@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: May 29, 2026 at 04:53 AM
+-- Generation Time: Jun 18, 2026 at 06:58 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -120,7 +120,7 @@ INSERT INTO `admins` (`id`, `first_name`, `middle_name`, `last_name`, `suffix`, 
 
 CREATE TABLE `availability` (
   `id` int(11) NOT NULL,
-  `item_type` enum('activity','accommodation') NOT NULL,
+  `item_type` enum('activity','accommodation','bundle') NOT NULL,
   `item_id` int(11) NOT NULL,
   `date` date NOT NULL,
   `time_slot` time DEFAULT NULL,
@@ -134,6 +134,20 @@ CREATE TABLE `availability` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `blocked_dates`
+--
+
+CREATE TABLE `blocked_dates` (
+  `id` int(11) NOT NULL,
+  `blocked_date` date NOT NULL,
+  `reason` text DEFAULT NULL,
+  `blocked_by` int(11) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `bookings`
 --
 
@@ -141,9 +155,10 @@ CREATE TABLE `bookings` (
   `id` int(11) NOT NULL,
   `booking_reference` varchar(20) NOT NULL,
   `user_id` int(11) NOT NULL,
-  `booking_type` enum('activity','accommodation') NOT NULL,
+  `booking_type` enum('activity','accommodation','bundle') NOT NULL,
   `activity_id` int(11) DEFAULT NULL,
   `accommodation_id` int(11) DEFAULT NULL,
+  `bundle_id` int(11) DEFAULT NULL,
   `status_id` int(11) NOT NULL DEFAULT 1,
   `full_name` varchar(255) NOT NULL,
   `email` varchar(255) NOT NULL,
@@ -204,6 +219,26 @@ INSERT INTO `booking_status` (`id`, `name`, `description`, `color`, `is_active`,
 (3, 'rejected', 'Booking has been rejected', '#ef4444', 1, '2026-05-29 02:03:38'),
 (4, 'completed', 'Booking has been completed', '#3b82f6', 1, '2026-05-29 02:03:38'),
 (5, 'cancelled', 'Booking has been cancelled', '#64748b', 1, '2026-05-29 02:03:38');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `bundles`
+--
+
+CREATE TABLE `bundles` (
+  `id` int(11) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `slug` varchar(255) NOT NULL,
+  `description` text DEFAULT NULL,
+  `price` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `capacity` int(11) NOT NULL DEFAULT 1,
+  `amenities` text DEFAULT NULL,
+  `image_url` varchar(500) DEFAULT NULL,
+  `is_active` tinyint(1) DEFAULT 1,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -403,6 +438,14 @@ ALTER TABLE `availability`
   ADD KEY `idx_is_available` (`is_available`);
 
 --
+-- Indexes for table `blocked_dates`
+--
+ALTER TABLE `blocked_dates`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `unique_blocked_date` (`blocked_date`),
+  ADD KEY `idx_blocked_date` (`blocked_date`);
+
+--
 -- Indexes for table `bookings`
 --
 ALTER TABLE `bookings`
@@ -416,7 +459,8 @@ ALTER TABLE `bookings`
   ADD KEY `idx_check_in_date` (`check_in_date`),
   ADD KEY `idx_check_out_date` (`check_out_date`),
   ADD KEY `idx_payment_status` (`payment_status`),
-  ADD KEY `idx_created_at` (`created_at`);
+  ADD KEY `idx_created_at` (`created_at`),
+  ADD KEY `fk_bookings_bundle` (`bundle_id`);
 
 --
 -- Indexes for table `booking_logs`
@@ -434,6 +478,13 @@ ALTER TABLE `booking_logs`
 ALTER TABLE `booking_status`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `name` (`name`);
+
+--
+-- Indexes for table `bundles`
+--
+ALTER TABLE `bundles`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `slug` (`slug`);
 
 --
 -- Indexes for table `login_logs`
@@ -540,6 +591,12 @@ ALTER TABLE `availability`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `blocked_dates`
+--
+ALTER TABLE `blocked_dates`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `bookings`
 --
 ALTER TABLE `bookings`
@@ -556,6 +613,12 @@ ALTER TABLE `booking_logs`
 --
 ALTER TABLE `booking_status`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+
+--
+-- AUTO_INCREMENT for table `bundles`
+--
+ALTER TABLE `bundles`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `login_logs`
@@ -615,6 +678,7 @@ ALTER TABLE `activity_availability_schedule`
 ALTER TABLE `bookings`
   ADD CONSTRAINT `fk_bookings_accommodation` FOREIGN KEY (`accommodation_id`) REFERENCES `accommodations` (`id`) ON DELETE SET NULL,
   ADD CONSTRAINT `fk_bookings_activity` FOREIGN KEY (`activity_id`) REFERENCES `activities` (`id`) ON DELETE SET NULL,
+  ADD CONSTRAINT `fk_bookings_bundle` FOREIGN KEY (`bundle_id`) REFERENCES `bundles` (`id`) ON DELETE SET NULL,
   ADD CONSTRAINT `fk_bookings_status` FOREIGN KEY (`status_id`) REFERENCES `booking_status` (`id`),
   ADD CONSTRAINT `fk_bookings_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 

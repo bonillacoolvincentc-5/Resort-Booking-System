@@ -35,8 +35,27 @@ try {
     }
     
     // Validate booking type
-    if (!in_array($data['booking_type'], ['activity', 'accommodation'])) {
+    if (!in_array($data['booking_type'], ['activity', 'accommodation', 'bundle'])) {
         throw new Exception('Invalid booking type');
+    }
+
+    // Reject bookings on admin-blocked dates
+    $conn->query("
+        CREATE TABLE IF NOT EXISTS `blocked_dates` (
+            `id` int(11) NOT NULL AUTO_INCREMENT,
+            `blocked_date` date NOT NULL,
+            `reason` text DEFAULT NULL,
+            `blocked_by` int(11) DEFAULT NULL,
+            `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+            PRIMARY KEY (`id`),
+            UNIQUE KEY `unique_blocked_date` (`blocked_date`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    ");
+    $blockedStmt = $conn->prepare("SELECT id FROM blocked_dates WHERE blocked_date = ? LIMIT 1");
+    $blockedStmt->bind_param('s', $data['check_in_date']);
+    $blockedStmt->execute();
+    if ($blockedStmt->get_result()->num_rows > 0) {
+        throw new Exception('This date is not available for booking. Please choose another date.');
     }
     
     // Get item ID based on booking type
@@ -75,7 +94,7 @@ try {
         
         $price = $activity['price_per_hour'] * $durationHours;
         
-    } else {
+    } else if ($data['booking_type'] === 'accommodation') {
         if (empty($data['accommodation_id'])) {
             throw new Exception('Accommodation ID is required for accommodation bookings');
         }
@@ -112,6 +131,44 @@ try {
         }
         
         $price = $accommodation['price_per_night'] * $numberOfDays;
+    } else {
+        // bundle
+        if (empty($data['bundle_id'])) {
+            throw new Exception('Bundle ID is required for bundle bookings');
+        }
+        $item_id = $data['bundle_id'];
+        
+        // Get bundle price
+        $stmt = $conn->prepare("SELECT price, capacity FROM bundles WHERE id = ? AND is_active = 1");
+        $stmt->bind_param('i', $item_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $bundle = $result->fetch_assoc();
+        
+        if (!$bundle) {
+            throw new Exception('Bundle not found or inactive');
+        }
+        
+        // Validate guest count
+        if ($data['number_of_guests'] > $bundle['capacity']) {
+            throw new Exception("Bundle capacity is {$bundle['capacity']} guests");
+        }
+        
+        // Calculate number of days and price
+        if (empty($data['check_out_date'])) {
+            throw new Exception('Check-out date is required for bundle bookings');
+        }
+        
+        $checkIn = new DateTime($data['check_in_date']);
+        $checkOut = new DateTime($data['check_out_date']);
+        $interval = $checkIn->diff($checkOut);
+        $numberOfDays = $interval->days;
+        
+        if ($numberOfDays < 1) {
+            throw new Exception('Minimum stay is 1 day');
+        }
+        
+        $price = $bundle['price']; // Flat price for the bundle package
     }
     
     // Check availability
@@ -132,7 +189,7 @@ try {
     $statusId = $status['id'];
     
     // Insert booking
-    $itemColumn = $data['booking_type'] === 'activity' ? 'activity_id' : 'accommodation_id';
+    $itemColumn = $data['booking_type'] === 'activity' ? 'activity_id' : ($data['booking_type'] === 'accommodation' ? 'accommodation_id' : 'bundle_id');
     $stmt = $conn->prepare("
         INSERT INTO bookings (
             booking_reference, user_id, booking_type, $itemColumn,
@@ -200,7 +257,7 @@ try {
  * Check availability for booking
  */
 function checkAvailability($conn, $type, $itemId, $date, $timeIn = null, $timeOut = null) {
-    $itemColumn = $type === 'activity' ? 'activity_id' : 'accommodation_id';
+    $itemColumn = $type === 'activity' ? 'activity_id' : ($type === 'accommodation' ? 'accommodation_id' : 'bundle_id');
     $query = "
         SELECT COUNT(*) as count
         FROM bookings b
@@ -220,16 +277,16 @@ function checkAvailability($conn, $type, $itemId, $date, $timeIn = null, $timeOu
     if ($type === 'activity') {
         $stmt = $conn->prepare("SELECT capacity FROM activities WHERE id = ?");
         $stmt->bind_param('i', $itemId);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        $item = $result->fetch_assoc();
-    } else {
+    } else if ($type === 'accommodation') {
         $stmt = $conn->prepare("SELECT capacity FROM accommodations WHERE id = ?");
         $stmt->bind_param('i', $itemId);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        $item = $result->fetch_assoc();
+    } else {
+        $stmt = $conn->prepare("SELECT capacity FROM bundles WHERE id = ?");
+        $stmt->bind_param('i', $itemId);
     }
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $item = $result->fetch_assoc();
     
     if ($countResult['count'] >= $item['capacity']) {
         return [
@@ -274,16 +331,16 @@ function updateAvailability($conn, $type, $itemId, $date, $timeIn = null, $timeO
         if ($type === 'activity') {
             $stmt = $conn->prepare("SELECT capacity FROM activities WHERE id = ?");
             $stmt->bind_param('i', $itemId);
-            $stmt->execute();
-            $result = $stmt->get_result();
-            $item = $result->fetch_assoc();
-        } else {
+        } else if ($type === 'accommodation') {
             $stmt = $conn->prepare("SELECT capacity FROM accommodations WHERE id = ?");
             $stmt->bind_param('i', $itemId);
-            $stmt->execute();
-            $result = $stmt->get_result();
-            $item = $result->fetch_assoc();
+        } else {
+            $stmt = $conn->prepare("SELECT capacity FROM bundles WHERE id = ?");
+            $stmt->bind_param('i', $itemId);
         }
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $item = $result->fetch_assoc();
         
         $totalSlots = $item['capacity'];
         $availableSlots = $totalSlots - 1;

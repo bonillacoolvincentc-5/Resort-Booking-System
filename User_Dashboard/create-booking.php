@@ -192,8 +192,9 @@ $userPhone = $_SESSION['user_phone'] ?? '';
             padding:.25rem .75rem; border-radius:2rem; font-size:.7rem; font-weight:700;
             text-transform:uppercase; letter-spacing:.05em; backdrop-filter:blur(8px);
         }
-        .badge-activity      { background:rgba(59,130,246,.9); color:#fff; }
-        .badge-accommodation { background:rgba(139,92,246,.9); color:#fff; }
+         .badge-activity      { background:rgba(59,130,246,.9); color:#fff; }
+         .badge-accommodation { background:rgba(139,92,246,.9); color:#fff; }
+         .badge-bundle        { background:rgba(16,185,129,.9); color:#fff; }
 
         .card-price-badge {
             position:absolute; bottom:.75rem; right:.75rem;
@@ -467,6 +468,9 @@ $userPhone = $_SESSION['user_phone'] ?? '';
             </button>
             <button class="filter-pill" onclick="filterPackages('accommodation',this)" id="filterAccommodation">
                 <i class="bi bi-house-door"></i> Accommodations
+            </button>
+            <button class="filter-pill" onclick="filterPackages('bundle',this)" id="filterBundle">
+                <i class="bi bi-box-seam"></i> Bundles
             </button>
             <div class="ms-auto">
                 <span id="packageCount" class="text-muted" style="font-size:.8rem;"></span>
@@ -773,6 +777,7 @@ function renderPackages(pkgs) {
         const gradients = {
             activity:      'linear-gradient(135deg,#1e3a5f,#0f172a)',
             accommodation: 'linear-gradient(135deg,#2d1f3d,#0f172a)',
+            bundle:        'linear-gradient(135deg,#1e3a2f,#0f172a)',
         };
 
         const imgHtml = pkg.image_url
@@ -787,7 +792,7 @@ function renderPackages(pkgs) {
             <div class="card-img-wrap">
                 ${imgHtml}
                 <span class="card-type-badge badge-${escHtml(pkg.package_type)}">
-                    ${pkg.package_type === 'activity' ? 'Activity' : ucfirst(pkg.type || 'Accommodation')}
+                    ${pkg.package_type === 'activity' ? 'Activity' : (pkg.package_type === 'bundle' ? 'Bundle' : ucfirst(pkg.type || 'Accommodation'))}
                 </span>
                 <span class="card-price-badge">from ${escHtml(pkg.starting_price)}</span>
             </div>
@@ -1023,6 +1028,9 @@ function recalcPrice() {
             base = selectedPkg.price; // show per-hour rate
             baseLabel = `${selectedPkg.price_label} (per hour)`;
         }
+    } else if (selectedPkg.package_type === 'bundle') {
+        base = selectedPkg.price;
+        baseLabel = `${selectedPkg.price_label} (Flat package rate)`;
     } else {
         // Accommodation — nights
         const ci = document.getElementById('bookingDate').value;
@@ -1048,6 +1056,7 @@ function recalcPrice() {
     document.getElementById('grandTotal').textContent     = '₱' + grand.toFixed(2);
 }
 
+// ── Time validation ────────────────────────────────────────────────
 // ── Time validation ────────────────────────────────────────────────
 function validateTime() {
     const tIn  = document.getElementById('timeIn').value;
@@ -1097,7 +1106,7 @@ async function handleBookingSubmit(e) {
         showError('Please select both Time-In and Time-Out.'); return;
     }
     if (selectedPkg.package_type === 'activity' && !validateTime()) return;
-    if (selectedPkg.package_type === 'accommodation' && !checkOut) {
+    if ((selectedPkg.package_type === 'accommodation' || selectedPkg.package_type === 'bundle') && !checkOut) {
         showError('Please select a check-out date.'); return;
     }
     if (guests < 1) { showError('At least 1 guest is required.'); return; }
@@ -1125,6 +1134,8 @@ async function handleBookingSubmit(e) {
 
     if (selectedPkg.package_type === 'activity') {
         payload.activity_id = selectedPkg.id;
+    } else if (selectedPkg.package_type === 'bundle') {
+        payload.bundle_id = selectedPkg.id;
     } else {
         payload.accommodation_id = selectedPkg.id;
     }

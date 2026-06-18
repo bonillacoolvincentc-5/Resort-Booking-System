@@ -105,9 +105,9 @@ function logBookingChange($conn, $bookingId, $oldStatusId, $newStatusId, $change
  * Restore availability when booking is cancelled or rejected
  */
 function restoreAvailability($conn, $bookingId) {
-    // Get booking details
+    // FIX #10: fetch bundle_id in addition to activity_id / accommodation_id
     $stmt = $conn->prepare("
-        SELECT booking_type, activity_id, accommodation_id, check_in_date, check_in_time
+        SELECT booking_type, activity_id, accommodation_id, bundle_id, check_in_date, check_in_time
         FROM bookings
         WHERE id = ?
     ");
@@ -115,12 +115,22 @@ function restoreAvailability($conn, $bookingId) {
     $stmt->execute();
     $result = $stmt->get_result();
     $booking = $result->fetch_assoc();
-    
+
     if (!$booking) return;
-    
+
     $itemType = $booking['booking_type'];
-    $itemId = $itemType === 'activity' ? $booking['activity_id'] : $booking['accommodation_id'];
-    $date = $booking['check_in_date'];
+
+    // FIX #10: correctly resolve item ID for all three booking types
+    switch ($itemType) {
+        case 'activity':      $itemId = $booking['activity_id'];      break;
+        case 'accommodation': $itemId = $booking['accommodation_id']; break;
+        case 'bundle':        $itemId = $booking['bundle_id'];        break;
+        default:              $itemId = null;
+    }
+
+    if (!$itemId) return; // nothing to restore
+
+    $date     = $booking['check_in_date'];
     $timeSlot = $booking['check_in_time'];
     
     // Update availability

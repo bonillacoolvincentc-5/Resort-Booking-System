@@ -124,14 +124,103 @@ try {
     }
     $accStmt->close();
 
+    // ── Bundles ──────────────────────────────────────────────────────────────
+    $bundleStmt = $conn->prepare("
+        SELECT 
+            id,
+            name,
+            slug,
+            description,
+            price,
+            capacity,
+            amenities,
+            image_url,
+            is_active
+        FROM bundles
+        WHERE is_active = 1
+        ORDER BY name ASC
+    ");
+    $bundleStmt->execute();
+    $bundleResult = $bundleStmt->get_result();
+
+    $bundles = [];
+    while ($row = $bundleResult->fetch_assoc()) {
+        // Parse amenities
+        $amenitiesList = [];
+        if (!empty($row['amenities'])) {
+            $amenitiesList = array_map('trim', explode(',', $row['amenities']));
+        }
+
+        // Fetch linked activities names
+        $linkedActs = [];
+        $actLinkStmt = $conn->prepare("
+            SELECT a.name 
+            FROM activities a
+            JOIN bundle_activities ba ON a.id = ba.activity_id
+            WHERE ba.bundle_id = ?
+        ");
+        $actLinkStmt->bind_param('i', $row['id']);
+        $actLinkStmt->execute();
+        $actLinkRes = $actLinkStmt->get_result();
+        while ($actRow = $actLinkRes->fetch_assoc()) {
+            $linkedActs[] = $actRow['name'];
+        }
+        $actLinkStmt->close();
+
+        // Fetch linked accommodations names
+        $linkedAccs = [];
+        $accLinkStmt = $conn->prepare("
+            SELECT acc.name 
+            FROM accommodations acc
+            JOIN bundle_accommodations bacc ON acc.id = bacc.accommodation_id
+            WHERE bacc.bundle_id = ?
+        ");
+        $accLinkStmt->bind_param('i', $row['id']);
+        $accLinkStmt->execute();
+        $accLinkRes = $accLinkStmt->get_result();
+        while ($accRow = $accLinkRes->fetch_assoc()) {
+            $linkedAccs[] = $accRow['name'];
+        }
+        $accLinkStmt->close();
+
+        // Inclusions: combine activities & accommodations
+        $inclusions = [];
+        if (!empty($linkedAccs)) {
+            $inclusions[] = 'Accommodation: ' . implode(', ', $linkedAccs);
+        }
+        if (!empty($linkedActs)) {
+            $inclusions[] = 'Activities: ' . implode(', ', $linkedActs);
+        }
+        $inclusions[] = 'Capacity: for ' . $row['capacity'] . ' person(s)';
+
+        $bundles[] = [
+            'id'                => $row['id'],
+            'package_type'      => 'bundle',
+            'name'              => $row['name'],
+            'slug'              => $row['slug'],
+            'description'       => $row['description'],
+            'short_description' => mb_strimwidth($row['description'] ?? '', 0, 120, '...'),
+            'price'             => (float) $row['price'],
+            'price_label'       => '₱' . number_format($row['price'], 2) . ' flat package price',
+            'starting_price'    => '₱' . number_format($row['price'], 2),
+            'capacity'          => $row['capacity'],
+            'icon'              => 'bi-box-seam',
+            'image_url'         => $row['image_url'],
+            'amenities'         => $amenitiesList,
+            'inclusions'        => $inclusions
+        ];
+    }
+    $bundleStmt->close();
+
     // ── Combine ──────────────────────────────────────────────────────────────
-    $packages = array_merge($activities, $accommodations);
+    $packages = array_merge($activities, $accommodations, $bundles);
 
     echo json_encode([
         'success'        => true,
         'packages'       => $packages,
         'activities'     => $activities,
         'accommodations' => $accommodations,
+        'bundles'        => $bundles,
         'total'          => count($packages),
     ]);
 
