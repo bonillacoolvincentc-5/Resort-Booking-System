@@ -478,9 +478,6 @@ while ($row = $result->fetch_assoc()) {
                 <button class="btn btn-outline-secondary">
                     <i class="bi bi-download me-2"></i>Export Report
                 </button>
-                <a href="../admin/logout.php" class="btn btn-logout">
-                            <i class="bi bi-box-arrow-right me-2"></i>Logout
-                        </a>
             </div>
         </div>
 

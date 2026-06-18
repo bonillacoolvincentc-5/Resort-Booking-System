@@ -22,7 +22,6 @@ try {
             min_duration_hours,
             max_duration_hours,
             capacity,
-            icon,
             image_url,
             is_active
         FROM activities
@@ -51,7 +50,7 @@ try {
             'price_label'        => '₱' . number_format($row['price_per_hour'], 2) . '/hr',
             'starting_price'     => '₱' . number_format($row['price_per_hour'], 2),
             'capacity'           => $row['capacity'],
-            'icon'               => $row['icon'] ?? 'bi-star',
+            'icon'               => 'bi-activity',
             'image_url'          => $row['image_url'],
             'min_duration_hours' => (float) $row['min_duration_hours'],
             'max_duration_hours' => (float) $row['max_duration_hours'],

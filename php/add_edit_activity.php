@@ -22,7 +22,6 @@ if ($action === 'add' || $action === 'edit') {
     $name = trim($_POST['name'] ?? '');
     $description = trim($_POST['description'] ?? '');
     $pricePerHour = floatval($_POST['price_per_hour'] ?? 0);
-    $icon = trim($_POST['icon'] ?? '');
     $isActive = intval($_POST['is_active'] ?? 1);
     $minDuration = floatval($_POST['min_duration_hours'] ?? 1.0);
     $maxDuration = floatval($_POST['max_duration_hours'] ?? 4.0);
@@ -53,11 +52,11 @@ if ($action === 'add' || $action === 'edit') {
     try {
         if ($action === 'add') {
             // Insert new activity
-            $query = "INSERT INTO activities (name, slug, description, price_per_hour, min_duration_hours, max_duration_hours, capacity, icon, image_url, is_active) 
-                      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            $query = "INSERT INTO activities (name, slug, description, price_per_hour, min_duration_hours, max_duration_hours, capacity, image_url, is_active) 
+                      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
             $stmt = $conn->prepare($query);
-            // s,s,s = name/slug/desc; d,d,d = price/minDur/maxDur; i = capacity; s,s = icon/image; i = is_active
-            $stmt->bind_param('sssdddissi', $name, $slug, $description, $pricePerHour, $minDuration, $maxDuration, $capacity, $icon, $imagePath, $isActive);
+            // s,s,s = name/slug/desc; d,d,d = price/minDur/maxDur; i = capacity; s = image; i = is_active
+            $stmt->bind_param('sssdddisi', $name, $slug, $description, $pricePerHour, $minDuration, $maxDuration, $capacity, $imagePath, $isActive);
             $stmt->execute();
             
             echo json_encode(['success' => true, 'message' => 'Activity added successfully']);
@@ -70,15 +69,16 @@ if ($action === 'add' || $action === 'edit') {
             
             if ($imagePath) {
                 // Update with new image
-                $query = "UPDATE activities SET name = ?, slug = ?, description = ?, price_per_hour = ?, min_duration_hours = ?, max_duration_hours = ?, capacity = ?, icon = ?, image_url = ?, is_active = ? WHERE id = ?";
+                $query = "UPDATE activities SET name = ?, slug = ?, description = ?, price_per_hour = ?, min_duration_hours = ?, max_duration_hours = ?, capacity = ?, image_url = ?, is_active = ? WHERE id = ?";
                 $stmt = $conn->prepare($query);
-                // s,s,s,d,d,d,i,s,s,i,i = name/slug/desc, price/min/max, capacity, icon/image, isActive, id
-                $stmt->bind_param('sssdddissii', $name, $slug, $description, $pricePerHour, $minDuration, $maxDuration, $capacity, $icon, $imagePath, $isActive, $activityId);
+                // s,s,s,d,d,d,i,s,i,i = name/slug/desc, price/min/max, capacity, image, isActive, id
+                $stmt->bind_param('sssdddisii', $name, $slug, $description, $pricePerHour, $minDuration, $maxDuration, $capacity, $imagePath, $isActive, $activityId);
             } else {
                 // Update without changing image
-                $query = "UPDATE activities SET name = ?, slug = ?, description = ?, price_per_hour = ?, min_duration_hours = ?, max_duration_hours = ?, capacity = ?, icon = ?, is_active = ? WHERE id = ?";
+                $query = "UPDATE activities SET name = ?, slug = ?, description = ?, price_per_hour = ?, min_duration_hours = ?, max_duration_hours = ?, capacity = ?, is_active = ? WHERE id = ?";
                 $stmt = $conn->prepare($query);
-                $stmt->bind_param('sssdddisii', $name, $slug, $description, $pricePerHour, $minDuration, $maxDuration, $capacity, $icon, $isActive, $activityId);
+                // s,s,s,d,d,d,i,i,i = name/slug/desc, price/min/max, capacity, isActive, id
+                $stmt->bind_param('sssdddiii', $name, $slug, $description, $pricePerHour, $minDuration, $maxDuration, $capacity, $isActive, $activityId);
             }
             $stmt->execute();
             

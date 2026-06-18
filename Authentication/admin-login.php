@@ -116,12 +116,6 @@
                 eyeIcon.classList.add('bi-eye');
             }
         }
-        const test = urlParam(window.location.search)
-        if(error){
-            docunment.getElementById('errorMessage').textContent = test(console.error();
-            )
-        }
-
         // Optional: Display error messages from server - Exact from original
         const urlParams = new URLSearchParams(window.location.search);
         const error = urlParams.get('error');

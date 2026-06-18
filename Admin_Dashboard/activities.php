@@ -31,7 +31,6 @@ $query = "
         a.min_duration_hours,
         a.max_duration_hours,
         a.capacity,
-        a.icon,
         a.image_url,
         a.is_active,
         a.created_at,
@@ -274,8 +273,8 @@ while ($row = $result->fetch_assoc()) {
                         $statusClass = $activity['is_active'] ? 'status-active' : 'status-inactive';
                         $statusText = $activity['is_active'] ? 'Active' : 'Inactive';
                         
-                        // Use icon from database or default
-                        $icon = $activity['icon'] ? $activity['icon'] : 'bi-activity';
+                        // Static fallback icon
+                        $icon = 'bi-activity';
                         
                         // Format price
                         $price = number_format($activity['price_per_hour'], 2);
@@ -358,13 +357,7 @@ while ($row = $result->fetch_assoc()) {
                             <textarea class="form-control" id="activityDescription" name="description" rows="3" style="background: var(--bg-tertiary); border: 1px solid var(--border-color); color: var(--text-primary);"></textarea>
                         </div>
                         <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label" style="color: var(--text-primary); font-weight: 500;">Icon (Bootstrap class)</label>
-                                    <input type="text" class="form-control" id="activityIcon" name="icon" placeholder="e.g., bi-basketball" style="background: var(--bg-tertiary); border: 1px solid var(--border-color); color: var(--text-primary);">
-                                </div>
-                            </div>
-                            <div class="col-md-6">
+                            <div class="col-md-12">
                                 <div class="mb-3">
                                     <label class="form-label" style="color: var(--text-primary); font-weight: 500;">Status</label>
                                     <select class="form-select" id="activityStatus" name="is_active" style="background: var(--bg-tertiary); border: 1px solid var(--border-color); color: var(--text-primary);">
@@ -454,7 +447,6 @@ while ($row = $result->fetch_assoc()) {
                     document.getElementById('activityName').value = activity.name;
                     document.getElementById('activityDescription').value = activity.description || '';
                     document.getElementById('activityPrice').value = activity.price_per_hour;
-                    document.getElementById('activityIcon').value = activity.icon || '';
                     document.getElementById('activityStatus').value = activity.is_active;
                     document.getElementById('minDuration').value = activity.min_duration_hours;
                     document.getElementById('maxDuration').value = activity.max_duration_hours;

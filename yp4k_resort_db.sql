@@ -57,7 +57,6 @@ CREATE TABLE `activities` (
   `min_duration_hours` decimal(4,2) NOT NULL DEFAULT 1.00,
   `max_duration_hours` decimal(4,2) NOT NULL DEFAULT 4.00,
   `capacity` int(11) NOT NULL DEFAULT 10,
-  `icon` varchar(50) DEFAULT NULL,
   `image_url` varchar(500) DEFAULT NULL,
   `is_active` tinyint(1) DEFAULT 1,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),

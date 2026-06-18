@@ -79,7 +79,6 @@
 function setActiveNavigation() {
     // Get current page filename
     const currentPage = window.location.pathname.split('/').pop();
-    console.log('Current page:', currentPage); // Debug log
     
     // Remove active class from all nav links
     document.querySelectorAll('.nav-link').forEach(link => {
@@ -88,19 +87,14 @@ function setActiveNavigation() {
     
     // Add active class to current page link
     const activeLink = document.querySelector(`.nav-link[data-page="${currentPage.replace('.php', '')}"]`);
-    console.log('Active link found:', activeLink); // Debug log
     
     if (activeLink) {
         activeLink.classList.add('active');
-        console.log('Active class added to:', activeLink); // Debug log
-    } else {
-        console.log('No matching link found for page:', currentPage);
     }
 }
 
 // Run on page load
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM loaded, setting active navigation');
     setActiveNavigation();
 });
 

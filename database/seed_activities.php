@@ -7,6 +7,9 @@
 require_once '../phpAuthentication/db_config.php';
 
 try {
+    // Disable foreign key checks to allow truncate
+    $conn->query("SET FOREIGN_KEY_CHECKS = 0");
+
     // Clear existing activities
     $conn->query("TRUNCATE TABLE activities");
     
@@ -20,7 +23,6 @@ try {
             'min_duration_hours' => 1.0,
             'max_duration_hours' => 4.0,
             'capacity' => 8,
-            'icon' => 'bi-8-circle',
             'image_url' => 'assets/Images/BilliardsHDreal.jpg'
         ],
         [
@@ -31,7 +33,6 @@ try {
             'min_duration_hours' => 1.0,
             'max_duration_hours' => 4.0,
             'capacity' => 20,
-            'icon' => 'bi-basketball',
             'image_url' => 'assets/Images/BasketballCourt.jpg'
         ],
         [
@@ -42,7 +43,6 @@ try {
             'min_duration_hours' => 1.0,
             'max_duration_hours' => 4.0,
             'capacity' => 50,
-            'icon' => 'bi-water',
             'image_url' => 'assets/Images/Pool.jpg'
         ],
         [
@@ -53,7 +53,6 @@ try {
             'min_duration_hours' => 1.0,
             'max_duration_hours' => 3.0,
             'capacity' => 30,
-            'icon' => 'bi-heart-pulse',
             'image_url' => 'assets/Images/Gym.jfif'
         ],
         [
@@ -64,7 +63,6 @@ try {
             'min_duration_hours' => 2.0,
             'max_duration_hours' => 4.0,
             'capacity' => 10,
-            'icon' => 'bi-joystick',
             'image_url' => 'assets/Images/ADV.jpg'
         ],
         [
@@ -75,12 +73,11 @@ try {
             'min_duration_hours' => 1.0,
             'max_duration_hours' => 4.0,
             'capacity' => 25,
-            'icon' => 'bi-balloon',
             'image_url' => 'assets/Images/Playground.jpg'
         ]
     ];
     
-    $stmt = $conn->prepare("INSERT INTO activities (name, slug, description, price_per_hour, min_duration_hours, max_duration_hours, capacity, icon, image_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    $stmt = $conn->prepare("INSERT INTO activities (name, slug, description, price_per_hour, min_duration_hours, max_duration_hours, capacity, image_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
     
     foreach ($activities as $activity) {
         $stmt->execute([
@@ -91,15 +88,18 @@ try {
             $activity['min_duration_hours'],
             $activity['max_duration_hours'],
             $activity['capacity'],
-            $activity['icon'],
             $activity['image_url']
         ]);
     }
+    
+    // Re-enable foreign key checks
+    $conn->query("SET FOREIGN_KEY_CHECKS = 1");
     
     echo "✓ Activities seeded successfully!<br>";
     echo "✓ " . count($activities) . " activities added to the database.<br>";
     
 } catch (Exception $e) {
+    $conn->query("SET FOREIGN_KEY_CHECKS = 1");
     die("Error seeding activities: " . $e->getMessage());
 }
 ?>

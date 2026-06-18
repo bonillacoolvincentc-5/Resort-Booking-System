@@ -59,7 +59,7 @@ $query = "
             ELSE acc.name
         END as item_name,
         CASE 
-            WHEN b.booking_type = 'activity' THEN a.icon
+            WHEN b.booking_type = 'activity' THEN 'bi-activity'
             ELSE NULL
         END as item_icon,
         pr.file_path as receipt_path
@@ -96,13 +96,6 @@ while ($row = $result->fetch_assoc()) {
     $bookings[] = $row;
 }
 
-// Fetch active users for dropdown
-$usersRes = $conn->query("SELECT id, first_name, last_name, email FROM users ORDER BY first_name ASC, last_name ASC");
-$allUsers = [];
-while ($row = $usersRes->fetch_assoc()) {
-    $allUsers[] = $row;
-}
-
 // Fetch activities
 $actsRes = $conn->query("SELECT id, name, price_per_hour, capacity FROM activities WHERE is_active = 1 ORDER BY name ASC");
 $activitiesList = [];
@@ -124,12 +117,6 @@ while ($row = $bundlesRes->fetch_assoc()) {
     $bundlesList[] = $row;
 }
 
-// Fetch booking statuses
-$statusRes = $conn->query("SELECT id, name, description FROM booking_status WHERE is_active = 1 ORDER BY id ASC");
-$statusesList = [];
-while ($row = $statusRes->fetch_assoc()) {
-    $statusesList[] = $row;
-}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -596,10 +583,6 @@ while ($row = $statusRes->fetch_assoc()) {
                     <i class="bi bi-download"></i>
                     Export
                 </button>
-                <button class="btn-modern btn-primary" onclick="openNewBookingModal()">
-                    <i class="bi bi-plus-circle"></i>
-                    New Booking
-                </button>
             </div>
         </div>
 
@@ -799,146 +782,7 @@ while ($row = $statusRes->fetch_assoc()) {
         </div>
     </div>
 
-    <!-- New Booking Modal -->
-    <div class="modal fade" id="newBookingModal" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content modal-content-modern">
-                <div class="modal-header modal-header-modern">
-                    <h5 class="modal-title">
-                        <i class="bi bi-plus-circle me-2"></i>Create New Booking
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body modal-body-modern">
-                    <form id="newBookingForm">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group-modern">
-                                    <label class="form-label-modern">Select Customer <span class="text-danger">*</span></label>
-                                    <select class="form-control-modern" id="newCustomerId" required>
-                                        <option value="">-- Choose Customer --</option>
-                                        <?php foreach ($allUsers as $u): ?>
-                                            <option value="<?php echo $u['id']; ?>">
-                                                <?php echo htmlspecialchars($u['first_name'] . ' ' . $u['last_name'] . ' (' . $u['email'] . ')'); ?>
-                                            </option>
-                                        <?php endforeach; ?>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group-modern">
-                                    <label class="form-label-modern">Booking Type <span class="text-danger">*</span></label>
-                                    <select class="form-control-modern" id="newBookingType" onchange="onBookingTypeChange()" required>
-                                        <option value="">-- Choose Type --</option>
-                                        <option value="activity">Activity</option>
-                                        <option value="accommodation">Accommodation</option>
-                                        <option value="bundle">Bundle</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
 
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group-modern">
-                                    <label class="form-label-modern">Select Item <span class="text-danger">*</span></label>
-                                    <select class="form-control-modern" id="newItemId" onchange="onItemChange()" required disabled>
-                                        <option value="">-- Select Booking Type First --</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group-modern">
-                                    <label class="form-label-modern">Check-in Date <span class="text-danger">*</span></label>
-                                    <input type="date" class="form-control-modern" id="newCheckInDate" required>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Check-out Date (For accommodations and bundles) -->
-                        <div class="row" id="newCheckoutDateRow" style="display: none;">
-                            <div class="col-md-6">
-                                <div class="form-group-modern">
-                                    <label class="form-label-modern">Check-out Date <span class="text-danger">*</span></label>
-                                    <input type="date" class="form-control-modern" id="newCheckOutDate">
-                                </div>
-                            </div>
-                            <div class="col-md-6"></div>
-                        </div>
-
-                        <!-- Time fields (For activities) -->
-                        <div class="row" id="newTimeFieldsRow" style="display: none;">
-                            <div class="col-md-6">
-                                <div class="form-group-modern">
-                                    <label class="form-label-modern">Time-In <span class="text-danger">*</span></label>
-                                    <input type="time" class="form-control-modern" id="newCheckInTime">
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group-modern">
-                                    <label class="form-label-modern">Time-Out <span class="text-danger">*</span></label>
-                                    <input type="time" class="form-control-modern" id="newCheckOutTime">
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group-modern">
-                                    <label class="form-label-modern">Number of Guests <span class="text-danger">*</span></label>
-                                    <input type="number" class="form-control-modern" id="newNumberOfGuests" min="1" value="1" required>
-                                    <small class="text-muted" id="newItemCapacityHint"></small>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group-modern">
-                                    <label class="form-label-modern">Booking Status <span class="text-danger">*</span></label>
-                                    <select class="form-control-modern" id="newStatusId" required>
-                                        <?php foreach ($statusesList as $s): ?>
-                                            <option value="<?php echo $s['id']; ?>" <?php echo $s['name'] === 'pending_review' ? 'selected' : ''; ?>>
-                                                <?php echo htmlspecialchars(ucfirst(str_replace('_', ' ', $s['name']))); ?>
-                                            </option>
-                                        <?php endforeach; ?>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group-modern">
-                                    <label class="form-label-modern">Payment Method <span class="text-danger">*</span></label>
-                                    <select class="form-control-modern" id="newPaymentMethod" required>
-                                        <option value="cash">Cash</option>
-                                        <option value="gcash">GCash</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group-modern">
-                                    <label class="form-label-modern">Payment Status <span class="text-danger">*</span></label>
-                                    <select class="form-control-modern" id="newPaymentStatus" required>
-                                        <option value="pending">Pending</option>
-                                        <option value="paid">Paid</option>
-                                        <option value="refunded">Refunded</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="form-group-modern">
-                            <label class="form-label-modern">Special Requests</label>
-                            <textarea class="form-control-modern" id="newSpecialRequests" rows="2" placeholder="Any special requirements..."></textarea>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer modal-footer-modern">
-                    <button type="button" class="btn-modern btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn-modern btn-primary" onclick="createBookingByAdmin()">Create Booking</button>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <!-- ── View Booking Modal ───────────────────────────────── -->
     <div class="modal fade" id="viewBookingModal" tabindex="-1">
@@ -974,7 +818,7 @@ while ($row = $statusRes->fetch_assoc()) {
 
         // ── Move modals to <body> on load to escape backdrop-filter stacking contexts ──
         document.addEventListener('DOMContentLoaded', function () {
-            ['newBookingModal', 'editBookingModal', 'viewBookingModal'].forEach(function(id) {
+            ['editBookingModal', 'viewBookingModal'].forEach(function(id) {
                 const el = document.getElementById(id);
                 if (el && el.parentElement !== document.body) {
                     document.body.appendChild(el);
@@ -1376,225 +1220,6 @@ while ($row = $statusRes->fetch_assoc()) {
             paymentFilter.addEventListener('change', applyFilters);
             dateFilter.addEventListener('change', applyFilters);
         });
-
-        let newBookingModalObj = null;
-
-        function openNewBookingModal() {
-            console.log('%c[DEBUG] openNewBookingModal() called', 'color: cyan; font-weight: bold;');
-
-            // Step 1: Check if bootstrap is available
-            if (typeof bootstrap === 'undefined') {
-                console.error('[DEBUG] FAIL: bootstrap is not defined — Bootstrap JS not loaded yet!');
-                return;
-            }
-            console.log('[DEBUG] Step 1 OK — bootstrap is defined');
-
-            // Step 2: Find the modal element
-            const modalEl = document.getElementById('newBookingModal');
-            if (!modalEl) {
-                console.error('[DEBUG] FAIL: #newBookingModal element not found in DOM!');
-                return;
-            }
-            console.log('[DEBUG] Step 2 OK — #newBookingModal element found:', modalEl);
-
-            // Step 3: Create or reuse modal object
-            try {
-                if (!newBookingModalObj) {
-                    newBookingModalObj = new bootstrap.Modal(modalEl);
-                    console.log('[DEBUG] Step 3 OK — new bootstrap.Modal created');
-                } else {
-                    console.log('[DEBUG] Step 3 OK — reusing existing modal object');
-                }
-            } catch (e) {
-                console.error('[DEBUG] FAIL at Step 3 — bootstrap.Modal() threw an error:', e);
-                return;
-            }
-
-            // Step 4: Reset form fields
-            const formEl = document.getElementById('newBookingForm');
-            if (!formEl) { console.error('[DEBUG] FAIL: #newBookingForm not found!'); return; }
-            formEl.reset();
-            console.log('[DEBUG] Step 4 OK — form reset');
-
-            // Step 5: Reset item select
-            const itemEl = document.getElementById('newItemId');
-            if (!itemEl) { console.error('[DEBUG] FAIL: #newItemId not found!'); return; }
-            itemEl.innerHTML = '<option value="">-- Select Booking Type First --</option>';
-            itemEl.disabled = true;
-            console.log('[DEBUG] Step 5 OK — item select reset');
-
-            // Step 6: Hide conditional rows
-            const checkoutRow = document.getElementById('newCheckoutDateRow');
-            const timeRow = document.getElementById('newTimeFieldsRow');
-            if (!checkoutRow) { console.error('[DEBUG] FAIL: #newCheckoutDateRow not found!'); return; }
-            if (!timeRow)     { console.error('[DEBUG] FAIL: #newTimeFieldsRow not found!'); return; }
-            checkoutRow.style.display = 'none';
-            timeRow.style.display = 'none';
-            document.getElementById('newItemCapacityHint').textContent = '';
-            console.log('[DEBUG] Step 6 OK — rows hidden');
-
-            // Step 7: Set date defaults
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('newCheckInDate').min = today;
-            document.getElementById('newCheckInDate').value = today;
-            document.getElementById('newCheckOutDate').min = today;
-            console.log('[DEBUG] Step 7 OK — dates set to today:', today);
-
-            // Step 8: Show modal
-            try {
-                newBookingModalObj.show();
-                console.log('[DEBUG] Step 8 OK — modal.show() called successfully!');
-            } catch (e) {
-                console.error('[DEBUG] FAIL at Step 8 — modal.show() threw an error:', e);
-            }
-        }
-
-        document.addEventListener('DOMContentLoaded', function() {
-            const newCheckInDateEl = document.getElementById('newCheckInDate');
-            if (newCheckInDateEl) {
-                newCheckInDateEl.addEventListener('change', function() {
-                    document.getElementById('newCheckOutDate').min = this.value;
-                    if (document.getElementById('newCheckOutDate').value < this.value) {
-                        document.getElementById('newCheckOutDate').value = this.value;
-                    }
-                });
-            }
-        });
-
-        function onBookingTypeChange() {
-            const type = document.getElementById('newBookingType').value;
-            const itemSelect = document.getElementById('newItemId');
-            const checkoutRow = document.getElementById('newCheckoutDateRow');
-            const timeFieldsRow = document.getElementById('newTimeFieldsRow');
-            
-            itemSelect.innerHTML = '<option value="">-- Select Item --</option>';
-            document.getElementById('newItemCapacityHint').textContent = '';
-            
-            if (!type) {
-                itemSelect.disabled = true;
-                checkoutRow.style.display = 'none';
-                timeFieldsRow.style.display = 'none';
-                return;
-            }
-            
-            itemSelect.disabled = false;
-            let list = [];
-            if (type === 'activity') {
-                list = activitiesList;
-                checkoutRow.style.display = 'none';
-                timeFieldsRow.style.display = 'flex';
-                document.getElementById('newCheckInTime').required = true;
-                document.getElementById('newCheckOutTime').required = true;
-                document.getElementById('newCheckOutDate').required = false;
-            } else if (type === 'accommodation') {
-                list = accommodationsList;
-                checkoutRow.style.display = 'flex';
-                timeFieldsRow.style.display = 'none';
-                document.getElementById('newCheckInTime').required = false;
-                document.getElementById('newCheckOutTime').required = false;
-                document.getElementById('newCheckOutDate').required = true;
-            } else if (type === 'bundle') {
-                list = bundlesList;
-                checkoutRow.style.display = 'flex';
-                timeFieldsRow.style.display = 'none';
-                document.getElementById('newCheckInTime').required = false;
-                document.getElementById('newCheckOutTime').required = false;
-                document.getElementById('newCheckOutDate').required = true;
-            }
-            
-            list.forEach(item => {
-                const opt = document.createElement('option');
-                opt.value = item.id;
-                opt.textContent = item.name + (item.price_per_hour ? ` (₱${item.price_per_hour}/hr)` : (item.price_per_night ? ` (₱${item.price_per_night}/night)` : ` (₱${item.price})`));
-                opt.dataset.capacity = item.capacity;
-                itemSelect.appendChild(opt);
-            });
-        }
-
-        function onItemChange() {
-            const itemSelect = document.getElementById('newItemId');
-            const selectedOpt = itemSelect.options[itemSelect.selectedIndex];
-            const capacityHint = document.getElementById('newItemCapacityHint');
-            const guestsInput = document.getElementById('newNumberOfGuests');
-            
-            if (selectedOpt && selectedOpt.dataset.capacity) {
-                const cap = selectedOpt.dataset.capacity;
-                capacityHint.textContent = `Max capacity: ${cap} guests`;
-                guestsInput.max = cap;
-                guestsInput.value = Math.min(guestsInput.value, cap);
-            } else {
-                capacityHint.textContent = '';
-                guestsInput.removeAttribute('max');
-            }
-        }
-
-        async function createBookingByAdmin() {
-            const userId = document.getElementById('newCustomerId').value;
-            const bookingType = document.getElementById('newBookingType').value;
-            const itemId = document.getElementById('newItemId').value;
-            const checkInDate = document.getElementById('newCheckInDate').value;
-            const checkOutDate = document.getElementById('newCheckOutDate').value;
-            const checkInTime = document.getElementById('newCheckInTime').value;
-            const checkOutTime = document.getElementById('newCheckOutTime').value;
-            const guests = document.getElementById('newNumberOfGuests').value;
-            const statusId = document.getElementById('newStatusId').value;
-            const paymentMethod = document.getElementById('newPaymentMethod').value;
-            const paymentStatus = document.getElementById('newPaymentStatus').value;
-            const specialRequests = document.getElementById('newSpecialRequests').value;
-            
-            // Validation
-            if (!userId || !bookingType || !itemId || !checkInDate || !guests || !statusId || !paymentMethod || !paymentStatus) {
-                alert('Please fill in all required fields marked with *');
-                return;
-            }
-            
-            if (bookingType === 'activity' && (!checkInTime || !checkOutTime)) {
-                alert('Please specify Time-In and Time-Out for activity bookings.');
-                return;
-            }
-            
-            if ((bookingType === 'accommodation' || bookingType === 'bundle') && !checkOutDate) {
-                alert('Please specify Check-out Date.');
-                return;
-            }
-            
-            const payload = {
-                user_id: userId,
-                booking_type: bookingType,
-                item_id: itemId,
-                check_in_date: checkInDate,
-                check_out_date: checkOutDate || null,
-                check_in_time: checkInTime || null,
-                check_out_time: checkOutTime || null,
-                number_of_guests: guests,
-                status_id: statusId,
-                payment_method: paymentMethod,
-                payment_status: paymentStatus,
-                special_requests: specialRequests
-            };
-            
-            try {
-                const res = await fetch('../php/admin_create_booking.php', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                
-                const result = await res.json();
-                if (result.success) {
-                    showNotification(result.message || 'Booking created successfully!', 'success');
-                    if (newBookingModalObj) {
-                        newBookingModalObj.hide();
-                    }
-                    setTimeout(() => location.reload(), 1500);
-                } else {
-                    alert('Error: ' + result.message);
-                }
-            } catch (err) {
-                console.error(err);
-                alert('Failed to send request to server.');
-            }
-        }
 
         // Pagination
         document.addEventListener('click', function(e) {
