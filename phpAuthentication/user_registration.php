@@ -26,6 +26,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $province = trim($_POST['province'] ?? '');
     $cityMunicipality = trim($_POST['city_municipality'] ?? '');
     $barangay = trim($_POST['barangay'] ?? '');
+    
+    // If location fields are numerical codes, convert using PSGC API
+    if (is_numeric($region) && strlen($region) >= 8) {
+        $json = @file_get_contents("https://psgc.gitlab.io/api/regions/{$region}/");
+        if ($json) { $d = json_decode($json, true); if (!empty($d['name'])) $region = $d['name']; }
+    }
+    if (is_numeric($province) && strlen($province) >= 8) {
+        $json = @file_get_contents("https://psgc.gitlab.io/api/provinces/{$province}/");
+        if ($json) { $d = json_decode($json, true); if (!empty($d['name'])) $province = $d['name']; }
+    }
+    if (is_numeric($cityMunicipality) && strlen($cityMunicipality) >= 8) {
+        $json = @file_get_contents("https://psgc.gitlab.io/api/cities-municipalities/{$cityMunicipality}/");
+        if ($json) { $d = json_decode($json, true); if (!empty($d['name'])) $cityMunicipality = $d['name']; }
+    }
+    if (is_numeric($barangay) && strlen($barangay) >= 8) {
+        $json = @file_get_contents("https://psgc.gitlab.io/api/barangays/{$barangay}/");
+        if ($json) { $d = json_decode($json, true); if (!empty($d['name'])) $barangay = $d['name']; }
+    }
+    
     $password = $_POST['password'] ?? '';
     $confirmPassword = $_POST['confirm_password'] ?? '';
     

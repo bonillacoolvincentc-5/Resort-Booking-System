@@ -1,3 +1,124 @@
+<?php
+session_start();
+
+// Check if user is logged in
+if (!isset($_SESSION['user_id'])) {
+    header('Location: ../Authentication/login.php');
+    exit();
+}
+
+require_once '../phpAuthentication/db_config.php';
+
+$userId = $_SESSION['user_id'];
+
+// Ensure profile columns exist in users table
+$columnsToAdd = [
+    'address' => "VARCHAR(255) DEFAULT NULL",
+    'birthdate' => "DATE DEFAULT NULL",
+    'gender' => "VARCHAR(50) DEFAULT NULL",
+    'bio' => "TEXT DEFAULT NULL",
+    'avatar' => "VARCHAR(255) DEFAULT NULL"
+];
+foreach ($columnsToAdd as $col => $def) {
+    $check = $conn->query("SHOW COLUMNS FROM users LIKE '$col'");
+    if ($check && $check->num_rows == 0) {
+        $conn->query("ALTER TABLE users ADD COLUMN $col $def");
+    }
+}
+
+// Fetch user data
+$stmt = $conn->prepare("SELECT * FROM users WHERE id = ?");
+$stmt->bind_param("i", $userId);
+$stmt->execute();
+$result = $stmt->get_result();
+$user = $result->fetch_assoc();
+$stmt->close();
+
+if (!$user) {
+    session_destroy();
+    header('Location: ../Authentication/login.php');
+    exit();
+}
+
+// Convert any numerical PSGC codes in database row to character names
+$rCode = $user['region'] ?? '';
+$pCode = $user['province'] ?? '';
+$cCode = $user['city_municipality'] ?? '';
+$bCode = $user['barangay'] ?? '';
+$updatedDb = false;
+
+if (is_numeric($rCode) && strlen($rCode) >= 8) {
+    $json = @file_get_contents("https://psgc.gitlab.io/api/regions/{$rCode}/");
+    if ($json) { $d = json_decode($json, true); if (!empty($d['name'])) { $user['region'] = $d['name']; $updatedDb = true; } }
+}
+if (is_numeric($pCode) && strlen($pCode) >= 8) {
+    $json = @file_get_contents("https://psgc.gitlab.io/api/provinces/{$pCode}/");
+    if ($json) { $d = json_decode($json, true); if (!empty($d['name'])) { $user['province'] = $d['name']; $updatedDb = true; } }
+}
+if (is_numeric($cCode) && strlen($cCode) >= 8) {
+    $json = @file_get_contents("https://psgc.gitlab.io/api/cities-municipalities/{$cCode}/");
+    if ($json) { $d = json_decode($json, true); if (!empty($d['name'])) { $user['city_municipality'] = $d['name']; $updatedDb = true; } }
+}
+if (is_numeric($bCode) && strlen($bCode) >= 8) {
+    $json = @file_get_contents("https://psgc.gitlab.io/api/barangays/{$bCode}/");
+    if ($json) { $d = json_decode($json, true); if (!empty($d['name'])) { $user['barangay'] = $d['name']; $updatedDb = true; } }
+}
+
+if ($updatedDb) {
+    $upStmt = $conn->prepare("UPDATE users SET region = ?, province = ?, city_municipality = ?, barangay = ? WHERE id = ?");
+    if ($upStmt) {
+        $upStmt->bind_param("ssssi", $user['region'], $user['province'], $user['city_municipality'], $user['barangay'], $userId);
+        $upStmt->execute();
+        $upStmt->close();
+    }
+}
+
+// Construct address if address column is empty or contains numerical codes
+$userAddress = $user['address'] ?? '';
+if (empty($userAddress) || preg_match('/\d{8,}/', $userAddress)) {
+    $parts = array_filter([
+        $user['barangay'] ?? '',
+        $user['city_municipality'] ?? '',
+        $user['province'] ?? '',
+        $user['region'] ?? ''
+    ]);
+    $userAddress = implode(', ', $parts);
+}
+
+// Full Name for display
+$fullName = trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? ''));
+if (empty($fullName)) {
+    $fullName = $_SESSION['user_name'] ?? 'Guest User';
+}
+$userEmail = $user['email'] ?? ($_SESSION['user_email'] ?? '');
+$userPhone = $user['phone_number'] ?? '';
+$userBirthdate = $user['birthdate'] ?? '';
+$userGender = $user['gender'] ?? '';
+$userBio = $user['bio'] ?? '';
+
+// Count user bookings
+$bookingsCount = 0;
+$stmtB = $conn->prepare("SELECT COUNT(*) as cnt FROM bookings WHERE email = ? OR full_name = ?");
+$stmtB->bind_param("ss", $userEmail, $fullName);
+$stmtB->execute();
+$resB = $stmtB->get_result();
+if ($rowB = $resB->fetch_assoc()) {
+    $bookingsCount = $rowB['cnt'];
+}
+$stmtB->close();
+
+// Calculate years or months joined
+$joinedDate = new DateTime($user['created_at'] ?? 'now');
+$now = new DateTime();
+$diff = $now->diff($joinedDate);
+if ($diff->y >= 1) {
+    $joinedStr = $diff->y . 'Y';
+} elseif ($diff->m >= 1) {
+    $joinedStr = $diff->m . 'M';
+} else {
+    $joinedStr = 'New';
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -636,8 +757,8 @@
                     <div class="profile-avatar" onclick="changeAvatar()">
                         <i class="bi bi-person-fill"></i>
                     </div>
-                    <h3 class="profile-name">John Doe</h3>
-                    <p class="profile-email">john.doe@email.com</p>
+                    <h3 class="profile-name"><?php echo htmlspecialchars($fullName); ?></h3>
+                    <p class="profile-email"><?php echo htmlspecialchars($userEmail); ?></p>
                     
                     <div class="profile-badges">
                         <span class="profile-badge badge-verified">Verified</span>
@@ -645,7 +766,7 @@
 
                     <div class="profile-stats">
                         <div class="stat-item">
-                            <div class="stat-value">18</div>
+                            <div class="stat-value"><?php echo $bookingsCount; ?></div>
                             <div class="stat-label">Bookings</div>
                         </div>
                         <div class="stat-item">
@@ -653,7 +774,7 @@
                             <div class="stat-label">Rating</div>
                         </div>
                         <div class="stat-item">
-                            <div class="stat-value">2Y</div>
+                            <div class="stat-value"><?php echo $joinedStr; ?></div>
                             <div class="stat-label">Joined</div>
                         </div>
                     </div>
@@ -693,7 +814,7 @@
                                             <label class="form-label-modern">
                                                 <i class="bi bi-person"></i>First Name
                                             </label>
-                                            <input type="text" class="form-control-modern" id="firstName" value="John" required>
+                                            <input type="text" class="form-control-modern" id="firstName" value="<?php echo htmlspecialchars($user['first_name'] ?? ''); ?>" required>
                                         </div>
                                     </div>
                                     <div class="col-md-6">
@@ -701,7 +822,7 @@
                                             <label class="form-label-modern">
                                                 <i class="bi bi-person"></i>Last Name
                                             </label>
-                                            <input type="text" class="form-control-modern" id="lastName" value="Doe" required>
+                                            <input type="text" class="form-control-modern" id="lastName" value="<?php echo htmlspecialchars($user['last_name'] ?? ''); ?>" required>
                                         </div>
                                     </div>
                                 </div>
@@ -712,7 +833,7 @@
                                             <label class="form-label-modern">
                                                 <i class="bi bi-envelope"></i>Email Address
                                             </label>
-                                            <input type="email" class="form-control-modern" id="email" value="john.doe@email.com" disabled>
+                                            <input type="email" class="form-control-modern" id="email" value="<?php echo htmlspecialchars($userEmail); ?>" disabled>
                                         </div>
                                     </div>
                                     <div class="col-md-6">
@@ -720,7 +841,7 @@
                                             <label class="form-label-modern">
                                                 <i class="bi bi-telephone"></i>Phone Number
                                             </label>
-                                            <input type="tel" class="form-control-modern" id="phone" value="+1 (555) 123-4567">
+                                            <input type="tel" class="form-control-modern" id="phone" value="<?php echo htmlspecialchars($userPhone); ?>">
                                         </div>
                                     </div>
                                 </div>
@@ -729,7 +850,7 @@
                                     <label class="form-label-modern">
                                         <i class="bi bi-geo-alt"></i>Address
                                     </label>
-                                    <input type="text" class="form-control-modern" id="address" value="123 Resort Lane, Paradise City">
+                                    <input type="text" class="form-control-modern" id="address" value="<?php echo htmlspecialchars($userAddress); ?>">
                                 </div>
 
                                 <div class="row">
@@ -738,7 +859,7 @@
                                             <label class="form-label-modern">
                                                 <i class="bi bi-calendar"></i>Date of Birth
                                             </label>
-                                            <input type="date" class="form-control-modern" id="birthdate" value="1990-01-01">
+                                            <input type="date" class="form-control-modern" id="birthdate" value="<?php echo htmlspecialchars($userBirthdate); ?>">
                                         </div>
                                     </div>
                                     <div class="col-md-6">
@@ -747,9 +868,10 @@
                                                 <i class="bi bi-gender-ambiguous"></i>Gender
                                             </label>
                                             <select class="form-select-modern" id="gender">
-                                                <option value="male" selected>Male</option>
-                                                <option value="female">Female</option>
-                                                <option value="other">Other</option>
+                                                <option value="" <?php echo empty($userGender) ? 'selected' : ''; ?>>Select Gender</option>
+                                                <option value="male" <?php echo strtolower($userGender) === 'male' ? 'selected' : ''; ?>>Male</option>
+                                                <option value="female" <?php echo strtolower($userGender) === 'female' ? 'selected' : ''; ?>>Female</option>
+                                                <option value="other" <?php echo strtolower($userGender) === 'other' ? 'selected' : ''; ?>>Other</option>
                                             </select>
                                         </div>
                                     </div>
@@ -759,7 +881,7 @@
                                     <label class="form-label-modern">
                                         <i class="bi bi-file-text"></i>Bio
                                     </label>
-                                    <textarea class="form-control-modern" id="bio" rows="3" placeholder="Tell us about yourself...">Adventure enthusiast and nature lover.</textarea>
+                                    <textarea class="form-control-modern" id="bio" rows="3" placeholder="Tell us about yourself..."><?php echo htmlspecialchars($userBio); ?></textarea>
                                 </div>
 
                                 <div class="d-flex gap-2">
@@ -859,30 +981,82 @@
             const birthdate = document.getElementById('birthdate').value;
             const gender = document.getElementById('gender').value;
             const bio = document.getElementById('bio').value;
-            
-            // Update sidebar display
-            document.querySelector('.profile-name').textContent = firstName + ' ' + lastName;
-            
-            showSuccess('Profile updated successfully!');
+
+            const btn = document.querySelector('button[onclick="saveProfile()"]');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Saving...';
+            btn.disabled = true;
+
+            const formData = new FormData();
+            formData.append('first_name', firstName);
+            formData.append('last_name', lastName);
+            formData.append('phone_number', phone);
+            formData.append('address', address);
+            formData.append('birthdate', birthdate);
+            formData.append('gender', gender);
+            formData.append('bio', bio);
+
+            fetch('../php/update_profile.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                if (data.success) {
+                    document.querySelector('.profile-name').textContent = firstName + ' ' + lastName;
+                    showSuccess('Profile updated successfully!');
+                } else {
+                    showError(data.message || 'Failed to update profile.');
+                }
+            })
+            .catch(err => {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                showError('Error connecting to server.');
+            });
         }
 
         function resetProfile() {
-            if (confirm('Are you sure you want to reset all profile changes?')) {
-                document.getElementById('personalForm').reset();
-                showInfo('Profile reset to original values');
+            if (confirm('Are you sure you want to reload and reset all changes?')) {
+                window.location.reload();
             }
         }
 
         function changePassword() {
-            const newPassword = prompt('Enter new password:');
-            if (newPassword) {
-                const confirmPassword = prompt('Confirm new password:');
-                if (newPassword === confirmPassword) {
+            const currentPassword = prompt('Enter current password:');
+            if (!currentPassword) return;
+            const newPassword = prompt('Enter new password (min 6 characters):');
+            if (!newPassword || newPassword.length < 6) {
+                showError('New password must be at least 6 characters!');
+                return;
+            }
+            const confirmPassword = prompt('Confirm new password:');
+            if (newPassword !== confirmPassword) {
+                showError('Passwords do not match!');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('current_password', currentPassword);
+            formData.append('new_password', newPassword);
+
+            fetch('../php/change_password.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
                     showSuccess('Password changed successfully!');
                 } else {
-                    showError('Passwords do not match!');
+                    showError(data.message || 'Failed to change password.');
                 }
-            }
+            })
+            .catch(err => {
+                showError('Error connecting to server.');
+            });
         }
 
         function changeAvatar() {

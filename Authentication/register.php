@@ -299,6 +299,20 @@
 
     function submitRegistration() {
         const formData = new FormData(document.getElementById('registerForm'));
+        
+        // Convert numerical dropdown codes to actual location names before sending to backend
+        const regSel = document.getElementById('region');
+        const provSel = document.getElementById('province');
+        const citySel = document.getElementById('city');
+        const barSel = document.getElementById('barangay');
+        if (regSel.selectedIndex > 0) formData.set('region', regSel.options[regSel.selectedIndex].text);
+        if (provSel.selectedIndex > 0) formData.set('province', provSel.options[provSel.selectedIndex].text);
+        if (citySel.selectedIndex > 0) {
+            formData.set('city', citySel.options[citySel.selectedIndex].text);
+            formData.set('city_municipality', citySel.options[citySel.selectedIndex].text);
+        }
+        if (barSel.selectedIndex > 0) formData.set('barangay', barSel.options[barSel.selectedIndex].text);
+
         const submitBtn = document.querySelector('button[type="submit"]');
         submitBtn.disabled = true;
         submitBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Processing...';
