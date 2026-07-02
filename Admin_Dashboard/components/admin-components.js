@@ -107,6 +107,77 @@ function toggleProfileMenu() {
     }, 0);
 }
 
+/* ── fetchAdminNotifications ────────────────────────────────────── */
+function fetchAdminNotifications() {
+    fetch('get_notifications.php')
+        .then(response => response.json())
+        .then(data => {
+            if (data.status !== 'success' || !data.notifications) return;
+            
+            const listContainer = document.querySelector('.notification-list');
+            const badge = document.querySelector('.notification-badge');
+            if (!listContainer) return;
+
+            const lastReadTime = parseInt(localStorage.getItem('admin_last_read_notif') || '0', 10);
+            let unreadCount = 0;
+            
+            if (data.notifications.length === 0) {
+                listContainer.innerHTML = `
+                    <div style="padding: 2rem; text-align: center; color: var(--text-muted);">
+                        <i class="bi bi-bell-slash" style="font-size: 1.5rem; display: block; margin-bottom: 0.5rem;"></i>
+                        No notifications
+                    </div>`;
+                if (badge) badge.style.display = 'none';
+                return;
+            }
+
+            let html = '';
+            data.notifications.forEach(notif => {
+                const notifTime = new Date(notif.timestamp).getTime() || 0;
+                const isUnread = notifTime > lastReadTime;
+                if (isUnread) unreadCount++;
+
+                const iconClass = (notif.type === 'booking') ? 'bi-calendar-check' : 'bi-person-plus';
+                
+                html += `
+                    <div class="notification-item ${isUnread ? 'unread' : ''}" onclick="window.location.href='${notif.url}'" style="cursor: pointer;">
+                        <div class="notification-icon">
+                            <i class="bi ${iconClass}"></i>
+                        </div>
+                        <div class="notification-content">
+                            <div class="notification-title">${notif.title}</div>
+                            <div class="notification-desc">${notif.desc}</div>
+                            <div class="notification-time">${notif.time}</div>
+                        </div>
+                    </div>`;
+            });
+
+            listContainer.innerHTML = html;
+
+            if (badge) {
+                if (unreadCount > 0) {
+                    badge.textContent = unreadCount;
+                    badge.style.display = 'inline-block';
+                } else {
+                    badge.style.display = 'none';
+                }
+            }
+        })
+        .catch(err => console.error('Error loading notifications:', err));
+}
+
+/* ── markAllNotificationsRead ───────────────────────────────────── */
+function markAllNotificationsRead() {
+    localStorage.setItem('admin_last_read_notif', Date.now());
+    
+    document.querySelectorAll('.notification-item.unread').forEach(item => {
+        item.classList.remove('unread');
+    });
+
+    const badge = document.querySelector('.notification-badge');
+    if (badge) badge.style.display = 'none';
+}
+
 /* ── Auto-boot: load sidebar + navbar on DOMContentLoaded ────────── */
 document.addEventListener('DOMContentLoaded', function () {
     // Load sidebar first, then set active link + breadcrumb
@@ -118,5 +189,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // Load navbar independently
     loadHTML('components/navbar.html', 'navbar-container', function () {
         setBreadcrumb();          // also try after navbar loads (element now in DOM)
+        fetchAdminNotifications();
     });
 });
+
