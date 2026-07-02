@@ -82,10 +82,10 @@ $adminEmail = $_SESSION['admin_email'];
                         <div class="stat-card">
                             <div class="stat-info">
                                 <div class="stat-label">Total Revenue</div>
-                                <div class="stat-value">$124,567</div>
+                                <div class="stat-value">&#8369;124,567</div>
                             </div>
                             <div class="stat-icon">
-                                <i class="bi bi-currency-dollar"></i>
+                                <span style="font-weight: 800; font-style: normal; font-size: 1.4rem; line-height: 1;">&#8369;</span>
                             </div>
                         </div>
 
@@ -153,28 +153,28 @@ $adminEmail = $_SESSION['admin_email'];
                 <tbody>
                     <tr>
                         <td>March 2026</td>
-                        <td>$45,678</td>
+                        <td>&#8369;45,678</td>
                         <td>1,284</td>
                         <td>892</td>
                         <td class="trend-up">+18.5%</td>
                     </tr>
                     <tr>
                         <td>February 2026</td>
-                        <td>$38,456</td>
+                        <td>&#8369;38,456</td>
                         <td>1,156</td>
                         <td>823</td>
                         <td class="trend-up">+12.3%</td>
                     </tr>
                     <tr>
                         <td>January 2026</td>
-                        <td>$32,789</td>
+                        <td>&#8369;32,789</td>
                         <td>987</td>
                         <td>756</td>
                         <td class="trend-down">-5.2%</td>
                     </tr>
                     <tr>
                         <td>December 2025</td>
-                        <td>$41,234</td>
+                        <td>&#8369;41,234</td>
                         <td>1,445</td>
                         <td>912</td>
                         <td class="trend-up">+8.7%</td>

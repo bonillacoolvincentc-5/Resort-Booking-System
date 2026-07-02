@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 session_start();
 
 // Include admin configuration
@@ -181,7 +181,7 @@ $adminEmail = $_SESSION['admin_email'];
                             <textarea class="form-ctrl" id="bundleDescription" rows="2" placeholder="Optional description"></textarea>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label" style="color: var(--text-primary);">Original Price (?)</label>
+                            <label class="form-label" style="color: var(--text-primary);">Original Price (&#8369;)</label>
                             <input type="number" class="form-ctrl" id="bundleOriginalPrice" min="0" step="0.01" value="0" oninput="calculateBundleFinalPrice()">
                         </div>
                         <div class="col-md-4">
@@ -189,7 +189,7 @@ $adminEmail = $_SESSION['admin_email'];
                             <input type="number" class="form-ctrl" id="bundleDiscount" min="0" max="100" step="0.01" value="0" oninput="calculateBundleFinalPrice()">
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label" style="color: var(--text-primary);">Final Price (?) <span style="color: var(--accent-danger);">*</span></label>
+                            <label class="form-label" style="color: var(--text-primary);">Final Price (&#8369;) <span style="color: var(--accent-danger);">*</span></label>
                             <input type="number" class="form-ctrl" id="bundleFinalPrice" min="0" step="0.01" value="0">
                         </div>
                         <div class="col-12">
@@ -507,14 +507,14 @@ $adminEmail = $_SESSION['admin_email'];
             if (calendarServices.activities.length) {
                 html += '<div style="font-weight:600;margin-bottom:0.25rem;color:var(--text-secondary);">Activities</div>';
                 calendarServices.activities.forEach(a => {
-                    html += `<label class="service-check-item"><input type="checkbox" class="bundle-act-chk" value="${a.id}" data-price="${a.price_per_hour}"> ${escapeHtml(a.name)} <span style="color:var(--text-muted);margin-left:auto;">?${parseFloat(a.price_per_hour).toFixed(2)}/hr</span></label>`;
+                    html += `<label class="service-check-item"><input type="checkbox" class="bundle-act-chk" value="${a.id}" data-price="${a.price_per_hour}"> ${escapeHtml(a.name)} <span style="color:var(--text-muted);margin-left:auto;">&#8369;${parseFloat(a.price_per_hour).toFixed(2)}/hr</span></label>`;
                 });
             }
 
             if (calendarServices.accommodations.length) {
                 html += '<div style="font-weight:600;margin:0.75rem 0 0.25rem;color:var(--text-secondary);">Rooms & Cottages</div>';
                 calendarServices.accommodations.forEach(acc => {
-                    html += `<label class="service-check-item"><input type="checkbox" class="bundle-acc-chk" value="${acc.id}" data-price="${acc.price_per_night}"> ${escapeHtml(acc.name)} <small style="color:var(--text-muted);">(${escapeHtml(acc.type)})</small> <span style="color:var(--text-muted);margin-left:auto;">?${parseFloat(acc.price_per_night).toFixed(2)}/night</span></label>`;
+                    html += `<label class="service-check-item"><input type="checkbox" class="bundle-acc-chk" value="${acc.id}" data-price="${acc.price_per_night}"> ${escapeHtml(acc.name)} <small style="color:var(--text-muted);">(${escapeHtml(acc.type)})</small> <span style="color:var(--text-muted);margin-left:auto;">&#8369;${parseFloat(acc.price_per_night).toFixed(2)}/night</span></label>`;
                 });
             }
 

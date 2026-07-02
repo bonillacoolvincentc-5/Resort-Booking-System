@@ -118,7 +118,7 @@ while ($row = $result->fetch_assoc()) {
                             </div>
                             <div class="activity-stats">
                                 <div class="stat-item">
-                                    <div class="stat-value">?<?php echo $price; ?></div>
+                                    <div class="stat-value">&#8369;<?php echo $price; ?></div>
                                     <div class="stat-label">Per Hour</div>
                                 </div>
                                 <div class="stat-item">

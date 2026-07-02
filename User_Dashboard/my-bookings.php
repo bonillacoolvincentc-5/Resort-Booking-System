@@ -772,11 +772,11 @@ while ($row = $statsResult->fetch_assoc()) {
                                 <?php endif; ?>
                                 <div class="booking-info-item">
                                     <div class="booking-info-icon">
-                                        <i class="bi bi-currency-dollar"></i>
+                                        <span style="font-weight: 800; font-style: normal; font-size: 1.2rem; line-height: 1;">&#8369;</span>
                                     </div>
                                     <div class="booking-info-content">
                                         <div class="booking-info-label">Total Amount</div>
-                                        <div class="booking-info-value">$<?php echo number_format($booking['total_amount'], 2); ?></div>
+                                        <div class="booking-info-value">&#8369;<?php echo number_format($booking['total_amount'], 2); ?></div>
                                     </div>
                                 </div>
                             </div>

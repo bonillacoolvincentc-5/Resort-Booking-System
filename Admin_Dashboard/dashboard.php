@@ -168,14 +168,14 @@ while ($row = $result->fetch_assoc()) {
             <div class="overview-card success">
                 <div class="overview-header">
                     <div class="overview-icon success">
-                        <i class="bi bi-currency-dollar"></i>
+                        <span style="font-weight: 800; font-style: normal; font-size: 1.4rem; line-height: 1;">&#8369;</span>
                     </div>
                     <div class="overview-trend trend-up">
                         <i class="bi bi-arrow-up"></i>
                         <span>18%</span>
                     </div>
                 </div>
-                <div class="overview-value">?<?php echo number_format($totalRevenue, 2); ?></div>
+                <div class="overview-value">&#8369;<?php echo number_format($totalRevenue, 2); ?></div>
                 <div class="overview-label">Revenue</div>
             </div>
 

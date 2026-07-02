@@ -162,7 +162,7 @@ while ($r = $accResult->fetch_assoc()) $allAccommodations[] = $r;
                         <p class="bundle-desc"><?= htmlspecialchars(mb_strimwidth($b['description'] ?? 'No description.', 0, 110, '�')) ?></p>
                         <div class="bundle-stats">
                             <div class="stat-item">
-                                <div class="stat-value">?<?= $price ?></div>
+                                <div class="stat-value">&#8369;<?= $price ?></div>
                                 <div class="stat-label">Price</div>
                             </div>
                             <div class="stat-item">
@@ -234,7 +234,7 @@ while ($r = $accResult->fetch_assoc()) $allAccommodations[] = $r;
 
                                 <div class="row g-3 mb-3">
                                     <div class="col-6">
-                                        <label class="form-label-custom">Price (?) <span style="color:var(--accent-danger)">*</span></label>
+                                        <label class="form-label-custom">Price (&#8369;) <span style="color:var(--accent-danger)">*</span></label>
                                         <input type="number" step="0.01" min="0" class="form-ctrl" id="bundlePrice" name="price" placeholder="0.00" required>
                                     </div>
                                     <div class="col-6">
@@ -282,7 +282,7 @@ while ($r = $accResult->fetch_assoc()) $allAccommodations[] = $r;
                                             <label class="check-item">
                                                 <input type="checkbox" class="act-chk" value="<?= $act['id'] ?>">
                                                 <span class="check-item-name"><?= htmlspecialchars($act['name']) ?></span>
-                                                <span class="check-item-price">?<?= number_format($act['price_per_hour'], 2) ?>/hr</span>
+                                                <span class="check-item-price">&#8369;<?= number_format($act['price_per_hour'], 2) ?>/hr</span>
                                             </label>
                                             <?php endforeach; ?>
                                         <?php else: ?>
@@ -304,7 +304,7 @@ while ($r = $accResult->fetch_assoc()) $allAccommodations[] = $r;
                                                     <?= htmlspecialchars($acc['name']) ?>
                                                     <small style="color:var(--text-muted);">(<?= ucfirst($acc['type']) ?>)</small>
                                                 </span>
-                                                <span class="check-item-price">?<?= number_format($acc['price_per_night'], 2) ?>/night</span>
+                                                <span class="check-item-price">&#8369;<?= number_format($acc['price_per_night'], 2) ?>/night</span>
                                             </label>
                                             <?php endforeach; ?>
                                         <?php else: ?>
