@@ -350,7 +350,7 @@ if ($diff->y >= 1) {
 
         .profile-stats {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(2, 1fr);
             gap: 1rem;
             margin-bottom: 1.5rem;
         }
@@ -722,7 +722,7 @@ if ($diff->y >= 1) {
             }
 
             .profile-stats {
-                grid-template-columns: repeat(3, 1fr);
+                grid-template-columns: repeat(2, 1fr);
             }
 
             .page-title {
@@ -768,10 +768,6 @@ if ($diff->y >= 1) {
                         <div class="stat-item">
                             <div class="stat-value"><?php echo $bookingsCount; ?></div>
                             <div class="stat-label">Bookings</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-value">4.8</div>
-                            <div class="stat-label">Rating</div>
                         </div>
                         <div class="stat-item">
                             <div class="stat-value"><?php echo $joinedStr; ?></div>
