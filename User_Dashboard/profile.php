@@ -632,7 +632,7 @@
         <!-- Page Header -->
         <div class="page-header">
             <h1 class="page-title">Profile Settings</h1>
-            <p class="page-subtitle">Manage your personal information, preferences, and security settings</p>
+            <p class="page-subtitle">Manage your personal information, password, and account activity</p>
         </div>
 
         <div class="row">
@@ -682,12 +682,6 @@
                     <div class="profile-tabs">
                         <button class="profile-tab active" onclick="switchTab('personal')">
                             <i class="bi bi-person"></i>Personal Info
-                        </button>
-                        <button class="profile-tab" onclick="switchTab('preferences')">
-                            <i class="bi bi-gear"></i>Preferences
-                        </button>
-                        <button class="profile-tab" onclick="switchTab('security')">
-                            <i class="bi bi-shield-check"></i>Security
                         </button>
                         <button class="profile-tab" onclick="switchTab('activity')">
                             <i class="bi bi-clock-history"></i>Activity
@@ -778,128 +772,19 @@
                                     </button>
                                 </div>
                             </form>
-                        </div>
 
-                        <!-- Preferences Tab -->
-                        <div class="tab-pane" id="preferences-tab">
-                            <h5 class="mb-4">Notification Preferences</h5>
-                            
-                            <div class="form-check-modern">
-                                <label class="form-check-label-modern">
-                                    <i class="bi bi-envelope"></i>Email Notifications
-                                </label>
-                                <div class="form-check form-switch">
-                                    <input class="form-check-input" type="checkbox" id="emailNotifications" checked>
-                                </div>
-                            </div>
-
-                            <div class="form-check-modern">
-                                <label class="form-check-label-modern">
-                                    <i class="bi bi-phone"></i>SMS Notifications
-                                </label>
-                                <div class="form-check form-switch">
-                                    <input class="form-check-input" type="checkbox" id="smsNotifications">
-                                </div>
-                            </div>
-
-                            <div class="form-check-modern">
-                                <label class="form-check-label-modern">
-                                    <i class="bi bi-newspaper"></i>Newsletter Subscription
-                                </label>
-                                <div class="form-check form-switch">
-                                    <input class="form-check-input" type="checkbox" id="newsletter" checked>
-                                </div>
-                            </div>
-
-                            <div class="form-check-modern">
-                                <label class="form-check-label-modern">
-                                    <i class="bi bi-megaphone"></i>Marketing Emails
-                                </label>
-                                <div class="form-check form-switch">
-                                    <input class="form-check-input" type="checkbox" id="marketing">
-                                </div>
-                            </div>
-
-                            <div class="form-check-modern">
-                                <label class="form-check-label-modern">
-                                    <i class="bi bi-eye"></i>Public Profile
-                                </label>
-                                <div class="form-check form-switch">
-                                    <input class="form-check-input" type="checkbox" id="publicProfile">
-                                </div>
-                            </div>
-
-                            <div class="form-check-modern">
-                                <label class="form-check-label-modern">
-                                    <i class="bi bi-geo-alt"></i>Location Services
-                                </label>
-                                <div class="form-check form-switch">
-                                    <input class="form-check-input" type="checkbox" id="location">
-                                </div>
-                            </div>
-
-                            <div class="mt-4">
-                                <button type="button" class="btn-modern btn-primary-modern" onclick="savePreferences()">
-                                    <i class="bi bi-check-circle"></i>Save Preferences
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Security Tab -->
-                        <div class="tab-pane" id="security-tab">
-                            <h5 class="mb-4">Security Settings</h5>
-
-                            <div class="security-card">
+                            <!-- Account Security / Change Password Section -->
+                            <hr class="my-4" style="border-color: var(--border-color);">
+                            <h5 class="mb-3"><i class="bi bi-shield-lock me-2"></i>Account Security</h5>
+                            <div class="security-card mb-0">
                                 <div class="security-title">
-                                    <i class="bi bi-lock"></i>Change Password
+                                    <i class="bi bi-lock"></i>Password
                                 </div>
                                 <div class="security-description">
                                     Update your password to keep your account secure
                                 </div>
-                                <button class="btn-modern btn-secondary-modern" onclick="changePassword()">
+                                <button type="button" class="btn-modern btn-secondary-modern" onclick="changePassword()">
                                     <i class="bi bi-key"></i>Change Password
-                                </button>
-                            </div>
-
-                            <div class="security-card">
-                                <div class="security-title">
-                                    <i class="bi bi-shield-check"></i>Two-Factor Authentication
-                                </div>
-                                <div class="security-description">
-                                    Add an extra layer of security to your account
-                                </div>
-                                <button class="btn-modern btn-secondary-modern" onclick="enable2FA()">
-                                    <i class="bi bi-phone"></i>Enable 2FA
-                                </button>
-                            </div>
-
-                            <div class="security-card">
-                                <div class="security-title">
-                                    <i class="bi bi-clock-history"></i>Login History
-                                </div>
-                                <div class="security-description">
-                                    View recent login attempts and locations
-                                </div>
-                                <button class="btn-modern btn-secondary-modern" onclick="viewLoginHistory()">
-                                    <i class="bi bi-list-ul"></i>View History
-                                </button>
-                            </div>
-
-                            <div class="security-card">
-                                <div class="security-title">
-                                    <i class="bi bi-phone"></i>Connected Devices
-                                </div>
-                                <div class="security-description">
-                                    Manage devices that have access to your account
-                                </div>
-                                <button class="btn-modern btn-secondary-modern" onclick="manageDevices()">
-                                    <i class="bi bi-gear"></i>Manage Devices
-                                </button>
-                            </div>
-
-                            <div class="mt-4">
-                                <button type="button" class="btn-modern btn-danger-modern" onclick="deleteAccount()">
-                                    <i class="bi bi-trash"></i>Delete Account
                                 </button>
                             </div>
                         </div>
@@ -989,19 +874,6 @@
             }
         }
 
-        function savePreferences() {
-            const preferences = {
-                emailNotifications: document.getElementById('emailNotifications').checked,
-                smsNotifications: document.getElementById('smsNotifications').checked,
-                newsletter: document.getElementById('newsletter').checked,
-                marketing: document.getElementById('marketing').checked,
-                publicProfile: document.getElementById('publicProfile').checked,
-                location: document.getElementById('location').checked
-            };
-            
-            showSuccess('Preferences saved successfully!');
-        }
-
         function changePassword() {
             const newPassword = prompt('Enter new password:');
             if (newPassword) {
@@ -1011,29 +883,6 @@
                 } else {
                     showError('Passwords do not match!');
                 }
-            }
-        }
-
-        function enable2FA() {
-            showInfo('Two-factor authentication setup would open');
-        }
-
-        function viewLoginHistory() {
-            showInfo('Login history would show recent login attempts');
-        }
-
-        function manageDevices() {
-            showInfo('Connected devices management would open');
-        }
-
-        function deleteAccount() {
-            const confirmation = prompt('Type "DELETE" to confirm account deletion:');
-            if (confirmation === 'DELETE') {
-                if (confirm('This action cannot be undone. Are you absolutely sure?')) {
-                    showInfo('Account deletion would be processed');
-                }
-            } else {
-                showInfo('Account deletion cancelled');
             }
         }
 
