@@ -23,14 +23,7 @@ global $conn;
 // Fetch real users from database
 $query = "
     SELECT 
-        u.id,
-        u.first_name,
-        u.middle_name,
-        u.last_name,
-        u.email,
-        u.phone_number,
-        u.is_verified,
-        u.created_at,
+        u.*,
         COUNT(b.id) as booking_count
     FROM users u
     LEFT JOIN bookings b ON u.id = b.user_id
@@ -140,9 +133,6 @@ while ($row = $result->fetch_assoc()) {
                                         <button class="btn-action btn-view" onclick="viewUser(<?php echo $user['id']; ?>)">
                                             <i class="bi bi-eye"></i>
                                         </button>
-                                        <button class="btn-action btn-edit" onclick="editUser(<?php echo $user['id']; ?>)">
-                                            <i class="bi bi-pencil"></i>
-                                        </button>
                                         <button class="btn-action btn-delete" onclick="deleteUser(<?php echo $user['id']; ?>)">
                                             <i class="bi bi-trash"></i>
                                         </button>
@@ -163,16 +153,126 @@ while ($row = $result->fetch_assoc()) {
         </div>
     </div>
 
+    <!-- View User Details Modal -->
+    <div class="modal fade" id="viewUserModal" tabindex="-1" aria-labelledby="viewUserModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 1rem; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.4);">
+                <div class="modal-header" style="border-bottom: 1px solid var(--border-color); background: rgba(0,0,0,0.15); padding: 1.5rem;">
+                    <h5 class="modal-title d-flex align-items-center gap-2" id="viewUserModalLabel" style="color: var(--text-primary); font-weight: 700;">
+                        <i class="bi bi-person-badge text-primary" style="font-size: 1.5rem;"></i> User Account Details
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4" style="color: var(--text-primary);">
+                    <div class="row g-4">
+                        <div class="col-md-4 text-center d-flex flex-column align-items-center justify-content-center" style="border-right: 1px solid var(--border-color);">
+                            <div class="avatar-circle mb-3" style="width: 100px; height: 100px; border-radius: 50%; background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); display: flex; align-items: center; justify-content: center; font-size: 2.5rem; color: #fff; box-shadow: 0 10px 20px rgba(0,0,0,0.2);">
+                                <i class="bi bi-person-fill"></i>
+                            </div>
+                            <h4 id="modalUserName" class="mb-1" style="font-weight: 700;">---</h4>
+                            <span id="modalUserStatus" class="badge rounded-pill mb-2 px-3 py-2">---</span>
+                            <p id="modalUserEmail" class="text-muted small mb-0">---</p>
+                        </div>
+                        <div class="col-md-8">
+                            <h6 class="text-uppercase text-muted small fw-bold mb-3" style="letter-spacing: 1px; color: var(--accent-primary) !important;">Personal Information</h6>
+                            <div class="row g-3 mb-4">
+                                <div class="col-sm-6">
+                                    <label class="text-muted small d-block">Full Name</label>
+                                    <span id="modalFullName" class="fw-medium">---</span>
+                                </div>
+                                <div class="col-sm-6">
+                                    <label class="text-muted small d-block">Phone Number</label>
+                                    <span id="modalPhone" class="fw-medium">---</span>
+                                </div>
+                                <div class="col-sm-6">
+                                    <label class="text-muted small d-block">Birthdate</label>
+                                    <span id="modalBirthdate" class="fw-medium">---</span>
+                                </div>
+                                <div class="col-sm-6">
+                                    <label class="text-muted small d-block">Gender</label>
+                                    <span id="modalGender" class="fw-medium">---</span>
+                                </div>
+                                <div class="col-12">
+                                    <label class="text-muted small d-block">Complete Address</label>
+                                    <span id="modalAddress" class="fw-medium">---</span>
+                                </div>
+                            </div>
+
+                            <h6 class="text-uppercase text-muted small fw-bold mb-3" style="letter-spacing: 1px; color: var(--accent-primary) !important;">Account Activity</h6>
+                            <div class="row g-3">
+                                <div class="col-sm-6">
+                                    <label class="text-muted small d-block">Date Joined</label>
+                                    <span id="modalJoined" class="fw-medium">---</span>
+                                </div>
+                                <div class="col-sm-6">
+                                    <label class="text-muted small d-block">Total Bookings</label>
+                                    <span id="modalBookings" class="fw-medium badge bg-primary px-3 py-1">0</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer" style="border-top: 1px solid var(--border-color); background: rgba(0,0,0,0.15); padding: 1rem 1.5rem;">
+                    <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal" style="border-radius: 0.5rem;">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
+        const usersData = <?php echo json_encode($users); ?>;
+
+        function viewUser(userId) {
+            const user = usersData.find(u => u.id == userId);
+            if (!user) return;
+            
+            // Construct full name
+            const fname = user.first_name || '';
+            const mname = user.middle_name ? ' ' + user.middle_name + ' ' : ' ';
+            const lname = user.last_name || '';
+            const sfx = user.suffix ? ' ' + user.suffix : '';
+            const fullName = (fname + mname + lname + sfx).trim().replace(/\s+/g, ' ') || 'No Name';
+
+            // Construct address
+            let address = user.address || '';
+            if (!address || /\d{8,}/.test(address)) {
+                const parts = [user.barangay, user.city_municipality, user.province, user.region].filter(Boolean);
+                address = parts.join(', ') || 'No Address Provided';
+            }
+
+            document.getElementById('modalUserName').textContent = fullName;
+            document.getElementById('modalFullName').textContent = fullName;
+            document.getElementById('modalUserEmail').textContent = user.email || 'N/A';
+            document.getElementById('modalPhone').textContent = user.phone_number || 'N/A';
+            document.getElementById('modalBirthdate').textContent = user.birthdate || 'Not specified';
+            document.getElementById('modalGender').textContent = user.gender || 'Not specified';
+            document.getElementById('modalAddress').textContent = address;
+            document.getElementById('modalBookings').textContent = user.booking_count || '0';
+
+            // Date joined format
+            if (user.created_at) {
+                const d = new Date(user.created_at);
+                document.getElementById('modalJoined').textContent = d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+            } else {
+                document.getElementById('modalJoined').textContent = 'N/A';
+            }
+
+            // Status badge
+            const statusBadge = document.getElementById('modalUserStatus');
+            if (user.is_verified == 1 || user.is_verified == '1') {
+                statusBadge.textContent = 'Verified';
+                statusBadge.className = 'badge rounded-pill mb-2 px-3 py-2 bg-success';
+            } else {
+                statusBadge.textContent = 'Unverified';
+                statusBadge.className = 'badge rounded-pill mb-2 px-3 py-2 bg-warning text-dark';
+            }
+
+            const modal = new bootstrap.Modal(document.getElementById('viewUserModal'));
+            modal.show();
+        }
 
         // Table interactions
         document.addEventListener('click', function(e) {
-            if (e.target.closest('.btn-view')) {
-                alert('View user details');
-            }
-            if (e.target.closest('.btn-edit')) {
-                alert('Edit user');
-            }
             if (e.target.closest('.btn-delete')) {
                 if (confirm('Are you sure you want to delete this user?')) {
                     alert('User deleted');
