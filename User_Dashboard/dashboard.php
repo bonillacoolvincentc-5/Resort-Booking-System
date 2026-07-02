@@ -594,7 +594,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="event-item mb-3">
+                        <div class="event-item">
                             <div class="d-flex align-items-start">
                                 <div class="event-date me-3">
                                     <div class="text-center">
@@ -607,40 +607,6 @@
                                     <div class="text-muted small">2:00 PM - Main Pool</div>
                                 </div>
                             </div>
-                        </div>
-                        <div class="event-item">
-                            <div class="d-flex align-items-start">
-                                <div class="event-date me-3">
-                                    <div class="text-center">
-                                        <div class="badge bg-warning">MAR</div>
-                                        <div class="fw-bold">28</div>
-                                    </div>
-                                </div>
-                                <div class="flex-grow-1">
-                                    <div class="fw-semibold">Yoga Session</div>
-                                    <div class="text-muted small">7:00 AM - Wellness Center</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Account Settings -->
-                <div class="card-modern mt-4">
-                    <div class="card-header-modern">
-                        <i class="bi bi-shield-check me-2"></i>Quick Settings
-                    </div>
-                    <div class="card-body-modern">
-                        <div class="d-grid gap-2">
-                            <button class="btn btn-outline-modern text-start" onclick="changePassword()">
-                                <i class="bi bi-lock me-2"></i>Change Password
-                            </button>
-                            <button class="btn btn-outline-modern text-start" onclick="window.location.href='profile.php'">
-                                <i class="bi bi-bell me-2"></i>Notifications
-                            </button>
-                            <button class="btn btn-outline-modern text-start" onclick="window.location.href='../index-new.html#contact'">
-                                <i class="bi bi-question-circle me-2"></i>Help Center
-                            </button>
                         </div>
                     </div>
                 </div>
@@ -686,18 +652,6 @@
                 
                 // Remove query parameter from URL
                 window.history.replaceState({}, document.title, window.location.pathname);
-            }
-        }
-
-        function changePassword() {
-            const newPassword = prompt('Enter new password:');
-            if (newPassword) {
-                const confirmPassword = prompt('Confirm new password:');
-                if (newPassword === confirmPassword) {
-                    alert('Password changed successfully!');
-                } else {
-                    alert('Passwords do not match!');
-                }
             }
         }
 
