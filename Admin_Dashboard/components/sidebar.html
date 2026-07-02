@@ -1,17 +1,25 @@
-<!-- Sidebar Component -->
+<!-- YP4K Resort — Admin Sidebar Component -->
+<!-- All styles live in: components/sidebar.css (loaded in <head> of each page) -->
+
 <div class="sidebar" id="sidebar">
+    <!-- Header -->
     <div class="sidebar-header">
         <div class="logo-section">
-            <i class="bi bi-shield-check"></i>
-            <span class="logo-text">Admin Panel</span>
+            <div class="logo-icon"><i class="bi bi-gem"></i></div>
+            <div>
+                <div class="logo-text">YP4K Resort</div>
+                <span class="logo-sub">Admin Panel</span>
+            </div>
         </div>
-        <button class="sidebar-toggle" onclick="toggleSidebar()">
-            <i class="bi bi-list"></i>
+        <button class="sidebar-toggle" onclick="toggleSidebar()" title="Toggle Sidebar">
+            <i class="bi bi-layout-sidebar-reverse"></i>
         </button>
     </div>
-    
+
+    <!-- Navigation -->
     <nav class="sidebar-nav">
         <ul class="nav-list">
+            <li class="nav-section-label">Main</li>
             <li class="nav-item">
                 <a href="dashboard.php" class="nav-link" data-page="dashboard">
                     <i class="bi bi-grid-1x2-fill"></i>
@@ -20,7 +28,7 @@
             </li>
             <li class="nav-item">
                 <a href="bookings.php" class="nav-link" data-page="bookings">
-                    <i class="bi bi-calendar-check"></i>
+                    <i class="bi bi-calendar-check-fill"></i>
                     <span class="nav-text">Bookings</span>
                 </a>
             </li>
@@ -30,303 +38,66 @@
                     <span class="nav-text">Calendar</span>
                 </a>
             </li>
+
+            <li class="nav-section-label">Management</li>
             <li class="nav-item">
                 <a href="activities.php" class="nav-link" data-page="activities">
-                    <i class="bi bi-activity"></i>
+                    <i class="bi bi-lightning-charge-fill"></i>
                     <span class="nav-text">Activities</span>
                 </a>
             </li>
             <li class="nav-item">
+                <a href="bundles.php" class="nav-link" data-page="bundles">
+                    <i class="bi bi-box-seam-fill"></i>
+                    <span class="nav-text">Bundle Packages</span>
+                </a>
+            </li>
+            <li class="nav-item">
                 <a href="menu.php" class="nav-link" data-page="menu">
-                    <i class="bi bi-menu-button-wide"></i>
+                    <i class="bi bi-menu-button-wide-fill"></i>
                     <span class="nav-text">Menu</span>
                 </a>
             </li>
             <li class="nav-item">
                 <a href="users.php" class="nav-link" data-page="users">
-                    <i class="bi bi-people"></i>
+                    <i class="bi bi-people-fill"></i>
                     <span class="nav-text">Users</span>
+                </a>
+            </li>
+
+            <li class="nav-section-label">Analytics</li>
+            <li class="nav-item">
+                <a href="payments.php" class="nav-link" data-page="payments">
+                    <i class="bi bi-credit-card-fill"></i>
+                    <span class="nav-text">Payments</span>
                 </a>
             </li>
             <li class="nav-item">
                 <a href="reports.php" class="nav-link" data-page="reports">
-                    <i class="bi bi-graph-up"></i>
+                    <i class="bi bi-graph-up-arrow"></i>
                     <span class="nav-text">Reports</span>
                 </a>
             </li>
         </ul>
     </nav>
-    
+
+    <!-- Footer -->
     <div class="sidebar-footer">
         <div class="admin-info">
-            <div class="admin-avatar">
-                <i class="bi bi-person-circle"></i>
-            </div>
+            <div class="admin-avatar"><i class="bi bi-person-fill"></i></div>
             <div class="admin-details">
-                <div class="admin-name">Admin User</div>
+                <div class="admin-name" id="sidebarAdminName">Administrator</div>
                 <div class="admin-role">Super Admin</div>
             </div>
         </div>
-        <a href="../Authentication/admin-login.php" class="logout-btn">
+        <a href="../phpAuthentication/logout.php" class="logout-btn">
             <i class="bi bi-box-arrow-right"></i>
-            <span>Logout</span>
+            <span>Sign Out</span>
         </a>
     </div>
 </div>
 
-<script>
-// Set active navigation item based on current page
-function setActiveNavigation() {
-    // Get current page filename
-    const currentPage = window.location.pathname.split('/').pop();
-    
-    // Remove active class from all nav links
-    document.querySelectorAll('.nav-link').forEach(link => {
-        link.classList.remove('active');
-    });
-    
-    // Add active class to current page link
-    const activeLink = document.querySelector(`.nav-link[data-page="${currentPage.replace('.php', '')}"]`);
-    
-    if (activeLink) {
-        activeLink.classList.add('active');
-    }
-}
-
-// Run on page load
-document.addEventListener('DOMContentLoaded', function() {
-    setActiveNavigation();
-});
-
-// Also run when sidebar is dynamically loaded
-window.addEventListener('load', function() {
-    // Wait a bit for sidebar to load
-    setTimeout(setActiveNavigation, 100);
-});
-
-// Also run when URL changes (for SPA-like navigation)
-window.addEventListener('popstate', function() {
-    setTimeout(setActiveNavigation, 100);
-});
-</script>
-
-<style>
-.sidebar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 260px;
-    height: 100vh;
-    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-    border-right: 1px solid rgba(51, 65, 85, 0.3);
-    z-index: 1000;
-    transition: all 0.3s ease;
-    display: flex;
-    flex-direction: column;
-}
-
-.sidebar-header {
-    padding: 1.5rem;
-    border-bottom: 1px solid rgba(51, 65, 85, 0.3);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-
-.logo-section {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-}
-
-.logo-section i {
-    font-size: 1.5rem;
-    color: #3b82f6;
-}
-
-.logo-text {
-    font-size: 1.25rem;
-    font-weight: 700;
-    color: #f1f5f9;
-}
-
-.sidebar-toggle {
-    display: none;
-    background: none;
-    border: none;
-    color: #94a3b8;
-    font-size: 1.25rem;
-    cursor: pointer;
-    padding: 0.5rem;
-    border-radius: 0.5rem;
-    transition: all 0.3s ease;
-}
-
-.sidebar-toggle:hover {
-    background: rgba(59, 130, 246, 0.1);
-    color: #f1f5f9;
-}
-
-.sidebar-nav {
-    flex: 1;
-    padding: 1rem 0;
-    overflow-y: auto;
-}
-
-.nav-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-
-.nav-item {
-    margin-bottom: 0.25rem;
-}
-
-.nav-link {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.875rem 1.5rem;
-    color: #94a3b8;
-    text-decoration: none;
-    transition: all 0.3s ease;
-    position: relative;
-    font-weight: 500;
-}
-
-.nav-link:hover {
-    background: rgba(59, 130, 246, 0.1);
-    color: #f1f5f9;
-}
-
-.nav-link.active {
-    background: linear-gradient(90deg, rgba(59, 130, 246, 0.2) 0%, transparent 100%);
-    color: #3b82f6;
-}
-
-.nav-link.active::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 3px;
-    background: linear-gradient(180deg, #3b82f6 0%, #8b5cf6 100%);
-}
-
-.nav-link i {
-    font-size: 1.125rem;
-    width: 20px;
-    text-align: center;
-}
-
-.nav-text {
-    font-size: 0.9rem;
-}
-
-.sidebar-footer {
-    padding: 1.5rem;
-    border-top: 1px solid rgba(51, 65, 85, 0.3);
-}
-
-.admin-info {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    margin-bottom: 1rem;
-}
-
-.admin-avatar {
-    width: 40px;
-    height: 40px;
-    background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
-    border-radius: 0.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-size: 1.25rem;
-}
-
-.admin-details {
-    flex: 1;
-}
-
-.admin-name {
-    color: #f1f5f9;
-    font-weight: 600;
-    font-size: 0.9rem;
-}
-
-.admin-role {
-    color: #64748b;
-    font-size: 0.75rem;
-}
-
-.logout-btn {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.75rem 1rem;
-    background: rgba(239, 68, 68, 0.1);
-    color: #ef4444;
-    text-decoration: none;
-    border-radius: 0.5rem;
-    font-weight: 500;
-    font-size: 0.875rem;
-    transition: all 0.3s ease;
-}
-
-.logout-btn:hover {
-    background: rgba(239, 68, 68, 0.2);
-    transform: translateY(-1px);
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-    .sidebar {
-        transform: translateX(-100%);
-    }
-    
-    .sidebar.active {
-        transform: translateX(0);
-    }
-    
-    .sidebar-toggle {
-        display: block;
-    }
-    
-    .nav-text,
-    .logo-text,
-    .admin-details {
-        display: none;
-    }
-    
-    .sidebar.active .nav-text,
-    .sidebar.active .logo-text,
-    .sidebar.active .admin-details {
-        display: block;
-    }
-}
-</style>
-
-<script>
-function toggleSidebar() {
-    const sidebar = document.getElementById('sidebar');
-    sidebar.classList.toggle('active');
-}
-
-// Set active nav item based on current page
-document.addEventListener('DOMContentLoaded', function() {
-    const currentPage = window.location.pathname.split('/').pop().split('.')[0];
-    const navLinks = document.querySelectorAll('.nav-link');
-    
-    navLinks.forEach(link => {
-        link.classList.remove('active');
-        if (link.dataset.page === currentPage) {
-            link.classList.add('active');
-        }
-    });
-});
-</script>
+<!-- NOTE: No <script> block here intentionally.
+     This HTML is loaded via fetch() + innerHTML, which does NOT execute
+     <script> tags. All JS functions (toggleSidebar, setActiveNavigation)
+     are defined in components/admin-components.js, loaded by each page. -->

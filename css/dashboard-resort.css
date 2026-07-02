@@ -1,0 +1,481 @@
+/* ═══════════════════════════════════════════════════════════════════
+   YP4K RESORT — Dashboard Shared CSS Override
+   dashboard-resort.css  |  Imported in ALL User & Admin dashboard pages
+   Overrides the old blue variables with the resort green system.
+═══════════════════════════════════════════════════════════════════ */
+
+/* ── 1. Override old CSS variables system-wide ─────────────────── */
+:root {
+    /* ── Override Bootstrap defaults — kill all blue ─────────────── */
+    --bs-primary:           #9DFF00;
+    --bs-primary-rgb:       157, 255, 0;
+    --bs-secondary:         #6EDC45;
+    --bs-secondary-rgb:     110, 220, 69;
+    --bs-info:              #B8C4BE;
+    --bs-info-rgb:          184, 196, 190;
+    --bs-link-color:        #9DFF00;
+    --bs-link-hover-color:  #6EDC45;
+    --bs-focus-ring-color:  rgba(157, 255, 0, 0.25);
+    --bs-focus-ring-width:  0.2rem;
+
+    /* ── Map old variable names to new green system ─────────────── */
+    --bg-primary:        #08120E;
+    --bg-secondary:      #101B17;
+    --bg-tertiary:       #1A2B22;
+    --bg-card:           rgba(21, 34, 29, 0.8);
+    --text-primary:      #FFFFFF;
+    --text-secondary:    #B8C4BE;
+    --text-muted:        #8C9992;
+
+    /* Old accent mapped to green */
+    --accent-primary:    #9DFF00;
+    --accent-secondary:  #6EDC45;
+    --accent-success:    #27C46A;
+    --accent-warning:    #F7B731;
+    --accent-danger:     #FF5A5F;
+
+    --border-color:      rgba(255,255,255,0.08);
+    --gradient-primary:  linear-gradient(135deg, #9DFF00, #6EDC45);
+
+    --shadow-sm:  0 1px 3px rgba(0,0,0,0.4);
+    --shadow-md:  0 4px 20px rgba(0,0,0,0.5);
+    --shadow-lg:  0 10px 40px rgba(0,0,0,0.6);
+    --shadow-xl:  0 20px 60px rgba(0,0,0,0.7);
+}
+
+/* ── 2. Body & Background ────────────────────────────────────────── */
+body {
+    font-family: 'Poppins', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+    background: #08120E !important;
+    background-image:
+        radial-gradient(ellipse 80% 60% at 20% 30%, rgba(13,28,18,0.9) 0%, transparent 70%),
+        radial-gradient(ellipse 60% 80% at 80% 70%, rgba(10,22,14,0.8) 0%, transparent 70%) !important;
+    color: #FFFFFF !important;
+    min-height: 100vh;
+}
+
+/* Subtle animated bg glow */
+body::before {
+    content: '';
+    position: fixed;
+    top: 30%; left: 50%;
+    transform: translate(-50%,-50%);
+    width: 600px; height: 400px;
+    background: radial-gradient(ellipse at center, rgba(157,255,0,0.04) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+    animation: dashGlow 8s ease-in-out infinite;
+}
+@keyframes dashGlow {
+    0%, 100% { opacity: 0.7; }
+    50%       { opacity: 1; }
+}
+
+/* ── 3. Old Navbar Override ──────────────────────────────────────── */
+.navbar-modern {
+    background: rgba(9,18,15,0.92) !important;
+    backdrop-filter: blur(20px) saturate(180%) !important;
+    border-bottom: 1px solid rgba(255,255,255,0.08) !important;
+}
+.navbar-brand i { color: #9DFF00 !important; }
+.nav-link:hover {
+    background: rgba(157,255,0,0.06) !important;
+    color: #FFFFFF !important;
+}
+.nav-link.active {
+    background: rgba(157,255,0,0.12) !important;
+    color: #9DFF00 !important;
+}
+.nav-link.btn-logout {
+    background: rgba(255,90,95,0.12) !important;
+    border: 1px solid rgba(255,90,95,0.2) !important;
+    color: #FF5A5F !important;
+}
+.nav-link.btn-logout:hover {
+    background: rgba(255,90,95,0.2) !important;
+    color: #FF5A5F !important;
+}
+
+/* ── 3b. Global Bootstrap Blue Killer ────────────────────────── */
+/* Focus rings — Bootstrap 5 uses blue by default */
+*:focus, *:focus-visible {
+    outline-color: rgba(157, 255, 0, 0.5) !important;
+}
+.form-control:focus, .form-select:focus, .form-check-input:focus,
+.btn:focus, .btn:focus-visible {
+    border-color: rgba(157, 255, 0, 0.4) !important;
+    box-shadow: 0 0 0 0.2rem rgba(157, 255, 0, 0.12) !important;
+    outline: none !important;
+}
+/* Bootstrap btn-primary (blue by default) */
+.btn-primary {
+    background: linear-gradient(135deg, #9DFF00, #6EDC45) !important;
+    border-color: #9DFF00 !important;
+    color: #000 !important;
+}
+.btn-primary:hover, .btn-primary:active, .btn-primary:focus {
+    background: linear-gradient(135deg, #6EDC45, #9DFF00) !important;
+    border-color: #6EDC45 !important;
+    color: #000 !important;
+    box-shadow: 0 4px 15px rgba(157, 255, 0, 0.3) !important;
+}
+/* Bootstrap links */
+a:not(.nav-link):not(.btn):not([class*="btn-"]):not(.auth-link):not(.footer-link):not(.nav-logout):not(.logout-btn) {
+    color: #9DFF00;
+}
+a:not(.nav-link):not(.btn):not([class*="btn-"]):not(.auth-link):not(.footer-link):not(.nav-logout):not(.logout-btn):hover {
+    color: #6EDC45;
+}
+/* Bootstrap info color (cyan -> neutral) */
+.text-info  { color: #B8C4BE !important; }
+.bg-info    { background: rgba(184, 196, 190, 0.12) !important; }
+.badge.bg-info, .badge-info { background: rgba(184, 196, 190, 0.15) !important; color: #B8C4BE !important; }
+.alert-info { background: rgba(157, 255, 0, 0.06) !important; border-color: rgba(157, 255, 0, 0.15) !important; color: #B8C4BE !important; }
+/* Bootstrap primary */
+.text-primary { color: #9DFF00 !important; }
+.bg-primary   { background: rgba(157, 255, 0, 0.15) !important; }
+/* Checkbox / radio checked state */
+.form-check-input:checked {
+    background-color: #9DFF00 !important;
+    border-color: #9DFF00 !important;
+}
+
+/* ── 4. Stat Cards ───────────────────────────────────────────────── */
+.stat-card {
+    background: rgba(21,34,29,0.7) !important;
+    border: 1px solid rgba(255,255,255,0.08) !important;
+    border-radius: 16px !important;
+    position: relative;
+    transition: all 0.3s ease !important;
+}
+.stat-card::before {
+    background: linear-gradient(90deg, #9DFF00, #6EDC45) !important;
+}
+.stat-card:hover {
+    border-color: rgba(157,255,0,0.2) !important;
+    box-shadow: 0 0 30px rgba(157,255,0,0.1) !important;
+    transform: translateY(-4px) !important;
+}
+.stat-icon.primary {
+    background: rgba(157,255,0,0.12) !important;
+    color: #9DFF00 !important;
+}
+.stat-icon.success {
+    background: rgba(39,196,106,0.12) !important;
+    color: #27C46A !important;
+}
+.stat-icon.warning {
+    background: rgba(247,183,49,0.12) !important;
+    color: #F7B731 !important;
+}
+.stat-icon.danger {
+    background: rgba(255,90,95,0.12) !important;
+    color: #FF5A5F !important;
+}
+
+/* ── 5. Modern Cards ─────────────────────────────────────────────── */
+.card-modern {
+    background: rgba(21,34,29,0.7) !important;
+    border: 1px solid rgba(255,255,255,0.08) !important;
+    border-radius: 16px !important;
+    backdrop-filter: blur(20px);
+}
+.card-modern:hover {
+    border-color: rgba(157,255,0,0.15) !important;
+    box-shadow: 0 0 30px rgba(157,255,0,0.08) !important;
+}
+.card-header-modern {
+    border-bottom: 1px solid rgba(255,255,255,0.08) !important;
+}
+.card-header-modern i { color: #9DFF00 !important; }
+
+/* ── 6. Buttons ──────────────────────────────────────────────────── */
+.btn-modern, .btn-primary-modern {
+    background: linear-gradient(135deg, #9DFF00, #6EDC45) !important;
+    color: #000 !important;
+    border: none !important;
+    font-weight: 700 !important;
+    box-shadow: 0 4px 15px rgba(157,255,0,0.25) !important;
+    transition: all 0.3s ease !important;
+}
+.btn-modern:hover, .btn-primary-modern:hover {
+    transform: translateY(-3px) !important;
+    box-shadow: 0 8px 25px rgba(157,255,0,0.4) !important;
+    color: #000 !important;
+}
+.btn-secondary-modern {
+    background: transparent !important;
+    border: 1px solid rgba(255,255,255,0.15) !important;
+    color: #FFFFFF !important;
+}
+.btn-secondary-modern:hover {
+    border-color: rgba(157,255,0,0.4) !important;
+    color: #9DFF00 !important;
+    background: rgba(157,255,0,0.06) !important;
+}
+.btn-success-modern {
+    background: rgba(39,196,106,0.15) !important;
+    border: 1px solid rgba(39,196,106,0.3) !important;
+    color: #27C46A !important;
+}
+.btn-success-modern:hover {
+    background: rgba(39,196,106,0.25) !important;
+    transform: translateY(-2px) !important;
+}
+.btn-danger-modern {
+    background: rgba(255,90,95,0.12) !important;
+    border: 1px solid rgba(255,90,95,0.25) !important;
+    color: #FF5A5F !important;
+}
+.btn-danger-modern:hover {
+    background: rgba(255,90,95,0.2) !important;
+    transform: translateY(-2px) !important;
+}
+
+/* ── 7. Forms ────────────────────────────────────────────────────── */
+.form-control-modern, .form-control, .form-select, .form-select-modern {
+    background: rgba(8,18,14,0.7) !important;
+    border: 1px solid rgba(255,255,255,0.08) !important;
+    color: #FFFFFF !important;
+    border-radius: 10px !important;
+    font-family: inherit !important;
+}
+.form-control-modern:focus, .form-control:focus, .form-select:focus {
+    border-color: rgba(157,255,0,0.4) !important;
+    box-shadow: 0 0 0 3px rgba(157,255,0,0.07) !important;
+    background: rgba(10,22,16,0.9) !important;
+    color: #FFFFFF !important;
+}
+.form-control-modern::placeholder { color: #5C6B63 !important; }
+.form-control-modern.error { border-color: #FF5A5F !important; }
+
+/* Select option */
+.form-select option, .form-select-modern option { background: #0D1810; color: #FFFFFF; }
+
+.form-label-modern, .form-label {
+    color: #B8C4BE !important;
+    font-weight: 600 !important;
+    font-size: 0.8rem !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.07em !important;
+}
+
+/* ── 8. Status Badges ────────────────────────────────────────────── */
+.status-badge, .badge {
+    border-radius: 100px !important;
+    font-weight: 700 !important;
+    font-size: 0.7rem !important;
+    letter-spacing: 0.05em !important;
+}
+.badge-success, .badge.bg-success,
+[class*="approved"], [class*="active"] {
+    background: rgba(39,196,106,0.15) !important;
+    color: #27C46A !important;
+    border: 1px solid rgba(39,196,106,0.3) !important;
+}
+.badge-warning, .badge.bg-warning,
+[class*="pending"] {
+    background: rgba(247,183,49,0.15) !important;
+    color: #F7B731 !important;
+    border: 1px solid rgba(247,183,49,0.3) !important;
+}
+.badge-danger, .badge.bg-danger,
+[class*="rejected"], [class*="cancelled"] {
+    background: rgba(255,90,95,0.15) !important;
+    color: #FF5A5F !important;
+    border: 1px solid rgba(255,90,95,0.3) !important;
+}
+
+/* ── 9. Alerts ───────────────────────────────────────────────────── */
+.alert-modern, .alert-success-modern {
+    background: rgba(39,196,106,0.1) !important;
+    border: 1px solid rgba(39,196,106,0.2) !important;
+    color: #27C46A !important;
+    border-radius: 10px !important;
+}
+.alert-danger-modern {
+    background: rgba(255,90,95,0.1) !important;
+    border: 1px solid rgba(255,90,95,0.2) !important;
+    color: #FF5A5F !important;
+}
+.alert-info-modern {
+    background: rgba(157,255,0,0.08) !important;
+    border: 1px solid rgba(157,255,0,0.15) !important;
+    color: #9DFF00 !important;
+}
+
+/* ── 10. Step indicators ─────────────────────────────────────────── */
+.step-item.active .step-dot {
+    border-color: #9DFF00 !important;
+    color: #9DFF00 !important;
+    background: rgba(157,255,0,0.1) !important;
+}
+.step-item.done .step-dot {
+    border-color: #27C46A !important;
+    background: #27C46A !important;
+    color: #000 !important;
+}
+.step-item.active { color: #9DFF00 !important; }
+.step-item.done { color: #27C46A !important; }
+
+/* ── 11. Filter Pills ────────────────────────────────────────────── */
+.filter-pill {
+    border: 1px solid rgba(255,255,255,0.08) !important;
+    color: #8C9992 !important;
+    background: transparent !important;
+    border-radius: 100px !important;
+    font-family: inherit !important;
+    transition: all 0.25s ease !important;
+}
+.filter-pill:hover, .filter-pill.active {
+    background: rgba(157,255,0,0.1) !important;
+    border-color: rgba(157,255,0,0.35) !important;
+    color: #9DFF00 !important;
+}
+
+/* ── 12. Page Header ─────────────────────────────────────────────── */
+.page-header {
+    background: rgba(21,34,29,0.6) !important;
+    border: 1px solid rgba(255,255,255,0.08) !important;
+    border-radius: 16px !important;
+    position: relative;
+    overflow: hidden;
+}
+.page-header::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, #9DFF00, #6EDC45, transparent);
+}
+.page-title {
+    background: linear-gradient(135deg, #FFFFFF, #9DFF00) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
+}
+
+/* ── 13. Calendar ────────────────────────────────────────────────── */
+.cal-day.available { background: rgba(39,196,106,0.12) !important; color: #27C46A !important; }
+.cal-day.limited   { background: rgba(247,183,49,0.12) !important;  color: #F7B731 !important; }
+.cal-day.full      { background: rgba(255,90,95,0.12) !important;   color: #FF5A5F !important; }
+.cal-day.selected  {
+    background: linear-gradient(135deg, #9DFF00, #6EDC45) !important;
+    color: #000 !important;
+    box-shadow: 0 4px 15px rgba(157,255,0,0.35) !important;
+}
+
+/* ── 14. Price Summary Panel ─────────────────────────────────────── */
+.price-summary {
+    background: rgba(157,255,0,0.05) !important;
+    border: 1px solid rgba(157,255,0,0.12) !important;
+    border-radius: 14px !important;
+}
+.price-row.total .price-val { color: #9DFF00 !important; }
+
+/* ── 15. Selected package ────────────────────────────────────────── */
+.selected-pkg-header {
+    background: rgba(157,255,0,0.06) !important;
+    border: 1px solid rgba(157,255,0,0.15) !important;
+    border-radius: 12px !important;
+}
+
+/* ── 16. Modal ───────────────────────────────────────────────────── */
+.modal-content-modern {
+    background: #101B17 !important;
+    border: 1px solid rgba(255,255,255,0.08) !important;
+    border-radius: 20px !important;
+}
+.modal-header-modern, .modal-footer-modern {
+    background: rgba(21,34,29,0.8) !important;
+    border-color: rgba(255,255,255,0.08) !important;
+}
+
+/* ── 17. Tables ──────────────────────────────────────────────────── */
+.table, .table-striped {
+    color: #B8C4BE !important;
+}
+.table thead th {
+    background: rgba(8,18,14,0.6) !important;
+    color: #8C9992 !important;
+    font-size: 0.72rem !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.08em !important;
+    font-weight: 700 !important;
+    border-color: rgba(255,255,255,0.08) !important;
+}
+.table tbody td {
+    border-color: rgba(255,255,255,0.04) !important;
+    color: #B8C4BE !important;
+}
+.table tbody tr:hover td {
+    background: rgba(157,255,0,0.03) !important;
+    color: #FFFFFF !important;
+}
+
+/* ── 18. Scrollbar ───────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: #08120E; }
+::-webkit-scrollbar-thumb { background: #1A2B22; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(157,255,0,0.2); }
+
+/* ── 19. Activity / Booking Cards ────────────────────────────────── */
+.booking-card {
+    background: rgba(21,34,29,0.7) !important;
+    border: 1px solid rgba(255,255,255,0.08) !important;
+    border-radius: 16px !important;
+}
+.booking-card:hover {
+    border-color: rgba(157,255,0,0.15) !important;
+    box-shadow: 0 0 30px rgba(157,255,0,0.07) !important;
+}
+
+/* ── 20. Profile Page ────────────────────────────────────────────── */
+.profile-avatar {
+    background: linear-gradient(135deg, #9DFF00, #6EDC45) !important;
+    color: #000 !important;
+}
+.profile-card {
+    background: rgba(21,34,29,0.7) !important;
+    border: 1px solid rgba(255,255,255,0.08) !important;
+    border-radius: 18px !important;
+}
+
+/* ── 21. Activity type cards ─────────────────────────────────────── */
+.package-card {
+    background: rgba(21,34,29,0.7) !important;
+    border: 1px solid rgba(255,255,255,0.08) !important;
+    border-radius: 16px !important;
+    transition: all 0.3s ease !important;
+}
+.package-card:hover {
+    border-color: rgba(157,255,0,0.2) !important;
+    box-shadow: 0 0 35px rgba(157,255,0,0.1) !important;
+    transform: translateY(-6px) !important;
+}
+.package-card.selected {
+    border-color: #9DFF00 !important;
+    box-shadow: 0 0 25px rgba(157,255,0,0.2) !important;
+}
+.card-type-badge.badge-bundle        { background: rgba(157,255,0,0.9)   !important; color: #000 !important; }
+.card-type-badge.badge-activity      { background: rgba(110,220,69,0.9)   !important; color: #000 !important; }
+.card-type-badge.badge-accommodation { background: rgba(39,196,106,0.9)   !important; color: #000 !important; }
+
+/* ── 22. Bundle & Calendar ───────────────────────────────────────── */
+.bundle-card {
+    background: rgba(21,34,29,0.7) !important;
+    border: 1px solid rgba(255,255,255,0.08) !important;
+    border-radius: 16px !important;
+    transition: all 0.3s ease !important;
+}
+.bundle-card.selected {
+    border-color: #9DFF00 !important;
+    box-shadow: 0 0 25px rgba(157,255,0,0.2) !important;
+}
+
+/* ── 23. Summary Panel ───────────────────────────────────────────── */
+.summary-panel {
+    background: rgba(21,34,29,0.7) !important;
+    border: 1px solid rgba(255,255,255,0.08) !important;
+    border-radius: 16px !important;
+}

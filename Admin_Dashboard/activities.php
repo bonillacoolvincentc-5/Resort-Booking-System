@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 session_start();
 
 // Include admin configuration
@@ -57,203 +57,21 @@ while ($row = $result->fetch_assoc()) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Activities Management - YP4K Resort</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../css/resort-theme.css">
+    <link rel="stylesheet" href="../css/dashboard-resort.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="components/sidebar.css">
     <link rel="stylesheet" href="components/navbar.css">
     
-    <style>
-        :root {
-            --bg-primary: #0f172a;
-            --bg-secondary: #1e293b;
-            --bg-tertiary: #334155;
-            --bg-card: rgba(30, 41, 59, 0.8);
-            --text-primary: #f1f5f9;
-            --text-secondary: #94a3b8;
-            --text-muted: #64748b;
-            --accent-primary: #3b82f6;
-            --accent-secondary: #8b5cf6;
-            --accent-success: #10b981;
-            --accent-warning: #f59e0b;
-            --accent-danger: #ef4444;
-            --border-color: rgba(51, 65, 85, 0.5);
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 50%, var(--bg-tertiary) 100%);
-            color: var(--text-primary);
-            min-height: 100vh;
-            line-height: 1.6;
-        }
-
-        .main-content {
-            margin-left: 260px;
-            margin-top: 70px;
-            padding: 2rem;
-            min-height: calc(100vh - 70px);
-        }
-
-        .activities-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 1.5rem;
-        }
-
-        .activity-card {
-            background: var(--bg-card);
-            backdrop-filter: blur(10px);
-            border: 1px solid var(--border-color);
-            border-radius: 1rem;
-            overflow: hidden;
-            transition: all 0.3s ease;
-        }
-
-        .activity-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-            border-color: var(--accent-primary);
-        }
-
-        .activity-image {
-            height: 200px;
-            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 3rem;
-        }
-
-        .activity-content {
-            padding: 1.5rem;
-        }
-
-        .activity-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 1rem;
-        }
-
-        .activity-title {
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: var(--text-primary);
-            margin-bottom: 0.25rem;
-        }
-
-        .activity-status {
-            padding: 0.25rem 0.75rem;
-            border-radius: 1rem;
-            font-size: 0.75rem;
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-
-        .status-active {
-            background: rgba(16, 185, 129, 0.2);
-            color: var(--accent-success);
-        }
-
-        .status-inactive {
-            background: rgba(239, 68, 68, 0.2);
-            color: var(--accent-danger);
-        }
-
-        .activity-description {
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-            margin-bottom: 1rem;
-            line-height: 1.5;
-        }
-
-        .activity-stats {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 1rem;
-            margin-bottom: 1rem;
-        }
-
-        .stat-item {
-            text-align: center;
-            padding: 0.75rem;
-            background: var(--bg-tertiary);
-            border-radius: 0.5rem;
-        }
-
-        .stat-value {
-            font-size: 1.25rem;
-            font-weight: 700;
-            color: var(--accent-primary);
-            margin-bottom: 0.25rem;
-        }
-
-        .stat-label {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-
-        .activity-actions {
-            display: flex;
-            gap: 0.5rem;
-        }
-
-        .btn-modern {
-            padding: 0.5rem 1rem;
-            border-radius: 0.5rem;
-            font-weight: 500;
-            border: none;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            cursor: pointer;
-            font-size: 0.875rem;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
-            color: white;
-        }
-
-        .btn-secondary {
-            background: var(--bg-tertiary);
-            color: var(--text-primary);
-            border: 1px solid var(--border-color);
-        }
-
-        .btn-primary:hover,
-        .btn-secondary:hover {
-            transform: translateY(-2px);
-        }
-
-        @media (max-width: 768px) {
-            .main-content {
-                margin-left: 0;
-                padding: 1rem;
-            }
-
-            .activities-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="../css/admin-theme.css">
+    <script src="components/admin-components.js" defer></script>
 </head>
 <body>
     <div id="sidebar-container"></div>
     <div id="navbar-container"></div>
 
-    <div class="main-content">
+    <div id="mainContent" class="main-content">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
                 <h1 class="h3 mb-2">Activities Management</h1>
@@ -297,7 +115,7 @@ while ($row = $result->fetch_assoc()) {
                             </div>
                             <div class="activity-stats">
                                 <div class="stat-item">
-                                    <div class="stat-value">₱<?php echo $price; ?></div>
+                                    <div class="stat-value">?<?php echo $price; ?></div>
                                     <div class="stat-label">Per Hour</div>
                                 </div>
                                 <div class="stat-item">
@@ -347,7 +165,7 @@ while ($row = $result->fetch_assoc()) {
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label class="form-label" style="color: var(--text-primary); font-weight: 500;">Price per Hour (₱)</label>
+                                    <label class="form-label" style="color: var(--text-primary); font-weight: 500;">Price per Hour (?)</label>
                                     <input type="number" step="0.01" class="form-control" id="activityPrice" name="price_per_hour" required style="background: var(--bg-tertiary); border: 1px solid var(--border-color); color: var(--text-primary);">
                                 </div>
                             </div>
@@ -403,19 +221,6 @@ while ($row = $result->fetch_assoc()) {
     </div>
 
     <script>
-        fetch('components/sidebar.html')
-            .then(response => response.text())
-            .then(html => {
-                document.getElementById('sidebar-container').innerHTML = html;
-                // Set active navigation after sidebar loads
-                setTimeout(setActiveNavigation, 50);
-            });
-
-        fetch('components/navbar.html')
-            .then(response => response.text())
-            .then(html => {
-                document.getElementById('navbar-container').innerHTML = html;
-            });
 
         // Modal instance
         let activityModal;
@@ -544,3 +349,6 @@ while ($row = $result->fetch_assoc()) {
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
+
+
+

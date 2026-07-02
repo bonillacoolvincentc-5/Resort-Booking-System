@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 session_start();
 
 require_once 'config.php';
@@ -14,7 +14,7 @@ $adminName  = $_SESSION['admin_name'];
 $adminEmail = $_SESSION['admin_email'];
 global $conn;
 
-// ── Ensure tables exist ───────────────────────────────────────────
+// -- Ensure tables exist -------------------------------------------
 $conn->query("
     CREATE TABLE IF NOT EXISTS `bundles` (
         `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -44,7 +44,7 @@ $conn->query("
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
 ");
 
-// ── Fetch bundles with relation counts ────────────────────────────
+// -- Fetch bundles with relation counts ----------------------------
 $result = $conn->query("
     SELECT
         b.id, b.name, b.slug, b.description, b.price, b.capacity,
@@ -61,12 +61,12 @@ $result = $conn->query("
 $bundles = [];
 while ($row = $result->fetch_assoc()) $bundles[] = $row;
 
-// ── Fetch activities for modal checkboxes ─────────────────────────
+// -- Fetch activities for modal checkboxes -------------------------
 $actResult     = $conn->query("SELECT id, name, price_per_hour FROM activities WHERE is_active = 1 ORDER BY name ASC");
 $allActivities = [];
 while ($r = $actResult->fetch_assoc()) $allActivities[] = $r;
 
-// ── Fetch accommodations for modal checkboxes ─────────────────────
+// -- Fetch accommodations for modal checkboxes ---------------------
 $accResult      = $conn->query("SELECT id, name, type, price_per_night FROM accommodations WHERE is_active = 1 ORDER BY type ASC, name ASC");
 $allAccommodations = [];
 while ($r = $accResult->fetch_assoc()) $allAccommodations[] = $r;
@@ -76,221 +76,17 @@ while ($r = $accResult->fetch_assoc()) $allAccommodations[] = $r;
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manage Bundles — YP4K Resort Admin</title>
+    <title>Manage Bundles � YP4K Resort Admin</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../css/resort-theme.css">
+    <link rel="stylesheet" href="../css/dashboard-resort.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="components/sidebar.css">
     <link rel="stylesheet" href="components/navbar.css">
 
-    <style>
-        /* ── DESIGN TOKENS (identical to all other admin pages) ── */
-        :root {
-            --bg-primary:      #0f172a;
-            --bg-secondary:    #1e293b;
-            --bg-tertiary:     #334155;
-            --bg-card:         rgba(30, 41, 59, 0.8);
-            --text-primary:    #f1f5f9;
-            --text-secondary:  #94a3b8;
-            --text-muted:      #64748b;
-            --accent-primary:  #3b82f6;
-            --accent-secondary:#8b5cf6;
-            --accent-success:  #10b981;
-            --accent-warning:  #f59e0b;
-            --accent-danger:   #ef4444;
-            --border-color:    rgba(51, 65, 85, 0.5);
-            --shadow-xl: 0 20px 25px -5px rgba(0,0,0,.1), 0 10px 10px -5px rgba(0,0,0,.04);
-        }
-        *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 50%, var(--bg-tertiary) 100%);
-            color: var(--text-primary); min-height:100vh; line-height:1.6;
-        }
-
-        /* ── LAYOUT (same offsets as activities.php) ── */
-        .main-content {
-            margin-left: 260px; margin-top: 70px;
-            padding: 2rem; min-height: calc(100vh - 70px);
-        }
-
-        /* ── BUNDLES GRID ── */
-        .bundles-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-            gap: 1.5rem;
-        }
-
-        /* ── BUNDLE CARD (mirrors activity-card exactly) ── */
-        .bundle-card {
-            background: var(--bg-card);
-            backdrop-filter: blur(10px);
-            border: 1px solid var(--border-color);
-            border-radius: 1rem;
-            overflow: hidden;
-            transition: all 0.3s ease;
-        }
-        .bundle-card:hover {
-            transform: translateY(-5px);
-            box-shadow: var(--shadow-xl);
-            border-color: var(--accent-primary);
-        }
-
-        .bundle-image {
-            height: 200px;
-            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
-            display: flex; align-items: center; justify-content: center;
-            color: white; font-size: 3rem; position: relative; overflow: hidden;
-        }
-        .bundle-image img {
-            width:100%; height:100%; object-fit: cover;
-        }
-        .bundle-type-badge {
-            position: absolute; top: .75rem; left: .75rem;
-            padding: .25rem .75rem; border-radius: 1rem;
-            font-size: .7rem; font-weight: 700; text-transform: uppercase;
-            background: rgba(139,92,246,.9); color: #fff;
-        }
-
-        .bundle-content { padding: 1.5rem; }
-
-        .bundle-header {
-            display: flex; justify-content: space-between;
-            align-items: flex-start; margin-bottom: 1rem;
-        }
-        .bundle-title {
-            font-size: 1.15rem; font-weight: 700;
-            color: var(--text-primary); margin-bottom: .25rem;
-        }
-        .bundle-desc {
-            color: var(--text-secondary); font-size: .875rem;
-            line-height: 1.5; margin-bottom: 1rem;
-        }
-
-        .bundle-status {
-            padding: .25rem .75rem; border-radius: 1rem;
-            font-size: .75rem; font-weight: 600; text-transform: uppercase;
-            white-space: nowrap; flex-shrink: 0;
-        }
-        .status-active   { background: rgba(16,185,129,.2); color: var(--accent-success); }
-        .status-inactive { background: rgba(239,68,68,.2);  color: var(--accent-danger); }
-
-        .bundle-stats {
-            display: grid; grid-template-columns: repeat(3, 1fr);
-            gap: .75rem; margin-bottom: 1rem;
-        }
-        .stat-item { text-align: center; padding: .65rem .5rem; background: var(--bg-tertiary); border-radius: .5rem; }
-        .stat-value { font-size: 1.1rem; font-weight: 700; color: var(--accent-primary); margin-bottom: .2rem; }
-        .stat-label { font-size: .7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .04em; }
-
-        .bundle-actions { display: flex; gap: .5rem; flex-wrap: wrap; }
-
-        /* ── BUTTONS (mirrors activities.php exactly) ── */
-        .btn-modern {
-            padding: .5rem 1rem; border-radius: .5rem; font-weight: 500;
-            border: none; transition: all .3s ease; text-decoration: none;
-            display: inline-flex; align-items: center; gap: .5rem;
-            cursor: pointer; font-size: .875rem;
-        }
-        .btn-primary   { background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); color: white; }
-        .btn-secondary { background: var(--bg-tertiary); color: var(--text-primary); border: 1px solid var(--border-color); }
-        .btn-success   { background: var(--accent-success); color: white; }
-        .btn-warning   { background: var(--accent-warning); color: white; }
-        .btn-danger    { background: var(--accent-danger);  color: white; }
-        .btn-primary:hover, .btn-secondary:hover, .btn-success:hover,
-        .btn-warning:hover, .btn-danger:hover { transform: translateY(-2px); box-shadow: var(--shadow-xl); }
-
-        /* ── FORM CONTROLS (mirrors all other admin modals) ── */
-        .form-ctrl {
-            background: var(--bg-tertiary); border: 1px solid var(--border-color);
-            color: var(--text-primary); border-radius: .5rem; padding: .65rem 1rem;
-            width: 100%; font-size: .875rem; transition: all .3s ease;
-            font-family: inherit;
-        }
-        .form-ctrl:focus {
-            outline: none; border-color: var(--accent-primary);
-            box-shadow: 0 0 0 3px rgba(59,130,246,.1);
-            background: var(--bg-tertiary); color: var(--text-primary);
-        }
-        .form-ctrl option { background: var(--bg-secondary); color: var(--text-primary); }
-        .form-ctrl::placeholder { color: var(--text-muted); }
-        .form-label-custom { color: var(--text-primary); font-weight: 500; margin-bottom: .4rem; font-size: .875rem; display: block; }
-
-        /* ── CHECKLIST ITEMS IN MODAL ── */
-        .check-item {
-            display: flex; align-items: center; gap: .75rem;
-            background: var(--bg-tertiary); border: 1px solid var(--border-color);
-            border-radius: .5rem; padding: .65rem 1rem; margin-bottom: .4rem;
-            cursor: pointer; transition: all .2s ease;
-        }
-        .check-item:hover, .check-item:has(input:checked) {
-            border-color: var(--accent-primary);
-            background: rgba(59,130,246,.08);
-        }
-        .check-item input[type=checkbox] { width:16px; height:16px; accent-color: var(--accent-primary); flex-shrink:0; }
-        .check-item-name  { flex:1; font-size:.85rem; color: var(--text-primary); }
-        .check-item-price { font-size:.8rem; color: var(--accent-success); font-weight:600; }
-        .check-section-title {
-            font-size:.75rem; font-weight:700; text-transform:uppercase;
-            letter-spacing:.05em; color: var(--accent-primary); margin-bottom:.5rem;
-            padding-bottom:.4rem; border-bottom: 1px solid var(--border-color);
-        }
-        .check-scroll { max-height: 200px; overflow-y: auto; }
-
-        /* ── MODAL ── */
-        .modal-content-admin {
-            background: var(--bg-card); border: 1px solid var(--border-color);
-            border-radius: 1rem; backdrop-filter: blur(20px);
-        }
-        .modal-header-admin {
-            background: var(--bg-tertiary); border-bottom: 1px solid var(--border-color);
-            padding: 1.25rem 1.5rem; border-radius: 1rem 1rem 0 0;
-        }
-        .modal-footer-admin {
-            background: var(--bg-tertiary); border-top: 1px solid var(--border-color);
-            padding: 1rem 1.5rem; border-radius: 0 0 1rem 1rem;
-            display: flex; gap: .5rem; justify-content: flex-end;
-        }
-
-        /* ── TOAST NOTIFICATIONS ── */
-        .toast-wrap { position: fixed; top: 90px; right: 1.5rem; z-index: 9999; display: flex; flex-direction: column; gap: .5rem; }
-        .toast-msg {
-            padding: .875rem 1.25rem; border-radius: .75rem;
-            font-size: .875rem; font-weight: 500; min-width: 280px;
-            animation: toastIn .3s ease; display: flex; align-items: center; gap: .6rem;
-        }
-        .toast-success { background: rgba(16,185,129,.15); border: 1px solid rgba(16,185,129,.3); color: var(--accent-success); }
-        .toast-error   { background: rgba(239,68,68,.15);  border: 1px solid rgba(239,68,68,.3);  color: var(--accent-danger);  }
-        @keyframes toastIn { from { opacity:0; transform:translateX(20px); } to { opacity:1; transform:translateX(0); } }
-
-        /* ── EMPTY STATE ── */
-        .empty-state { grid-column: 1 / -1; text-align: center; padding: 4rem 2rem; }
-        .empty-state i { font-size: 3.5rem; color: var(--text-muted); display: block; margin-bottom: 1rem; }
-
-        /* ── STATS ROW ── */
-        .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
-        .stats-mini {
-            background: var(--bg-card); border: 1px solid var(--border-color);
-            border-radius: .75rem; padding: 1rem 1.25rem; display: flex;
-            align-items: center; gap: 1rem; transition: all .3s ease;
-        }
-        .stats-mini:hover { border-color: var(--accent-primary); }
-        .stats-mini-icon {
-            width: 44px; height: 44px; border-radius: .75rem;
-            display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink:0;
-        }
-        .stats-mini-icon.purple { background: rgba(139,92,246,.15); color: var(--accent-secondary); }
-        .stats-mini-icon.green  { background: rgba(16,185,129,.15);  color: var(--accent-success); }
-        .stats-mini-icon.amber  { background: rgba(245,158,11,.15);  color: var(--accent-warning); }
-        .stats-mini-val  { font-size: 1.5rem; font-weight: 700; color: var(--text-primary); line-height:1.2; }
-        .stats-mini-lbl  { font-size: .75rem; color: var(--text-muted); }
-
-        /* ── RESPONSIVE ── */
-        @media (max-width: 768px) {
-            .main-content { margin-left: 0; padding: 1rem; }
-            .bundles-grid { grid-template-columns: 1fr; }
-        }
-    </style>
+    <link rel="stylesheet" href="../css/admin-theme.css">
+    <script src="components/admin-components.js" defer></script>
 </head>
 <body>
     <div id="sidebar-container"></div>
@@ -299,8 +95,8 @@ while ($r = $accResult->fetch_assoc()) $allAccommodations[] = $r;
     <!-- Toast container -->
     <div class="toast-wrap" id="toastWrap"></div>
 
-    <!-- ── MAIN CONTENT ─────────────────────────────────────────── -->
-    <div class="main-content">
+    <!-- -- MAIN CONTENT ------------------------------------------- -->
+    <div id="mainContent" class="main-content">
 
         <!-- Page header -->
         <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
@@ -361,10 +157,10 @@ while ($r = $accResult->fetch_assoc()) $allAccommodations[] = $r;
                             </div>
                             <span class="bundle-status <?= $statusClass ?>"><?= $statusText ?></span>
                         </div>
-                        <p class="bundle-desc"><?= htmlspecialchars(mb_strimwidth($b['description'] ?? 'No description.', 0, 110, '…')) ?></p>
+                        <p class="bundle-desc"><?= htmlspecialchars(mb_strimwidth($b['description'] ?? 'No description.', 0, 110, '�')) ?></p>
                         <div class="bundle-stats">
                             <div class="stat-item">
-                                <div class="stat-value">₱<?= $price ?></div>
+                                <div class="stat-value">?<?= $price ?></div>
                                 <div class="stat-label">Price</div>
                             </div>
                             <div class="stat-item">
@@ -405,13 +201,13 @@ while ($r = $accResult->fetch_assoc()) $allAccommodations[] = $r;
         </div>
     </div><!-- /main-content -->
 
-    <!-- ══════════════════════════════════════════════════════════════
+    <!-- --------------------------------------------------------------
          ADD / EDIT BUNDLE MODAL
-    ═══════════════════════════════════════════════════════════════ -->
+    --------------------------------------------------------------- -->
     <div class="modal fade" id="bundleModal" tabindex="-1" aria-labelledby="bundleModalTitle" aria-hidden="true">
         <div class="modal-dialog modal-xl modal-dialog-scrollable">
-            <div class="modal-content modal-content-admin">
-                <div class="modal-header-admin d-flex align-items-center justify-content-between">
+            <div class="modal-content modal-content">
+                <div class="modal-header d-flex align-items-center justify-content-between">
                     <h5 class="mb-0 fw-700" id="bundleModalTitle" style="color:var(--text-primary);font-weight:700;">Add Bundle</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
@@ -431,12 +227,12 @@ while ($r = $accResult->fetch_assoc()) $allAccommodations[] = $r;
                                 <div class="mb-3">
                                     <label class="form-label-custom">Description</label>
                                     <textarea class="form-ctrl" id="bundleDescription" name="description" rows="4"
-                                              placeholder="Describe what guests get with this bundle…"></textarea>
+                                              placeholder="Describe what guests get with this bundle�"></textarea>
                                 </div>
 
                                 <div class="row g-3 mb-3">
                                     <div class="col-6">
-                                        <label class="form-label-custom">Price (₱) <span style="color:var(--accent-danger)">*</span></label>
+                                        <label class="form-label-custom">Price (?) <span style="color:var(--accent-danger)">*</span></label>
                                         <input type="number" step="0.01" min="0" class="form-ctrl" id="bundlePrice" name="price" placeholder="0.00" required>
                                     </div>
                                     <div class="col-6">
@@ -473,7 +269,7 @@ while ($r = $accResult->fetch_assoc()) $allAccommodations[] = $r;
                                 </div>
                             </div>
 
-                            <!-- Right column — relations -->
+                            <!-- Right column � relations -->
                             <div class="col-lg-5">
                                 <!-- Included Activities -->
                                 <div class="mb-4">
@@ -484,7 +280,7 @@ while ($r = $accResult->fetch_assoc()) $allAccommodations[] = $r;
                                             <label class="check-item">
                                                 <input type="checkbox" class="act-chk" value="<?= $act['id'] ?>">
                                                 <span class="check-item-name"><?= htmlspecialchars($act['name']) ?></span>
-                                                <span class="check-item-price">₱<?= number_format($act['price_per_hour'], 2) ?>/hr</span>
+                                                <span class="check-item-price">?<?= number_format($act['price_per_hour'], 2) ?>/hr</span>
                                             </label>
                                             <?php endforeach; ?>
                                         <?php else: ?>
@@ -506,7 +302,7 @@ while ($r = $accResult->fetch_assoc()) $allAccommodations[] = $r;
                                                     <?= htmlspecialchars($acc['name']) ?>
                                                     <small style="color:var(--text-muted);">(<?= ucfirst($acc['type']) ?>)</small>
                                                 </span>
-                                                <span class="check-item-price">₱<?= number_format($acc['price_per_night'], 2) ?>/night</span>
+                                                <span class="check-item-price">?<?= number_format($acc['price_per_night'], 2) ?>/night</span>
                                             </label>
                                             <?php endforeach; ?>
                                         <?php else: ?>
@@ -520,7 +316,7 @@ while ($r = $accResult->fetch_assoc()) $allAccommodations[] = $r;
                     </form>
                 </div>
 
-                <div class="modal-footer-admin">
+                <div class="modal-footer">
                     <button type="button" class="btn-modern btn-secondary" data-bs-dismiss="modal">Cancel</button>
                     <button type="button" class="btn-modern btn-primary" id="saveBundleBtn" onclick="saveBundle()">
                         <i class="bi bi-check-circle"></i> Save Bundle
@@ -530,13 +326,13 @@ while ($r = $accResult->fetch_assoc()) $allAccommodations[] = $r;
         </div>
     </div>
 
-    <!-- ══════════════════════════════════════════════════════════════
+    <!-- --------------------------------------------------------------
          DELETE CONFIRMATION MODAL
-    ═══════════════════════════════════════════════════════════════ -->
+    --------------------------------------------------------------- -->
     <div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content modal-content-admin">
-                <div class="modal-header-admin">
+            <div class="modal-content modal-content">
+                <div class="modal-header">
                     <h5 class="mb-0 fw-700" style="color:var(--accent-danger);font-weight:700;">
                         <i class="bi bi-exclamation-triangle me-2"></i>Delete Bundle
                     </h5>
@@ -546,7 +342,7 @@ while ($r = $accResult->fetch_assoc()) $allAccommodations[] = $r;
                     <p style="color:var(--text-secondary);">Are you sure you want to delete <strong id="deleteBundleName" style="color:var(--text-primary);"></strong>?</p>
                     <p style="color:var(--text-muted);font-size:.875rem;margin-top:.5rem;">This action cannot be undone.</p>
                 </div>
-                <div class="modal-footer-admin">
+                <div class="modal-footer">
                     <button type="button" class="btn-modern btn-secondary" data-bs-dismiss="modal">Cancel</button>
                     <button type="button" class="btn-modern btn-danger" id="confirmDeleteBtn">
                         <i class="bi bi-trash"></i> Delete
@@ -558,22 +354,15 @@ while ($r = $accResult->fetch_assoc()) $allAccommodations[] = $r;
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-    /* ══════════════════════════════════════════════════════════════
-       Manage Bundles — JS
-    ══════════════════════════════════════════════════════════════ */
+    /* --------------------------------------------------------------
+       Manage Bundles � JS
+    -------------------------------------------------------------- */
     'use strict';
 
     let bundleModal, deleteModal, editingId = null;
 
-    // ── Load sidebar & navbar ──────────────────────────────────────
+    // -- Load sidebar & navbar --------------------------------------
     document.addEventListener('DOMContentLoaded', () => {
-        fetch('components/sidebar.html').then(r => r.text()).then(h => {
-            document.getElementById('sidebar-container').innerHTML = h;
-            setTimeout(setActiveNavigation, 50);
-        });
-        fetch('components/navbar.html').then(r => r.text()).then(h => {
-            document.getElementById('navbar-container').innerHTML = h;
-        });
 
         bundleModal = new bootstrap.Modal(document.getElementById('bundleModal'));
         deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
@@ -590,7 +379,7 @@ while ($r = $accResult->fetch_assoc()) $allAccommodations[] = $r;
         });
     });
 
-    // ── Open Add Modal ─────────────────────────────────────────────
+    // -- Open Add Modal ---------------------------------------------
     function openAddModal() {
         editingId = null;
         document.getElementById('bundleModalTitle').textContent = 'Add Bundle';
@@ -602,7 +391,7 @@ while ($r = $accResult->fetch_assoc()) $allAccommodations[] = $r;
         bundleModal.show();
     }
 
-    // ── Edit Bundle ────────────────────────────────────────────────
+    // -- Edit Bundle ------------------------------------------------
     async function editBundle(id) {
         editingId = id;
         try {
@@ -611,7 +400,7 @@ while ($r = $accResult->fetch_assoc()) $allAccommodations[] = $r;
             if (!data.success) { toast('Failed to load bundle: ' + data.message, 'error'); return; }
 
             const b = data.bundle;
-            document.getElementById('bundleModalTitle').textContent = 'Edit Bundle — ' + b.name;
+            document.getElementById('bundleModalTitle').textContent = 'Edit Bundle � ' + b.name;
             document.getElementById('bundleId').value          = b.id;
             document.getElementById('bundleName').value        = b.name;
             document.getElementById('bundleDescription').value = b.description || '';
@@ -638,7 +427,7 @@ while ($r = $accResult->fetch_assoc()) $allAccommodations[] = $r;
         }
     }
 
-    // ── Save Bundle ────────────────────────────────────────────────
+    // -- Save Bundle ------------------------------------------------
     async function saveBundle() {
         const name  = document.getElementById('bundleName').value.trim();
         const price = document.getElementById('bundlePrice').value;
@@ -652,7 +441,7 @@ while ($r = $accResult->fetch_assoc()) $allAccommodations[] = $r;
         document.getElementById('accommodationIds').value = accIds;
 
         const btn = document.getElementById('saveBundleBtn');
-        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving…';
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving�';
         btn.disabled  = true;
 
         const form     = document.getElementById('bundleForm');
@@ -677,7 +466,7 @@ while ($r = $accResult->fetch_assoc()) $allAccommodations[] = $r;
         }
     }
 
-    // ── Toggle Available/Unavailable ───────────────────────────────
+    // -- Toggle Available/Unavailable -------------------------------
     async function toggleStatus(id, current) {
         const action = current ? 'disable' : 'enable';
         if (!confirm(`Are you sure you want to ${action} this bundle?`)) return;
@@ -692,7 +481,7 @@ while ($r = $accResult->fetch_assoc()) $allAccommodations[] = $r;
         } catch { toast('Network error', 'error'); }
     }
 
-    // ── Delete bundle ──────────────────────────────────────────────
+    // -- Delete bundle ----------------------------------------------
     function deleteBundle(id, name) {
         document.getElementById('deleteBundleName').textContent = name;
         document.getElementById('confirmDeleteBtn').onclick = async () => {
@@ -710,7 +499,7 @@ while ($r = $accResult->fetch_assoc()) $allAccommodations[] = $r;
         deleteModal.show();
     }
 
-    // ── Helpers ────────────────────────────────────────────────────
+    // -- Helpers ----------------------------------------------------
     function clearAllCheckboxes() {
         document.querySelectorAll('.act-chk, .acc-chk').forEach(c => c.checked = false);
     }
@@ -726,3 +515,7 @@ while ($r = $accResult->fetch_assoc()) $allAccommodations[] = $r;
     </script>
 </body>
 </html>
+
+
+
+

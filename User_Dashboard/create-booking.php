@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 session_start();
 
 // Auth guard
@@ -22,6 +22,8 @@ $userPhone = $_SESSION['user_phone'] ?? '';
     <title>Create Booking — YP4K Resort</title>
     <meta name="description" content="Browse and book resort packages at YP4K Resort. Select from activities and accommodations with real-time pricing.">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../css/resort-theme.css">
+    <link rel="stylesheet" href="../css/dashboard-resort.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
@@ -469,9 +471,6 @@ $userPhone = $_SESSION['user_phone'] ?? '';
             <button class="filter-pill" onclick="filterPackages('accommodation',this)" id="filterAccommodation">
                 <i class="bi bi-house-door"></i> Accommodations
             </button>
-            <button class="filter-pill" onclick="filterPackages('bundle',this)" id="filterBundle">
-                <i class="bi bi-box-seam"></i> Bundles
-            </button>
             <div class="ms-auto">
                 <span id="packageCount" class="text-muted" style="font-size:.8rem;"></span>
             </div>
@@ -739,7 +738,8 @@ async function loadPackages() {
 
         if (!data.success) { renderEmptyState('Could not load packages.'); return; }
 
-        allPackages = data.packages || [];
+        // Exclude bundles from this page since they have a dedicated premium page
+        allPackages = (data.packages || []).filter(p => p.package_type !== 'bundle');
 
         // Load activities as potential add-ons
         (data.activities || []).forEach(a => {

@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 session_start();
 
 // Include admin configuration
@@ -24,429 +24,21 @@ $adminEmail = $_SESSION['admin_email'];
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Calendar - YP4K Resort</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../css/resort-theme.css">
+    <link rel="stylesheet" href="../css/dashboard-resort.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="components/sidebar.css">
     <link rel="stylesheet" href="components/navbar.css">
     
-    <style>
-        :root {
-            --bg-primary: #0f172a;
-            --bg-secondary: #1e293b;
-            --bg-tertiary: #334155;
-            --bg-card: rgba(30, 41, 59, 0.8);
-            --text-primary: #f1f5f9;
-            --text-secondary: #94a3b8;
-            --text-muted: #64748b;
-            --accent-primary: #3b82f6;
-            --accent-secondary: #8b5cf6;
-            --accent-success: #10b981;
-            --accent-warning: #f59e0b;
-            --accent-danger: #ef4444;
-            --border-color: rgba(51, 65, 85, 0.5);
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 50%, var(--bg-tertiary) 100%);
-            color: var(--text-primary);
-            min-height: 100vh;
-            line-height: 1.6;
-        }
-
-        .main-content {
-            margin-left: 260px;
-            margin-top: 70px;
-            padding: 2rem;
-            min-height: calc(100vh - 70px);
-        }
-
-        .calendar-container {
-            background: var(--bg-card);
-            backdrop-filter: blur(10px);
-            border: 1px solid var(--border-color);
-            border-radius: 1rem;
-            padding: 2rem;
-        }
-
-        .calendar-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 2rem;
-        }
-
-        .calendar-title {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: var(--text-primary);
-        }
-
-        .calendar-nav {
-            display: flex;
-            gap: 1rem;
-        }
-
-        .calendar-nav button {
-            background: var(--bg-tertiary);
-            border: 1px solid var(--border-color);
-            color: var(--text-primary);
-            padding: 0.5rem 1rem;
-            border-radius: 0.5rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .calendar-nav button:hover {
-            background: var(--accent-primary);
-            color: white;
-            border-color: var(--accent-primary);
-        }
-
-        .calendar-grid {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 1px;
-            background: var(--border-color);
-            border: 1px solid var(--border-color);
-            border-radius: 0.5rem;
-            overflow: hidden;
-        }
-
-        .calendar-day-header {
-            background: var(--bg-tertiary);
-            padding: 1rem;
-            text-align: center;
-            font-weight: 600;
-            color: var(--text-primary);
-            font-size: 0.9rem;
-        }
-
-        .calendar-day {
-            background: var(--bg-secondary);
-            padding: 1rem;
-            min-height: 80px;
-            position: relative;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .calendar-day:hover {
-            background: rgba(59, 130, 246, 0.1);
-        }
-
-        .calendar-day.other-month {
-            background: var(--bg-primary);
-            color: var(--text-muted);
-        }
-
-        .calendar-day.today {
-            background: rgba(59, 130, 246, 0.2);
-            border: 1px solid var(--accent-primary);
-        }
-
-        .calendar-day-number {
-            font-weight: 600;
-            margin-bottom: 0.25rem;
-        }
-
-        .calendar-events {
-            font-size: 0.7rem;
-            color: var(--text-secondary);
-            margin-top: 0.25rem;
-        }
-
-        .event-item {
-            background: var(--accent-primary);
-            color: white;
-            padding: 0.125rem 0.25rem;
-            border-radius: 0.25rem;
-            margin-bottom: 0.125rem;
-            font-size: 0.6rem;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .event-item:hover {
-            background: var(--accent-secondary);
-            transform: scale(1.05);
-        }
-
-        .event-item.basketball {
-            background: var(--accent-warning);
-        }
-
-        .event-item.swimming {
-            background: var(--accent-success);
-        }
-
-        .event-item.gym {
-            background: var(--accent-danger);
-        }
-
-        .event-item.adventure {
-            background: var(--accent-secondary);
-        }
-
-        .event-item.playground {
-            background: linear-gradient(135deg, #ff6b6b, #feca57);
-        }
-
-        .calendar-day.has-bookings {
-            background: rgba(59, 130, 246, 0.05);
-        }
-
-        .calendar-day.has-bookings:hover {
-            background: rgba(59, 130, 246, 0.15);
-        }
-
-        .calendar-day.blocked {
-            background: rgba(100, 116, 139, 0.35);
-            border: 1px solid rgba(100, 116, 139, 0.6);
-            cursor: pointer;
-        }
-
-        .calendar-day.blocked:hover {
-            background: rgba(100, 116, 139, 0.45);
-        }
-
-        .booking-count {
-            font-size: 0.65rem;
-            font-weight: 600;
-            padding: 0.15rem 0.35rem;
-            border-radius: 0.25rem;
-            margin-top: 0.25rem;
-            display: inline-block;
-        }
-
-        .booking-count.low { background: rgba(16, 185, 129, 0.25); color: #10b981; }
-        .booking-count.moderate { background: rgba(245, 158, 11, 0.25); color: #f59e0b; }
-        .booking-count.high { background: rgba(239, 68, 68, 0.25); color: #ef4444; }
-        .booking-count.blocked { background: rgba(100, 116, 139, 0.35); color: #94a3b8; }
-
-        .modal-content-admin {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            color: var(--text-primary);
-        }
-
-        .modal-header-admin {
-            background: var(--bg-tertiary);
-            border-bottom: 1px solid var(--border-color);
-            padding: 1rem 1.5rem;
-        }
-
-        .modal-footer-admin {
-            background: var(--bg-tertiary);
-            border-top: 1px solid var(--border-color);
-            padding: 1rem 1.5rem;
-        }
-
-        .detail-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 0.5rem 0;
-            border-bottom: 1px solid var(--border-color);
-            font-size: 0.9rem;
-        }
-
-        .detail-row:last-child { border-bottom: none; }
-        .detail-label { color: var(--text-secondary); }
-        .detail-value { color: var(--text-primary); font-weight: 500; text-align: right; }
-
-        .booking-list-item {
-            background: var(--bg-tertiary);
-            border-radius: 0.5rem;
-            padding: 1rem;
-            margin-bottom: 0.75rem;
-            border-left: 4px solid var(--accent-primary);
-        }
-
-        .status-badge {
-            display: inline-block;
-            padding: 0.2rem 0.5rem;
-            border-radius: 0.25rem;
-            font-size: 0.75rem;
-            font-weight: 600;
-        }
-
-        .service-check-item {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.4rem 0;
-            color: var(--text-primary);
-            font-size: 0.875rem;
-        }
-
-        .service-check-scroll {
-            max-height: 220px;
-            overflow-y: auto;
-            padding: 0.5rem;
-            background: var(--bg-tertiary);
-            border-radius: 0.5rem;
-            border: 1px solid var(--border-color);
-        }
-
-        .form-ctrl {
-            width: 100%;
-            background: var(--bg-tertiary);
-            border: 1px solid var(--border-color);
-            color: var(--text-primary);
-            padding: 0.5rem 0.75rem;
-            border-radius: 0.5rem;
-        }
-
-        .form-ctrl:focus {
-            outline: none;
-            border-color: var(--accent-primary);
-            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
-        }
-
-        .btn-modal {
-            padding: 0.5rem 1rem;
-            border-radius: 0.5rem;
-            border: none;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .btn-modal-primary {
-            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
-            color: white;
-        }
-
-        .btn-modal-secondary {
-            background: var(--bg-tertiary);
-            border: 1px solid var(--border-color);
-            color: var(--text-primary);
-        }
-
-        .btn-modal-danger {
-            background: var(--accent-danger);
-            color: white;
-        }
-
-        /* Booking Details Modal */
-        .booking-details-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-
-        .booking-details-content {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 1rem;
-            padding: 2rem;
-            max-width: 500px;
-            width: 90%;
-            max-height: 80vh;
-            overflow-y: auto;
-        }
-
-        .booking-details-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1.5rem;
-            padding-bottom: 1rem;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .booking-details-title {
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: var(--text-primary);
-        }
-
-        .booking-details-close {
-            background: none;
-            border: none;
-            color: var(--text-secondary);
-            font-size: 1.5rem;
-            cursor: pointer;
-            transition: color 0.3s ease;
-        }
-
-        .booking-details-close:hover {
-            color: var(--text-primary);
-        }
-
-        .booking-item {
-            background: var(--bg-tertiary);
-            border-radius: 0.5rem;
-            padding: 1rem;
-            margin-bottom: 1rem;
-            border-left: 4px solid var(--accent-primary);
-        }
-
-        .booking-item h4 {
-            color: var(--text-primary);
-            font-size: 1rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .booking-item p {
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-            margin: 0.25rem 0;
-        }
-
-        .booking-time {
-            color: var(--accent-primary);
-            font-weight: 500;
-        }
-
-        .legend {
-            display: flex;
-            gap: 2rem;
-            margin-top: 2rem;
-            padding: 1rem;
-            background: var(--bg-tertiary);
-            border-radius: 0.5rem;
-        }
-
-        .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .legend-color {
-            width: 12px;
-            height: 12px;
-            border-radius: 2px;
-        }
-
-        .legend-text {
-            font-size: 0.85rem;
-            color: var(--text-secondary);
-        }
-    </style>
+    <link rel="stylesheet" href="../css/admin-theme.css">
+    <script src="components/admin-components.js" defer></script>
 </head>
 <body>
     <div id="sidebar-container"></div>
     <div id="navbar-container"></div>
 
-    <div class="main-content">
+    <div id="mainContent" class="main-content">
         <div class="calendar-container">
             <div class="calendar-header">
                 <h2 class="calendar-title">March 2026</h2>
@@ -495,12 +87,12 @@ $adminEmail = $_SESSION['admin_email'];
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <div class="detail-row"><span class="detail-label">Selected Date</span><span class="detail-value" id="detailDate">—</span></div>
+                    <div class="detail-row"><span class="detail-label">Selected Date</span><span class="detail-value" id="detailDate">�</span></div>
                     <div class="detail-row"><span class="detail-label">Total Bookings</span><span class="detail-value" id="detailTotal">0</span></div>
                     <div class="detail-row"><span class="detail-label">Rooms Occupied</span><span class="detail-value" id="detailRooms">0</span></div>
                     <div class="detail-row"><span class="detail-label">Cottages Occupied</span><span class="detail-value" id="detailCottages">0</span></div>
                     <div class="detail-row"><span class="detail-label">Activities Reserved</span><span class="detail-value" id="detailActivities">0</span></div>
-                    <div id="blockedReasonRow" class="detail-row d-none"><span class="detail-label">Block Reason</span><span class="detail-value" id="detailBlockReason">—</span></div>
+                    <div id="blockedReasonRow" class="detail-row d-none"><span class="detail-label">Block Reason</span><span class="detail-value" id="detailBlockReason">�</span></div>
                 </div>
                 <div class="modal-footer modal-footer-admin d-flex flex-wrap gap-2">
                     <button type="button" class="btn-modal btn-modal-primary" onclick="openBookingsListModal()"><i class="bi bi-list-ul me-1"></i>View Bookings</button>
@@ -516,7 +108,7 @@ $adminEmail = $_SESSION['admin_email'];
         <div class="modal-dialog modal-lg modal-dialog-scrollable">
             <div class="modal-content modal-content-admin">
                 <div class="modal-header modal-header-admin">
-                    <h5 class="modal-title"><i class="bi bi-calendar-check me-2"></i>Bookings — <span id="bookingsListDate"></span></h5>
+                    <h5 class="modal-title"><i class="bi bi-calendar-check me-2"></i>Bookings � <span id="bookingsListDate"></span></h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body" id="bookingsListBody">
@@ -589,7 +181,7 @@ $adminEmail = $_SESSION['admin_email'];
                             <textarea class="form-ctrl" id="bundleDescription" rows="2" placeholder="Optional description"></textarea>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label" style="color: var(--text-primary);">Original Price (₱)</label>
+                            <label class="form-label" style="color: var(--text-primary);">Original Price (?)</label>
                             <input type="number" class="form-ctrl" id="bundleOriginalPrice" min="0" step="0.01" value="0" oninput="calculateBundleFinalPrice()">
                         </div>
                         <div class="col-md-4">
@@ -597,7 +189,7 @@ $adminEmail = $_SESSION['admin_email'];
                             <input type="number" class="form-ctrl" id="bundleDiscount" min="0" max="100" step="0.01" value="0" oninput="calculateBundleFinalPrice()">
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label" style="color: var(--text-primary);">Final Price (₱) <span style="color: var(--accent-danger);">*</span></label>
+                            <label class="form-label" style="color: var(--text-primary);">Final Price (?) <span style="color: var(--accent-danger);">*</span></label>
                             <input type="number" class="form-ctrl" id="bundleFinalPrice" min="0" step="0.01" value="0">
                         </div>
                         <div class="col-12">
@@ -616,20 +208,6 @@ $adminEmail = $_SESSION['admin_email'];
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Load components
-        fetch('components/sidebar.html')
-            .then(response => response.text())
-            .then(html => {
-                document.getElementById('sidebar-container').innerHTML = html;
-                // Set active navigation after sidebar loads
-                setTimeout(setActiveNavigation, 50);
-            });
-
-        fetch('components/navbar.html')
-            .then(response => response.text())
-            .then(html => {
-                document.getElementById('navbar-container').innerHTML = html;
-            });
 
         // Calendar state
         let currentDate = new Date();
@@ -840,10 +418,10 @@ $adminEmail = $_SESSION['admin_email'];
                         <div class="detail-row"><span class="detail-label">Booking Status</span><span class="detail-value">${escapeHtml(formatStatus(b.status_name))}</span></div>
                         <div class="detail-row"><span class="detail-label">Payment Status</span><span class="detail-value">${escapeHtml(capitalize(b.payment_status))}</span></div>
                         <div class="detail-row"><span class="detail-label">Check-in</span><span class="detail-value">${escapeHtml(b.check_in_date)} ${b.check_in_time ? escapeHtml(b.check_in_time) : ''}</span></div>
-                        <div class="detail-row"><span class="detail-label">Check-out</span><span class="detail-value">${escapeHtml(b.check_out_date || '—')} ${b.check_out_time ? escapeHtml(b.check_out_time) : ''}</span></div>
+                        <div class="detail-row"><span class="detail-label">Check-out</span><span class="detail-value">${escapeHtml(b.check_out_date || '�')} ${b.check_out_time ? escapeHtml(b.check_out_time) : ''}</span></div>
                         <div class="detail-row"><span class="detail-label">Guests</span><span class="detail-value">${b.number_of_guests}</span></div>
-                        <div class="detail-row"><span class="detail-label">Total Amount</span><span class="detail-value">₱${parseFloat(b.total_amount).toLocaleString('en-PH', {minimumFractionDigits: 2})}</span></div>
-                        <div class="detail-row"><span class="detail-label">Payment Method</span><span class="detail-value">${escapeHtml(capitalize(b.payment_method || '—'))}</span></div>
+                        <div class="detail-row"><span class="detail-label">Total Amount</span><span class="detail-value">?${parseFloat(b.total_amount).toLocaleString('en-PH', {minimumFractionDigits: 2})}</span></div>
+                        <div class="detail-row"><span class="detail-label">Payment Method</span><span class="detail-value">${escapeHtml(capitalize(b.payment_method || '�'))}</span></div>
                         ${b.special_requests ? `<div class="detail-row"><span class="detail-label">Special Requests</span><span class="detail-value">${escapeHtml(b.special_requests)}</span></div>` : ''}
                     `;
                 })
@@ -929,14 +507,14 @@ $adminEmail = $_SESSION['admin_email'];
             if (calendarServices.activities.length) {
                 html += '<div style="font-weight:600;margin-bottom:0.25rem;color:var(--text-secondary);">Activities</div>';
                 calendarServices.activities.forEach(a => {
-                    html += `<label class="service-check-item"><input type="checkbox" class="bundle-act-chk" value="${a.id}" data-price="${a.price_per_hour}"> ${escapeHtml(a.name)} <span style="color:var(--text-muted);margin-left:auto;">₱${parseFloat(a.price_per_hour).toFixed(2)}/hr</span></label>`;
+                    html += `<label class="service-check-item"><input type="checkbox" class="bundle-act-chk" value="${a.id}" data-price="${a.price_per_hour}"> ${escapeHtml(a.name)} <span style="color:var(--text-muted);margin-left:auto;">?${parseFloat(a.price_per_hour).toFixed(2)}/hr</span></label>`;
                 });
             }
 
             if (calendarServices.accommodations.length) {
                 html += '<div style="font-weight:600;margin:0.75rem 0 0.25rem;color:var(--text-secondary);">Rooms & Cottages</div>';
                 calendarServices.accommodations.forEach(acc => {
-                    html += `<label class="service-check-item"><input type="checkbox" class="bundle-acc-chk" value="${acc.id}" data-price="${acc.price_per_night}"> ${escapeHtml(acc.name)} <small style="color:var(--text-muted);">(${escapeHtml(acc.type)})</small> <span style="color:var(--text-muted);margin-left:auto;">₱${parseFloat(acc.price_per_night).toFixed(2)}/night</span></label>`;
+                    html += `<label class="service-check-item"><input type="checkbox" class="bundle-acc-chk" value="${acc.id}" data-price="${acc.price_per_night}"> ${escapeHtml(acc.name)} <small style="color:var(--text-muted);">(${escapeHtml(acc.type)})</small> <span style="color:var(--text-muted);margin-left:auto;">?${parseFloat(acc.price_per_night).toFixed(2)}/night</span></label>`;
                 });
             }
 
@@ -1000,12 +578,12 @@ $adminEmail = $_SESSION['admin_email'];
         }
 
         function formatStatus(status) {
-            if (!status) return '—';
+            if (!status) return '�';
             return status.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
         }
 
         function capitalize(str) {
-            if (!str) return '—';
+            if (!str) return '�';
             return str.charAt(0).toUpperCase() + str.slice(1);
         }
 
@@ -1046,3 +624,6 @@ $adminEmail = $_SESSION['admin_email'];
     </script>
 </body>
 </html>
+
+
+

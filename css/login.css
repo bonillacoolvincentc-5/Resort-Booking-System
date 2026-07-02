@@ -1,4 +1,4 @@
-:root {
+﻿:root {
             --bg-primary: #0f172a;
             --bg-secondary: #1e293b;
             --bg-tertiary: #334155;
@@ -6,8 +6,8 @@
             --text-primary: #f1f5f9;
             --text-secondary: #94a3b8;
             --text-muted: #64748b;
-            --accent-primary: #3b82f6;
-            --accent-secondary: #8b5cf6;
+            --accent-primary: #9DFF00;
+            --accent-secondary: #6EDC45;
             --accent-success: #10b981;
             --accent-warning: #f59e0b;
             --accent-danger: #ef4444;
@@ -96,7 +96,7 @@
 
         .nav-link:hover {
             color: var(--text-primary) !important;
-            background: rgba(59, 130, 246, 0.1);
+            background: rgba(157, 255, 0, 0.1);
         }
 
         .nav-link:hover::after {
@@ -105,7 +105,7 @@
 
         .nav-link.active {
             color: var(--text-primary) !important;
-            background: rgba(59, 130, 246, 0.15);
+            background: rgba(157, 255, 0, 0.15);
         }
 
         .nav-link.active::after {
@@ -128,7 +128,7 @@
 
         .btn-login:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3);
+            box-shadow: 0 10px 20px rgba(157, 255, 0, 0.3);
         }
 
         /* Hero Section */
@@ -209,7 +209,7 @@
 
         .btn-hero-primary:hover {
             transform: translateY(-3px);
-            box-shadow: 0 20px 40px rgba(59, 130, 246, 0.4);
+            box-shadow: 0 20px 40px rgba(157, 255, 0, 0.4);
         }
 
         .btn-hero-secondary {
@@ -344,7 +344,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: linear-gradient(135deg, rgba(15, 23, 42, 0.7) 0%, rgba(59, 130, 246, 0.3) 100%);
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.7) 0%, rgba(157, 255, 0, 0.3) 100%);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -397,7 +397,7 @@
 
         .activity-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3);
+            box-shadow: 0 10px 20px rgba(157, 255, 0, 0.3);
         }
 
         /* Booking Section */
@@ -427,7 +427,7 @@
             background: var(--bg-tertiary);
             border-color: var(--accent-primary);
             color: var(--text-primary);
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+            box-shadow: 0 0 0 3px rgba(157, 255, 0, 0.1);
         }
 
         .form-label-modern {

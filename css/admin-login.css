@@ -1,4 +1,4 @@
-:root {
+﻿:root {
             --bg-primary: #0f172a;
             --bg-secondary: #1e293b;
             --bg-tertiary: #334155;
@@ -6,8 +6,8 @@
             --text-primary: #f1f5f9;
             --text-secondary: #94a3b8;
             --text-muted: #64748b;
-            --accent-primary: #3b82f6;
-            --accent-secondary: #8b5cf6;
+            --accent-primary: #9DFF00;
+            --accent-secondary: #6EDC45;
             --accent-success: #10b981;
             --accent-warning: #f59e0b;
             --accent-danger: #ef4444;
@@ -115,7 +115,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: linear-gradient(45deg, transparent 30%, rgba(139, 92, 246, 0.03) 50%, transparent 70%);
+            background: linear-gradient(45deg, transparent 30%, rgba(110, 220, 69, 0.03) 50%, transparent 70%);
             opacity: 0;
             transition: opacity 0.3s ease;
             pointer-events: none;
@@ -128,7 +128,7 @@
         .card:hover {
             transform: translateY(-5px);
             box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
-            border-color: rgba(139, 92, 246, 0.3);
+            border-color: rgba(110, 220, 69, 0.3);
         }
 
         .card-body {
@@ -213,13 +213,13 @@
             background: var(--bg-tertiary);
             border-color: var(--accent-secondary);
             color: var(--text-primary);
-            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+            box-shadow: 0 0 0 3px rgba(110, 220, 69, 0.1);
             outline: none;
             transform: translateY(-1px);
         }
 
         .form-control:hover {
-            border-color: rgba(139, 92, 246, 0.5);
+            border-color: rgba(110, 220, 69, 0.5);
         }
 
         .form-control::placeholder {
@@ -339,12 +339,12 @@
 
         .btn-primary:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(139, 92, 246, 0.3);
+            box-shadow: 0 10px 20px rgba(110, 220, 69, 0.3);
         }
 
         .btn-primary:focus {
             outline: none;
-            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.3);
+            box-shadow: 0 0 0 3px rgba(110, 220, 69, 0.3);
         }
 
         .btn-outline-secondary {
@@ -405,9 +405,9 @@
         }
 
         .alert-info-modern {
-            background: rgba(139, 92, 246, 0.1);
+            background: rgba(110, 220, 69, 0.1);
             color: var(--accent-secondary);
-            border: 1px solid rgba(139, 92, 246, 0.2);
+            border: 1px solid rgba(110, 220, 69, 0.2);
         }
 
         /* Responsive */

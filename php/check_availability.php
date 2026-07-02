@@ -19,7 +19,7 @@ try {
         throw new Exception('Missing required parameters');
     }
     
-    if (!in_array($type, ['activity', 'accommodation'])) {
+    if (!in_array($type, ['activity', 'accommodation', 'bundle'])) {
         throw new Exception('Invalid type parameter');
     }
     
@@ -34,7 +34,7 @@ try {
         if (!$item) {
             throw new Exception('Activity not found or inactive');
         }
-    } else {
+    } else if ($type === 'accommodation') {
         $stmt = $conn->prepare("SELECT capacity, name FROM accommodations WHERE id = ? AND is_active = 1");
         $stmt->bind_param('i', $itemId);
         $stmt->execute();
@@ -44,9 +44,19 @@ try {
         if (!$item) {
             throw new Exception('Accommodation not found or inactive');
         }
+    } else if ($type === 'bundle') {
+        $stmt = $conn->prepare("SELECT capacity, name FROM bundles WHERE id = ? AND is_active = 1");
+        $stmt->bind_param('i', $itemId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $item = $result->fetch_assoc();
+        
+        if (!$item) {
+            throw new Exception('Bundle not found or inactive');
+        }
     }
     
-    $itemColumn = $type === 'activity' ? 'activity_id' : 'accommodation_id';
+    $itemColumn = $type === 'activity' ? 'activity_id' : ($type === 'accommodation' ? 'accommodation_id' : 'bundle_id');
     
     // Count existing bookings for the date
     $query = "

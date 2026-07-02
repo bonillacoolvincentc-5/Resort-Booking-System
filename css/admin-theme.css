@@ -1,0 +1,1375 @@
+/* ═══════════════════════════════════════════════════════════════════
+   YP4K Resort — Admin Theme CSS
+   admin-theme.css  |  Loaded by all Admin_Dashboard pages
+   Provides: main layout, overview cards, charts section, activity feed
+═══════════════════════════════════════════════════════════════════ */
+
+/* ── 1. Main Content Layout ───────────────────────────────────────── */
+.main-content {
+    margin-left: var(--sidebar-width, 255px);
+    margin-top: var(--navbar-height, 68px);
+    padding: 2rem 2.5rem;
+    min-height: calc(100vh - var(--navbar-height, 68px));
+    transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    z-index: 1;
+}
+
+/* ── 2. Overview Stats Grid ───────────────────────────────────────── */
+.overview-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.25rem;
+    margin-bottom: 2rem;
+}
+
+@media (max-width: 1200px) {
+    .overview-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 600px) {
+    .overview-grid { grid-template-columns: 1fr; }
+    .main-content  { padding: 1.25rem; }
+}
+
+/* ── 3. Overview Card ─────────────────────────────────────────────── */
+.overview-card {
+    background: rgba(21, 34, 29, 0.75);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 18px;
+    padding: 1.5rem 1.5rem 1.25rem;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    cursor: default;
+}
+
+.overview-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    border-radius: 18px 18px 0 0;
+    background: linear-gradient(90deg, #9DFF00, #6EDC45);
+    opacity: 0.6;
+    transition: opacity 0.3s ease;
+}
+
+.overview-card.warning::before  { background: linear-gradient(90deg, #F7B731, #f0a500); }
+.overview-card.success::before  { background: linear-gradient(90deg, #27C46A, #1da855); }
+.overview-card.danger::before   { background: linear-gradient(90deg, #FF5A5F, #e04448); }
+
+.overview-card:hover {
+    transform: translateY(-5px);
+    border-color: rgba(157, 255, 0, 0.18);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5), 0 0 30px rgba(157, 255, 0, 0.07);
+}
+
+.overview-card.warning:hover  { border-color: rgba(247, 183, 49, 0.25); box-shadow: 0 12px 40px rgba(0,0,0,0.5), 0 0 25px rgba(247,183,49,0.1); }
+.overview-card.success:hover  { border-color: rgba(39, 196, 106, 0.25); box-shadow: 0 12px 40px rgba(0,0,0,0.5), 0 0 25px rgba(39,196,106,0.1); }
+.overview-card.danger:hover   { border-color: rgba(255, 90, 95, 0.25);  box-shadow: 0 12px 40px rgba(0,0,0,0.5), 0 0 25px rgba(255,90,95,0.1); }
+
+/* ── 3a. Card Header Row ────────────────────────────────────────── */
+.overview-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.1rem;
+}
+
+/* ── 3b. Icon Badge ─────────────────────────────────────────────── */
+.overview-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+}
+
+.overview-icon.primary {
+    background: rgba(157, 255, 0, 0.12);
+    color: #9DFF00;
+    box-shadow: 0 0 16px rgba(157, 255, 0, 0.15);
+}
+.overview-icon.warning {
+    background: rgba(247, 183, 49, 0.12);
+    color: #F7B731;
+    box-shadow: 0 0 16px rgba(247, 183, 49, 0.15);
+}
+.overview-icon.success {
+    background: rgba(39, 196, 106, 0.12);
+    color: #27C46A;
+    box-shadow: 0 0 16px rgba(39, 196, 106, 0.15);
+}
+.overview-icon.danger {
+    background: rgba(255, 90, 95, 0.12);
+    color: #FF5A5F;
+    box-shadow: 0 0 16px rgba(255, 90, 95, 0.15);
+}
+
+/* ── 3c. Trend Chip ─────────────────────────────────────────────── */
+.overview-trend {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 0.25rem 0.6rem;
+    border-radius: 100px;
+}
+
+.overview-trend.trend-up {
+    background: rgba(39, 196, 106, 0.12);
+    color: #27C46A;
+    border: 1px solid rgba(39, 196, 106, 0.2);
+}
+.overview-trend.trend-down {
+    background: rgba(255, 90, 95, 0.12);
+    color: #FF5A5F;
+    border: 1px solid rgba(255, 90, 95, 0.2);
+}
+
+.overview-trend i {
+    font-size: 0.7rem;
+}
+
+/* ── 3d. Card Value & Label ─────────────────────────────────────── */
+.overview-value {
+    font-size: 2rem;
+    font-weight: 800;
+    color: #ffffff;
+    line-height: 1;
+    margin-bottom: 0.35rem;
+    letter-spacing: -0.02em;
+    transition: opacity 0.4s ease;
+}
+
+.overview-label {
+    font-size: 0.8rem;
+    color: #8C9992;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+/* ── 4. Charts Section ────────────────────────────────────────────── */
+.charts-section {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 1.25rem;
+    margin-bottom: 1.5rem;
+}
+
+@media (max-width: 1024px) {
+    .charts-section { grid-template-columns: 1fr; }
+}
+
+.chart-card {
+    background: rgba(21, 34, 29, 0.75);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 18px;
+    padding: 1.5rem;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.chart-card:hover {
+    border-color: rgba(157, 255, 0, 0.12);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+}
+
+.chart-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.25rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.chart-title {
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 0.95rem;
+    margin: 0;
+    letter-spacing: -0.01em;
+}
+
+.chart-options {
+    display: flex;
+    gap: 0.35rem;
+}
+
+.chart-option {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: #8C9992;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.3rem 0.75rem;
+    border-radius: 100px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: inherit;
+    letter-spacing: 0.03em;
+}
+
+.chart-option:hover {
+    background: rgba(157, 255, 0, 0.06);
+    border-color: rgba(157, 255, 0, 0.2);
+    color: #9DFF00;
+}
+
+.chart-option.active {
+    background: rgba(157, 255, 0, 0.12);
+    border-color: rgba(157, 255, 0, 0.35);
+    color: #9DFF00;
+}
+
+.chart-container {
+    min-height: 220px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.chart-placeholder {
+    text-align: center;
+    color: #5C6B63;
+    width: 100%;
+}
+
+.chart-placeholder i {
+    font-size: 3rem;
+    display: block;
+    margin-bottom: 0.6rem;
+    opacity: 0.5;
+}
+
+.chart-placeholder p {
+    font-size: 0.85rem;
+    margin: 0;
+    font-weight: 500;
+    opacity: 0.6;
+}
+
+/* ── 5. Activity Card ─────────────────────────────────────────────── */
+.activity-card {
+    background: rgba(21, 34, 29, 0.75);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 18px;
+    padding: 1.5rem;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    margin-bottom: 1.5rem;
+}
+
+.activity-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.activity-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 0.9rem 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    transition: background 0.2s ease;
+}
+
+.activity-item:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.activity-item:first-child {
+    padding-top: 0;
+}
+
+.activity-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.95rem;
+    flex-shrink: 0;
+    margin-top: 0.1rem;
+}
+
+.activity-icon.booking {
+    background: rgba(157, 255, 0, 0.12);
+    color: #9DFF00;
+}
+
+.activity-icon.user {
+    background: rgba(110, 220, 69, 0.12);
+    color: #6EDC45;
+}
+
+.activity-icon.payment {
+    background: rgba(39, 196, 106, 0.12);
+    color: #27C46A;
+}
+
+.activity-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.activity-title {
+    color: #ffffff;
+    font-weight: 600;
+    font-size: 0.85rem;
+    margin-bottom: 0.15rem;
+}
+
+.activity-desc {
+    color: #8C9992;
+    font-size: 0.8rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.activity-time {
+    color: #5C6B63;
+    font-size: 0.72rem;
+    margin-top: 0.2rem;
+}
+
+/* ── 6. Page Header Row ───────────────────────────────────────────── */
+.main-content h1.h3 {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #ffffff;
+    background: linear-gradient(135deg, #ffffff 60%, #9DFF00);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: -0.02em;
+    margin-bottom: 0;
+}
+
+.main-content .text-muted {
+    color: #8C9992 !important;
+    font-size: 0.875rem;
+}
+
+/* ── 7. Export / Action Buttons ───────────────────────────────────── */
+.btn-outline-secondary {
+    background: transparent !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    color: #B8C4BE !important;
+    font-size: 0.85rem;
+    font-weight: 600;
+    border-radius: 9px;
+    padding: 0.5rem 1.1rem;
+    transition: all 0.25s ease;
+    font-family: inherit;
+}
+
+.btn-outline-secondary:hover {
+    background: rgba(157, 255, 0, 0.07) !important;
+    border-color: rgba(157, 255, 0, 0.3) !important;
+    color: #9DFF00 !important;
+    transform: translateY(-2px);
+}
+
+/* ── 8. Revenue card — slightly smaller value to fit currency symbol ─ */
+.overview-card.success .overview-value {
+    font-size: 1.75rem;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   PAGE-LEVEL COMPONENTS (shared across bookings, activities, users…)
+═══════════════════════════════════════════════════════════════════ */
+
+/* ── 9. Page Header ───────────────────────────────────────────────── */
+.page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    background: rgba(21, 34, 29, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 18px;
+    padding: 1.5rem 2rem;
+    margin-bottom: 1.5rem;
+    position: relative;
+    overflow: hidden;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+}
+
+.page-header::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, #9DFF00, #6EDC45, transparent);
+}
+
+.page-title {
+    font-size: 1.6rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #ffffff 60%, #9DFF00);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: -0.02em;
+    margin: 0 0 0.2rem;
+    line-height: 1.2;
+}
+
+.page-header .text-muted {
+    color: #8C9992 !important;
+    font-size: 0.875rem;
+    margin: 0;
+}
+
+.page-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-shrink: 0;
+}
+
+/* ── 10. Filters Card ─────────────────────────────────────────────── */
+.filters-card {
+    background: rgba(21, 34, 29, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1.25rem;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+}
+
+.filters-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+    gap: 1rem;
+    align-items: end;
+}
+
+@media (max-width: 1100px) {
+    .filters-grid { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 640px) {
+    .filters-grid { grid-template-columns: 1fr; }
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.filter-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #8C9992;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.filter-input {
+    background: rgba(8, 18, 14, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 9px;
+    color: #ffffff;
+    font-size: 0.875rem;
+    font-family: inherit;
+    padding: 0.55rem 0.9rem;
+    transition: border-color 0.25s ease, box-shadow 0.25s ease;
+    outline: none;
+    width: 100%;
+    appearance: none;
+    -webkit-appearance: none;
+}
+
+.filter-input:focus {
+    border-color: rgba(157, 255, 0, 0.4);
+    box-shadow: 0 0 0 3px rgba(157, 255, 0, 0.07);
+}
+
+.filter-input::placeholder { color: #5C6B63; }
+
+/* Style native select arrow */
+select.filter-input {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238C9992' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    padding-right: 2rem;
+    cursor: pointer;
+}
+
+select.filter-input option {
+    background: #0D1810;
+    color: #ffffff;
+}
+
+/* Date input calendar icon colour */
+input[type="date"].filter-input::-webkit-calendar-picker-indicator {
+    filter: invert(0.6);
+    cursor: pointer;
+}
+
+/* ── 11. Bookings Card + Table ────────────────────────────────────── */
+.bookings-card {
+    background: rgba(21, 34, 29, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 18px;
+    overflow: hidden;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+}
+
+.table-modern {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+}
+
+.table-modern thead tr {
+    background: rgba(8, 18, 14, 0.6);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.table-modern thead th {
+    padding: 0.9rem 1.25rem;
+    color: #8C9992;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    white-space: nowrap;
+    text-align: left;
+}
+
+.table-modern tbody tr {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    transition: background 0.2s ease;
+}
+
+.table-modern tbody tr:last-child {
+    border-bottom: none;
+}
+
+.table-modern tbody tr:hover {
+    background: rgba(157, 255, 0, 0.03);
+}
+
+.table-modern tbody td {
+    padding: 1rem 1.25rem;
+    color: #B8C4BE;
+    vertical-align: middle;
+}
+
+.customer-name {
+    color: #ffffff !important;
+    font-weight: 600;
+}
+
+/* ── 12. Payment method pill ──────────────────────────────────────── */
+.payment-method {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.payment-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 7px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+}
+
+.gcash-icon {
+    background: rgba(0, 102, 255, 0.15);
+    color: #4d8aff;
+    border: 1px solid rgba(0, 102, 255, 0.2);
+}
+
+.cash-icon {
+    background: rgba(39, 196, 106, 0.12);
+    color: #27C46A;
+    border: 1px solid rgba(39, 196, 106, 0.2);
+}
+
+/* ── 13. Status Badges ────────────────────────────────────────────── */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.3rem 0.75rem;
+    border-radius: 100px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: capitalize;
+    white-space: nowrap;
+}
+
+.status-badge::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: 0.8;
+}
+
+.status-pending_review,
+.status-pending {
+    background: rgba(247, 183, 49, 0.12);
+    color: #F7B731;
+    border: 1px solid rgba(247, 183, 49, 0.25);
+}
+
+.status-approved {
+    background: rgba(39, 196, 106, 0.12);
+    color: #27C46A;
+    border: 1px solid rgba(39, 196, 106, 0.25);
+}
+
+.status-rejected,
+.status-cancelled {
+    background: rgba(255, 90, 95, 0.12);
+    color: #FF5A5F;
+    border: 1px solid rgba(255, 90, 95, 0.25);
+}
+
+.status-completed {
+    background: rgba(157, 255, 0, 0.1);
+    color: #9DFF00;
+    border: 1px solid rgba(157, 255, 0, 0.2);
+}
+
+/* ── 14. Action Buttons ───────────────────────────────────────────── */
+.action-buttons {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+}
+
+.btn-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.35rem 0.75rem;
+    border-radius: 7px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid transparent;
+    font-family: inherit;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    line-height: 1.4;
+}
+
+.btn-approve {
+    background: rgba(39, 196, 106, 0.12);
+    border-color: rgba(39, 196, 106, 0.25);
+    color: #27C46A;
+}
+.btn-approve:hover {
+    background: rgba(39, 196, 106, 0.22);
+    border-color: rgba(39, 196, 106, 0.4);
+    transform: translateY(-1px);
+}
+
+.btn-reject {
+    background: rgba(255, 90, 95, 0.1);
+    border-color: rgba(255, 90, 95, 0.22);
+    color: #FF5A5F;
+}
+.btn-reject:hover {
+    background: rgba(255, 90, 95, 0.2);
+    border-color: rgba(255, 90, 95, 0.4);
+    transform: translateY(-1px);
+}
+
+.btn-view {
+    background: rgba(157, 255, 0, 0.08);
+    border-color: rgba(157, 255, 0, 0.2);
+    color: #9DFF00;
+}
+.btn-view:hover {
+    background: rgba(157, 255, 0, 0.15);
+    border-color: rgba(157, 255, 0, 0.35);
+    transform: translateY(-1px);
+}
+
+.btn-edit {
+    background: rgba(184, 196, 190, 0.08);
+    border-color: rgba(184, 196, 190, 0.15);
+    color: #B8C4BE;
+}
+.btn-edit:hover {
+    background: rgba(184, 196, 190, 0.15);
+    border-color: rgba(184, 196, 190, 0.3);
+    color: #ffffff;
+    transform: translateY(-1px);
+}
+
+/* ── 15. Pagination ───────────────────────────────────────────────── */
+.pagination-section {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.25rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.pagination-info {
+    font-size: 0.82rem;
+    color: #8C9992;
+}
+
+.pagination-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.page-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: #8C9992;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: inherit;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.page-btn:hover {
+    background: rgba(157, 255, 0, 0.07);
+    border-color: rgba(157, 255, 0, 0.2);
+    color: #9DFF00;
+}
+
+.page-btn.active {
+    background: rgba(157, 255, 0, 0.14);
+    border-color: rgba(157, 255, 0, 0.35);
+    color: #9DFF00;
+}
+
+/* ── 16. Btn-modern variants (used in buttons across pages) ────────── */
+.btn-modern {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.55rem 1.25rem;
+    border-radius: 9px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    font-family: inherit;
+    transition: all 0.25s ease;
+    line-height: 1.4;
+    white-space: nowrap;
+}
+
+.btn-modern.btn-primary,
+.btn-primary-modern {
+    background: linear-gradient(135deg, #9DFF00, #6EDC45);
+    color: #000;
+    box-shadow: 0 4px 14px rgba(157, 255, 0, 0.25);
+}
+.btn-modern.btn-primary:hover,
+.btn-primary-modern:hover {
+    box-shadow: 0 6px 20px rgba(157, 255, 0, 0.4);
+    transform: translateY(-2px);
+    color: #000;
+}
+
+.btn-modern.btn-secondary,
+.btn-secondary-modern {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #B8C4BE;
+}
+.btn-modern.btn-secondary:hover,
+.btn-secondary-modern:hover {
+    background: rgba(157, 255, 0, 0.07);
+    border-color: rgba(157, 255, 0, 0.3);
+    color: #9DFF00;
+    transform: translateY(-2px);
+}
+
+/* ── 17. Modal overrides ──────────────────────────────────────────── */
+.modal-content-modern {
+    background: #0D1810 !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-radius: 20px !important;
+    color: #ffffff;
+}
+
+.modal-header-modern {
+    background: rgba(21, 34, 29, 0.9) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07) !important;
+    padding: 1.25rem 1.5rem !important;
+}
+
+.modal-header-modern .modal-title {
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 1rem;
+}
+
+.modal-body-modern {
+    background: #0D1810;
+    padding: 1.5rem !important;
+}
+
+.modal-footer-modern {
+    background: rgba(21, 34, 29, 0.9) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.07) !important;
+    padding: 1rem 1.5rem !important;
+    gap: 0.75rem;
+}
+
+/* ── 18. Form groups inside modals ────────────────────────────────── */
+.form-group-modern {
+    margin-bottom: 1.1rem;
+}
+
+.form-control-modern {
+    background: rgba(8, 18, 14, 0.8) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-radius: 9px !important;
+    color: #ffffff !important;
+    font-size: 0.875rem;
+    font-family: inherit;
+    padding: 0.6rem 0.9rem;
+    width: 100%;
+    transition: border-color 0.25s ease, box-shadow 0.25s ease;
+    outline: none;
+}
+
+.form-control-modern:focus {
+    border-color: rgba(157, 255, 0, 0.4) !important;
+    box-shadow: 0 0 0 3px rgba(157, 255, 0, 0.07) !important;
+}
+
+.form-control-modern::placeholder { color: #5C6B63; }
+
+textarea.form-control-modern { resize: vertical; min-height: 90px; }
+
+/* ── 19. Empty state (no bookings) ───────────────────────────────── */
+.table-modern tbody td[colspan] {
+    text-align: center;
+    padding: 3rem 1rem;
+}
+
+.table-modern tbody td[colspan] .bi-inbox {
+    font-size: 2.5rem;
+    color: #5C6B63;
+    display: block;
+    margin-bottom: 0.75rem;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   CALENDAR PAGE  (calendar.php)
+═══════════════════════════════════════════════════════════════════ */
+
+/* ── 20. Calendar Container ───────────────────────────────────────── */
+.calendar-container {
+    background: rgba(21, 34, 29, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 20px;
+    overflow: hidden;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+}
+
+/* ── 21. Calendar Header ──────────────────────────────────────────── */
+.calendar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.5rem 1.75rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+    background: rgba(8, 18, 14, 0.5);
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.calendar-title {
+    font-size: 1.5rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #ffffff 60%, #9DFF00);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: -0.02em;
+    margin: 0;
+}
+
+/* ── 22. Calendar Nav Buttons ─────────────────────────────────────── */
+.calendar-nav {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.calendar-nav button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.45rem 1rem;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #B8C4BE;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.calendar-nav button:hover {
+    background: rgba(157, 255, 0, 0.1);
+    border-color: rgba(157, 255, 0, 0.3);
+    color: #9DFF00;
+    transform: translateY(-1px);
+}
+
+/* ── 23. Calendar Grid ────────────────────────────────────────────── */
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* Day-of-week header row */
+.calendar-day-header {
+    padding: 0.75rem 0.5rem;
+    text-align: center;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #5C6B63;
+    background: rgba(8, 18, 14, 0.4);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* ── 24. Calendar Day Cell ────────────────────────────────────────── */
+.calendar-day {
+    min-height: 90px;
+    padding: 0.6rem 0.7rem;
+    border-right: 1px solid rgba(255, 255, 255, 0.04);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    cursor: pointer;
+    transition: background 0.2s ease;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+
+.calendar-day:hover {
+    background: rgba(157, 255, 0, 0.04);
+}
+
+/* Every 7th cell — no right border */
+.calendar-day:nth-child(7n) {
+    border-right: none;
+}
+
+/* Other-month days (greyed out) */
+.calendar-day.other-month {
+    opacity: 0.3;
+    cursor: default;
+    pointer-events: none;
+}
+
+/* Today highlight */
+.calendar-day.today {
+    background: rgba(157, 255, 0, 0.06);
+    border: 1px solid rgba(157, 255, 0, 0.2);
+}
+
+.calendar-day.today .calendar-day-number {
+    background: linear-gradient(135deg, #9DFF00, #6EDC45);
+    color: #000;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+}
+
+/* Blocked day */
+.calendar-day.blocked {
+    background: rgba(100, 116, 139, 0.12);
+}
+
+.calendar-day.blocked:hover {
+    background: rgba(100, 116, 139, 0.18);
+}
+
+/* Has bookings */
+.calendar-day.has-bookings {
+    background: rgba(39, 196, 106, 0.04);
+}
+
+/* ── 25. Day Number ───────────────────────────────────────────────── */
+.calendar-day-number {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #ffffff;
+    line-height: 1;
+}
+
+.calendar-day.other-month .calendar-day-number {
+    color: #5C6B63;
+}
+
+/* ── 26. Booking Count Badge ──────────────────────────────────────── */
+.booking-count {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 0.18rem 0.5rem;
+    border-radius: 100px;
+    margin-top: auto;
+    width: fit-content;
+}
+
+.booking-count.none,
+.booking-count.low {
+    background: rgba(39, 196, 106, 0.12);
+    color: #27C46A;
+    border: 1px solid rgba(39, 196, 106, 0.2);
+}
+
+.booking-count.moderate {
+    background: rgba(245, 158, 11, 0.15);
+    color: #F7B731;
+    border: 1px solid rgba(245, 158, 11, 0.25);
+}
+
+.booking-count.high,
+.booking-count.full {
+    background: rgba(239, 68, 68, 0.15);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.25);
+}
+
+.booking-count.blocked {
+    background: rgba(100, 116, 139, 0.2);
+    color: #94a3b8;
+    border: 1px solid rgba(100, 116, 139, 0.3);
+}
+
+/* ── 27. Legend ───────────────────────────────────────────────────── */
+.legend {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1.25rem;
+    padding: 1.1rem 1.75rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    background: rgba(8, 18, 14, 0.35);
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.legend-color {
+    width: 14px;
+    height: 14px;
+    border-radius: 4px;
+    flex-shrink: 0;
+}
+
+.legend-text {
+    font-size: 0.75rem;
+    color: #8C9992;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+/* ── 28. Calendar Admin Modals ────────────────────────────────────── */
+.modal-content-admin {
+    background: #0D1810 !important;
+    border: 1px solid rgba(255, 255, 255, 0.09) !important;
+    border-radius: 18px !important;
+    color: #ffffff;
+}
+
+.modal-header-admin {
+    background: rgba(21, 34, 29, 0.95) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07) !important;
+    padding: 1.1rem 1.4rem !important;
+}
+
+.modal-header-admin .modal-title {
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+}
+
+.modal-footer-admin {
+    background: rgba(21, 34, 29, 0.9) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.07) !important;
+    padding: 0.9rem 1.4rem !important;
+    gap: 0.5rem;
+}
+
+.modal-content-admin .modal-body {
+    background: #0D1810;
+    padding: 1.4rem;
+}
+
+/* ── 29. Detail Rows (inside modals) ──────────────────────────────── */
+.detail-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    padding: 0.65rem 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    gap: 1rem;
+}
+
+.detail-row:last-child {
+    border-bottom: none;
+}
+
+.detail-label {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #8C9992;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.detail-value {
+    font-size: 0.875rem;
+    color: #ffffff;
+    font-weight: 500;
+    text-align: right;
+}
+
+/* ── 30. Modal Action Buttons ─────────────────────────────────────── */
+.btn-modal {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.45rem 1rem;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid transparent;
+    font-family: inherit;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    line-height: 1.4;
+    text-decoration: none;
+}
+
+.btn-modal-primary {
+    background: linear-gradient(135deg, #9DFF00, #6EDC45);
+    color: #000;
+    border-color: #9DFF00;
+    box-shadow: 0 3px 10px rgba(157, 255, 0, 0.2);
+}
+.btn-modal-primary:hover {
+    box-shadow: 0 5px 16px rgba(157, 255, 0, 0.35);
+    transform: translateY(-1px);
+    color: #000;
+}
+
+.btn-modal-secondary {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.1);
+    color: #B8C4BE;
+}
+.btn-modal-secondary:hover {
+    background: rgba(157, 255, 0, 0.07);
+    border-color: rgba(157, 255, 0, 0.25);
+    color: #9DFF00;
+    transform: translateY(-1px);
+}
+
+.btn-modal-danger {
+    background: rgba(255, 90, 95, 0.1);
+    border-color: rgba(255, 90, 95, 0.25);
+    color: #FF5A5F;
+}
+.btn-modal-danger:hover {
+    background: rgba(255, 90, 95, 0.2);
+    border-color: rgba(255, 90, 95, 0.4);
+    transform: translateY(-1px);
+}
+
+.btn-modal.btn-sm {
+    padding: 0.3rem 0.7rem;
+    font-size: 0.75rem;
+}
+
+/* ── 31. Booking List Item (inside bookingsListModal) ─────────────── */
+.booking-list-item {
+    padding: 0.9rem;
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 12px;
+    margin-bottom: 0.7rem;
+    background: rgba(21, 34, 29, 0.5);
+    transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.booking-list-item:last-child {
+    margin-bottom: 0;
+}
+
+.booking-list-item:hover {
+    border-color: rgba(157, 255, 0, 0.15);
+    background: rgba(21, 34, 29, 0.8);
+}
+
+.booking-list-item strong {
+    color: #ffffff;
+    font-size: 0.9rem;
+}
+
+/* ── 32. Form controls inside calendar modals ─────────────────────── */
+.form-ctrl {
+    width: 100%;
+    background: rgba(8, 18, 14, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 9px;
+    color: #ffffff;
+    font-size: 0.875rem;
+    font-family: inherit;
+    padding: 0.6rem 0.9rem;
+    transition: border-color 0.25s ease, box-shadow 0.25s ease;
+    outline: none;
+    display: block;
+}
+
+.form-ctrl:focus {
+    border-color: rgba(157, 255, 0, 0.4);
+    box-shadow: 0 0 0 3px rgba(157, 255, 0, 0.07);
+}
+
+.form-ctrl::placeholder { color: #5C6B63; }
+
+textarea.form-ctrl {
+    resize: vertical;
+    min-height: 80px;
+}
+
+.form-ctrl[readonly] {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* ── 33. Service checkboxes scroll area ───────────────────────────── */
+.service-check-scroll {
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 9px;
+    padding: 0.75rem;
+    background: rgba(8, 18, 14, 0.5);
+    scrollbar-width: thin;
+    scrollbar-color: rgba(157, 255, 0, 0.2) transparent;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.service-check-scroll label {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    color: #B8C4BE;
+    font-size: 0.85rem;
+    cursor: pointer;
+    padding: 0.3rem 0.5rem;
+    border-radius: 7px;
+    transition: background 0.15s ease;
+}
+
+.service-check-scroll label:hover {
+    background: rgba(157, 255, 0, 0.05);
+    color: #ffffff;
+}
+
+.service-check-scroll input[type="checkbox"] {
+    accent-color: #9DFF00;
+    width: 15px;
+    height: 15px;
+    flex-shrink: 0;
+}
+
+/* ── 34. Responsive calendar ──────────────────────────────────────── */
+@media (max-width: 768px) {
+    .calendar-day {
+        min-height: 60px;
+        padding: 0.4rem;
+    }
+
+    .calendar-day-number {
+        font-size: 0.78rem;
+    }
+
+    .booking-count {
+        font-size: 0.58rem;
+        padding: 0.12rem 0.35rem;
+    }
+
+    .calendar-title {
+        font-size: 1.15rem;
+    }
+
+    .calendar-nav button {
+        padding: 0.4rem 0.6rem;
+        font-size: 0.75rem;
+    }
+
+    .legend {
+        gap: 0.75rem;
+        padding: 0.9rem 1rem;
+    }
+}

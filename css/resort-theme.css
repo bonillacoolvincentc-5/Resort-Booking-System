@@ -1,0 +1,802 @@
+/* ═══════════════════════════════════════════════════════════════════
+   YP4K RESORT — Global Design System
+   resort-theme.css  |  Import this on EVERY page of the system
+═══════════════════════════════════════════════════════════════════ */
+
+/* Google Fonts — Poppins */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap');
+
+/* ─── 1. DESIGN TOKENS ──────────────────────────────────────────── */
+:root {
+  /* Backgrounds */
+  --bg-primary:    #08120E;
+  --bg-secondary:  #101B17;
+  --bg-card:       #15221D;
+  --bg-card-2:     #1A2B22;
+  --bg-elevated:   #1E3028;
+  --nav-bg:        rgba(9, 18, 15, 0.88);
+
+  /* Green Accents */
+  --accent:        #9DFF00;
+  --accent-2:      #6EDC45;
+  --accent-3:      #4BBF2E;
+  --accent-dim:    rgba(157, 255, 0, 0.5);
+  --glow:          rgba(157, 255, 0, 0.18);
+  --glow-sm:       rgba(157, 255, 0, 0.08);
+  --glow-lg:       rgba(157, 255, 0, 0.25);
+
+  /* Text */
+  --text:          #FFFFFF;
+  --text-2:        #B8C4BE;
+  --text-muted:    #8C9992;
+  --text-dim:      #5C6B63;
+
+  /* Status */
+  --success:       #27C46A;
+  --warning:       #F7B731;
+  --error:         #FF5A5F;
+  --info:          #B8C4BE;  /* Neutral warm-white — no blue/cyan */
+
+  /* Borders */
+  --border:        rgba(255, 255, 255, 0.08);
+  --border-2:      rgba(255, 255, 255, 0.04);
+  --border-accent: rgba(157, 255, 0, 0.3);
+  --border-hover:  rgba(157, 255, 0, 0.5);
+
+  /* Shadows */
+  --shadow-sm:     0 1px 4px rgba(0,0,0,0.5);
+  --shadow-md:     0 4px 20px rgba(0,0,0,0.55);
+  --shadow-lg:     0 10px 40px rgba(0,0,0,0.65);
+  --shadow-xl:     0 20px 60px rgba(0,0,0,0.7);
+  --shadow-glow:   0 0 30px rgba(157, 255, 0, 0.12);
+  --shadow-glow-lg:0 0 60px rgba(157, 255, 0, 0.2);
+
+  /* Border Radii */
+  --radius-xs:  6px;
+  --radius-sm:  10px;
+  --radius-md:  14px;
+  --radius-lg:  18px;
+  --radius-xl:  24px;
+  --radius-2xl: 32px;
+
+  /* Transitions */
+  --t:      all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --t-fast: all 0.15s ease;
+  --t-slow: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Typography */
+  --font:      'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* ─── 2. RESET & BASE ───────────────────────────────────────────── */
+*, *::before, *::after {
+  margin: 0; padding: 0; box-sizing: border-box;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font);
+  background-color: var(--bg-primary);
+  color: var(--text);
+  min-height: 100vh;
+  line-height: 1.65;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ─── 3. ANIMATED BACKGROUND SYSTEM ────────────────────────────── */
+.resort-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: var(--bg-primary);
+  overflow: hidden;
+}
+
+/* Layer 1: Animated gradient drift */
+.resort-bg::before {
+  content: '';
+  position: absolute;
+  inset: -50%;
+  background: radial-gradient(
+    ellipse 80% 60% at 20% 30%,
+    rgba(13, 28, 18, 0.9) 0%,
+    transparent 70%
+  ),
+  radial-gradient(
+    ellipse 60% 80% at 80% 70%,
+    rgba(10, 22, 14, 0.8) 0%,
+    transparent 70%
+  );
+  animation: bgDrift 30s ease-in-out infinite alternate;
+}
+
+/* Layer 2: Radial green glow at center */
+.resort-bg::after {
+  content: '';
+  position: absolute;
+  top: 35%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 70vw;
+  height: 50vh;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(157, 255, 0, 0.045) 0%,
+    transparent 70%
+  );
+  animation: glowPulse 8s ease-in-out infinite;
+}
+
+@keyframes bgDrift {
+  0%   { transform: translate(0, 0) scale(1); }
+  33%  { transform: translate(2%, 1%) scale(1.02); }
+  66%  { transform: translate(-1%, 2%) scale(0.99); }
+  100% { transform: translate(1%, -1%) scale(1.01); }
+}
+
+@keyframes glowPulse {
+  0%, 100% { opacity: 0.7; transform: translate(-50%,-50%) scale(1); }
+  50%       { opacity: 1;   transform: translate(-50%,-50%) scale(1.1); }
+}
+
+/* ─── 4. CSS FLOATING PARTICLES ────────────────────────────────── */
+.particles {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.particle {
+  position: absolute;
+  border-radius: 50%;
+  background: var(--accent);
+  opacity: 0;
+  animation: particleDrift linear infinite;
+}
+
+/* 8 particles with varied sizes, positions, speeds */
+.particle:nth-child(1)  { width:3px; height:3px; left:10%; top:20%; animation-duration:45s; animation-delay:0s;   opacity:0.06; }
+.particle:nth-child(2)  { width:2px; height:2px; left:25%; top:60%; animation-duration:55s; animation-delay:-10s;  opacity:0.05; }
+.particle:nth-child(3)  { width:4px; height:4px; left:50%; top:15%; animation-duration:40s; animation-delay:-5s;   opacity:0.07; }
+.particle:nth-child(4)  { width:2px; height:2px; left:70%; top:40%; animation-duration:60s; animation-delay:-20s;  opacity:0.05; }
+.particle:nth-child(5)  { width:3px; height:3px; left:85%; top:70%; animation-duration:50s; animation-delay:-15s;  opacity:0.06; }
+.particle:nth-child(6)  { width:2px; height:2px; left:40%; top:80%; animation-duration:48s; animation-delay:-8s;   opacity:0.05; }
+.particle:nth-child(7)  { width:5px; height:5px; left:15%; top:85%; animation-duration:65s; animation-delay:-25s;  opacity:0.04; }
+.particle:nth-child(8)  { width:2px; height:2px; left:90%; top:10%; animation-duration:42s; animation-delay:-3s;   opacity:0.07; }
+
+@keyframes particleDrift {
+  0%   { transform: translateY(0) translateX(0); opacity: inherit; }
+  25%  { transform: translateY(-30px) translateX(15px); }
+  50%  { transform: translateY(-15px) translateX(-10px); }
+  75%  { transform: translateY(-45px) translateX(20px); }
+  100% { transform: translateY(-80px) translateX(5px); opacity: 0; }
+}
+
+/* ─── 5. GLASSMORPHISM NAVBAR ───────────────────────────────────── */
+.resort-nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 1000;
+  background: var(--nav-bg);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 1px solid var(--border);
+  padding: 0.75rem 0;
+  transition: var(--t);
+}
+
+.resort-nav.scrolled {
+  background: rgba(7, 15, 11, 0.96);
+  box-shadow: 0 4px 30px rgba(0,0,0,0.5);
+}
+
+.resort-nav .navbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-weight: 700;
+  font-size: 1.2rem;
+  color: var(--text) !important;
+  text-decoration: none;
+  letter-spacing: -0.01em;
+}
+
+.resort-nav .navbar-brand .brand-icon {
+  width: 34px; height: 34px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem;
+  color: #000;
+  flex-shrink: 0;
+}
+
+.resort-nav .nav-link {
+  color: var(--text-2) !important;
+  font-weight: 500;
+  font-size: 0.9rem;
+  padding: 0.5rem 1rem !important;
+  border-radius: var(--radius-sm);
+  transition: var(--t);
+  position: relative;
+  margin: 0 0.1rem;
+}
+
+.resort-nav .nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: 4px; left: 50%;
+  width: 0; height: 2px;
+  background: var(--accent);
+  border-radius: 2px;
+  transform: translateX(-50%);
+  transition: width 0.3s ease;
+}
+
+.resort-nav .nav-link:hover {
+  color: var(--text) !important;
+  background: rgba(157, 255, 0, 0.06);
+}
+
+.resort-nav .nav-link:hover::after,
+.resort-nav .nav-link.active::after {
+  width: 60%;
+}
+
+.resort-nav .nav-link.active {
+  color: var(--accent) !important;
+  background: rgba(157, 255, 0, 0.08);
+}
+
+/* ─── 6. BUTTONS ────────────────────────────────────────────────── */
+
+/* Primary — Green gradient */
+.btn-resort {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.75rem;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: #000 !important;
+  font-family: var(--font);
+  font-weight: 700;
+  font-size: 0.9rem;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  text-decoration: none;
+  transition: var(--t);
+  box-shadow: 0 4px 20px rgba(157, 255, 0, 0.3);
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+.btn-resort:hover {
+  transform: translateY(-4px) scale(1.03);
+  box-shadow: 0 8px 35px rgba(157, 255, 0, 0.45);
+  color: #000 !important;
+}
+
+.btn-resort:active {
+  transform: translateY(-1px) scale(0.98);
+}
+
+/* Ghost — Transparent with green border */
+.btn-resort-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.75rem;
+  background: transparent;
+  color: var(--text) !important;
+  font-family: var(--font);
+  font-weight: 600;
+  font-size: 0.9rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  text-decoration: none;
+  transition: var(--t);
+  backdrop-filter: blur(10px);
+  white-space: nowrap;
+}
+
+.btn-resort-ghost:hover {
+  border-color: var(--accent);
+  color: var(--accent) !important;
+  background: rgba(157, 255, 0, 0.06);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 25px rgba(157, 255, 0, 0.15);
+}
+
+/* Danger */
+.btn-resort-danger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.25rem;
+  background: rgba(255, 90, 95, 0.12);
+  color: var(--error) !important;
+  font-family: var(--font);
+  font-weight: 600;
+  font-size: 0.875rem;
+  border: 1px solid rgba(255, 90, 95, 0.25);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  text-decoration: none;
+  transition: var(--t);
+}
+
+.btn-resort-danger:hover {
+  background: rgba(255, 90, 95, 0.2);
+  border-color: var(--error);
+  transform: translateY(-2px);
+}
+
+/* Small variant */
+.btn-resort-sm {
+  padding: 0.5rem 1.1rem;
+  font-size: 0.8rem;
+}
+
+/* ─── 7. GLASS CARDS ────────────────────────────────────────────── */
+.glass-card {
+  background: rgba(21, 34, 29, 0.7);
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  transition: var(--t);
+}
+
+.glass-card:hover {
+  border-color: rgba(157, 255, 0, 0.15);
+  box-shadow: var(--shadow-glow);
+  transform: translateY(-4px);
+}
+
+.glass-card-static {
+  background: rgba(21, 34, 29, 0.7);
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+
+/* ─── 8. FORM ELEMENTS ──────────────────────────────────────────── */
+.input-resort {
+  width: 100%;
+  background: rgba(8, 18, 14, 0.6);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 0.9rem;
+  padding: 0.8rem 1rem;
+  outline: none;
+  transition: var(--t);
+}
+
+.input-resort::placeholder { color: var(--text-muted); }
+
+.input-resort:focus {
+  border-color: var(--accent-dim);
+  background: rgba(12, 24, 18, 0.8);
+  box-shadow: 0 0 0 3px rgba(157, 255, 0, 0.08);
+}
+
+.input-resort.error { border-color: var(--error); }
+
+.label-resort {
+  display: block;
+  color: var(--text-2);
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 0.4rem;
+}
+
+.select-resort {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238C9992' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  padding-right: 2.5rem !important;
+}
+
+.select-resort option {
+  background: var(--bg-card);
+  color: var(--text);
+}
+
+/* ─── 9. STATUS BADGES ──────────────────────────────────────────── */
+.badge-resort {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 100px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.badge-success  { background: rgba(39, 196, 106, 0.15);  color: var(--success);    border: 1px solid rgba(39, 196, 106, 0.3); }
+.badge-warning  { background: rgba(247, 183, 49, 0.15);   color: var(--warning);    border: 1px solid rgba(247, 183, 49, 0.3); }
+.badge-error    { background: rgba(255, 90, 95, 0.15);    color: var(--error);      border: 1px solid rgba(255, 90, 95, 0.3); }
+.badge-info     { background: rgba(184, 196, 190, 0.12);  color: var(--text-2);     border: 1px solid rgba(184, 196, 190, 0.2); }
+.badge-muted    { background: rgba(140, 153, 146, 0.1);   color: var(--text-muted); border: 1px solid rgba(140, 153, 146, 0.18); }
+.badge-accent   { background: rgba(157, 255, 0, 0.12);    color: var(--accent);     border: 1px solid rgba(157, 255, 0, 0.25); }
+
+/* ─── 10. TYPOGRAPHY UTILITIES ──────────────────────────────────── */
+.text-accent   { color: var(--accent) !important; }
+.text-accent-2 { color: var(--accent-2) !important; }
+.text-resort-2 { color: var(--text-2) !important; }
+.text-muted-resort { color: var(--text-muted) !important; }
+
+.heading-xl {
+  font-size: clamp(2.5rem, 5vw, 4rem);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+}
+
+.heading-lg {
+  font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+.heading-md {
+  font-size: 1.4rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.label-green {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+/* ─── 11. SCROLL REVEAL ANIMATIONS ─────────────────────────────── */
+.reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.reveal-delay-1 { transition-delay: 0.1s; }
+.reveal-delay-2 { transition-delay: 0.2s; }
+.reveal-delay-3 { transition-delay: 0.3s; }
+.reveal-delay-4 { transition-delay: 0.4s; }
+.reveal-delay-5 { transition-delay: 0.5s; }
+
+/* ─── 12. STAT CARDS ────────────────────────────────────────────── */
+.stat-card-resort {
+  background: rgba(21, 34, 29, 0.6);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 1.5rem;
+  position: relative;
+  overflow: hidden;
+  transition: var(--t);
+}
+
+.stat-card-resort::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.stat-card-resort:hover {
+  border-color: rgba(157, 255, 0, 0.2);
+  box-shadow: var(--shadow-glow);
+  transform: translateY(-3px);
+}
+
+.stat-card-resort:hover::before { opacity: 1; }
+
+.stat-card-resort .stat-icon {
+  width: 48px; height: 48px;
+  background: rgba(157, 255, 0, 0.1);
+  border-radius: var(--radius-sm);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.25rem;
+  color: var(--accent);
+  margin-bottom: 1rem;
+}
+
+.stat-card-resort .stat-value {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: var(--text);
+  letter-spacing: -0.03em;
+  line-height: 1;
+  margin-bottom: 0.25rem;
+}
+
+.stat-card-resort .stat-label {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+/* ─── 13. TABLE STYLES ──────────────────────────────────────────── */
+.table-resort {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.875rem;
+}
+
+.table-resort thead th {
+  background: rgba(8, 18, 14, 0.5);
+  color: var(--text-muted);
+  font-weight: 600;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 0.9rem 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.table-resort tbody td {
+  padding: 0.9rem 1rem;
+  color: var(--text-2);
+  border-bottom: 1px solid var(--border-2);
+  transition: var(--t-fast);
+}
+
+.table-resort tbody tr:hover td {
+  background: rgba(157, 255, 0, 0.03);
+  color: var(--text);
+}
+
+.table-resort tbody tr:last-child td { border-bottom: none; }
+
+/* ─── 14. MODAL ─────────────────────────────────────────────────── */
+.modal-resort .modal-content {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xl), var(--shadow-glow);
+}
+
+.modal-resort .modal-header {
+  background: transparent;
+  border-bottom: 1px solid var(--border);
+  padding: 1.5rem;
+}
+
+.modal-resort .modal-title {
+  color: var(--text);
+  font-weight: 700;
+  font-family: var(--font);
+}
+
+.modal-resort .modal-body { padding: 1.5rem; }
+
+.modal-resort .modal-footer {
+  background: transparent;
+  border-top: 1px solid var(--border);
+  padding: 1.25rem 1.5rem;
+}
+
+.modal-resort .btn-close {
+  filter: invert(1) opacity(0.5);
+  transition: var(--t-fast);
+}
+.modal-resort .btn-close:hover { filter: invert(1) opacity(1); }
+
+/* ─── 15. SECTION UTILITIES ─────────────────────────────────────── */
+.section-resort {
+  padding: 6rem 0;
+  position: relative;
+}
+
+.section-header {
+  text-align: center;
+  margin-bottom: 4rem;
+}
+
+.section-header .label-green {
+  display: inline-block;
+  margin-bottom: 0.75rem;
+}
+
+.section-header h2 {
+  font-size: clamp(1.8rem, 3vw, 2.5rem);
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.02em;
+  margin-bottom: 0.75rem;
+}
+
+.section-header p {
+  color: var(--text-muted);
+  font-size: 1rem;
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+/* Section divider line */
+.section-divider {
+  border: none;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border), transparent);
+  margin: 0;
+}
+
+/* ─── 16. ALERT / NOTICE STYLES ─────────────────────────────────── */
+.alert-resort {
+  padding: 0.9rem 1.25rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.alert-resort-success { background: rgba(39, 196, 106, 0.1);  border: 1px solid rgba(39, 196, 106, 0.2);  color: var(--success); }
+.alert-resort-error   { background: rgba(255, 90, 95, 0.1);   border: 1px solid rgba(255, 90, 95, 0.2);   color: var(--error); }
+.alert-resort-warning { background: rgba(247, 183, 49, 0.1);  border: 1px solid rgba(247, 183, 49, 0.2);  color: var(--warning); }
+.alert-resort-info    { background: rgba(157, 255, 0, 0.06);  border: 1px solid rgba(157, 255, 0, 0.15);  color: var(--text-2); }
+
+/* ─── 17. SCROLLBAR ─────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-primary); }
+::-webkit-scrollbar-thumb { background: var(--bg-elevated); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(157, 255, 0, 0.2); }
+
+/* ─── 18. LOADING SPINNER ───────────────────────────────────────── */
+.spinner-resort {
+  width: 40px; height: 40px;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spinResort 0.8s linear infinite;
+}
+
+@keyframes spinResort { to { transform: rotate(360deg); } }
+
+/* ─── 19. REDUCED MOTION ────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ─── 20. RESPONSIVE HELPERS ────────────────────────────────────── */
+@media (max-width: 768px) {
+  .section-resort { padding: 4rem 0; }
+  .heading-xl { font-size: 2rem; }
+  .heading-lg { font-size: 1.6rem; }
+}
+
+/* ─── 21. FOOTER ─────────────────────────────────────────────────── */
+.footer-resort {
+  background: rgba(6, 12, 9, 0.95);
+  border-top: 1px solid var(--border);
+  padding: 4rem 0 2rem;
+}
+
+.footer-resort .footer-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 1rem;
+}
+
+.footer-resort .footer-brand .brand-icon {
+  width: 32px; height: 32px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  border-radius: 7px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.9rem;
+  color: #000;
+}
+
+.footer-resort h6 {
+  color: var(--text-2);
+  font-weight: 600;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 1rem;
+}
+
+.footer-resort .footer-link {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 0.875rem;
+  display: inline-block;
+  transition: var(--t-fast);
+}
+
+.footer-resort .footer-link:hover {
+  color: var(--accent);
+  transform: translateX(3px);
+}
+
+.footer-resort .footer-divider {
+  border-color: var(--border);
+  margin: 2.5rem 0 1.5rem;
+}
+
+.footer-resort .social-link {
+  width: 36px; height: 36px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: var(--t);
+  font-size: 0.95rem;
+}
+
+.footer-resort .social-link:hover {
+  background: rgba(157, 255, 0, 0.1);
+  border-color: var(--border-accent);
+  color: var(--accent);
+  transform: translateY(-2px);
+}
+
+/* ─── 22. PAGE HEADER (Dashboards) ─────────────────────────────── */
+.page-header-resort {
+  background: rgba(21, 34, 29, 0.5);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.75rem 2rem;
+  margin-bottom: 2rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.page-header-resort::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2), transparent);
+}
+
+.page-header-resort h1 {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.02em;
+  margin-bottom: 0.25rem;
+}
+
+.page-header-resort p {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  margin: 0;
+}

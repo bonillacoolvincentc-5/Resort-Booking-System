@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 session_start();
 
 // Include admin configuration
@@ -125,6 +125,8 @@ while ($row = $bundlesRes->fetch_assoc()) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bookings Management - YP4K Resort</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../css/resort-theme.css">
+    <link rel="stylesheet" href="../css/dashboard-resort.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
@@ -132,438 +134,8 @@ while ($row = $bundlesRes->fetch_assoc()) {
     <link rel="stylesheet" href="components/sidebar.css">
     <link rel="stylesheet" href="components/navbar.css">
     
-    <style>
-        :root {
-            --bg-primary: #0f172a;
-            --bg-secondary: #1e293b;
-            --bg-tertiary: #334155;
-            --bg-card: rgba(30, 41, 59, 0.8);
-            --text-primary: #f1f5f9;
-            --text-secondary: #94a3b8;
-            --text-muted: #64748b;
-            --accent-primary: #3b82f6;
-            --accent-secondary: #8b5cf6;
-            --accent-success: #10b981;
-            --accent-warning: #f59e0b;
-            --accent-danger: #ef4444;
-            --border-color: rgba(51, 65, 85, 0.5);
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 50%, var(--bg-tertiary) 100%);
-            color: var(--text-primary);
-            min-height: 100vh;
-            line-height: 1.6;
-        }
-
-        .main-content {
-            margin-left: 260px;
-            margin-top: 70px;
-            padding: 2rem;
-            min-height: calc(100vh - 70px);
-        }
-
-        .page-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 2rem;
-        }
-
-        .page-title {
-            font-size: 1.75rem;
-            font-weight: 700;
-            color: var(--text-primary);
-        }
-
-        .page-actions {
-            display: flex;
-            gap: 1rem;
-        }
-
-        .btn-modern {
-            padding: 0.5rem 1rem;
-            border-radius: 0.5rem;
-            font-weight: 500;
-            border: none;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            cursor: pointer;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
-            color: white;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3);
-        }
-
-        .btn-secondary {
-            background: var(--bg-tertiary);
-            color: var(--text-primary);
-            border: 1px solid var(--border-color);
-        }
-
-        .btn-secondary:hover {
-            background: var(--bg-secondary);
-            border-color: var(--accent-primary);
-        }
-
-        /* Filters Section */
-        .filters-card {
-            background: var(--bg-card);
-            backdrop-filter: blur(10px);
-            border: 1px solid var(--border-color);
-            border-radius: 1rem;
-            padding: 1.5rem;
-            margin-bottom: 2rem;
-        }
-
-        .filters-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
-        }
-
-        .filter-group {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .filter-label {
-            color: var(--text-primary);
-            font-weight: 500;
-            margin-bottom: 0.5rem;
-            font-size: 0.9rem;
-        }
-
-        .filter-input {
-            background: var(--bg-tertiary);
-            border: 1px solid var(--border-color);
-            color: var(--text-primary);
-            padding: 0.75rem;
-            border-radius: 0.5rem;
-            font-size: 0.9rem;
-            transition: all 0.3s ease;
-        }
-
-        .filter-input:focus {
-            background: var(--bg-tertiary);
-            border-color: var(--accent-primary);
-            outline: none;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-        }
-
-        /* Bookings Table */
-        .bookings-card {
-            background: var(--bg-card);
-            backdrop-filter: blur(10px);
-            border: 1px solid var(--border-color);
-            border-radius: 1rem;
-            overflow: hidden;
-        }
-
-        .table-modern {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        .table-modern thead {
-            background: var(--bg-tertiary);
-        }
-
-        .table-modern th {
-            padding: 1rem;
-            text-align: left;
-            font-weight: 600;
-            color: var(--text-primary);
-            font-size: 0.85rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .table-modern td {
-            padding: 1rem;
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-            border-bottom: 1px solid rgba(51, 65, 85, 0.2);
-        }
-
-        .table-modern tbody tr {
-            transition: all 0.3s ease;
-        }
-
-        .table-modern tbody tr:hover {
-            background: rgba(59, 130, 246, 0.05);
-        }
-
-        .customer-name {
-            font-weight: 600;
-            color: var(--text-primary);
-        }
-
-        .status-badge {
-            padding: 0.25rem 0.75rem;
-            border-radius: 1rem;
-            font-size: 0.75rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-
-        .status-pending {
-            background: rgba(245, 158, 11, 0.2);
-            color: var(--accent-warning);
-        }
-
-        .status-approved {
-            background: rgba(16, 185, 129, 0.2);
-            color: var(--accent-success);
-        }
-
-        .status-rejected {
-            background: rgba(239, 68, 68, 0.2);
-            color: var(--accent-danger);
-        }
-
-        .status-completed {
-            background: rgba(59, 130, 246, 0.2);
-            color: var(--accent-primary);
-        }
-
-        .status-cancelled {
-            background: rgba(100, 116, 139, 0.2);
-            color: var(--text-muted);
-        }
-
-        .status-pending_review {
-            background: rgba(245, 158, 11, 0.2);
-            color: var(--accent-warning);
-        }
-
-        .payment-method {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-weight: 500;
-        }
-
-        .payment-icon {
-            width: 24px;
-            height: 24px;
-            border-radius: 0.25rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.875rem;
-            color: white;
-        }
-
-        .gcash-icon {
-            background: linear-gradient(135deg, #00d4ff, #0099cc);
-        }
-
-        .cash-icon {
-            background: linear-gradient(135deg, #28a745, #20c997);
-        }
-
-        .action-buttons {
-            display: flex;
-            gap: 0.5rem;
-        }
-
-        .btn-action {
-            padding: 0.375rem 0.75rem;
-            border-radius: 0.375rem;
-            font-size: 0.75rem;
-            border: none;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .btn-approve {
-            background: rgba(16, 185, 129, 0.1);
-            color: var(--accent-success);
-        }
-
-        .btn-approve:hover {
-            background: var(--accent-success);
-            color: white;
-        }
-
-        .btn-reject {
-            background: rgba(239, 68, 68, 0.1);
-            color: var(--accent-danger);
-        }
-
-        .btn-reject:hover {
-            background: var(--accent-danger);
-            color: white;
-        }
-
-        .btn-edit {
-            background: rgba(59, 130, 246, 0.1);
-            color: var(--accent-primary);
-        }
-
-        .btn-edit:hover {
-            background: var(--accent-primary);
-            color: white;
-        }
-
-        /* Issue #17 fix — .btn-view was missing */
-        .btn-view {
-            background: rgba(139, 92, 246, 0.1);
-            color: var(--accent-secondary);
-        }
-
-        .btn-view:hover {
-            background: var(--accent-secondary);
-            color: white;
-        }
-
-        /* Modal Styles */
-        .modal-content-modern {
-            background: var(--bg-card);
-            backdrop-filter: blur(20px);
-            border: 1px solid var(--border-color);
-            border-radius: 1rem;
-        }
-
-        .modal-header-modern {
-            background: var(--bg-tertiary);
-            border-bottom: 1px solid var(--border-color);
-            padding: 1.5rem;
-            border-radius: 1rem 1rem 0 0;
-        }
-
-        .modal-body-modern {
-            padding: 1.5rem;
-        }
-
-        .modal-footer-modern {
-            background: var(--bg-tertiary);
-            border-top: 1px solid var(--border-color);
-            padding: 1.5rem;
-            border-radius: 0 0 1rem 1rem;
-        }
-
-        .form-group-modern {
-            margin-bottom: 1.5rem;
-        }
-
-        .form-label-modern {
-            color: var(--text-primary);
-            font-weight: 500;
-            margin-bottom: 0.5rem;
-            font-size: 0.9rem;
-            display: block;
-        }
-
-        .form-control-modern {
-            background: var(--bg-tertiary);
-            border: 1px solid var(--border-color);
-            color: var(--text-primary);
-            padding: 0.75rem 1rem;
-            border-radius: 0.5rem;
-            font-size: 0.9rem;
-            transition: all 0.3s ease;
-            width: 100%;
-        }
-
-        .form-control-modern:focus {
-            background: var(--bg-tertiary);
-            border-color: var(--accent-primary);
-            outline: none;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-        }
-
-        /* Pagination */
-        .pagination-section {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 1.5rem;
-            border-top: 1px solid var(--border-color);
-        }
-
-        .pagination-info {
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-        }
-
-        .pagination-controls {
-            display: flex;
-            gap: 0.5rem;
-        }
-
-        .page-btn {
-            padding: 0.5rem 0.75rem;
-            background: var(--bg-tertiary);
-            border: 1px solid var(--border-color);
-            color: var(--text-secondary);
-            border-radius: 0.375rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .page-btn:hover,
-        .page-btn.active {
-            background: var(--accent-primary);
-            color: white;
-            border-color: var(--accent-primary);
-        }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-            .main-content {
-                margin-left: 0;
-                padding: 1rem;
-            }
-
-            .page-header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 1rem;
-            }
-
-            .filters-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .table-modern {
-                font-size: 0.8rem;
-            }
-
-            .table-modern th,
-            .table-modern td {
-                padding: 0.5rem;
-            }
-        }
-
-        /* ── STACKING CONTEXT FIX ──────────────────────────────────────────
-           backdrop-filter on .filters-card and .bookings-card creates new
-           stacking contexts that trap Bootstrap modals. Force modal z-indices
-           high enough to escape any stacking context.
-        ──────────────────────────────────────────────────────────────────── */
-        .modal { z-index: 10500 !important; }
-        .modal-backdrop { z-index: 10400 !important; }
-        .modal-dialog { z-index: 10501 !important; position: relative !important; }
-    </style>
+    <link rel="stylesheet" href="../css/admin-theme.css">
+    <script src="components/admin-components.js" defer></script>
 </head>
 <body>
     <!-- Include Components -->
@@ -571,7 +143,7 @@ while ($row = $bundlesRes->fetch_assoc()) {
     <div id="navbar-container"></div>
 
     <!-- Main Content -->
-    <div class="main-content">
+    <div id="mainContent" class="main-content">
         <!-- Page Header -->
         <div class="page-header">
             <div>
@@ -784,7 +356,7 @@ while ($row = $bundlesRes->fetch_assoc()) {
 
 
 
-    <!-- ── View Booking Modal ───────────────────────────────── -->
+    <!-- -- View Booking Modal --------------------------------- -->
     <div class="modal fade" id="viewBookingModal" tabindex="-1">
         <div class="modal-dialog modal-lg">
             <div class="modal-content modal-content-modern">
@@ -798,7 +370,7 @@ while ($row = $bundlesRes->fetch_assoc()) {
                     <!-- Populated by viewBooking() JS -->
                     <div class="text-center py-4" id="viewBookingLoader">
                         <div class="spinner-border text-primary" role="status"></div>
-                        <p class="mt-2" style="color:var(--text-secondary);">Loading booking details…</p>
+                        <p class="mt-2" style="color:var(--text-secondary);">Loading booking details�</p>
                     </div>
                 </div>
                 <div class="modal-footer modal-footer-modern">
@@ -816,7 +388,7 @@ while ($row = $bundlesRes->fetch_assoc()) {
         const accommodationsList = <?php echo json_encode($accommodationsList); ?>;
         const bundlesList = <?php echo json_encode($bundlesList); ?>;
 
-        // ── Move modals to <body> on load to escape backdrop-filter stacking contexts ──
+        // -- Move modals to <body> on load to escape backdrop-filter stacking contexts --
         document.addEventListener('DOMContentLoaded', function () {
             ['editBookingModal', 'viewBookingModal'].forEach(function(id) {
                 const el = document.getElementById(id);
@@ -825,19 +397,6 @@ while ($row = $bundlesRes->fetch_assoc()) {
                 }
             });
         });
-
-        // Load components
-        fetch('components/sidebar.html')
-            .then(response => response.text())
-            .then(html => {
-                document.getElementById('sidebar-container').innerHTML = html;
-            });
-
-        fetch('components/navbar.html')
-            .then(response => response.text())
-            .then(html => {
-                document.getElementById('navbar-container').innerHTML = html;
-            });
 
         // Approve booking
         async function approveBooking(bookingId) {
@@ -906,7 +465,7 @@ while ($row = $bundlesRes->fetch_assoc()) {
             }
         }
 
-        // ── View Booking Details (Issue #2 fix) ─────────────────────────
+        // -- View Booking Details (Issue #2 fix) -------------------------
         let viewBookingModalObj = null;
 
         async function viewBooking(bookingId) {
@@ -917,7 +476,7 @@ while ($row = $bundlesRes->fetch_assoc()) {
             document.getElementById('viewBookingBody').innerHTML = `
                 <div class="text-center py-4">
                     <div class="spinner-border text-primary" role="status"></div>
-                    <p class="mt-2" style="color:var(--text-secondary);">Loading booking details…</p>
+                    <p class="mt-2" style="color:var(--text-secondary);">Loading booking details�</p>
                 </div>`;
             viewBookingModalObj.show();
 
@@ -945,8 +504,8 @@ while ($row = $bundlesRes->fetch_assoc()) {
                 const amount = parseFloat(b.total_amount || 0).toLocaleString('en-PH', { style: 'currency', currency: 'PHP' });
 
                 // Dates
-                const checkIn  = b.check_in_date  ? (b.check_in_date  + (b.check_in_time  ? ' ' + b.check_in_time  : '')) : '—';
-                const checkOut = b.check_out_date ? (b.check_out_date + (b.check_out_time ? ' ' + b.check_out_time : '')) : '—';
+                const checkIn  = b.check_in_date  ? (b.check_in_date  + (b.check_in_time  ? ' ' + b.check_in_time  : '')) : '�';
+                const checkOut = b.check_out_date ? (b.check_out_date + (b.check_out_time ? ' ' + b.check_out_time : '')) : '�';
 
                 // Receipt
                 const receiptHtml = b.receipt_file_path
@@ -962,7 +521,7 @@ while ($row = $bundlesRes->fetch_assoc()) {
                         <div style="border-left:2px solid var(--border-color);padding:.5rem .75rem;margin-bottom:.5rem;">
                             <div style="font-size:.8rem;color:var(--text-secondary);">
                                 <strong style="color:var(--text-primary);">${escHtml(log.changed_by_name || log.changed_by)}</strong>
-                                changed status to <strong style="color:var(--accent-primary);">${escHtml(log.new_status_name || '—')}</strong>
+                                changed status to <strong style="color:var(--accent-primary);">${escHtml(log.new_status_name || '�')}</strong>
                             </div>
                             ${log.notes ? `<div style="font-size:.75rem;color:var(--text-muted);margin-top:.2rem;">${escHtml(log.notes)}</div>` : ''}
                             <div style="font-size:.7rem;color:var(--text-muted);margin-top:.2rem;">${escHtml(log.created_at || '')}</div>
@@ -990,11 +549,11 @@ while ($row = $bundlesRes->fetch_assoc()) {
                             <p class="mb-1" style="font-size:.75rem;color:var(--text-muted);">CUSTOMER</p>
                             <p class="mb-0" style="color:var(--text-primary);font-weight:600;">${escHtml(b.full_name)}</p>
                             <p class="mb-0" style="font-size:.85rem;color:var(--text-secondary);">${escHtml(b.email)}</p>
-                            <p class="mb-0" style="font-size:.85rem;color:var(--text-secondary);">${escHtml(b.phone_number || '—')}</p>
+                            <p class="mb-0" style="font-size:.85rem;color:var(--text-secondary);">${escHtml(b.phone_number || '�')}</p>
                         </div>
                         <div class="col-md-6">
                             <p class="mb-1" style="font-size:.75rem;color:var(--text-muted);">ITEM BOOKED</p>
-                            <p class="mb-0" style="color:var(--text-primary);font-weight:600;">${escHtml(b.item_name || '—')}</p>
+                            <p class="mb-0" style="color:var(--text-primary);font-weight:600;">${escHtml(b.item_name || '�')}</p>
                         </div>
                         <div class="col-md-6">
                             <p class="mb-1" style="font-size:.75rem;color:var(--text-muted);">CHECK-IN</p>
@@ -1014,7 +573,7 @@ while ($row = $bundlesRes->fetch_assoc()) {
                         </div>
                         <div class="col-md-4">
                             <p class="mb-1" style="font-size:.75rem;color:var(--text-muted);">PAYMENT</p>
-                            <p class="mb-0" style="color:var(--text-primary);">${escHtml(b.payment_method ? b.payment_method.toUpperCase() : '—')} / ${escHtml(b.payment_status || '—')}</p>
+                            <p class="mb-0" style="color:var(--text-primary);">${escHtml(b.payment_method ? b.payment_method.toUpperCase() : '�')} / ${escHtml(b.payment_status || '�')}</p>
                         </div>
                         ${b.special_requests ? `
                         <div class="col-12">
@@ -1041,7 +600,7 @@ while ($row = $bundlesRes->fetch_assoc()) {
             }
         }
 
-        // ── Edit Booking (Issue #3 fix) ──────────────────────────────────
+        // -- Edit Booking (Issue #3 fix) ----------------------------------
         let editBookingModalObj = null;
         let currentEditBookingId = null;
 
@@ -1097,7 +656,7 @@ while ($row = $bundlesRes->fetch_assoc()) {
             }
         }
 
-        // ── Save Booking Changes (Issue #4 fix) ──────────────────────────
+        // -- Save Booking Changes (Issue #4 fix) --------------------------
         async function saveBookingChanges() {
             if (!currentEditBookingId) return;
 
@@ -1229,7 +788,7 @@ while ($row = $bundlesRes->fetch_assoc()) {
             }
         });
 
-        // ── escHtml utility (used by viewBooking template literals) ──
+        // -- escHtml utility (used by viewBooking template literals) --
         function escHtml(s) {
             if (s == null) return '';
             return String(s)
@@ -1245,3 +804,6 @@ while ($row = $bundlesRes->fetch_assoc()) {
     <!-- Bootstrap JS already loaded above -->
 </body>
 </html>
+
+
+

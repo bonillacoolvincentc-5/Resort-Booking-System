@@ -1,141 +1,854 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YP4K Resort - Premium Resort Experience</title>
+    <title>YP4K Resort — Luxury. Adventure. Nature.</title>
+    <meta name="description"
+        content="Experience world-class luxury accommodations, thrilling activities, and unforgettable moments at YP4K Private Resort.">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css">
-    <link rel="stylesheet" href="css/login.css">
+    <link rel="stylesheet" href="css/resort-theme.css">
+    <style>
+        /* ═══════════════════════════════════════════════════════
+       INDEX PAGE — Additional Styles
+    ═══════════════════════════════════════════════════════ */
+
+        /* NAV LOGIN BUTTON */
+        .nav-btn-login {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.55rem 1.25rem;
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            color: #000 !important;
+            font-weight: 700;
+            font-size: 0.85rem;
+            border-radius: var(--radius-sm);
+            text-decoration: none;
+            transition: var(--t);
+            box-shadow: 0 4px 15px rgba(157, 255, 0, 0.3);
+            margin-left: 0.5rem;
+        }
+
+        .nav-btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(157, 255, 0, 0.45);
+            color: #000 !important;
+        }
+
+        /* ── HERO ───────────────────────────────────────────── */
+        .hero {
+            position: relative;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            overflow: hidden;
+            padding: 7rem 0 4rem;
+        }
+
+        /* Hero Background Slideshow
+       ┌────────────────────────────────────────────────────────┐
+       │  TO CHANGE HERO IMAGES: Edit the HERO_IMAGES array    │
+       │  in the <script> section below. The CSS handles       │
+       │  the crossfade automatically.                          │
+       └────────────────────────────────────────────────────────┘ */
+        .hero-bg-layer {
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            opacity: 0;
+            transition: opacity 1.8s ease-in-out;
+        }
+
+        .hero-bg-layer.active {
+            opacity: 1;
+        }
+
+        @media (max-width: 768px) {
+            .hero-bg-layer {
+                background-attachment: scroll;
+            }
+        }
+
+        /* Dark gradient overlay — pointer-events:none so navbar clicks pass through */
+        .hero-overlay {
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+            pointer-events: none;
+            background: linear-gradient(105deg,
+                    rgba(5, 10, 7, 0.82) 0%,
+                    rgba(8, 18, 14, 0.7) 40%,
+                    rgba(8, 18, 14, 0.45) 70%,
+                    rgba(5, 10, 7, 0.6) 100%);
+        }
+
+        /* Bottom vignette — decorative only */
+        .hero-vignette {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 30%;
+            z-index: 2;
+            pointer-events: none;
+            background: linear-gradient(to top, var(--bg-primary), transparent);
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 3;
+        }
+
+        /* Hero label */
+        .hero-tagline {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin-bottom: 1.25rem;
+        }
+
+        .hero-tagline::before {
+            content: '';
+            display: inline-block;
+            width: 20px;
+            height: 2px;
+            background: var(--accent);
+        }
+
+        /* Hero headline */
+        .hero-headline {
+            font-size: clamp(2.4rem, 5vw, 4.2rem);
+            font-weight: 800;
+            line-height: 1.08;
+            letter-spacing: -0.03em;
+            color: var(--text);
+            margin-bottom: 1.25rem;
+        }
+
+        .hero-headline .accent-word {
+            color: var(--accent);
+        }
+
+        .hero-subtitle {
+            font-size: 1.05rem;
+            color: var(--text-2);
+            line-height: 1.7;
+            max-width: 460px;
+            margin-bottom: 2.25rem;
+        }
+
+        /* Hero CTA row */
+        .hero-ctas {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 3.5rem;
+        }
+
+        /* Hero stats row */
+        .hero-stats {
+            display: flex;
+            gap: 2.5rem;
+            flex-wrap: wrap;
+        }
+
+        .hero-stat {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .hero-stat-icon {
+            color: var(--accent-2);
+            font-size: 1.2rem;
+            opacity: 0.8;
+        }
+
+        .hero-stat-value {
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: var(--text);
+            line-height: 1;
+        }
+
+        .hero-stat-label {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            margin-top: 0.1rem;
+        }
+
+        /* ── PROMO CARD (Right Column) ─────────────────────── */
+        .promo-card {
+            background: rgba(10, 20, 15, 0.6);
+            backdrop-filter: blur(30px) saturate(180%);
+            -webkit-backdrop-filter: blur(30px) saturate(180%);
+            border: 1px solid rgba(157, 255, 0, 0.2);
+            border-radius: var(--radius-xl);
+            padding: 2rem;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5), var(--shadow-glow-lg);
+            position: relative;
+            overflow: hidden;
+            animation: promoFloat 6s ease-in-out infinite;
+        }
+
+        @keyframes promoFloat {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-8px);
+            }
+        }
+
+        .promo-card::before {
+            content: '';
+            position: absolute;
+            top: -1px;
+            left: 20%;
+            right: 20%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent), transparent);
+        }
+
+        .promo-card .promo-tag {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.25rem;
+        }
+
+        .promo-tag-label {
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: var(--accent);
+        }
+
+        .promo-star {
+            color: var(--accent);
+            font-size: 1.2rem;
+            animation: starSpin 8s linear infinite;
+        }
+
+        @keyframes starSpin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .promo-date {
+            text-align: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .promo-day-label {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            margin-bottom: 0.25rem;
+        }
+
+        .promo-day-num {
+            font-size: 4.5rem;
+            font-weight: 900;
+            color: var(--text);
+            line-height: 1;
+            letter-spacing: -0.05em;
+        }
+
+        .promo-event {
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--accent-2);
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .promo-price-block {
+            background: rgba(157, 255, 0, 0.07);
+            border: 1px solid rgba(157, 255, 0, 0.15);
+            border-radius: var(--radius-md);
+            padding: 1.25rem;
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        .promo-price {
+            font-size: 3rem;
+            font-weight: 900;
+            color: var(--accent);
+            line-height: 1;
+            letter-spacing: -0.04em;
+        }
+
+        .promo-price-label {
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--text-2);
+            margin-top: 0.25rem;
+        }
+
+        .promo-cta-text {
+            text-align: center;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .promo-cta-text span {
+            color: var(--accent);
+            font-weight: 700;
+        }
+
+        /* ── ABOUT SECTION ──────────────────────────────────── */
+        .about-img-wrapper {
+            position: relative;
+            border-radius: var(--radius-xl);
+            overflow: hidden;
+        }
+
+        .about-img-wrapper img {
+            width: 100%;
+            height: 480px;
+            object-fit: cover;
+            border-radius: var(--radius-xl);
+            transition: transform 0.6s ease;
+        }
+
+        .about-img-wrapper:hover img {
+            transform: scale(1.04);
+        }
+
+        .about-img-wrapper .play-btn {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.3);
+            transition: var(--t);
+            border-radius: var(--radius-xl);
+            text-decoration: none;
+        }
+
+        .about-img-wrapper .play-btn:hover {
+            background: rgba(0, 0, 0, 0.15);
+        }
+
+        .play-btn-circle {
+            width: 72px;
+            height: 72px;
+            background: rgba(157, 255, 0, 0.95);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: #000;
+            transition: var(--t);
+            box-shadow: 0 0 40px rgba(157, 255, 0, 0.5);
+        }
+
+        .play-btn:hover .play-btn-circle {
+            transform: scale(1.1);
+            box-shadow: 0 0 60px rgba(157, 255, 0, 0.7);
+        }
+
+        .about-feature {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.75rem;
+            align-items: flex-start;
+        }
+
+        .about-feature-icon {
+            width: 48px;
+            height: 48px;
+            flex-shrink: 0;
+            background: rgba(157, 255, 0, 0.08);
+            border: 1px solid rgba(157, 255, 0, 0.15);
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            color: var(--accent-2);
+            margin-top: 0.1rem;
+        }
+
+        .about-feature h5 {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 0.2rem;
+        }
+
+        .about-feature p {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin: 0;
+            line-height: 1.55;
+        }
+
+        /* ── ACTIVITIES GRID ─────────────────────────────────── */
+        .activity-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            transition: var(--t);
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .activity-card:hover {
+            border-color: rgba(157, 255, 0, 0.2);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), var(--shadow-glow);
+            transform: translateY(-6px);
+        }
+
+        .activity-img-wrap {
+            position: relative;
+            height: 220px;
+            overflow: hidden;
+        }
+
+        .activity-img-wrap img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.6s ease;
+        }
+
+        .activity-card:hover .activity-img-wrap img {
+            transform: scale(1.07);
+        }
+
+        .activity-type-badge {
+            position: absolute;
+            top: 0.75rem;
+            left: 0.75rem;
+            background: rgba(157, 255, 0, 0.9);
+            color: #000;
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            padding: 0.25rem 0.65rem;
+            border-radius: 100px;
+        }
+
+        .activity-img-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, rgba(8, 18, 14, 0.8) 0%, transparent 60%);
+        }
+
+        .activity-body {
+            padding: 1.25rem;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+        }
+
+        .activity-title {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 0.4rem;
+        }
+
+        .activity-desc {
+            font-size: 0.825rem;
+            color: var(--text-muted);
+            line-height: 1.55;
+            flex: 1;
+            margin-bottom: 1rem;
+        }
+
+        .activity-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--accent) !important;
+            text-decoration: none;
+            transition: var(--t-fast);
+            border: none;
+            background: none;
+            padding: 0;
+        }
+
+        .activity-btn:hover {
+            gap: 0.7rem;
+            color: var(--accent-2) !important;
+        }
+
+        /* ── CTA BAND ────────────────────────────────────────── */
+        .cta-band {
+            background: linear-gradient(135deg, rgba(21, 34, 29, 0.8), rgba(13, 22, 18, 0.9));
+            border: 1px solid var(--border);
+            border-radius: var(--radius-2xl);
+            padding: 4rem 3rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cta-band::before {
+            content: '';
+            position: absolute;
+            top: -1px;
+            left: 15%;
+            right: 15%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent), transparent);
+        }
+
+        .cta-band::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(ellipse at center, rgba(157, 255, 0, 0.05) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .cta-band h2 {
+            font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+            font-weight: 800;
+            color: var(--text);
+            letter-spacing: -0.03em;
+            margin-bottom: 0.75rem;
+        }
+
+        .cta-band p {
+            color: var(--text-muted);
+            font-size: 1rem;
+            margin-bottom: 2rem;
+            max-width: 480px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* ── CONTACT CARDS ───────────────────────────────────── */
+        .contact-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            text-align: center;
+            transition: var(--t);
+            height: 100%;
+        }
+
+        .contact-card:hover {
+            border-color: rgba(157, 255, 0, 0.2);
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-glow);
+        }
+
+        .contact-icon {
+            width: 60px;
+            height: 60px;
+            background: rgba(157, 255, 0, 0.08);
+            border: 1px solid rgba(157, 255, 0, 0.15);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            color: var(--accent-2);
+            margin: 0 auto 1.25rem;
+            transition: var(--t);
+        }
+
+        .contact-card:hover .contact-icon {
+            background: rgba(157, 255, 0, 0.15);
+            box-shadow: 0 0 20px rgba(157, 255, 0, 0.2);
+            transform: scale(1.05);
+        }
+
+        .contact-card h5 {
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+        }
+
+        .contact-card p {
+            color: var(--text-2);
+            font-size: 0.875rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .contact-card .contact-sub {
+            color: var(--text-muted);
+            font-size: 0.775rem;
+        }
+
+        /* Mobile nav tweaks */
+        @media (max-width: 992px) {
+            .promo-card {
+                margin-top: 2.5rem;
+                animation: none;
+            }
+
+            .hero {
+                min-height: auto;
+                padding: 7rem 0 5rem;
+            }
+        }
+    </style>
 </head>
+
 <body>
-    <!-- Modern Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-modern">
+    <!-- Animated Background System -->
+    <div class="resort-bg"></div>
+    <div class="particles">
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════
+     NAVIGATION
+══════════════════════════════════════════════════════ -->
+    <nav class="resort-nav navbar navbar-expand-lg" id="mainNav">
         <div class="container">
             <a class="navbar-brand" href="#home">
-                <i class="bi bi-gem"></i>
+                <div class="brand-icon"><i class="bi bi-gem"></i></div>
                 YP4K Resort
             </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                style="color: var(--text-muted);">
+                <i class="bi bi-list" style="font-size:1.5rem;"></i>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link active" href="#home">Home</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#about">About</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#activities">Activities</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#booking">Booking</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#contact">Contact</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="btn-login" href="http://localhost/YP4K_Resort/Authentication/login.php">
-                            <i class="bi bi-box-arrow-in-right me-2"></i>Login
-                        </a>
-                    </li>
+                <ul class="navbar-nav mx-auto gap-1">
+                    <li class="nav-item"><a class="nav-link active" href="#home">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#about">About</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#activities">Activities</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#booking">Booking</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#contact">Contact</a></li>
                 </ul>
+                <div class="d-flex align-items-center gap-2 mt-3 mt-lg-0">
+                    <a href="http://localhost/YP4K_Resort/Authentication/login.php" class="nav-btn-login">
+                        <i class="bi bi-box-arrow-in-right"></i>
+                        Login
+                    </a>
+                </div>
             </div>
         </div>
     </nav>
 
-    <!-- Hero Section -->
-    <section id="home" class="hero-section">
-        <div class="hero-bg"></div>
+    <!-- ══════════════════════════════════════════════════════
+     HERO SECTION
+══════════════════════════════════════════════════════ -->
+    <section id="home" class="hero">
+        <!-- Background Image Layers (controlled by JS below) -->
+        <div class="hero-bg-layer" id="heroBg0"></div>
+        <div class="hero-bg-layer" id="heroBg1"></div>
+        <div class="hero-bg-layer" id="heroBg2"></div>
         <div class="hero-overlay"></div>
-        <div class="floating-shapes">
-            <div class="shape"></div>
-            <div class="shape"></div>
-            <div class="shape"></div>
-        </div>
+        <div class="hero-vignette"></div>
+
         <div class="container hero-content">
-            <div class="row align-items-center">
-                <div class="col-lg-6" data-aos="fade-right" data-aos-duration="1000">
-                    <h1 class="hero-title">
-                        Experience Paradise at YP4K Resort
+            <div class="row align-items-center g-5">
+                <!-- Left: Headline & CTAs -->
+                <div class="col-lg-6">
+                    <div class="hero-tagline reveal">Relax. Adventure. Unwind.</div>
+
+                    <h1 class="hero-headline reveal reveal-delay-1">
+                        Experience<br>
+                        Paradise at<br>
+                        <span class="accent-word">YP4K Resort</span>
                     </h1>
-                    <p class="hero-subtitle">
-                        Discover luxury accommodations, thrilling activities, and unforgettable moments in our world-class resort destination.
+
+                    <p class="hero-subtitle reveal reveal-delay-2">
+                        Discover luxury accommodations, thrilling activities,
+                        and unforgettable moments in our world-class private resort.
                     </p>
-                    <div class="hero-buttons">
-                        <a href="Authentication/login.php" class="btn-hero-primary">
+
+                    <div class="hero-ctas reveal reveal-delay-3">
+                        <a href="Authentication/login.php" class="btn-resort">
                             <i class="bi bi-calendar-check"></i>
                             Book Your Stay
                         </a>
-                        <a href="#activities" class="btn-hero-secondary">
-                            <i class="bi bi-compass"></i>
+                        <a href="#activities" class="btn-resort-ghost">
+                            <i class="bi bi-play-circle"></i>
                             Explore Activities
                         </a>
                     </div>
+
+                    <!-- Stats -->
+                    <div class="hero-stats reveal reveal-delay-4">
+                        <div class="hero-stat">
+                            <i class="bi bi-trophy-fill hero-stat-icon"></i>
+                            <div>
+                                <div class="hero-stat-value" data-count="15">0</div>
+                                <div class="hero-stat-label">Years of Excellence</div>
+                            </div>
+                        </div>
+                        <div class="hero-stat">
+                            <i class="bi bi-people-fill hero-stat-icon"></i>
+                            <div>
+                                <div class="hero-stat-value" data-count="50" data-suffix="K+">0</div>
+                                <div class="hero-stat-label">Happy Guests</div>
+                            </div>
+                        </div>
+                        <div class="hero-stat">
+                            <i class="bi bi-lightning-fill hero-stat-icon"></i>
+                            <div>
+                                <div class="hero-stat-value" data-count="25" data-suffix="+">0</div>
+                                <div class="hero-stat-label">Activities</div>
+                            </div>
+                        </div>
+                        <div class="hero-stat">
+                            <i class="bi bi-star-fill hero-stat-icon"></i>
+                            <div>
+                                <div class="hero-stat-value" data-count="4.9" data-suffix="/5" data-decimal="true">0
+                                </div>
+                                <div class="hero-stat-label">Guest Rating</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="col-lg-6" data-aos="fade-left" data-aos-duration="1000">
-                    <div class="text-center">
-                        <img src="assets/Images/Logo.jpg" alt="YP4K Resort" class="img-fluid rounded-4" style="max-width: 400px; box-shadow: var(--shadow-xl);">
+
+                <!-- Right: Promo Card -->
+                <div class="col-lg-5 offset-lg-1 reveal reveal-delay-2">
+                    <div class="promo-card">
+                        <div class="promo-tag">
+                            <span class="promo-tag-label">✦ Today's Promo</span>
+                            <i class="bi bi-stars promo-star"></i>
+                        </div>
+                        <div class="promo-date">
+                            <div class="promo-day-label">One Day Promo Only!</div>
+                            <div class="promo-day-num">JULY 9</div>
+                        </div>
+                        <div class="promo-event">44th Founders Anniversary</div>
+                        <div class="promo-price-block">
+                            <div class="promo-price">₱4,444</div>
+                            <div class="promo-price-label">One Year Membership</div>
+                        </div>
+                        <p class="promo-cta-text">
+                            Be a <span>WARRIOR</span>. Be our member.
+                        </p>
+                        <div class="mt-3">
+                            <a href="Authentication/login.php" class="btn-resort w-100 justify-content-center">
+                                <i class="bi bi-lightning-charge-fill"></i>
+                                Grab This Deal
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- About Section -->
-    <section id="about" class="section-modern">
+    <hr class="section-divider">
+
+    <!-- ══════════════════════════════════════════════════════
+     ABOUT SECTION
+══════════════════════════════════════════════════════ -->
+    <section id="about" class="section-resort">
         <div class="container">
-            <div class="text-center mb-5">
-                <h2 class="section-title fade-in">About YP4K Resort</h2>
-                <p class="section-subtitle fade-in">Where Luxury Meets Adventure</p>
+            <div class="section-header">
+                <span class="label-green">About YP4K Resort</span>
+                <h2>Where Luxury Meets Adventure</h2>
+                <p>At YP4K Resort, we pride ourselves on offering world-class amenities and unforgettable experiences
+                    for everyone.</p>
             </div>
-            <div class="row align-items-center">
-                <div class="col-lg-6 mb-4 mb-lg-0" data-aos="fade-right">
-                    <img src="assets/Images/AerialShotOne.jpg" alt="Resort View" class="img-fluid rounded-4" style="box-shadow: var(--shadow-xl);">
+
+            <div class="row align-items-center g-5">
+                <!-- Image / Video -->
+                <div class="col-lg-6 reveal">
+                    <div class="about-img-wrapper">
+                        <img src="assets/Images/AerialShotOne.jpg" alt="YP4K Resort Aerial View" loading="lazy">
+                        <a href="#" class="play-btn" onclick="return false;">
+                            <div class="play-btn-circle">
+                                <i class="bi bi-play-fill ms-1"></i>
+                            </div>
+                        </a>
+                        <div
+                            style="position:absolute;bottom:1rem;left:1rem;z-index:5;font-size:0.75rem;color:var(--text-2);display:flex;align-items:center;gap:0.4rem;">
+                            <i class="bi bi-play-circle" style="color:var(--accent);"></i> Watch Resort Tour
+                            &nbsp;·&nbsp; 1:25
+                        </div>
+                    </div>
                 </div>
-                <div class="col-lg-6" data-aos="fade-left">
-                    <h3 class="mb-3">Welcome to Paradise</h3>
-                    <p class="text-secondary mb-4">
-                        At YP4K Resort, we pride ourselves on offering world-class amenities and unforgettable experiences. Whether you're seeking adventure through our trail guides or relaxation at our luxurious facilities, we have something for everyone.
-                    </p>
-                    <div class="row g-4">
+
+                <!-- Features -->
+                <div class="col-lg-6 reveal reveal-delay-2">
+                    <div class="about-feature">
+                        <div class="about-feature-icon"><i class="bi bi-building"></i></div>
+                        <div>
+                            <h5>Luxurious Accommodations</h5>
+                            <p>Spacious rooms and villas with modern amenities and breathtaking views of the resort.</p>
+                        </div>
+                    </div>
+                    <div class="about-feature">
+                        <div class="about-feature-icon"><i class="bi bi-controller"></i></div>
+                        <div>
+                            <h5>Exciting Activities</h5>
+                            <p>From trails to pools, enjoy a wide range of thrilling activities for every age and skill
+                                level.</p>
+                        </div>
+                    </div>
+                    <div class="about-feature">
+                        <div class="about-feature-icon"><i class="bi bi-award"></i></div>
+                        <div>
+                            <h5>World-Class Amenities</h5>
+                            <p>Experience top-notch facilities designed for your ultimate comfort and enjoyment.</p>
+                        </div>
+                    </div>
+
+                    <!-- Mini stats -->
+                    <div class="row g-3 mt-1">
                         <div class="col-6">
-                            <div class="d-flex align-items-center">
-                                <i class="bi bi-trophy-fill text-warning me-3" style="font-size: 2rem;"></i>
-                                <div>
-                                    <h5 class="mb-0">15+ Years</h5>
-                                    <p class="text-muted mb-0">of Excellence</p>
-                                </div>
+                            <div class="stat-card-resort text-center">
+                                <div class="stat-value"
+                                    style="font-size:2rem;font-weight:800;color:var(--accent);letter-spacing:-0.03em;">
+                                    15+</div>
+                                <div class="stat-label" style="font-size:0.8rem;color:var(--text-muted);">Years
+                                    Operating</div>
                             </div>
                         </div>
                         <div class="col-6">
-                            <div class="d-flex align-items-center">
-                                <i class="bi bi-star-fill text-warning me-3" style="font-size: 2rem;"></i>
-                                <div>
-                                    <h5 class="mb-0">4.9/5</h5>
-                                    <p class="text-muted mb-0">Guest Rating</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-6">
-                            <div class="d-flex align-items-center">
-                                <i class="bi bi-people-fill text-warning me-3" style="font-size: 2rem;"></i>
-                                <div>
-                                    <h5 class="mb-0">50K+</h5>
-                                    <p class="text-muted mb-0">Happy Guests</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-6">
-                            <div class="d-flex align-items-center">
-                                <i class="bi bi-award-fill text-warning me-3" style="font-size: 2rem;"></i>
-                                <div>
-                                    <h5 class="mb-0">25+</h5>
-                                    <p class="text-muted mb-0">Awards Won</p>
+                            <div class="stat-card-resort text-center">
+                                <div class="stat-value"
+                                    style="font-size:2rem;font-weight:800;color:var(--accent);letter-spacing:-0.03em;">
+                                    4.9★</div>
+                                <div class="stat-label" style="font-size:0.8rem;color:var(--text-muted);">Guest Rating
                                 </div>
                             </div>
                         </div>
@@ -145,113 +858,107 @@
         </div>
     </section>
 
-    <!-- Activities Section -->
-    <section id="activities" class="section-modern">
+    <hr class="section-divider">
+
+    <!-- ══════════════════════════════════════════════════════
+     ACTIVITIES SECTION
+══════════════════════════════════════════════════════ -->
+    <section id="activities" class="section-resort">
         <div class="container">
-            <div class="text-center mb-5">
-                <h2 class="section-title fade-in">Premium Activities</h2>
-                <p class="section-subtitle fade-in">Discover Our World-Class Facilities</p>
+            <div class="section-header">
+                <span class="label-green">What We Offer</span>
+                <h2>Premium Activities</h2>
+                <p>Discover our world-class facilities and choose the experience that fits your adventure.</p>
             </div>
+
             <div class="row g-4">
-                <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="100">
+                <div class="col-md-6 col-lg-4 reveal">
                     <div class="activity-card">
-                        <div class="activity-image-wrapper">
-                            <img src="assets/Images/BilliardsHDreal.jpg" alt="Billiards" class="activity-image">
-                            <div class="activity-overlay">
-                                <i class="bi bi-8-circle activity-icon"></i>
-                            </div>
+                        <div class="activity-img-wrap">
+                            <img src="assets/Images/BilliardsHDreal.jpg" alt="Billiards" loading="lazy">
+                            <span class="activity-type-badge">Indoor</span>
+                            <div class="activity-img-overlay"></div>
                         </div>
-                        <div class="activity-content">
+                        <div class="activity-body">
                             <h3 class="activity-title">Premium Billiards</h3>
-                            <p class="activity-description">Professional billiards tables with expert coaching available for all skill levels.</p>
-                            <a href="#booking" class="activity-btn">
-                                <i class="bi bi-calendar-plus"></i> Book Now
-                            </a>
+                            <p class="activity-desc">Professional billiards tables with expert coaching available for
+                                all skill levels.</p>
+                            <a href="#booking" class="activity-btn">Book Now <i class="bi bi-arrow-right"></i></a>
                         </div>
                     </div>
                 </div>
-                <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="200">
+                <div class="col-md-6 col-lg-4 reveal reveal-delay-1">
                     <div class="activity-card">
-                        <div class="activity-image-wrapper">
-                            <img src="assets/Images/BasketballCourt.jpg" alt="Basketball" class="activity-image">
-                            <div class="activity-overlay">
-                                <i class="bi bi-basketball activity-icon"></i>
-                            </div>
+                        <div class="activity-img-wrap">
+                            <img src="assets/Images/BasketballCourt.jpg" alt="Basketball" loading="lazy">
+                            <span class="activity-type-badge">Court</span>
+                            <div class="activity-img-overlay"></div>
                         </div>
-                        <div class="activity-content">
+                        <div class="activity-body">
                             <h3 class="activity-title">Basketball Court</h3>
-                            <p class="activity-description">State-of-the-art indoor and outdoor courts for basketball enthusiasts.</p>
-                            <a href="#booking" class="activity-btn">
-                                <i class="bi bi-calendar-plus"></i> Book Now
-                            </a>
+                            <p class="activity-desc">State-of-the-art indoor and outdoor courts for basketball
+                                enthusiasts of all ages.</p>
+                            <a href="#booking" class="activity-btn">Book Now <i class="bi bi-arrow-right"></i></a>
                         </div>
                     </div>
                 </div>
-                <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="300">
+                <div class="col-md-6 col-lg-4 reveal reveal-delay-2">
                     <div class="activity-card">
-                        <div class="activity-image-wrapper">
-                            <img src="assets/Images/Pool.jpg" alt="Swimming Pool" class="activity-image">
-                            <div class="activity-overlay">
-                                <i class="bi bi-water activity-icon"></i>
-                            </div>
+                        <div class="activity-img-wrap">
+                            <img src="assets/Images/Pool.jpg" alt="Swimming Pool" loading="lazy">
+                            <span class="activity-type-badge">Aquatic</span>
+                            <div class="activity-img-overlay"></div>
                         </div>
-                        <div class="activity-content">
+                        <div class="activity-body">
                             <h3 class="activity-title">Swimming Pool</h3>
-                            <p class="activity-description">Olympic-sized pools with crystal clear water and professional lifeguards.</p>
-                            <a href="#booking" class="activity-btn">
-                                <i class="bi bi-calendar-plus"></i> Book Now
-                            </a>
+                            <p class="activity-desc">Olympic-sized pools with crystal clear water and professional
+                                lifeguards on duty.</p>
+                            <a href="#booking" class="activity-btn">Book Now <i class="bi bi-arrow-right"></i></a>
                         </div>
                     </div>
                 </div>
-                <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="400">
+                <div class="col-md-6 col-lg-4 reveal reveal-delay-1">
                     <div class="activity-card">
-                        <div class="activity-image-wrapper">
-                            <img src="assets/Images/Gym.jfif" alt="Gym" class="activity-image">
-                            <div class="activity-overlay">
-                                <i class="bi bi-heart-pulse activity-icon"></i>
-                            </div>
+                        <div class="activity-img-wrap">
+                            <img src="assets/Images/GYM.jfif" alt="Gym" loading="lazy">
+                            <span class="activity-type-badge">Fitness</span>
+                            <div class="activity-img-overlay"></div>
                         </div>
-                        <div class="activity-content">
+                        <div class="activity-body">
                             <h3 class="activity-title">Fitness Gym</h3>
-                            <p class="activity-description">Modern equipment with personal trainers and group fitness classes.</p>
-                            <a href="#booking" class="activity-btn">
-                                <i class="bi bi-calendar-plus"></i> Book Now
-                            </a>
+                            <p class="activity-desc">Modern equipment with personal trainers and group fitness classes
+                                available daily.</p>
+                            <a href="#booking" class="activity-btn">Book Now <i class="bi bi-arrow-right"></i></a>
                         </div>
                     </div>
                 </div>
-                <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="500">
+                <div class="col-md-6 col-lg-4 reveal reveal-delay-2">
                     <div class="activity-card">
-                        <div class="activity-image-wrapper">
-                            <img src="assets/Images/ADV.jpg" alt="Adventure Rides" class="activity-image">
-                            <div class="activity-overlay">
-                                <i class="bi bi-joystick activity-icon"></i>
-                            </div>
+                        <div class="activity-img-wrap">
+                            <img src="assets/Images/ADV.jpg" alt="Adventure" loading="lazy">
+                            <span class="activity-type-badge">Thrill</span>
+                            <div class="activity-img-overlay"></div>
                         </div>
-                        <div class="activity-content">
+                        <div class="activity-body">
                             <h3 class="activity-title">Adventure Rides</h3>
-                            <p class="activity-description">Thrilling adventure rides and zip lines for adrenaline seekers.</p>
-                            <a href="#booking" class="activity-btn">
-                                <i class="bi bi-calendar-plus"></i> Book Now
-                            </a>
+                            <p class="activity-desc">Thrilling adventure rides and zip lines for adrenaline seekers of
+                                all ages.</p>
+                            <a href="#booking" class="activity-btn">Book Now <i class="bi bi-arrow-right"></i></a>
                         </div>
                     </div>
                 </div>
-                <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="600">
+                <div class="col-md-6 col-lg-4 reveal reveal-delay-3">
                     <div class="activity-card">
-                        <div class="activity-image-wrapper">
-                            <img src="assets/Images/Playground.jpg" alt="Playground" class="activity-image">
-                            <div class="activity-overlay">
-                                <i class="bi bi-balloon activity-icon"></i>
-                            </div>
+                        <div class="activity-img-wrap">
+                            <img src="assets/Images/Playground.jpg" alt="Playground" loading="lazy">
+                            <span class="activity-type-badge">Kids</span>
+                            <div class="activity-img-overlay"></div>
                         </div>
-                        <div class="activity-content">
+                        <div class="activity-body">
                             <h3 class="activity-title">Kids Playground</h3>
-                            <p class="activity-description">Safe and fun playground area with activities for children of all ages.</p>
-                            <a href="#booking" class="activity-btn">
-                                <i class="bi bi-calendar-plus"></i> Book Now
-                            </a>
+                            <p class="activity-desc">Safe and fun playground area with supervised activities for
+                                children of all ages.</p>
+                            <a href="#booking" class="activity-btn">Book Now <i class="bi bi-arrow-right"></i></a>
                         </div>
                     </div>
                 </div>
@@ -259,138 +966,96 @@
         </div>
     </section>
 
-    <!-- Booking Section -->
-    <section id="booking" class="section-modern booking-section">
+    <hr class="section-divider">
+
+    <section id="booking" class="section-resort">
         <div class="container">
-            <div class="text-center mb-5">
-                <h2 class="section-title fade-in">Book Your Experience</h2>
-                <p class="section-subtitle fade-in">Reserve Your Spot Today</p>
+            <div class="cta-band reveal">
+                <span class="label-green d-inline-block mb-3">Ready to Visit?</span>
+                <h2>Begin Your Resort Experience</h2>
+                <p>Reserve your spot today and enjoy world-class amenities, breathtaking views, and unforgettable
+                    moments.</p>
+                <div class="d-flex gap-3 justify-content-center flex-wrap">
+                    <a href="Authentication/login.php" class="btn-resort">
+                        <i class="bi bi-calendar-check"></i>
+                        Reserve Your Stay
+                    </a>
+                    <a href="#contact" class="btn-resort-ghost">
+                        <i class="bi bi-telephone"></i>
+                        Contact Us First
+                    </a>
+                </div>
             </div>
-            <div class="row justify-content-center">
-                <div class="col-lg-8">
-                    <div class="booking-card" data-aos="fade-up">
-                        <form id="bookingForm">
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <label class="form-label-modern">Full Name</label>
-                                    <input type="text" class="form-control form-control-modern" placeholder="Enter your name" required>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label-modern">Email</label>
-                                    <input type="email" class="form-control form-control-modern" placeholder="Enter your email" required>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label-modern">Phone</label>
-                                    <input type="tel" class="form-control form-control-modern" placeholder="Enter your phone" required>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label-modern">Activity</label>
-                                    <select class="form-control form-control-modern" required>
-                                        <option value="">Select Activity</option>
-                                        <option value="billiards">Premium Billiards</option>
-                                        <option value="basketball">Basketball Court</option>
-                                        <option value="swimming">Swimming Pool</option>
-                                        <option value="gym">Fitness Gym</option>
-                                        <option value="adventure">Adventure Rides</option>
-                                        <option value="playground">Kids Playground</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label-modern">Date</label>
-                                    <input type="date" class="form-control form-control-modern" required>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label-modern">Time</label>
-                                    <select class="form-control form-control-modern" required>
-                                        <option value="">Select Time</option>
-                                        <option value="09:00">9:00 AM</option>
-                                        <option value="10:00">10:00 AM</option>
-                                        <option value="11:00">11:00 AM</option>
-                                        <option value="14:00">2:00 PM</option>
-                                        <option value="15:00">3:00 PM</option>
-                                        <option value="16:00">4:00 PM</option>
-                                    </select>
-                                </div>
-                                <div class="col-12">
-                                    <label class="form-label-modern">Special Requests</label>
-                                    <textarea class="form-control form-control-modern" rows="3" placeholder="Any special requirements..."></textarea>
-                                </div>
-                                <div class="col-12">
-                                    <button type="submit" class="btn-hero-primary w-100">
-                                        <i class="bi bi-calendar-check me-2"></i>Book Now
-                                    </button>
-                                </div>
-                            </div>
-                        </form>
+        </div>
+    </section>
+
+    <hr class="section-divider">
+
+    <!-- ══════════════════════════════════════════════════════
+     CONTACT SECTION
+══════════════════════════════════════════════════════ -->
+    <section id="contact" class="section-resort">
+        <div class="container">
+            <div class="section-header">
+                <span class="label-green">Reach Out</span>
+                <h2>Get in Touch</h2>
+                <p>Our team is ready to help you plan the perfect resort experience.</p>
+            </div>
+
+            <div class="row g-4 justify-content-center">
+                <div class="col-md-4 col-lg-3 reveal">
+                    <div class="contact-card">
+                        <div class="contact-icon"><i class="bi bi-telephone"></i></div>
+                        <h5>Call Us</h5>
+                        <p>+63 (XXX) XXX-XXXX</p>
+                        <p class="contact-sub">Mon–Sun · 8AM–8PM</p>
+                    </div>
+                </div>
+                <div class="col-md-4 col-lg-3 reveal reveal-delay-1">
+                    <div class="contact-card">
+                        <div class="contact-icon"><i class="bi bi-envelope"></i></div>
+                        <h5>Email Us</h5>
+                        <p>info@yp4kresort.com</p>
+                        <p class="contact-sub">24/7 Support</p>
+                    </div>
+                </div>
+                <div class="col-md-4 col-lg-3 reveal reveal-delay-2">
+                    <div class="contact-card">
+                        <div class="contact-icon"><i class="bi bi-geo-alt"></i></div>
+                        <h5>Visit Us</h5>
+                        <p>YP4K Private Resort</p>
+                        <p class="contact-sub">Philippines</p>
                     </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Contact Section -->
-    <section id="contact" class="section-modern">
+    <!-- ══════════════════════════════════════════════════════
+     FOOTER
+══════════════════════════════════════════════════════ -->
+    <footer class="footer-resort">
         <div class="container">
-            <div class="text-center mb-5">
-                <h2 class="section-title fade-in">Get in Touch</h2>
-                <p class="section-subtitle fade-in">We're Here to Help</p>
-            </div>
             <div class="row g-4">
-                <div class="col-md-4" data-aos="fade-up" data-aos-delay="100">
-                    <div class="contact-card">
-                        <div class="contact-icon">
-                            <i class="bi bi-telephone"></i>
-                        </div>
-                        <h4>Call Us</h4>
-                        <p class="text-secondary">+1 (555) 123-4567</p>
-                        <p class="text-muted small">Mon-Fri: 9AM-6PM</p>
-                    </div>
-                </div>
-                <div class="col-md-4" data-aos="fade-up" data-aos-delay="200">
-                    <div class="contact-card">
-                        <div class="contact-icon">
-                            <i class="bi bi-envelope"></i>
-                        </div>
-                        <h4>Email Us</h4>
-                        <p class="text-secondary">info@yp4kresort.com</p>
-                        <p class="text-muted small">24/7 Support</p>
-                    </div>
-                </div>
-                <div class="col-md-4" data-aos="fade-up" data-aos-delay="300">
-                    <div class="contact-card">
-                        <div class="contact-icon">
-                            <i class="bi bi-geo-alt"></i>
-                        </div>
-                        <h4>Visit Us</h4>
-                        <p class="text-secondary">123 Resort Lane</p>
-                        <p class="text-muted small">Paradise City</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Footer -->
-    <footer class="footer-modern">
-        <div class="container">
-            <div class="row">
-                <div class="col-lg-4 mb-4">
+                <div class="col-lg-4">
                     <div class="footer-brand">
-                        <i class="bi bi-gem"></i>
+                        <div class="brand-icon"><i class="bi bi-gem"></i></div>
                         YP4K Resort
                     </div>
-                    <p class="text-secondary mb-3">
-                        Experience luxury, adventure, and relaxation at our world-class resort destination.
+                    <p style="color:var(--text-muted);font-size:0.875rem;margin-bottom:1.25rem;line-height:1.7;">
+                        Experience luxury, adventure, and relaxation at our world-class private resort destination in
+                        the Philippines.
                     </p>
-                    <div class="d-flex gap-3">
-                        <a href="#" class="footer-link"><i class="bi bi-facebook"></i></a>
-                        <a href="#" class="footer-link"><i class="bi bi-twitter"></i></a>
-                        <a href="#" class="footer-link"><i class="bi bi-instagram"></i></a>
-                        <a href="#" class="footer-link"><i class="bi bi-linkedin"></i></a>
+                    <div class="d-flex gap-2">
+                        <a href="#" class="social-link"><i class="bi bi-facebook"></i></a>
+                        <a href="#" class="social-link"><i class="bi bi-instagram"></i></a>
+                        <a href="#" class="social-link"><i class="bi bi-twitter-x"></i></a>
+                        <a href="#" class="social-link"><i class="bi bi-tiktok"></i></a>
                     </div>
                 </div>
-                <div class="col-lg-2 col-md-6 mb-4">
-                    <h6 class="text-white mb-3">Quick Links</h6>
+
+                <div class="col-6 col-lg-2 offset-lg-1">
+                    <h6>Navigation</h6>
                     <div class="d-flex flex-column gap-2">
                         <a href="#about" class="footer-link">About Us</a>
                         <a href="#activities" class="footer-link">Activities</a>
@@ -398,138 +1063,171 @@
                         <a href="#contact" class="footer-link">Contact</a>
                     </div>
                 </div>
-                <div class="col-lg-2 col-md-6 mb-4">
-                    <h6 class="text-white mb-3">Services</h6>
+
+                <div class="col-6 col-lg-2">
+                    <h6>Services</h6>
                     <div class="d-flex flex-column gap-2">
-                        <a href="#" class="footer-link">Accommodation</a>
-                        <a href="#" class="footer-link">Dining</a>
-                        <a href="#" class="footer-link">Spa</a>
-                        <a href="#" class="footer-link">Events</a>
+                        <a href="Authentication/login.php" class="footer-link">Accommodations</a>
+                        <a href="Authentication/login.php" class="footer-link">Activities</a>
+                        <a href="Authentication/login.php" class="footer-link">Bundle Packages</a>
+                        <a href="Authentication/login.php" class="footer-link">Events</a>
                     </div>
                 </div>
-                <div class="col-lg-2 col-md-6 mb-4">
-                    <h6 class="text-white mb-3">Support</h6>
-                    <div class="d-flex flex-column gap-2">
-                        <a href="#" class="footer-link">Help Center</a>
-                        <a href="#" class="footer-link">FAQs</a>
-                        <a href="#" class="footer-link">Privacy Policy</a>
-                        <a href="#" class="footer-link">Terms of Service</a>
-                    </div>
-                </div>
-                <div class="col-lg-2 col-md-6 mb-4">
-                    <h6 class="text-white mb-3">Newsletter</h6>
-                    <p class="text-secondary small mb-3">Subscribe for exclusive offers</p>
-                    <div class="input-group">
-                        <input type="email" class="form-control form-control-modern" placeholder="Your email">
-                        <button class="btn btn-hero-primary" type="button">
+
+                <div class="col-lg-3">
+                    <h6>Newsletter</h6>
+                    <p style="color:var(--text-muted);font-size:0.8rem;margin-bottom:0.75rem;">Subscribe for exclusive
+                        promos and updates.</p>
+                    <div class="d-flex gap-2">
+                        <input type="email" class="input-resort" placeholder="Your email"
+                            style="border-radius:var(--radius-sm);">
+                        <button class="btn-resort btn-resort-sm" type="button" style="flex-shrink:0;">
                             <i class="bi bi-send"></i>
                         </button>
                     </div>
                 </div>
             </div>
-            <hr class="border-secondary my-4">
-            <div class="text-center text-muted">
-                <p class="mb-0">&copy; 2026 YP4K Resort. All rights reserved.</p>
+
+            <hr class="footer-divider">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <p style="color:var(--text-dim);font-size:0.8rem;margin:0;">
+                    &copy; 2026 YP4K Resort. All rights reserved.
+                </p>
+                <div class="d-flex gap-3">
+                    <a href="#" class="footer-link" style="font-size:0.775rem;">Privacy Policy</a>
+                    <a href="#" class="footer-link" style="font-size:0.775rem;">Terms of Service</a>
+                </div>
             </div>
         </div>
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
     <script>
-        // Initialize AOS
-        AOS.init({
-            duration: 1000,
-            once: true,
-            offset: 100
-        });
+        /* ═══════════════════════════════════════════════════════════════
+           HERO IMAGE SLIDESHOW
+           ┌─────────────────────────────────────────────────────────┐
+           │ TO CHANGE IMAGES: Edit the paths in HERO_IMAGES below.  │
+           │ You can add or remove entries — the slideshow adjusts   │
+           │ automatically. Use any path relative to this file.      │
+           └─────────────────────────────────────────────────────────┘
+        ═══════════════════════════════════════════════════════════════ */
+        const HERO_IMAGES = [
+            'assets/Images/AerialShotOne.jpg',      // Image 1 — Edit path here
+            'assets/Images/Aerial Shot Two.jpg',    // Image 2 — Edit path here
+            'assets/Images/ArialShot Three.jpg',    // Image 3 — Edit path here
+        ];
+        const HERO_INTERVAL_MS = 6000; // Time per image in milliseconds (6 seconds)
 
-        // Navbar scroll effect
-        window.addEventListener('scroll', function() {
-            const navbar = document.querySelector('.navbar-modern');
-            if (window.scrollY > 50) {
-                navbar.classList.add('scrolled');
-            } else {
-                navbar.classList.remove('scrolled');
-            }
-        });
+        (function initHeroSlideshow() {
+            const layers = [
+                document.getElementById('heroBg0'),
+                document.getElementById('heroBg1'),
+                document.getElementById('heroBg2'),
+            ];
 
-        // Smooth scrolling for navigation links
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                e.preventDefault();
-                const target = document.querySelector(this.getAttribute('href'));
-                if (target) {
-                    target.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'start'
-                    });
+            // Pre-load images & assign
+            HERO_IMAGES.forEach((src, i) => {
+                if (layers[i]) {
+                    layers[i].style.backgroundImage = `url('${src}')`;
                 }
             });
+
+            let current = 0;
+            if (layers[0]) layers[0].classList.add('active');
+
+            setInterval(() => {
+                layers[current].classList.remove('active');
+                current = (current + 1) % Math.min(HERO_IMAGES.length, layers.length);
+                layers[current].classList.add('active');
+            }, HERO_INTERVAL_MS);
+        })();
+
+        /* ═══ NAVBAR SCROLL EFFECT ═════════════════════════════════════ */
+        const nav = document.getElementById('mainNav');
+        window.addEventListener('scroll', () => {
+            nav.classList.toggle('scrolled', window.scrollY > 60);
         });
 
-        // Active navigation link
-        window.addEventListener('scroll', function() {
-            const sections = document.querySelectorAll('section');
-            const navLinks = document.querySelectorAll('.nav-link');
-            
+        /* ═══ ACTIVE NAV LINK ON SCROLL ═══════════════════════════════ */
+        const sections = document.querySelectorAll('section[id]');
+        const navLinks = document.querySelectorAll('.resort-nav .nav-link');
+
+        window.addEventListener('scroll', () => {
             let current = '';
-            sections.forEach(section => {
-                const sectionTop = section.offsetTop;
-                const sectionHeight = section.clientHeight;
-                if (scrollY >= (sectionTop - 200)) {
-                    current = section.getAttribute('id');
-                }
+            sections.forEach(s => {
+                if (window.scrollY >= s.offsetTop - 200) current = s.id;
             });
+            navLinks.forEach(l => {
+                l.classList.toggle('active', l.getAttribute('href') === '#' + current);
+            });
+        }, { passive: true });
 
-            navLinks.forEach(link => {
-                link.classList.remove('active');
-                if (link.getAttribute('href').slice(1) === current) {
-                    link.classList.add('active');
-                }
+        /* ═══ SMOOTH SCROLL ════════════════════════════════════════════ */
+        document.querySelectorAll('a[href^="#"]').forEach(a => {
+            const href = a.getAttribute('href');
+            if (!href || href === '#') return; // skip bare '#' links
+            a.addEventListener('click', e => {
+                try {
+                    const target = document.querySelector(href);
+                    if (target) {
+                        e.preventDefault();
+                        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                } catch (err) { /* invalid selector, do nothing */ }
             });
         });
 
-        // Fade in animation
-        const observerOptions = {
-            threshold: 0.1,
-            rootMargin: '0px 0px -50px 0px'
-        };
-
-        const observer = new IntersectionObserver(function(entries) {
+        /* ═══ SCROLL REVEAL ════════════════════════════════════════════ */
+        const revealObserver = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
                     entry.target.classList.add('visible');
+                    revealObserver.unobserve(entry.target);
                 }
             });
-        }, observerOptions);
+        }, { threshold: 0.1, rootMargin: '0px 0px -60px 0px' });
 
-        document.querySelectorAll('.fade-in').forEach(el => {
-            observer.observe(el);
-        });
+        document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
 
-        // Booking form submission
-        document.getElementById('bookingForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            alert('Booking submitted successfully! We will contact you soon.');
-            this.reset();
-        });
+        /* ═══ COUNTER ANIMATION (Hero Stats) ══════════════════════════ */
+        const counters = document.querySelectorAll('[data-count]');
+        let countersStarted = false;
 
-        // Set minimum date to today
-        const dateInput = document.querySelector('input[type="date"]');
-        if (dateInput) {
-            const today = new Date().toISOString().split('T')[0];
-            dateInput.min = today;
-        }
+        const counterObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting && !countersStarted) {
+                    countersStarted = true;
+                    counters.forEach(counter => {
+                        const target = parseFloat(counter.dataset.count);
+                        const suffix = counter.dataset.suffix || '+';
+                        const isDecimal = counter.dataset.decimal === 'true';
+                        const duration = 1800;
+                        const step = target / (duration / 16);
+                        let current = 0;
 
-        // Global keyboard shortcut for admin access
-        document.addEventListener('keydown', function(event) {
-            // Check for Ctrl + Shift + L
-            if (event.ctrlKey && event.shiftKey && (event.key === 'l' || event.key === 'L')) {
-                event.preventDefault();
-                window.location.href = 'http://localhost/YP4K_Resort/Authentication/admin-login.php';
+                        const update = () => {
+                            current = Math.min(current + step, target);
+                            counter.textContent = isDecimal
+                                ? current.toFixed(1) + suffix
+                                : Math.floor(current) + suffix;
+                            if (current < target) requestAnimationFrame(update);
+                        };
+                        update();
+                    });
+                }
+            });
+        }, { threshold: 0.5 });
+
+        if (counters.length) counterObserver.observe(counters[0].closest('.hero-stats'));
+
+        /* ═══ ADMIN KEYBOARD SHORTCUT ═════════════════════════════════ */
+        document.addEventListener('keydown', e => {
+            if (e.ctrlKey && e.shiftKey && (e.key === 'l' || e.key === 'L')) {
+                e.preventDefault();
+                window.location.href = 'Authentication/admin-login.php';
             }
         });
     </script>
 </body>
+
 </html>
