@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 session_start();
 
 // Check if user is logged in
@@ -108,8 +108,8 @@ while ($row = $statsResult->fetch_assoc()) {
             --bg-tertiary: #334155;
             --bg-card: rgba(30, 41, 59, 0.8);
             --text-primary: #f1f5f9;
-            --text-secondary: #94a3b8;
-            --text-muted: #64748b;
+            --text-secondary: #cbd5e1;
+            --text-muted: #cbd5e1;
             --accent-primary: #3b82f6;
             --accent-secondary: #8b5cf6;
             --accent-success: #10b981;

@@ -24,8 +24,8 @@
     --bg-tertiary:       #1A2B22;
     --bg-card:           rgba(21, 34, 29, 0.8);
     --text-primary:      #FFFFFF;
-    --text-secondary:    #B8C4BE;
-    --text-muted:        #8C9992;
+    --text-secondary:    #cbd5e1;
+    --text-muted:        #cbd5e1;
 
     /* Old accent mapped to green */
     --accent-primary:    #9DFF00;
@@ -52,6 +52,20 @@ body {
         radial-gradient(ellipse 60% 80% at 80% 70%, rgba(10,22,14,0.8) 0%, transparent 70%) !important;
     color: #FFFFFF !important;
     min-height: 100vh;
+}
+
+/* ── Ensure all muted and secondary text is bright silver and highly readable in dark mode ── */
+.text-muted,
+.text-secondary,
+small.text-muted,
+.text-muted.small,
+.event-item .text-muted,
+.activity-item .text-muted,
+.card-modern .text-muted,
+.stat-label,
+.table-modern td.text-muted,
+p.text-muted {
+    color: #cbd5e1 !important;
 }
 
 /* Subtle animated bg glow */

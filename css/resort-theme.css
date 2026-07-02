@@ -27,9 +27,9 @@
 
   /* Text */
   --text:          #FFFFFF;
-  --text-2:        #B8C4BE;
-  --text-muted:    #8C9992;
-  --text-dim:      #5C6B63;
+  --text-2:        #cbd5e1;
+  --text-muted:    #cbd5e1;
+  --text-dim:      #94a3b8;
 
   /* Status */
   --success:       #27C46A;
