@@ -58,7 +58,7 @@ try {
                 WHEN b.booking_type = 'bundle'        THEN bun.name
             END as item_name,
             CASE
-                WHEN b.booking_type = 'activity' THEN a.icon
+                WHEN b.booking_type = 'activity' THEN 'bi-activity'
                 ELSE NULL
             END as item_icon,
             pr.file_path as receipt_path

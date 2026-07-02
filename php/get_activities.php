@@ -11,7 +11,7 @@ header('Content-Type: application/json');
 try {
     $stmt = $conn->prepare("
         SELECT id, name, slug, description, price_per_hour, min_duration_hours, 
-               max_duration_hours, capacity, icon, image_url, is_active
+               max_duration_hours, capacity, image_url, is_active
         FROM activities
         WHERE is_active = 1
         ORDER BY name ASC

@@ -50,7 +50,7 @@ try {
                 ELSE acc.name
             END as item_name,
             CASE 
-                WHEN b.booking_type = 'activity' THEN a.icon
+                WHEN b.booking_type = 'activity' THEN 'bi-activity'
                 ELSE NULL
             END as item_icon
         FROM bookings b
