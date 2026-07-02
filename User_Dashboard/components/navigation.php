@@ -112,6 +112,11 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                     </a>
                 </li>
                 <li class="nav-item">
+                    <a class="nav-link <?php echo $currentPage === 'trail-guide.php' ? 'active' : ''; ?>" href="trail-guide.php">
+                        <i class="bi bi-compass"></i> Trail Guide
+                    </a>
+                </li>
+                <li class="nav-item">
                     <a class="nav-link <?php echo $currentPage === 'my-bookings.php' ? 'active' : ''; ?>" href="my-bookings.php">
                         <i class="bi bi-calendar-check"></i> My Bookings
                     </a>
