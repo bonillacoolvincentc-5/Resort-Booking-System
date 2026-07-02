@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 session_start();
 
 // Include admin configuration
@@ -39,17 +39,18 @@ $adminEmail = $_SESSION['admin_email'];
     <div id="navbar-container"></div>
 
     <div id="mainContent" class="main-content">
-        <div class="d-flex justify-content-between align-items-center mb-4">
+        <!-- Page Header -->
+        <div class="page-header">
             <div>
-                <h1 class="h3 mb-2">Payment Management</h1>
-                <p class="text-muted mb-0">Track all transactions and payment history</p>
+                <h1 class="page-title">Payment Management</h1>
+                <p class="text-muted">Track all transactions and payment history</p>
             </div>
-            <div class="d-flex gap-2">
-                <button class="btn btn-outline-secondary">
-                    <i class="bi bi-download me-2"></i>Export
+            <div class="page-actions">
+                <button class="btn-modern btn-secondary">
+                    <i class="bi bi-download me-1"></i> Export
                 </button>
-                <button class="btn btn-primary">
-                    <i class="bi bi-plus-circle me-2"></i>Process Refund
+                <button class="btn-modern btn-primary">
+                    <i class="bi bi-plus-circle me-1"></i> Process Refund
                 </button>
             </div>
         </div>

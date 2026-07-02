@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 session_start();
 
 // Include admin configuration
@@ -69,15 +69,17 @@ while ($row = $result->fetch_assoc()) {
     <div id="navbar-container"></div>
 
     <div id="mainContent" class="main-content">
+        <!-- Page Header -->
         <div class="page-header">
             <div>
-                <h1 class="h3 mb-2">User Management</h1>
-                <p class="text-muted mb-0">Manage all registered users and their permissions</p>
+                <h1 class="page-title">User Management</h1>
+                <p class="text-muted">Manage all registered users and their permissions</p>
             </div>
-            <button class="btn-modern btn-primary">
-                <i class="bi bi-person-plus"></i>
-                Add User
-            </button>
+            <div class="page-actions">
+                <button class="btn-modern btn-primary">
+                    <i class="bi bi-person-plus"></i> Add User
+                </button>
+            </div>
         </div>
 
         <div class="users-container">

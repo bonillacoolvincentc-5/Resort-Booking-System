@@ -1373,3 +1373,1161 @@ textarea.form-ctrl {
         padding: 0.9rem 1rem;
     }
 }
+
+/* ── Shared: form-label-modern ────────────────────────────────────── */
+.form-label-modern {
+    display: block;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #8C9992;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.4rem;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   ACTIVITIES PAGE  (activities.php)
+═══════════════════════════════════════════════════════════════════ */
+
+/* ── 35. Activities Grid ──────────────────────────────────────────── */
+.activities-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 1.25rem;
+}
+
+/* ── 36. Activity Card ────────────────────────────────────────────── */
+.activity-card {
+    background: rgba(21, 34, 29, 0.75);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 18px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+}
+
+.activity-card:hover {
+    border-color: rgba(157, 255, 0, 0.2);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+    transform: translateY(-3px);
+}
+
+/* ── 37. Activity Image ───────────────────────────────────────────── */
+.activity-image {
+    width: 100%;
+    height: 160px;
+    background: rgba(8, 18, 14, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    flex-shrink: 0;
+    position: relative;
+}
+
+.activity-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s ease;
+}
+
+.activity-card:hover .activity-image img {
+    transform: scale(1.04);
+}
+
+.activity-image .bi {
+    font-size: 3rem;
+    color: #3D5247;
+}
+
+/* ── 38. Activity Content ─────────────────────────────────────────── */
+.activity-content {
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    flex: 1;
+}
+
+/* ── 39. Activity Header ──────────────────────────────────────────── */
+.activity-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+
+.activity-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin: 0 0 0.3rem;
+    line-height: 1.3;
+}
+
+.activity-description {
+    font-size: 0.82rem;
+    color: #8C9992;
+    margin: 0;
+    line-height: 1.55;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* ── 40. Activity Status Badge ────────────────────────────────────── */
+.activity-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.25rem 0.65rem;
+    border-radius: 100px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.activity-status::before {
+    content: '';
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: currentColor;
+}
+
+.status-active {
+    background: rgba(157, 255, 0, 0.12);
+    color: #9DFF00;
+    border: 1px solid rgba(157, 255, 0, 0.25);
+}
+
+.status-inactive {
+    background: rgba(255, 90, 95, 0.1);
+    color: #FF5A5F;
+    border: 1px solid rgba(255, 90, 95, 0.22);
+}
+
+/* ── 41. Activity Stats Row ───────────────────────────────────────── */
+.activity-stats {
+    display: flex;
+    gap: 1rem;
+}
+
+.stat-item {
+    flex: 1;
+    background: rgba(8, 18, 14, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 10px;
+    padding: 0.65rem 0.85rem;
+    text-align: center;
+}
+
+.stat-value {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #9DFF00;
+    line-height: 1.2;
+}
+
+.stat-label {
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: #5C6B63;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-top: 0.2rem;
+}
+
+/* ── 42. Activity Actions ─────────────────────────────────────────── */
+.activity-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: auto;
+}
+
+.activity-actions .btn-modern.btn-secondary {
+    border-color: rgba(255, 90, 95, 0.2);
+    color: #FF5A5F;
+}
+
+.activity-actions .btn-modern.btn-secondary:hover {
+    background: rgba(255, 90, 95, 0.1);
+    border-color: rgba(255, 90, 95, 0.35);
+    color: #FF5A5F;
+}
+
+/* ── 43. Responsive activities grid ───────────────────────────────── */
+@media (max-width: 900px) {
+    .activities-grid {
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    }
+}
+
+@media (max-width: 540px) {
+    .activities-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   BUNDLES PAGE  (bundles.php)
+═══════════════════════════════════════════════════════════════════ */
+
+/* ── 44. Stats Row ────────────────────────────────────────────────── */
+.stats-row {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.stats-mini {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    background: rgba(21, 34, 29, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    padding: 0.9rem 1.25rem;
+    flex: 1;
+    min-width: 140px;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    transition: border-color 0.2s ease;
+}
+
+.stats-mini:hover {
+    border-color: rgba(157, 255, 0, 0.15);
+}
+
+.stats-mini-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+
+.stats-mini-icon.purple {
+    background: rgba(139, 92, 246, 0.15);
+    color: #a78bfa;
+    border: 1px solid rgba(139, 92, 246, 0.2);
+}
+
+.stats-mini-icon.green {
+    background: rgba(157, 255, 0, 0.1);
+    color: #9DFF00;
+    border: 1px solid rgba(157, 255, 0, 0.2);
+}
+
+.stats-mini-icon.amber {
+    background: rgba(247, 183, 49, 0.12);
+    color: #F7B731;
+    border: 1px solid rgba(247, 183, 49, 0.2);
+}
+
+.stats-mini-val {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: #ffffff;
+    line-height: 1;
+}
+
+.stats-mini-lbl {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #5C6B63;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    margin-top: 0.2rem;
+}
+
+/* ── 45. Bundles Grid ─────────────────────────────────────────────── */
+.bundles-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.25rem;
+}
+
+/* ── 46. Bundle Card ──────────────────────────────────────────────── */
+.bundle-card {
+    background: rgba(21, 34, 29, 0.75);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 18px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+}
+
+.bundle-card:hover {
+    border-color: rgba(157, 255, 0, 0.2);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+    transform: translateY(-3px);
+}
+
+/* ── 47. Bundle Image ─────────────────────────────────────────────── */
+.bundle-image {
+    position: relative;
+    width: 100%;
+    height: 170px;
+    background: rgba(8, 18, 14, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.bundle-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s ease;
+}
+
+.bundle-card:hover .bundle-image img {
+    transform: scale(1.05);
+}
+
+.bundle-image .bi {
+    font-size: 3rem;
+    color: #3D5247;
+}
+
+.bundle-type-badge {
+    position: absolute;
+    top: 0.65rem;
+    left: 0.65rem;
+    background: rgba(157, 255, 0, 0.15);
+    color: #9DFF00;
+    border: 1px solid rgba(157, 255, 0, 0.3);
+    border-radius: 100px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 0.2rem 0.55rem;
+}
+
+/* ── 48. Bundle Content ───────────────────────────────────────────── */
+.bundle-content {
+    padding: 1.2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    flex: 1;
+}
+
+.bundle-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.6rem;
+}
+
+.bundle-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #ffffff;
+    line-height: 1.3;
+}
+
+.bundle-desc {
+    font-size: 0.82rem;
+    color: #8C9992;
+    margin: 0;
+    line-height: 1.55;
+}
+
+/* ── 49. Bundle Status Badge ──────────────────────────────────────── */
+.bundle-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.22rem 0.6rem;
+    border-radius: 100px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.bundle-status::before {
+    content: '';
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: currentColor;
+}
+
+/* Reuses .status-active / .status-inactive already defined */
+
+/* ── 50. Bundle Stats ─────────────────────────────────────────────── */
+.bundle-stats {
+    display: flex;
+    gap: 0.6rem;
+}
+
+/* Reuses .stat-item / .stat-value / .stat-label from activities */
+
+/* ── 51. Bundle Actions ───────────────────────────────────────────── */
+.bundle-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-top: auto;
+}
+
+/* Warning (Disable) button */
+.btn-modern.btn-warning {
+    background: rgba(247, 183, 49, 0.1);
+    border: 1px solid rgba(247, 183, 49, 0.22);
+    color: #F7B731;
+}
+.btn-modern.btn-warning:hover {
+    background: rgba(247, 183, 49, 0.2);
+    border-color: rgba(247, 183, 49, 0.4);
+    transform: translateY(-1px);
+}
+
+/* Success (Enable) button */
+.btn-modern.btn-success {
+    background: rgba(39, 196, 106, 0.1);
+    border: 1px solid rgba(39, 196, 106, 0.22);
+    color: #27C46A;
+}
+.btn-modern.btn-success:hover {
+    background: rgba(39, 196, 106, 0.2);
+    border-color: rgba(39, 196, 106, 0.4);
+    transform: translateY(-1px);
+}
+
+/* Danger (Delete) button */
+.btn-modern.btn-danger {
+    background: rgba(255, 90, 95, 0.1);
+    border: 1px solid rgba(255, 90, 95, 0.22);
+    color: #FF5A5F;
+}
+.btn-modern.btn-danger:hover {
+    background: rgba(255, 90, 95, 0.2);
+    border-color: rgba(255, 90, 95, 0.4);
+    transform: translateY(-1px);
+}
+
+/* ── 52. Empty State ──────────────────────────────────────────────── */
+.empty-state {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 2rem;
+    background: rgba(21, 34, 29, 0.5);
+    border: 1px dashed rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    text-align: center;
+    gap: 0.25rem;
+}
+
+.empty-state > .bi {
+    font-size: 3rem;
+    color: #3D5247;
+    margin-bottom: 0.75rem;
+}
+
+/* ── 53. Bundle modal form helpers ────────────────────────────────── */
+.form-label-custom {
+    display: block;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #8C9992;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.4rem;
+}
+
+/* Check section inside bundle modal */
+.check-section-title {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #8C9992;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.5rem;
+}
+
+.check-scroll {
+    max-height: 210px;
+    overflow-y: auto;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    padding: 0.6rem;
+    background: rgba(8, 18, 14, 0.5);
+    scrollbar-width: thin;
+    scrollbar-color: rgba(157, 255, 0, 0.2) transparent;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.check-item {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.45rem 0.6rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.check-item:hover {
+    background: rgba(157, 255, 0, 0.05);
+}
+
+.check-item input[type="checkbox"] {
+    accent-color: #9DFF00;
+    width: 15px;
+    height: 15px;
+    flex-shrink: 0;
+}
+
+.check-item-name {
+    flex: 1;
+    font-size: 0.85rem;
+    color: #B8C4BE;
+}
+
+.check-item-price {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #9DFF00;
+    white-space: nowrap;
+}
+
+/* ── 54. Toast notifications ──────────────────────────────────────── */
+.toast-wrap {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+
+.toast-item {
+    background: rgba(21, 34, 29, 0.95);
+    border: 1px solid rgba(157, 255, 0, 0.2);
+    border-radius: 12px;
+    padding: 0.85rem 1.1rem;
+    color: #ffffff;
+    font-size: 0.85rem;
+    font-weight: 500;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4);
+    animation: toastIn 0.25s ease forwards;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    min-width: 240px;
+    max-width: 340px;
+}
+
+.toast-item.error {
+    border-color: rgba(255, 90, 95, 0.3);
+}
+
+@keyframes toastIn {
+    from { opacity: 0; transform: translateX(30px); }
+    to   { opacity: 1; transform: translateX(0); }
+}
+
+/* ── 55. Responsive bundles ───────────────────────────────────────── */
+@media (max-width: 900px) {
+    .bundles-grid {
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    }
+    .stats-row {
+        gap: 0.6rem;
+    }
+}
+
+@media (max-width: 540px) {
+    .bundles-grid { grid-template-columns: 1fr; }
+    .stats-mini { min-width: 100%; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   USER MANAGEMENT PAGE  (users.php)
+═══════════════════════════════════════════════════════════════════ */
+
+/* ── 56. Users Container & Table ──────────────────────────────────── */
+.users-container {
+    background: rgba(21, 34, 29, 0.75);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 20px;
+    overflow: hidden;
+    padding: 1.25rem;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+}
+
+/* ── 57. User Avatar & Info ───────────────────────────────────────── */
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+}
+
+.user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: #ffffff;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+    line-height: 1;
+}
+
+.user-details {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.user-name {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #ffffff;
+    line-height: 1.2;
+}
+
+.user-email {
+    font-size: 0.78rem;
+    color: #8C9992;
+    line-height: 1.2;
+}
+
+.btn-action.btn-delete {
+    border-color: rgba(255, 90, 95, 0.2);
+    color: #FF5A5F;
+}
+
+.btn-action.btn-delete:hover {
+    background: rgba(255, 90, 95, 0.15);
+    border-color: rgba(255, 90, 95, 0.35);
+    color: #FF5A5F;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   PAYMENT MANAGEMENT PAGE  (payments.php)
+═══════════════════════════════════════════════════════════════════ */
+
+/* ── 58. Overview Cards ───────────────────────────────────────────── */
+.overview-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.25rem;
+    margin-bottom: 1.5rem;
+}
+
+.overview-card {
+    background: rgba(21, 34, 29, 0.75);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    padding: 1.25rem;
+    position: relative;
+    overflow: hidden;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    transition: border-color 0.25s ease, transform 0.25s ease;
+}
+
+.overview-card:hover {
+    border-color: rgba(157, 255, 0, 0.2);
+    transform: translateY(-2px);
+}
+
+.overview-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    background: rgba(157, 255, 0, 0.1);
+    color: #9DFF00;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    margin-bottom: 0.85rem;
+    border: 1px solid rgba(157, 255, 0, 0.2);
+}
+
+.overview-value {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #ffffff;
+    line-height: 1.1;
+}
+
+.overview-label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #5C6B63;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    margin-top: 0.25rem;
+}
+
+/* ── 59. Payments Table Container ─────────────────────────────────── */
+.payments-table {
+    background: rgba(21, 34, 29, 0.75);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 20px;
+    overflow: hidden;
+    padding: 1.25rem;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+}
+
+.payment-id {
+    font-weight: 700;
+    color: #9DFF00;
+    font-family: monospace;
+    font-size: 0.9rem;
+}
+
+.amount {
+    font-weight: 700;
+    color: #27C46A;
+}
+
+.amount.pending {
+    color: #F7B731;
+}
+
+.amount.failed {
+    color: #FF5A5F;
+}
+
+/* Status badge variants for payments */
+.status-badge.status-completed {
+    background: rgba(39, 196, 106, 0.15);
+    color: #27C46A;
+    border: 1px solid rgba(39, 196, 106, 0.3);
+}
+
+.status-badge.status-pending {
+    background: rgba(247, 183, 49, 0.15);
+    color: #F7B731;
+    border: 1px solid rgba(247, 183, 49, 0.3);
+}
+
+.status-badge.status-failed {
+    background: rgba(255, 90, 95, 0.15);
+    color: #FF5A5F;
+    border: 1px solid rgba(255, 90, 95, 0.3);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   REPORTS & ANALYTICS PAGE  (reports.php)
+═══════════════════════════════════════════════════════════════════ */
+
+/* ── 60. Reports Grid & Charts ────────────────────────────────────── */
+.reports-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+    align-items: start;
+}
+
+@media (max-width: 1024px) {
+    .reports-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.chart-card {
+    background: rgba(21, 34, 29, 0.75);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 18px;
+    padding: 1.4rem;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+}
+
+.chart-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.25rem;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.chart-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin: 0;
+}
+
+.chart-options {
+    display: flex;
+    gap: 0.35rem;
+    background: rgba(8, 18, 14, 0.6);
+    padding: 0.25rem;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.chart-option {
+    padding: 0.3rem 0.75rem;
+    border-radius: 6px;
+    border: none;
+    background: transparent;
+    color: #B8C4BE;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: inherit;
+}
+
+.chart-option:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: #ffffff;
+}
+
+.chart-option.active {
+    background: rgba(157, 255, 0, 0.15);
+    color: #9DFF00;
+}
+
+.chart-container {
+    min-height: 260px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(8, 18, 14, 0.4);
+    border-radius: 14px;
+    border: 1px dashed rgba(255, 255, 255, 0.08);
+    padding: 1.5rem;
+}
+
+.chart-placeholder {
+    text-align: center;
+    color: #5C6B63;
+}
+
+.chart-placeholder .bi {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+    display: block;
+    color: #3D5247;
+}
+
+/* ── 61. Stats Grid (Reports right col) ───────────────────────────── */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.85rem;
+}
+
+.stat-card {
+    background: rgba(8, 18, 14, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 12px;
+    padding: 0.9rem 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.stat-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.stat-info .stat-label {
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: #5C6B63;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.stat-info .stat-value {
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: #ffffff;
+    margin-top: 0.15rem;
+}
+
+.stat-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: rgba(157, 255, 0, 0.1);
+    color: #9DFF00;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+    border: 1px solid rgba(157, 255, 0, 0.2);
+}
+
+.trend-up {
+    color: #27C46A !important;
+    font-weight: 700;
+}
+
+.trend-down {
+    color: #FF5A5F !important;
+    font-weight: 700;
+}
+
+/* ── 62. Table Section (Reports bottom) ───────────────────────────── */
+.table-section {
+    background: rgba(21, 34, 29, 0.75);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 18px;
+    padding: 1.4rem;
+    overflow: hidden;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   MENU MANAGEMENT PAGE  (menu.php)
+═══════════════════════════════════════════════════════════════════ */
+
+/* ── 63. Menu Grid & Categories ───────────────────────────────────── */
+.menu-grid {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    gap: 1.5rem;
+    align-items: start;
+}
+
+@media (max-width: 900px) {
+    .menu-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.menu-categories {
+    background: rgba(21, 34, 29, 0.75);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 18px;
+    padding: 1.25rem;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+}
+
+.category-title {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #8C9992;
+    margin-bottom: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.category-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.category-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.65rem 0.9rem;
+    border-radius: 10px;
+    color: #B8C4BE;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+}
+
+.category-item:hover {
+    background: rgba(157, 255, 0, 0.05);
+    color: #ffffff;
+}
+
+.category-item.active {
+    background: rgba(157, 255, 0, 0.12);
+    color: #9DFF00;
+    border-color: rgba(157, 255, 0, 0.25);
+}
+
+.category-item .bi {
+    font-size: 1.1rem;
+}
+
+/* ── 64. Menu Items Section ───────────────────────────────────────── */
+.menu-items {
+    background: rgba(21, 34, 29, 0.75);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 18px;
+    padding: 1.4rem;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+}
+
+.menu-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.25rem;
+}
+
+.menu-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin: 0;
+}
+
+.items-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 1.25rem;
+}
+
+/* ── 65. Menu Item Card ───────────────────────────────────────────── */
+.menu-item-card {
+    background: rgba(8, 18, 14, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 14px;
+    padding: 1.1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.menu-item-card:hover {
+    border-color: rgba(157, 255, 0, 0.2);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.item-image {
+    width: 100%;
+    height: 140px;
+    background: rgba(21, 34, 29, 0.8);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    font-size: 3rem;
+    color: #3D5247;
+    margin-bottom: 0.2rem;
+}
+
+.item-details {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    flex: 1;
+}
+
+.item-name {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #ffffff;
+}
+
+.item-description {
+    font-size: 0.8rem;
+    color: #8C9992;
+    line-height: 1.45;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.item-price {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: #9DFF00;
+}
+
+/* ── 66. Menu Item Actions ────────────────────────────────────────── */
+.item-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.4rem;
+    margin-top: auto;
+    padding-top: 0.6rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.action-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.05);
+    color: #B8C4BE;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.action-btn.edit-btn:hover {
+    background: rgba(157, 255, 0, 0.15);
+    border-color: rgba(157, 255, 0, 0.3);
+    color: #9DFF00;
+}
+
+.action-btn.delete-btn {
+    border-color: rgba(255, 90, 95, 0.2);
+    color: #FF5A5F;
+}
+
+.action-btn.delete-btn:hover {
+    background: rgba(255, 90, 95, 0.15);
+    border-color: rgba(255, 90, 95, 0.35);
+    color: #FF5A5F;
+}

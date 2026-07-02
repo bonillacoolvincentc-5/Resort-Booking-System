@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 session_start();
 
 require_once 'config.php';
@@ -98,15 +98,17 @@ while ($r = $accResult->fetch_assoc()) $allAccommodations[] = $r;
     <!-- -- MAIN CONTENT ------------------------------------------- -->
     <div id="mainContent" class="main-content">
 
-        <!-- Page header -->
-        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+        <!-- Page Header -->
+        <div class="page-header">
             <div>
-                <h1 class="h3 mb-1">Manage Bundles</h1>
-                <p class="text-muted mb-0">Create and manage resort packages visible to users on the booking page</p>
+                <h1 class="page-title">Manage Bundles</h1>
+                <p class="text-muted">Create and manage resort packages visible to users on the booking page</p>
             </div>
-            <button class="btn-modern btn-primary" onclick="openAddModal()">
-                <i class="bi bi-plus-circle"></i> Add Bundle
-            </button>
+            <div class="page-actions">
+                <button class="btn-modern btn-primary" onclick="openAddModal()">
+                    <i class="bi bi-plus-circle"></i> Add Bundle
+                </button>
+            </div>
         </div>
 
         <!-- Stats row -->
@@ -206,13 +208,13 @@ while ($r = $accResult->fetch_assoc()) $allAccommodations[] = $r;
     --------------------------------------------------------------- -->
     <div class="modal fade" id="bundleModal" tabindex="-1" aria-labelledby="bundleModalTitle" aria-hidden="true">
         <div class="modal-dialog modal-xl modal-dialog-scrollable">
-            <div class="modal-content modal-content">
-                <div class="modal-header d-flex align-items-center justify-content-between">
-                    <h5 class="mb-0 fw-700" id="bundleModalTitle" style="color:var(--text-primary);font-weight:700;">Add Bundle</h5>
+            <div class="modal-content modal-content-modern">
+                <div class="modal-header modal-header-modern">
+                    <h5 class="modal-title" id="bundleModalTitle">Add Bundle</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
 
-                <div class="modal-body" style="padding:1.5rem;background:var(--bg-card);">
+                <div class="modal-body modal-body-modern">
                     <form id="bundleForm" enctype="multipart/form-data" novalidate>
                         <input type="hidden" id="bundleId" name="bundle_id">
 
@@ -316,7 +318,7 @@ while ($r = $accResult->fetch_assoc()) $allAccommodations[] = $r;
                     </form>
                 </div>
 
-                <div class="modal-footer">
+                <div class="modal-footer modal-footer-modern">
                     <button type="button" class="btn-modern btn-secondary" data-bs-dismiss="modal">Cancel</button>
                     <button type="button" class="btn-modern btn-primary" id="saveBundleBtn" onclick="saveBundle()">
                         <i class="bi bi-check-circle"></i> Save Bundle
@@ -331,18 +333,18 @@ while ($r = $accResult->fetch_assoc()) $allAccommodations[] = $r;
     --------------------------------------------------------------- -->
     <div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content modal-content">
-                <div class="modal-header">
-                    <h5 class="mb-0 fw-700" style="color:var(--accent-danger);font-weight:700;">
+            <div class="modal-content modal-content-modern">
+                <div class="modal-header modal-header-modern">
+                    <h5 class="modal-title" style="color:#FF5A5F;">
                         <i class="bi bi-exclamation-triangle me-2"></i>Delete Bundle
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body" style="padding:1.5rem;background:var(--bg-card);">
-                    <p style="color:var(--text-secondary);">Are you sure you want to delete <strong id="deleteBundleName" style="color:var(--text-primary);"></strong>?</p>
-                    <p style="color:var(--text-muted);font-size:.875rem;margin-top:.5rem;">This action cannot be undone.</p>
+                <div class="modal-body modal-body-modern">
+                    <p style="color:#B8C4BE;">Are you sure you want to delete <strong id="deleteBundleName" style="color:#ffffff;"></strong>?</p>
+                    <p style="color:#5C6B63;font-size:.875rem;margin-top:.5rem;">This action cannot be undone.</p>
                 </div>
-                <div class="modal-footer">
+                <div class="modal-footer modal-footer-modern">
                     <button type="button" class="btn-modern btn-secondary" data-bs-dismiss="modal">Cancel</button>
                     <button type="button" class="btn-modern btn-danger" id="confirmDeleteBtn">
                         <i class="bi bi-trash"></i> Delete

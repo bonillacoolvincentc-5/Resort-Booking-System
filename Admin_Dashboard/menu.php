@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 session_start();
 
 // Include admin configuration
@@ -39,6 +39,19 @@ $adminEmail = $_SESSION['admin_email'];
     <div id="navbar-container"></div>
 
     <div id="mainContent" class="main-content">
+        <!-- Page Header -->
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">Menu Management</h1>
+                <p class="text-muted">Manage food, beverages, and dining items for the resort</p>
+            </div>
+            <div class="page-actions">
+                <button class="btn-modern btn-primary">
+                    <i class="bi bi-plus-circle"></i> Add Item
+                </button>
+            </div>
+        </div>
+
         <div class="menu-grid">
             <div class="menu-categories">
                 <h3 class="category-title">Categories</h3>
@@ -69,10 +82,6 @@ $adminEmail = $_SESSION['admin_email'];
             <div class="menu-items">
                 <div class="menu-header">
                     <h3 class="menu-title">Main Course Items</h3>
-                    <button class="add-item-btn">
-                        <i class="bi bi-plus-circle"></i>
-                        Add Item
-                    </button>
                 </div>
 
                 <div class="items-grid">

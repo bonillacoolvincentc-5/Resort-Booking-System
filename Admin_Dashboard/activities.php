@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 session_start();
 
 // Include admin configuration
@@ -72,15 +72,18 @@ while ($row = $result->fetch_assoc()) {
     <div id="navbar-container"></div>
 
     <div id="mainContent" class="main-content">
-        <div class="d-flex justify-content-between align-items-center mb-4">
+        <!-- Page Header -->
+        <div class="page-header">
             <div>
-                <h1 class="h3 mb-2">Activities Management</h1>
-                <p class="text-muted mb-0">Manage resort activities and facilities</p>
+                <h1 class="page-title">Activities Management</h1>
+                <p class="text-muted">Manage resort activities and facilities</p>
             </div>
-            <button class="btn-modern btn-primary" onclick="openAddActivityModal()">
-                <i class="bi bi-plus-circle"></i>
-                Add Activity
-            </button>
+            <div class="page-actions">
+                <button class="btn-modern btn-primary" onclick="openAddActivityModal()">
+                    <i class="bi bi-plus-circle"></i>
+                    Add Activity
+                </button>
+            </div>
         </div>
 
         <div class="activities-grid">
@@ -148,73 +151,69 @@ while ($row = $result->fetch_assoc()) {
     <!-- Add/Edit Activity Modal -->
     <div class="modal fade" id="activityModal" tabindex="-1">
         <div class="modal-dialog modal-lg">
-            <div class="modal-content" style="background: var(--bg-card); backdrop-filter: blur(20px); border: 1px solid var(--border-color); border-radius: 1rem;">
-                <div class="modal-header" style="background: var(--bg-tertiary); border-bottom: 1px solid var(--border-color); padding: 1.5rem; border-radius: 1rem 1rem 0 0;">
-                    <h5 class="modal-title" style="color: var(--text-primary);" id="activityModalTitle">Add Activity</h5>
+            <div class="modal-content modal-content-modern">
+                <div class="modal-header modal-header-modern">
+                    <h5 class="modal-title" id="activityModalTitle">Add Activity</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body" style="padding: 1.5rem;">
+                <div class="modal-body modal-body-modern">
                     <form id="activityForm">
                         <input type="hidden" id="activityId" name="activity_id">
                         <div class="row">
                             <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label" style="color: var(--text-primary); font-weight: 500;">Activity Name</label>
-                                    <input type="text" class="form-control" id="activityName" name="name" required style="background: var(--bg-tertiary); border: 1px solid var(--border-color); color: var(--text-primary);">
+                                <div class="form-group-modern">
+                                    <label class="form-label-modern">Activity Name</label>
+                                    <input type="text" class="form-control-modern" id="activityName" name="name" required>
                                 </div>
                             </div>
                             <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label" style="color: var(--text-primary); font-weight: 500;">Price per Hour (?)</label>
-                                    <input type="number" step="0.01" class="form-control" id="activityPrice" name="price_per_hour" required style="background: var(--bg-tertiary); border: 1px solid var(--border-color); color: var(--text-primary);">
+                                <div class="form-group-modern">
+                                    <label class="form-label-modern">Price per Hour (₱)</label>
+                                    <input type="number" step="0.01" class="form-control-modern" id="activityPrice" name="price_per_hour" required>
                                 </div>
                             </div>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label" style="color: var(--text-primary); font-weight: 500;">Description</label>
-                            <textarea class="form-control" id="activityDescription" name="description" rows="3" style="background: var(--bg-tertiary); border: 1px solid var(--border-color); color: var(--text-primary);"></textarea>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Description</label>
+                            <textarea class="form-control-modern" id="activityDescription" name="description" rows="3"></textarea>
                         </div>
-                        <div class="row">
-                            <div class="col-md-12">
-                                <div class="mb-3">
-                                    <label class="form-label" style="color: var(--text-primary); font-weight: 500;">Status</label>
-                                    <select class="form-select" id="activityStatus" name="is_active" style="background: var(--bg-tertiary); border: 1px solid var(--border-color); color: var(--text-primary);">
-                                        <option value="1">Active</option>
-                                        <option value="0">Inactive</option>
-                                    </select>
-                                </div>
-                            </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Status</label>
+                            <select class="form-control-modern" id="activityStatus" name="is_active">
+                                <option value="1">Active</option>
+                                <option value="0">Inactive</option>
+                            </select>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label" style="color: var(--text-primary); font-weight: 500;">Activity Image</label>
-                            <input type="file" class="form-control" id="activityImage" name="image" accept="image/*" style="background: var(--bg-tertiary); border: 1px solid var(--border-color); color: var(--text-primary);">
-                            <small class="text-muted" style="color: var(--text-muted);">Leave empty to keep existing image (when editing)</small>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Activity Image</label>
+                            <input type="file" class="form-control-modern" id="activityImage" name="image" accept="image/*">
+                            <small style="color:#5C6B63; font-size:0.78rem; margin-top:0.3rem; display:block;">Leave empty to keep existing image (when editing)</small>
                         </div>
                         <div class="row">
                             <div class="col-md-4">
-                                <div class="mb-3">
-                                    <label class="form-label" style="color: var(--text-primary); font-weight: 500;">Min Duration (hours)</label>
-                                    <input type="number" step="0.5" class="form-control" id="minDuration" name="min_duration_hours" value="1.0" style="background: var(--bg-tertiary); border: 1px solid var(--border-color); color: var(--text-primary);">
+                                <div class="form-group-modern">
+                                    <label class="form-label-modern">Min Duration (hours)</label>
+                                    <input type="number" step="0.5" class="form-control-modern" id="minDuration" name="min_duration_hours" value="1.0">
                                 </div>
                             </div>
                             <div class="col-md-4">
-                                <div class="mb-3">
-                                    <label class="form-label" style="color: var(--text-primary); font-weight: 500;">Max Duration (hours)</label>
-                                    <input type="number" step="0.5" class="form-control" id="maxDuration" name="max_duration_hours" value="4.0" style="background: var(--bg-tertiary); border: 1px solid var(--border-color); color: var(--text-primary);">
+                                <div class="form-group-modern">
+                                    <label class="form-label-modern">Max Duration (hours)</label>
+                                    <input type="number" step="0.5" class="form-control-modern" id="maxDuration" name="max_duration_hours" value="4.0">
                                 </div>
                             </div>
                             <div class="col-md-4">
-                                <div class="mb-3">
-                                    <label class="form-label" style="color: var(--text-primary); font-weight: 500;">Capacity</label>
-                                    <input type="number" class="form-control" id="activityCapacity" name="capacity" value="10" style="background: var(--bg-tertiary); border: 1px solid var(--border-color); color: var(--text-primary);">
+                                <div class="form-group-modern">
+                                    <label class="form-label-modern">Capacity</label>
+                                    <input type="number" class="form-control-modern" id="activityCapacity" name="capacity" value="10">
                                 </div>
                             </div>
                         </div>
                     </form>
                 </div>
-                <div class="modal-footer" style="background: var(--bg-tertiary); border-top: 1px solid var(--border-color); padding: 1.5rem; border-radius: 0 0 1rem 1rem;">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="background: var(--bg-tertiary); border: 1px solid var(--border-color); color: var(--text-primary);">Cancel</button>
-                    <button type="button" class="btn btn-primary" onclick="saveActivity()" style="background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); border: none;">Save Activity</button>
+                <div class="modal-footer modal-footer-modern">
+                    <button type="button" class="btn-modern btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn-modern btn-primary" onclick="saveActivity()">Save Activity</button>
                 </div>
             </div>
         </div>
