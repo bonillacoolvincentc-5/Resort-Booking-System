@@ -156,20 +156,20 @@ while ($row = $result->fetch_assoc()) {
     <!-- View User Details Modal -->
     <div class="modal fade" id="viewUserModal" tabindex="-1" aria-labelledby="viewUserModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg">
-            <div class="modal-content" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 1rem; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.4);">
-                <div class="modal-header" style="border-bottom: 1px solid var(--border-color); background: rgba(0,0,0,0.15); padding: 1.5rem;">
-                    <h5 class="modal-title d-flex align-items-center gap-2" id="viewUserModalLabel" style="color: var(--text-primary); font-weight: 700;">
+            <div class="modal-content" style="background: #101B17 !important; border: 1px solid rgba(255,255,255,0.1) !important; border-radius: 1rem !important; overflow: hidden; box-shadow: 0 25px 50px rgba(0,0,0,0.8) !important;">
+                <div class="modal-header" style="border-bottom: 1px solid rgba(255,255,255,0.1) !important; background: #15221D !important; padding: 1.5rem;">
+                    <h5 class="modal-title d-flex align-items-center gap-2" id="viewUserModalLabel" style="color: #fff !important; font-weight: 700;">
                         <i class="bi bi-person-badge text-primary" style="font-size: 1.5rem;"></i> User Account Details
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body p-4" style="color: var(--text-primary);">
+                <div class="modal-body p-4" style="color: #B8C4BE !important; background: #101B17 !important;">
                     <div class="row g-4">
                         <div class="col-md-4 text-center d-flex flex-column align-items-center justify-content-center" style="border-right: 1px solid var(--border-color);">
                             <div class="avatar-circle mb-3" style="width: 100px; height: 100px; border-radius: 50%; background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); display: flex; align-items: center; justify-content: center; font-size: 2.5rem; color: #fff; box-shadow: 0 10px 20px rgba(0,0,0,0.2);">
                                 <i class="bi bi-person-fill"></i>
                             </div>
-                            <h4 id="modalUserName" class="mb-1" style="font-weight: 700;">---</h4>
+                            <h4 id="modalUserName" class="mb-1" style="font-weight: 700; color: #fff;">---</h4>
                             <span id="modalUserStatus" class="badge rounded-pill mb-2 px-3 py-2">---</span>
                             <p id="modalUserEmail" class="text-muted small mb-0">---</p>
                         </div>
@@ -178,23 +178,23 @@ while ($row = $result->fetch_assoc()) {
                             <div class="row g-3 mb-4">
                                 <div class="col-sm-6">
                                     <label class="text-muted small d-block">Full Name</label>
-                                    <span id="modalFullName" class="fw-medium">---</span>
+                                    <span id="modalFullName" class="fw-medium text-white">---</span>
                                 </div>
                                 <div class="col-sm-6">
                                     <label class="text-muted small d-block">Phone Number</label>
-                                    <span id="modalPhone" class="fw-medium">---</span>
+                                    <span id="modalPhone" class="fw-medium text-white">---</span>
                                 </div>
                                 <div class="col-sm-6">
                                     <label class="text-muted small d-block">Birthdate</label>
-                                    <span id="modalBirthdate" class="fw-medium">---</span>
+                                    <span id="modalBirthdate" class="fw-medium text-white">---</span>
                                 </div>
                                 <div class="col-sm-6">
                                     <label class="text-muted small d-block">Gender</label>
-                                    <span id="modalGender" class="fw-medium">---</span>
+                                    <span id="modalGender" class="fw-medium text-white">---</span>
                                 </div>
                                 <div class="col-12">
                                     <label class="text-muted small d-block">Complete Address</label>
-                                    <span id="modalAddress" class="fw-medium">---</span>
+                                    <span id="modalAddress" class="fw-medium text-white">---</span>
                                 </div>
                             </div>
 
@@ -202,7 +202,7 @@ while ($row = $result->fetch_assoc()) {
                             <div class="row g-3">
                                 <div class="col-sm-6">
                                     <label class="text-muted small d-block">Date Joined</label>
-                                    <span id="modalJoined" class="fw-medium">---</span>
+                                    <span id="modalJoined" class="fw-medium text-white">---</span>
                                 </div>
                                 <div class="col-sm-6">
                                     <label class="text-muted small d-block">Total Bookings</label>
@@ -212,7 +212,7 @@ while ($row = $result->fetch_assoc()) {
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer" style="border-top: 1px solid var(--border-color); background: rgba(0,0,0,0.15); padding: 1rem 1.5rem;">
+                <div class="modal-footer" style="border-top: 1px solid rgba(255,255,255,0.1) !important; background: #15221D !important; padding: 1rem 1.5rem;">
                     <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal" style="border-radius: 0.5rem;">Close</button>
                 </div>
             </div>
