@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -646,7 +646,6 @@
                     <p class="profile-email">john.doe@email.com</p>
                     
                     <div class="profile-badges">
-                        <span class="profile-badge badge-gold">Gold Member</span>
                         <span class="profile-badge badge-verified">Verified</span>
                     </div>
 
@@ -661,7 +660,7 @@
                         </div>
                         <div class="stat-item">
                             <div class="stat-value">2Y</div>
-                            <div class="stat-label">Member</div>
+                            <div class="stat-label">Joined</div>
                         </div>
                     </div>
 

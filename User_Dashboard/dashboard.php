@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -438,7 +438,7 @@
 
         <!-- Stats Grid -->
         <div class="row g-4 mb-4">
-            <div class="col-lg-3 col-md-6">
+            <div class="col-lg-4 col-md-6">
                 <div class="stat-card">
                     <div class="stat-icon primary">
                         <i class="bi bi-calendar-check"></i>
@@ -447,7 +447,7 @@
                     <div class="stat-label">Active Bookings</div>
                 </div>
             </div>
-            <div class="col-lg-3 col-md-6">
+            <div class="col-lg-4 col-md-6">
                 <div class="stat-card">
                     <div class="stat-icon success">
                         <i class="bi bi-star-fill"></i>
@@ -456,22 +456,13 @@
                     <div class="stat-label">Activities</div>
                 </div>
             </div>
-            <div class="col-lg-3 col-md-6">
+            <div class="col-lg-4 col-md-6">
                 <div class="stat-card">
                     <div class="stat-icon warning">
                         <i class="bi bi-credit-card"></i>
                     </div>
                     <div class="stat-number">$450</div>
                     <div class="stat-label">Total Spent</div>
-                </div>
-            </div>
-            <div class="col-lg-3 col-md-6">
-                <div class="stat-card">
-                    <div class="stat-icon primary">
-                        <i class="bi bi-trophy"></i>
-                    </div>
-                    <div class="stat-number">Gold</div>
-                    <div class="stat-label">Member Status</div>
                 </div>
             </div>
         </div>
@@ -575,7 +566,6 @@
                         <div class="profile-name">John Doe</div>
                         <div class="profile-email">john.doe@email.com</div>
                         <div class="d-flex justify-content-center gap-2 mb-3">
-                            <span class="badge bg-warning">Gold Member</span>
                             <span class="badge bg-success">Verified</span>
                         </div>
                         <a href="profile.php" class="btn-modern btn-primary-modern w-100">
