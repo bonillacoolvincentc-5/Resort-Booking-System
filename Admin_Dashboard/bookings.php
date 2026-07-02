@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 session_start();
 
 // Include admin configuration
@@ -175,14 +175,6 @@ while ($row = $bundlesRes->fetch_assoc()) {
                     </select>
                 </div>
                 <div class="filter-group">
-                    <label class="filter-label">Payment Method</label>
-                    <select class="filter-input" id="paymentFilter">
-                        <option value="">All Methods</option>
-                        <option value="gcash">GCash</option>
-                        <option value="cash">Cash</option>
-                    </select>
-                </div>
-                <div class="filter-group">
                     <label class="filter-label">Date Range</label>
                     <input type="date" class="filter-input" id="dateFilter">
                 </div>
@@ -197,7 +189,6 @@ while ($row = $bundlesRes->fetch_assoc()) {
                         <th>Customer Name</th>
                         <th>Date</th>
                         <th>Activity/Facility</th>
-                        <th>Payment Method</th>
                         <th>Status</th>
                         <th>Actions</th>
                     </tr>
@@ -209,14 +200,6 @@ while ($row = $bundlesRes->fetch_assoc()) {
                                 <td class="customer-name"><?php echo htmlspecialchars($booking['full_name']); ?></td>
                                 <td><?php echo date('M j, Y', strtotime($booking['check_in_date'])); ?></td>
                                 <td><?php echo htmlspecialchars($booking['item_name']); ?></td>
-                                <td>
-                                    <div class="payment-method">
-                                        <div class="payment-icon <?php echo strtolower($booking['payment_method']); ?>-icon">
-                                            <i class="bi bi-<?php echo $booking['payment_method'] === 'gcash' ? 'credit-card' : 'cash'; ?>"></i>
-                                        </div>
-                                        <span><?php echo ucfirst($booking['payment_method']); ?></span>
-                                    </div>
-                                </td>
                                 <td><span class="status-badge status-<?php echo $booking['status_name']; ?>"><?php echo ucfirst(str_replace('_', ' ', $booking['status_name'])); ?></span></td>
                                 <td>
                                     <div class="action-buttons">
@@ -300,7 +283,7 @@ while ($row = $bundlesRes->fetch_assoc()) {
                             </div>
                         </div>
                         <div class="row">
-                            <div class="col-md-6">
+                            <div class="col-12">
                                 <div class="form-group-modern">
                                     <label class="form-label-modern">Activity/Facility</label>
                                     <select class="form-control-modern" id="editActivity" required>
@@ -309,15 +292,6 @@ while ($row = $bundlesRes->fetch_assoc()) {
                                         <option value="gym">Fitness Gym</option>
                                         <option value="adventure">Adventure Rides</option>
                                         <option value="playground">Kids Playground</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group-modern">
-                                    <label class="form-label-modern">Payment Method</label>
-                                    <select class="form-control-modern" id="editPaymentMethod" required>
-                                        <option value="gcash">GCash</option>
-                                        <option value="cash">Cash</option>
                                     </select>
                                 </div>
                             </div>
@@ -572,8 +546,8 @@ while ($row = $bundlesRes->fetch_assoc()) {
                             <p class="mb-0" style="color:var(--accent-success);font-weight:700;">${amount}</p>
                         </div>
                         <div class="col-md-4">
-                            <p class="mb-1" style="font-size:.75rem;color:var(--text-muted);">PAYMENT</p>
-                            <p class="mb-0" style="color:var(--text-primary);">${escHtml(b.payment_method ? b.payment_method.toUpperCase() : '�')} / ${escHtml(b.payment_status || '�')}</p>
+                            <p class="mb-1" style="font-size:.75rem;color:var(--text-muted);">PAYMENT STATUS</p>
+                            <p class="mb-0" style="color:var(--text-primary);">${escHtml((b.payment_status || 'Pending').toUpperCase())}</p>
                         </div>
                         ${b.special_requests ? `
                         <div class="col-12">
@@ -626,7 +600,6 @@ while ($row = $bundlesRes->fetch_assoc()) {
                 document.getElementById('editCustomerName').value   = b.full_name      || '';
                 document.getElementById('editDate').value           = b.check_in_date  || '';
                 document.getElementById('editTime').value           = b.check_in_time  || '';
-                document.getElementById('editPaymentMethod').value  = b.payment_method || 'cash';
 
                 // Populate activity/accommodation/bundle from real DB data
                 const actSel = document.getElementById('editActivity');
@@ -665,7 +638,6 @@ while ($row = $bundlesRes->fetch_assoc()) {
                 full_name:      document.getElementById('editCustomerName').value.trim(),
                 check_in_date:  document.getElementById('editDate').value,
                 check_in_time:  document.getElementById('editTime').value || null,
-                payment_method: document.getElementById('editPaymentMethod').value,
                 item_id:        document.getElementById('editActivity').value || null,
                 special_requests: document.getElementById('editSpecialRequests').value,
             };
@@ -732,40 +704,33 @@ while ($row = $bundlesRes->fetch_assoc()) {
         document.addEventListener('DOMContentLoaded', function() {
             const searchInput = document.getElementById('searchInput');
             const statusFilter = document.getElementById('statusFilter');
-            const paymentFilter = document.getElementById('paymentFilter');
             const dateFilter = document.getElementById('dateFilter');
             
             function applyFilters() {
-                const searchTerm = searchInput.value.toLowerCase();
-                const statusValue = statusFilter.value;
-                const paymentValue = paymentFilter.value;
-                const dateValue = dateFilter.value;
+                const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
+                const statusValue = statusFilter ? statusFilter.value.toLowerCase() : '';
+                const dateValue = dateFilter ? dateFilter.value : '';
                 
                 const rows = document.querySelectorAll('#bookingsTableBody tr');
                 
                 rows.forEach(row => {
-                    const bookingId = row.dataset.bookingId;
-                    const booking = bookingsData[bookingId];
+                    if (!row.dataset.bookingId) return;
+                    
+                    const customerName = (row.querySelector('.customer-name')?.textContent || '').toLowerCase();
+                    const statusText = (row.querySelector('.status-badge')?.textContent || '').toLowerCase();
+                    const dateText = (row.cells[1]?.textContent || '').toLowerCase();
                     
                     let showRow = true;
                     
-                    // Search filter
-                    if (searchTerm && !booking.customer.toLowerCase().includes(searchTerm)) {
+                    if (searchTerm && !customerName.includes(searchTerm)) {
                         showRow = false;
                     }
                     
-                    // Status filter
-                    if (statusValue && booking.status !== statusValue) {
+                    if (statusValue && !statusText.includes(statusValue)) {
                         showRow = false;
                     }
                     
-                    // Payment filter
-                    if (paymentValue && booking.payment !== paymentValue) {
-                        showRow = false;
-                    }
-                    
-                    // Date filter
-                    if (dateValue && !booking.date.includes(dateValue)) {
+                    if (dateValue && !dateText.includes(dateValue.toLowerCase())) {
                         showRow = false;
                     }
                     
@@ -774,10 +739,9 @@ while ($row = $bundlesRes->fetch_assoc()) {
             }
             
             // Add event listeners
-            searchInput.addEventListener('input', applyFilters);
-            statusFilter.addEventListener('change', applyFilters);
-            paymentFilter.addEventListener('change', applyFilters);
-            dateFilter.addEventListener('change', applyFilters);
+            if (searchInput) searchInput.addEventListener('input', applyFilters);
+            if (statusFilter) statusFilter.addEventListener('change', applyFilters);
+            if (dateFilter) dateFilter.addEventListener('change', applyFilters);
         });
 
         // Pagination
