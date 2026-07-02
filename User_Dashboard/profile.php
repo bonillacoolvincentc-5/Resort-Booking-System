@@ -10,27 +10,6 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --bg-primary: #0f172a;
-            --bg-secondary: #1e293b;
-            --bg-tertiary: #334155;
-            --bg-card: rgba(30, 41, 59, 0.8);
-            --text-primary: #f1f5f9;
-            --text-secondary: #cbd5e1;
-            --text-muted: #cbd5e1;
-            --accent-primary: #3b82f6;
-            --accent-secondary: #8b5cf6;
-            --accent-success: #10b981;
-            --accent-warning: #f59e0b;
-            --accent-danger: #ef4444;
-            --border-color: rgba(51, 65, 85, 0.5);
-            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-            --gradient-primary: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
-            --gradient-dark: linear-gradient(135deg, var(--bg-primary), var(--bg-secondary));
-        }
 
         * {
             margin: 0;
@@ -83,7 +62,7 @@
 
         .nav-link:hover {
             color: var(--text-primary) !important;
-            background: rgba(59, 130, 246, 0.1);
+            background: rgba(157, 255, 0, 0.1);
         }
 
         .nav-link.active {
@@ -285,42 +264,52 @@
         /* Tabs */
         .profile-tabs {
             display: flex;
-            background: var(--bg-tertiary);
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .profile-tab {
-            padding: 1rem 1.5rem;
-            background: none;
-            border: none;
-            color: var(--text-secondary);
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            position: relative;
-            display: flex;
-            align-items: center;
+            background: rgba(16, 27, 23, 0.65);
+            border-bottom: 1px solid rgba(157, 255, 0, 0.15);
+            padding: 0 1.25rem;
             gap: 0.5rem;
         }
 
+        .profile-tab {
+            padding: 1.15rem 1.75rem;
+            background: transparent;
+            border: none;
+            color: #cbd5e1;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -1px;
+        }
+
+        .profile-tab i {
+            font-size: 1.1rem;
+            color: #cbd5e1;
+            transition: color 0.3s ease;
+        }
+
         .profile-tab:hover {
-            color: var(--text-primary);
-            background: rgba(59, 130, 246, 0.1);
+            color: #ffffff;
+            background: rgba(157, 255, 0, 0.05);
+        }
+
+        .profile-tab:hover i {
+            color: #9DFF00;
         }
 
         .profile-tab.active {
-            color: var(--text-primary);
-            background: var(--bg-card);
+            color: #9DFF00;
+            background: rgba(157, 255, 0, 0.08);
+            border-bottom: 3px solid #9DFF00;
         }
 
-        .profile-tab.active::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 2px;
-            background: var(--gradient-primary);
+        .profile-tab.active i {
+            color: #9DFF00;
         }
 
         /* Tab Content */
@@ -363,8 +352,10 @@
         }
 
         .form-control-modern {
-            background: var(--bg-tertiary);
-            border: 1px solid var(--border-color);
+            width: 100%;
+            display: block;
+            background: rgba(16, 27, 23, 0.85);
+            border: 1px solid rgba(157, 255, 0, 0.2);
             color: var(--text-primary);
             padding: 0.75rem 1rem;
             border-radius: 0.5rem;
@@ -373,10 +364,10 @@
         }
 
         .form-control-modern:focus {
-            background: var(--bg-tertiary);
-            border-color: var(--accent-primary);
+            background: rgba(16, 27, 23, 0.95);
+            border-color: #9DFF00;
             color: var(--text-primary);
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+            box-shadow: 0 0 0 3px rgba(157, 255, 0, 0.15);
             outline: none;
         }
 
@@ -385,8 +376,10 @@
         }
 
         .form-select-modern {
-            background: var(--bg-tertiary);
-            border: 1px solid var(--border-color);
+            width: 100%;
+            display: block;
+            background: rgba(16, 27, 23, 0.85);
+            border: 1px solid rgba(157, 255, 0, 0.2);
             color: var(--text-primary);
             padding: 0.75rem 1rem;
             border-radius: 0.5rem;
@@ -395,10 +388,10 @@
         }
 
         .form-select-modern:focus {
-            background: var(--bg-tertiary);
-            border-color: var(--accent-primary);
+            background: rgba(16, 27, 23, 0.95);
+            border-color: #9DFF00;
             color: var(--text-primary);
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+            box-shadow: 0 0 0 3px rgba(157, 255, 0, 0.15);
             outline: none;
         }
 
@@ -458,12 +451,13 @@
 
         .btn-primary-modern {
             background: var(--gradient-primary);
-            color: white;
+            color: #08120E !important;
+            font-weight: 700;
         }
 
         .btn-primary-modern:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3);
+            box-shadow: 0 10px 20px rgba(157, 255, 0, 0.25);
         }
 
         .btn-secondary-modern {
@@ -511,8 +505,8 @@
 
         /* Security Cards */
         .security-card {
-            background: rgba(59, 130, 246, 0.05);
-            border: 1px solid rgba(59, 130, 246, 0.2);
+            background: rgba(157, 255, 0, 0.04);
+            border: 1px solid rgba(157, 255, 0, 0.15);
             border-radius: 0.75rem;
             padding: 1.5rem;
             margin-bottom: 1rem;
@@ -520,8 +514,8 @@
         }
 
         .security-card:hover {
-            background: rgba(59, 130, 246, 0.1);
-            border-color: var(--accent-primary);
+            background: rgba(157, 255, 0, 0.08);
+            border-color: #9DFF00;
             transform: translateY(-2px);
         }
 
@@ -712,18 +706,23 @@
                                     </div>
                                 </div>
 
-                                <div class="form-group-modern">
-                                    <label class="form-label-modern">
-                                        <i class="bi bi-envelope"></i>Email Address
-                                    </label>
-                                    <input type="email" class="form-control-modern" id="email" value="john.doe@email.com" disabled>
-                                </div>
-
-                                <div class="form-group-modern">
-                                    <label class="form-label-modern">
-                                        <i class="bi bi-telephone"></i>Phone Number
-                                    </label>
-                                    <input type="tel" class="form-control-modern" id="phone" value="+1 (555) 123-4567">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group-modern">
+                                            <label class="form-label-modern">
+                                                <i class="bi bi-envelope"></i>Email Address
+                                            </label>
+                                            <input type="email" class="form-control-modern" id="email" value="john.doe@email.com" disabled>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group-modern">
+                                            <label class="form-label-modern">
+                                                <i class="bi bi-telephone"></i>Phone Number
+                                            </label>
+                                            <input type="tel" class="form-control-modern" id="phone" value="+1 (555) 123-4567">
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <div class="form-group-modern">
@@ -942,9 +941,9 @@
                 infoAlert = document.createElement('div');
                 infoAlert.id = 'infoAlert';
                 infoAlert.className = 'alert alert-modern alert-info-modern alert-dismissible fade show';
-                infoAlert.style.background = 'rgba(59, 130, 246, 0.1)';
-                infoAlert.style.color = 'var(--accent-primary)';
-                infoAlert.style.border = '1px solid rgba(59, 130, 246, 0.2)';
+                infoAlert.style.background = 'rgba(157, 255, 0, 0.1)';
+                infoAlert.style.color = '#9DFF00';
+                infoAlert.style.border = '1px solid rgba(157, 255, 0, 0.2)';
                 infoAlert.innerHTML = `
                     <i class="bi bi-info-circle me-2"></i>
                     <span id="infoMessage"></span>
