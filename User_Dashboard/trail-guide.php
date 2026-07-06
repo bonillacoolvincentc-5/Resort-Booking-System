@@ -774,25 +774,18 @@ $userId = $_SESSION['user_id'];
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label-custom">Start Point (Point 1)</label>
+                    <label class="form-label-custom">Start Point</label>
                     <select id="startPoint" class="form-select-modern">
-                        <option value="wp1">Resort Base Camp (Elev: 120m)</option>
-                        <option value="wp3">Clubhouse & Rental Station (Elev: 135m)</option>
-                        <option value="wp2">North Gate Entry (Elev: 110m)</option>
-                        <option value="wp4">Mountain View Lodge (Elev: 210m)</option>
-                        <option value="wp5">Muddy Creek Crossing (Elev: 150m)</option>
+                        <option value="wp1">Point A — Start Point</option>
+                        <option value="wp2">Point B — Destination</option>
                     </select>
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label-custom">Destination (Point 2)</label>
+                    <label class="form-label-custom">Destination Point</label>
                     <select id="endPoint" class="form-select-modern">
-                        <option value="wp8" selected>Eagle's Peak Summit (Elev: 540m)</option>
-                        <option value="wp6">Hidden Waterfall Trailhead (Elev: 280m)</option>
-                        <option value="wp7">Sunset Ridge Lookout (Elev: 420m)</option>
-                        <option value="wp5">Muddy Creek Crossing (Elev: 150m)</option>
-                        <option value="wp9">Pine Forest Wilderness Loop (Elev: 310m)</option>
-                        <option value="wp10">Canyon Rim Overlook (Elev: 480m)</option>
+                        <option value="wp2" selected>Point B — Destination</option>
+                        <option value="wp1">Point A — Start Point</option>
                     </select>
                 </div>
 
@@ -908,64 +901,32 @@ $userId = $_SESSION['user_id'];
                 
                 <div class="expedition-card">
                     <div class="exp-header">
-                        <div class="exp-title">The Muddy Creek Express</div>
-                        <span class="diff-badge diff-green">Beginner</span>
+                        <div class="exp-title">Point A to Point B Express Route</div>
+                        <span class="diff-badge diff-green">Beginner / Inter</span>
                     </div>
-                    <p class="exp-desc">A fun, accessible introductory ride from Base Camp to the thrilling riverbanks of Muddy Creek. Great for families and first-time riders.</p>
+                    <p class="exp-desc">The direct adventure trail connecting Point A (Start Point) to Point B destination. Great for scenic off-road riding.</p>
                     <div class="exp-meta">
-                        <div class="meta-item"><i class="bi bi-clock"></i> 18 mins</div>
-                        <div class="meta-item"><i class="bi bi-signpost"></i> 3.2 km</div>
-                        <div class="meta-item"><i class="bi bi-arrow-up-right"></i> +30m Elev</div>
+                        <div class="meta-item"><i class="bi bi-clock"></i> ~15 mins</div>
+                        <div class="meta-item"><i class="bi bi-signpost"></i> ~1.2 km</div>
+                        <div class="meta-item"><i class="bi bi-arrow-up-right"></i> +15m Elev</div>
                     </div>
-                    <button class="btn-exp-plan" onclick="planExpedition('wp1', 'wp5')">
+                    <button class="btn-exp-plan" onclick="planExpedition('wp1', 'wp2')">
                         <i class="bi bi-compass"></i> Show on Map & Calculate
                     </button>
                 </div>
 
                 <div class="expedition-card">
                     <div class="exp-header">
-                        <div class="exp-title">Eagle's Peak Summit Climb</div>
-                        <span class="diff-badge diff-red">Extreme</span>
+                        <div class="exp-title">Point B Return Trail</div>
+                        <span class="diff-badge diff-yellow">Return Route</span>
                     </div>
-                    <p class="exp-desc">Our most challenging off-road ascent! Navigate steep rocky switchbacks up to the resort's highest summit for 360-degree mountain vistas.</p>
+                    <p class="exp-desc">The return ride from destination Point B back to your Point A trailhead starting point.</p>
                     <div class="exp-meta">
-                        <div class="meta-item"><i class="bi bi-clock"></i> 42 mins</div>
-                        <div class="meta-item"><i class="bi bi-signpost"></i> 6.8 km</div>
-                        <div class="meta-item"><i class="bi bi-arrow-up-right"></i> +420m Elev</div>
+                        <div class="meta-item"><i class="bi bi-clock"></i> ~15 mins</div>
+                        <div class="meta-item"><i class="bi bi-signpost"></i> ~1.2 km</div>
+                        <div class="meta-item"><i class="bi bi-arrow-up-right"></i> -15m Elev</div>
                     </div>
-                    <button class="btn-exp-plan" onclick="planExpedition('wp1', 'wp8')">
-                        <i class="bi bi-compass"></i> Show on Map & Calculate
-                    </button>
-                </div>
-
-                <div class="expedition-card">
-                    <div class="exp-header">
-                        <div class="exp-title">Sunset Ridge Scenic Loop</div>
-                        <span class="diff-badge diff-yellow">Intermediate</span>
-                    </div>
-                    <p class="exp-desc">A balanced expedition winding through pine forests up to Sunset Ridge Lookout. Best experienced in the late afternoon for golden hour photos.</p>
-                    <div class="exp-meta">
-                        <div class="meta-item"><i class="bi bi-clock"></i> 32 mins</div>
-                        <div class="meta-item"><i class="bi bi-signpost"></i> 5.4 km</div>
-                        <div class="meta-item"><i class="bi bi-arrow-up-right"></i> +300m Elev</div>
-                    </div>
-                    <button class="btn-exp-plan" onclick="planExpedition('wp3', 'wp7')">
-                        <i class="bi bi-compass"></i> Show on Map & Calculate
-                    </button>
-                </div>
-
-                <div class="expedition-card">
-                    <div class="exp-header">
-                        <div class="exp-title">Hidden Waterfall Exploration</div>
-                        <span class="diff-badge diff-yellow">Intermediate</span>
-                    </div>
-                    <p class="exp-desc">Descend deep into the canyon wilderness to reach the hidden waterfall trailhead. Includes mud tracks and shaded forest trails.</p>
-                    <div class="exp-meta">
-                        <div class="meta-item"><i class="bi bi-clock"></i> 28 mins</div>
-                        <div class="meta-item"><i class="bi bi-signpost"></i> 4.5 km</div>
-                        <div class="meta-item"><i class="bi bi-arrow-up-right"></i> +160m Elev</div>
-                    </div>
-                    <button class="btn-exp-plan" onclick="planExpedition('wp2', 'wp6')">
+                    <button class="btn-exp-plan" onclick="planExpedition('wp2', 'wp1')">
                         <i class="bi bi-compass"></i> Show on Map & Calculate
                     </button>
                 </div>
@@ -996,17 +957,24 @@ $userId = $_SESSION['user_id'];
     <script>
         // --- 1. WAYPOINTS DATABASE ---
         const waypoints = {
-            wp1: { name: "Resort Base Camp", lat: 14.1234, lng: 121.2345, elev: 120, diff: "easy", desc: "Main starting hub, ATV garage, and safety check area." },
-            wp2: { name: "North Gate Entry", lat: 14.1300, lng: 121.2300, elev: 110, diff: "easy", desc: "Northern access trail connecting to resort perimeter." },
-            wp3: { name: "Clubhouse & Rental Station", lat: 14.1210, lng: 121.2400, elev: 135, diff: "easy", desc: "Equipment rental and briefing center." },
-            wp4: { name: "Mountain View Lodge", lat: 14.1150, lng: 121.2450, elev: 210, diff: "inter", desc: "Scenic mid-altitude rest stop with refreshments." },
-            wp5: { name: "Muddy Creek Crossing", lat: 14.1350, lng: 121.2200, elev: 150, diff: "inter", desc: "Thrilling shallow water and mud bank crossing." },
-            wp6: { name: "Hidden Waterfall Trailhead", lat: 14.1400, lng: 121.2400, elev: 280, diff: "inter", desc: "Lush tropical canyon trail leading to the natural falls." },
-            wp7: { name: "Sunset Ridge Lookout", lat: 14.1100, lng: 121.2250, elev: 420, diff: "inter", desc: "Western ridge offering panoramic sunset views." },
-            wp8: { name: "Eagle's Peak Summit", lat: 14.1450, lng: 121.2550, elev: 540, diff: "extreme", desc: "Highest elevation trail with steep rock switchbacks." },
-            wp9: { name: "Pine Forest Loop", lat: 14.1250, lng: 121.2600, elev: 310, diff: "easy", desc: "Smooth dirt trail through dense mountain pine trees." },
-            wp10:{ name: "Canyon Rim Overlook", lat: 14.1050, lng: 121.2500, elev: 480, diff: "extreme", desc: "Cliffside adventure track with breathtaking canyon views." }
+            wp1: { name: "Point A — Start Point", lat: 16.167724, lng: 120.002010, elev: 15, diff: "easy", desc: "Main Starting Point A for ATV trail riders." },
+            wp2: { name: "Point B — Destination", lat: 16.175398, lng: 120.002073, elev: 35, diff: "inter", desc: "Northern trail destination Point B." }
         };
+
+        // Complete ordered sequence of coordinates following the road from Point A to Point B
+        const roadPathSequence = [
+            [16.167724, 120.002010], // Point A
+            [16.169675, 120.002960], // Location 1
+            [16.169416, 120.003861], // Location 2
+            [16.171344, 120.004537], // Location 3
+            [16.171606, 120.004875], // Location 4
+            [16.172495, 120.004919], // Location 5
+            [16.172626, 120.005141], // Location 6
+            [16.172967, 120.005350], // Location 7
+            [16.174356, 120.005211], // Location 8
+            [16.175712, 120.004043], // Location 9
+            [16.175398, 120.002073]  // Point B
+        ];
 
         let currentPace = "standard";
         let paceSpeed = 16; // km/h
@@ -1018,8 +986,8 @@ $userId = $_SESSION['user_id'];
         document.addEventListener("DOMContentLoaded", () => {
             // Center map on resort area
             map = L.map('atvMap', {
-                center: [14.1250, 121.2400],
-                zoom: 13,
+                center: [16.1716, 120.0019],
+                zoom: 15,
                 zoomControl: true,
                 attributionControl: false
             });
@@ -1148,12 +1116,19 @@ $userId = $_SESSION['user_id'];
             let p1 = waypoints[startKey];
             let p2 = waypoints[endKey];
 
-            // Distance calculation (Haversine approx * terrain winding factor 1.45)
-            let dLat = (p2.lat - p1.lat) * 111; // km per lat deg
-            let dLng = (p2.lng - p1.lng) * 108; // km per lng deg at this latitude
-            let straightDist = Math.sqrt(dLat*dLat + dLng*dLng);
-            let trailDist = (straightDist * 1.45).toFixed(1); // realistic trail distance in km
-            let trailMiles = (trailDist * 0.621371).toFixed(1);
+            // Calculate exact distance along the road path
+            let totalDistKm = 0;
+            let pathCoords = (startKey === 'wp1' && endKey === 'wp2') || (startKey === 'wp2' && endKey === 'wp1') 
+                ? roadPathSequence 
+                : [[p1.lat, p1.lng], [p2.lat, p2.lng]];
+            
+            for (let i = 0; i < pathCoords.length - 1; i++) {
+                let dLat = (pathCoords[i+1][0] - pathCoords[i][0]) * 111;
+                let dLng = (pathCoords[i+1][1] - pathCoords[i][1]) * 108;
+                totalDistKm += Math.sqrt(dLat*dLat + dLng*dLng);
+            }
+            let trailDist = totalDistKm.toFixed(2); // exact road trail distance in km
+            let trailMiles = (trailDist * 0.621371).toFixed(2);
 
             // Time calculation
             let timeHours = trailDist / paceSpeed;
@@ -1205,27 +1180,32 @@ $userId = $_SESSION['user_id'];
                 map.removeLayer(currentRouteLine);
             }
 
-            // Create a curved midpoint to simulate wilderness trail winding
-            let midLat = (p1.lat + p2.lat) / 2 + (p2.lng - p1.lng) * 0.18;
-            let midLng = (p1.lng + p2.lng) / 2 - (p2.lat - p1.lat) * 0.18;
+            let startKey = getWaypointKey(p1.name);
+            let endKey = getWaypointKey(p2.name);
 
-            let latlngs = [
-                [p1.lat, p1.lng],
-                [midLat, midLng],
-                [p2.lat, p2.lng]
-            ];
+            let latlngs;
+            if (startKey === 'wp1' && endKey === 'wp2') {
+                latlngs = roadPathSequence;
+            } else if (startKey === 'wp2' && endKey === 'wp1') {
+                latlngs = [...roadPathSequence].reverse();
+            } else {
+                latlngs = [
+                    [p1.lat, p1.lng],
+                    [p2.lat, p2.lng]
+                ];
+            }
 
             // High-contrast vibrant blue polyline for terrain visibility
             currentRouteLine = L.polyline(latlngs, {
                 color: '#2563eb',
-                weight: 5,
-                opacity: 0.9,
+                weight: 6,
+                opacity: 0.95,
                 smoothFactor: 1,
-                dashArray: '10, 8'
+                dashArray: '12, 8'
             }).addTo(map);
 
             // Fit map zoom to route bounds with padding
-            map.fitBounds(currentRouteLine.getBounds(), { padding: [60, 60], maxZoom: 15 });
+            map.fitBounds(currentRouteLine.getBounds(), { padding: [60, 60], maxZoom: 16 });
 
             // Open popup on destination
             if (markers[getWaypointKey(p2.name)]) {
