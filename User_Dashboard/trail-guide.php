@@ -425,6 +425,99 @@ $userId = $_SESSION['user_id'];
             z-index: 10;
         }
 
+        /* Google Maps Style Floating Layer Switcher */
+        .gmaps-layer-bar {
+            position: absolute;
+            bottom: 16px;
+            left: 16px;
+            z-index: 1000;
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 6px 10px;
+            display: flex;
+            gap: 6px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            max-width: calc(100% - 32px);
+            overflow-x: auto;
+            backdrop-filter: blur(4px);
+            transition: all 0.3s ease;
+        }
+
+        .gmaps-layer-card {
+            background: transparent;
+            border: 2px solid transparent;
+            border-radius: 8px;
+            padding: 4px 6px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            min-width: 62px;
+            color: #3c4043;
+            outline: none;
+        }
+
+        .gmaps-layer-card:hover {
+            background: #f1f3f4;
+        }
+
+        .gmaps-layer-card.active {
+            border-color: #1a73e8;
+            background: rgba(26, 115, 232, 0.08);
+        }
+
+        .layer-thumb {
+            width: 44px;
+            height: 36px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.15rem;
+            margin-bottom: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+        }
+
+        .gmaps-layer-card span {
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: #3c4043;
+            font-family: 'Inter', sans-serif;
+            white-space: nowrap;
+        }
+
+        .gmaps-layer-card.active span {
+            color: #1a73e8;
+            font-weight: 700;
+        }
+
+        /* Thumbnail Backgrounds */
+        .thumb-terrain {
+            background: linear-gradient(135deg, #8dc26f 0%, #76b852 100%);
+            color: #ffffff;
+        }
+        .thumb-sat {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: #ffffff;
+        }
+        .thumb-road {
+            background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
+            color: #444444;
+        }
+        .thumb-topo {
+            background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);
+            color: #1e293b;
+        }
+        .thumb-dark {
+            background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
+            color: #9DFF00;
+        }
+
         /* Custom Leaflet Dark Popup */
         .leaflet-popup-content-wrapper {
             background: #1e293b !important;
@@ -775,7 +868,32 @@ $userId = $_SESSION['user_id'];
                     </div>
                 </div>
 
-                <div id="atvMap"></div>
+                <div class="map-container-wrapper" style="position: relative; flex: 1; display: flex; flex-direction: column; width: 100%;">
+                    <div id="atvMap"></div>
+                    <!-- Google Maps Style Bottom-Left Layer Selector Bar -->
+                    <div class="gmaps-layer-bar">
+                        <button class="gmaps-layer-card active" onclick="switchBaseMap('googleTerrain', this)">
+                            <div class="layer-thumb thumb-terrain"><i class="bi bi-mountain"></i></div>
+                            <span>Terrain</span>
+                        </button>
+                        <button class="gmaps-layer-card" onclick="switchBaseMap('googleSatellite', this)">
+                            <div class="layer-thumb thumb-sat"><i class="bi bi-globe-americas"></i></div>
+                            <span>Satellite</span>
+                        </button>
+                        <button class="gmaps-layer-card" onclick="switchBaseMap('googleRoadmap', this)">
+                            <div class="layer-thumb thumb-road"><i class="bi bi-map"></i></div>
+                            <span>Roadmap</span>
+                        </button>
+                        <button class="gmaps-layer-card" onclick="switchBaseMap('esriTopo', this)">
+                            <div class="layer-thumb thumb-topo"><i class="bi bi-compass"></i></div>
+                            <span>Topo Map</span>
+                        </button>
+                        <button class="gmaps-layer-card" onclick="switchBaseMap('darkMode', this)">
+                            <div class="layer-thumb thumb-dark"><i class="bi bi-moon-stars"></i></div>
+                            <span>Dark Mode</span>
+                        </button>
+                    </div>
+                </div>
             </div>
 
         </div>
@@ -893,6 +1011,8 @@ $userId = $_SESSION['user_id'];
         let currentPace = "standard";
         let paceSpeed = 16; // km/h
         let map, markers = {}, currentRouteLine = null;
+        let currentBaseLayer = null;
+        const baseTileLayers = {};
 
         // --- 2. INITIALIZE LEAFLET MAP ---
         document.addEventListener("DOMContentLoaded", () => {
@@ -904,11 +1024,39 @@ $userId = $_SESSION['user_id'];
                 attributionControl: false
             });
 
-            // CartoDB Dark Matter Basemap Tiles
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+            // Google Maps Terrain (Physical Map with contour lines, elevation hillshading & labels - EXACTLY like Google Maps)
+            baseTileLayers['googleTerrain'] = L.tileLayer('https://mt1.google.com/vt/lyrs=p&x={x}&y={y}&z={z}', {
+                maxZoom: 20,
+                attribution: 'Map data &copy; Google'
+            });
+
+            // Google Maps Hybrid Satellite (Aerial imagery with roads and labels)
+            baseTileLayers['googleSatellite'] = L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
+                maxZoom: 20,
+                attribution: 'Imagery &copy; Google'
+            });
+
+            // Google Maps Standard Roadmap
+            baseTileLayers['googleRoadmap'] = L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+                maxZoom: 20,
+                attribution: 'Map data &copy; Google'
+            });
+
+            // Esri World Topo Map
+            baseTileLayers['esriTopo'] = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', {
                 maxZoom: 18,
-                subdomains: 'abcd'
-            }).addTo(map);
+                attribution: 'Tiles &copy; Esri'
+            });
+
+            // CartoDB Dark Matter
+            baseTileLayers['darkMode'] = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                maxZoom: 18,
+                subdomains: 'abcd',
+                attribution: '&copy; CARTO'
+            });
+
+            // Set Google Maps Terrain as default active basemap
+            currentBaseLayer = baseTileLayers['googleTerrain'].addTo(map);
 
             // Add Markers
             addMarkersToMap('all');
@@ -916,6 +1064,22 @@ $userId = $_SESSION['user_id'];
             // Trigger initial calculation
             calculateRoute();
         });
+
+        // Function to switch basemap layers from the Google Maps style UI
+        function switchBaseMap(layerKey, btn) {
+            if (currentBaseLayer) {
+                map.removeLayer(currentBaseLayer);
+            }
+            if (baseTileLayers[layerKey]) {
+                currentBaseLayer = baseTileLayers[layerKey].addTo(map);
+            }
+            document.querySelectorAll('.gmaps-layer-card').forEach(card => {
+                card.classList.remove('active');
+            });
+            if (btn) {
+                btn.classList.add('active');
+            }
+        }
 
         // --- 3. CUSTOM MARKERS & POPUPS ---
         function addMarkersToMap(filter) {
@@ -1051,11 +1215,11 @@ $userId = $_SESSION['user_id'];
                 [p2.lat, p2.lng]
             ];
 
-            // Neon green polyline with glow effect
+            // High-contrast vibrant blue polyline for terrain visibility
             currentRouteLine = L.polyline(latlngs, {
-                color: '#9DFF00',
+                color: '#2563eb',
                 weight: 5,
-                opacity: 0.85,
+                opacity: 0.9,
                 smoothFactor: 1,
                 dashArray: '10, 8'
             }).addTo(map);
