@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jun 18, 2026 at 06:58 AM
+-- Generation Time: Jul 06, 2026 at 04:30 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -62,6 +62,18 @@ CREATE TABLE `activities` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `activities`
+--
+
+INSERT INTO `activities` (`id`, `name`, `slug`, `description`, `price_per_hour`, `min_duration_hours`, `max_duration_hours`, `capacity`, `image_url`, `is_active`, `created_at`, `updated_at`) VALUES
+(1, 'Billiards', 'billiards', 'Premium billiards tables with expert coaching available for all skill levels', 25.00, 1.00, 4.00, 8, 'assets/Images/BilliardsHDreal.jpg', 1, '2026-06-18 14:06:52', '2026-06-18 14:06:52'),
+(2, 'Basketball Court', 'basketball', 'State-of-the-art indoor and outdoor courts for basketball enthusiasts', 25.00, 1.00, 4.00, 20, 'assets/Images/BasketballCourt.jpg', 1, '2026-06-18 14:06:52', '2026-06-18 14:06:52'),
+(3, 'Swimming Pool', 'swimming', 'Olympic-sized pools with crystal clear water and professional lifeguards', 15.00, 1.00, 4.00, 50, 'assets/Images/Pool.jpg', 1, '2026-06-18 14:06:52', '2026-06-18 14:06:52'),
+(4, 'Fitness Gym', 'gym', 'Modern equipment with personal trainers and group fitness classes', 20.00, 1.00, 3.00, 30, 'assets/Images/Gym.jfif', 1, '2026-06-18 14:06:52', '2026-06-18 14:06:52'),
+(5, 'Adventure Rides', 'adventure', 'Thrilling adventure rides and zip lines for adrenaline seekers', 45.00, 2.00, 4.00, 10, 'assets/Images/ADV.jpg', 1, '2026-06-18 14:06:52', '2026-06-18 14:06:52'),
+(6, 'Kids Playground', 'playground', 'Safe and fun playground area with activities for children of all ages', 10.00, 1.00, 4.00, 25, 'assets/Images/Playground.jpg', 1, '2026-06-18 14:06:52', '2026-06-18 14:06:52');
 
 -- --------------------------------------------------------
 
@@ -144,6 +156,13 @@ CREATE TABLE `blocked_dates` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Dumping data for table `blocked_dates`
+--
+
+INSERT INTO `blocked_dates` (`id`, `blocked_date`, `reason`, `blocked_by`, `created_at`) VALUES
+(1, '2026-07-15', 'Testing', 1, '2026-07-02 16:06:37');
+
 -- --------------------------------------------------------
 
 --
@@ -175,6 +194,13 @@ CREATE TABLE `bookings` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `bookings`
+--
+
+INSERT INTO `bookings` (`id`, `booking_reference`, `user_id`, `booking_type`, `activity_id`, `accommodation_id`, `bundle_id`, `status_id`, `full_name`, `email`, `phone_number`, `check_in_date`, `check_in_time`, `check_out_date`, `check_out_time`, `number_of_days`, `number_of_guests`, `special_requests`, `total_amount`, `payment_status`, `payment_method`, `created_at`, `updated_at`) VALUES
+(1, 'REF-2026-0001', 1, 'activity', 1, NULL, NULL, 1, 'Cool Vincent Bonilla', 'bonillacoolvincentc@gmail.com', '09563695447', '2026-07-10', '14:00:00', '2026-07-10', '16:00:00', 1, 4, 'Need 2 extra cue sticks and chalk.', 50.00, 'paid', 'gcash', '2026-07-02 18:27:04', '2026-07-02 18:27:04');
 
 -- --------------------------------------------------------
 
@@ -238,6 +264,48 @@ CREATE TABLE `bundles` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `bundles`
+--
+
+INSERT INTO `bundles` (`id`, `name`, `slug`, `description`, `price`, `capacity`, `amenities`, `image_url`, `is_active`, `created_at`, `updated_at`) VALUES
+(1, 'Testing Bundle', 'testing-bundle', 'This is just a testing bundle', 1000.00, 12, '0', 'assets/uploads/bundles/bundle_6a4686b366c35.jpg', 1, '2026-07-02 15:41:39', '2026-07-02 15:41:39');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `bundle_accommodations`
+--
+
+CREATE TABLE `bundle_accommodations` (
+  `id` int(11) NOT NULL,
+  `bundle_id` int(11) NOT NULL,
+  `accommodation_id` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `bundle_activities`
+--
+
+CREATE TABLE `bundle_activities` (
+  `id` int(11) NOT NULL,
+  `bundle_id` int(11) NOT NULL,
+  `activity_id` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `bundle_activities`
+--
+
+INSERT INTO `bundle_activities` (`id`, `bundle_id`, `activity_id`) VALUES
+(1, 1, 2),
+(2, 1, 1),
+(3, 1, 4),
+(4, 1, 6),
+(5, 1, 3);
 
 -- --------------------------------------------------------
 
@@ -375,15 +443,20 @@ CREATE TABLE `users` (
   `remember_token` varchar(255) DEFAULT NULL,
   `token_expiry` timestamp NULL DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `address` varchar(255) DEFAULT NULL,
+  `birthdate` date DEFAULT NULL,
+  `gender` varchar(50) DEFAULT NULL,
+  `bio` text DEFAULT NULL,
+  `avatar` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Dumping data for table `users`
 --
 
-INSERT INTO `users` (`id`, `first_name`, `middle_name`, `last_name`, `suffix`, `email`, `phone_number`, `region`, `province`, `city_municipality`, `barangay`, `password`, `is_verified`, `verification_token`, `reset_token`, `reset_token_expiry`, `remember_token`, `token_expiry`, `created_at`, `updated_at`) VALUES
-(1, 'Cool Vincent', '', 'Bonilla', '', 'bonillacoolvincentc@gmail.com', '09563695447', '010000000', '015500000', '015516000', '015516007', '$2y$10$9smp40N.ZWhZ4dWxMSJ3xOADbAkMeNHu.R3GeJlQXieumXHrm.5IO', 0, '12f4c66db811caa1c2eae16aed9efb0e6f4ebb0c9f0c54a1a1ec8fb527b5ddff', NULL, NULL, 'ccf80ca993b0c2c905eaa17050a04e83be5a0f7f01ca408f0e509a7d6332ba55', '2026-04-25 16:48:02', '2026-03-26 16:32:38', '2026-03-26 16:48:02');
+INSERT INTO `users` (`id`, `first_name`, `middle_name`, `last_name`, `suffix`, `email`, `phone_number`, `region`, `province`, `city_municipality`, `barangay`, `password`, `is_verified`, `verification_token`, `reset_token`, `reset_token_expiry`, `remember_token`, `token_expiry`, `created_at`, `updated_at`, `address`, `birthdate`, `gender`, `bio`, `avatar`) VALUES
+(1, 'Cool Vincent', '', 'Bonilla', '', 'bonillacoolvincentc@gmail.com', '09563695447', 'Ilocos Region', 'Pangasinan', 'Burgos', 'Poblacion', '$2y$10$9smp40N.ZWhZ4dWxMSJ3xOADbAkMeNHu.R3GeJlQXieumXHrm.5IO', 0, '12f4c66db811caa1c2eae16aed9efb0e6f4ebb0c9f0c54a1a1ec8fb527b5ddff', NULL, NULL, 'd2d47f89587c1dbfd7f7d33c88302d56b2c70fed9fe1ab2454b0c9b5ee7c3b9c', '2026-08-01 15:42:05', '2026-03-26 16:32:38', '2026-07-02 17:25:27', 'Poblacion, Burgos, Pangasinan, Ilocos Region', NULL, NULL, NULL, NULL);
 
 --
 -- Indexes for dumped tables
@@ -486,6 +559,22 @@ ALTER TABLE `bundles`
   ADD UNIQUE KEY `slug` (`slug`);
 
 --
+-- Indexes for table `bundle_accommodations`
+--
+ALTER TABLE `bundle_accommodations`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `bundle_id` (`bundle_id`),
+  ADD KEY `accommodation_id` (`accommodation_id`);
+
+--
+-- Indexes for table `bundle_activities`
+--
+ALTER TABLE `bundle_activities`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `bundle_id` (`bundle_id`),
+  ADD KEY `activity_id` (`activity_id`);
+
+--
 -- Indexes for table `login_logs`
 --
 ALTER TABLE `login_logs`
@@ -569,7 +658,7 @@ ALTER TABLE `accommodations`
 -- AUTO_INCREMENT for table `activities`
 --
 ALTER TABLE `activities`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT for table `activity_availability_schedule`
@@ -593,13 +682,13 @@ ALTER TABLE `availability`
 -- AUTO_INCREMENT for table `blocked_dates`
 --
 ALTER TABLE `blocked_dates`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `bookings`
 --
 ALTER TABLE `bookings`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `booking_logs`
@@ -617,7 +706,19 @@ ALTER TABLE `booking_status`
 -- AUTO_INCREMENT for table `bundles`
 --
 ALTER TABLE `bundles`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT for table `bundle_accommodations`
+--
+ALTER TABLE `bundle_accommodations`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `bundle_activities`
+--
+ALTER TABLE `bundle_activities`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `login_logs`
