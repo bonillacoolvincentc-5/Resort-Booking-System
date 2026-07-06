@@ -755,7 +755,7 @@ $userId = $_SESSION['user_id'];
                     <i class="bi bi-signpost-split"></i> 45 km Wilderness Tracks
                 </div>
                 <div class="stat-pill">
-                    <i class="bi bi-speedometer2"></i> Beginner to Extreme Terrain
+                    <i class="bi bi-map-fill"></i> Fixed Resort Trail Route
                 </div>
                 <div class="stat-pill" style="border-color: #10b981; color: #10b981;">
                     <i class="bi bi-check-circle-fill"></i> Trails Open & Dry Today
@@ -827,8 +827,8 @@ $userId = $_SESSION['user_id'];
                             <div id="estElev" class="metric-num">-- m</div>
                         </div>
                         <div class="metric-box">
-                            <div class="metric-lbl">Difficulty Rating</div>
-                            <div id="estDiff" class="metric-num">--</div>
+                            <div class="metric-lbl">Trail Route Type</div>
+                            <div id="estDiff" class="metric-num"><span class="badge bg-success">Fixed Resort Route</span></div>
                         </div>
                         <div class="metric-box">
                             <div class="metric-lbl">Trail Condition</div>
@@ -854,10 +854,7 @@ $userId = $_SESSION['user_id'];
                         <span><i class="bi bi-map-fill me-2" style="color:var(--accent-neon);"></i>Interactive Trail Map</span>
                     </div>
                     <div class="map-filter-btns">
-                        <button class="filter-chip active" onclick="filterMap('all', this)">All Waypoints</button>
-                        <button class="filter-chip" onclick="filterMap('easy', this)">Beginner 🟢</button>
-                        <button class="filter-chip" onclick="filterMap('inter', this)">Intermediate 🟡</button>
-                        <button class="filter-chip" onclick="filterMap('extreme', this)">Extreme 🔴</button>
+                        <span class="badge bg-success" style="padding: 6px 12px; font-size: 0.8rem;"><i class="bi bi-geo-alt-fill me-1"></i> Fixed Resort Trail Route</span>
                     </div>
                 </div>
 
@@ -902,7 +899,7 @@ $userId = $_SESSION['user_id'];
                 <div class="expedition-card">
                     <div class="exp-header">
                         <div class="exp-title">Point A to Point B Express Route</div>
-                        <span class="diff-badge diff-green">Beginner / Inter</span>
+                        <span class="diff-badge diff-green">Resort Trail</span>
                     </div>
                     <p class="exp-desc">The direct adventure trail connecting Point A (Start Point) to Point B destination. Great for scenic off-road riding.</p>
                     <div class="exp-meta">
@@ -918,7 +915,7 @@ $userId = $_SESSION['user_id'];
                 <div class="expedition-card">
                     <div class="exp-header">
                         <div class="exp-title">Point B Return Trail</div>
-                        <span class="diff-badge diff-yellow">Return Route</span>
+                        <span class="diff-badge diff-green">Return Trail</span>
                     </div>
                     <p class="exp-desc">The return ride from destination Point B back to your Point A trailhead starting point.</p>
                     <div class="exp-meta">
@@ -1061,11 +1058,8 @@ $userId = $_SESSION['user_id'];
                 let wp = waypoints[key];
                 if (filter !== 'all' && wp.diff !== filter) continue;
 
-                // Color code by difficulty
                 let color = "#10b981"; // green
                 let iconText = "🟢";
-                if (wp.diff === "inter") { color = "#f59e0b"; iconText = "🟡"; }
-                if (wp.diff === "extreme") { color = "#ef4444"; iconText = "🔴"; }
 
                 let customIcon = L.divIcon({
                     className: 'custom-pin',
@@ -1078,7 +1072,7 @@ $userId = $_SESSION['user_id'];
                 let popupContent = `
                     <div class="popup-title">${wp.name}</div>
                     <div class="popup-desc">${wp.desc}</div>
-                    <div class="mb-2"><span class="popup-elev">Elev: ${wp.elev}m</span> <span class="popup-elev" style="background:${color}; color:#000;">${wp.diff.toUpperCase()}</span></div>
+                    <div class="mb-2"><span class="popup-elev">Elev: ${wp.elev}m</span> <span class="popup-elev" style="background:${color}; color:#000;">FIXED ROUTE</span></div>
                     <button class="popup-btn" onclick="setAsDestination('${key}')">Set as Route Destination 🎯</button>
                 `;
 
@@ -1139,27 +1133,13 @@ $userId = $_SESSION['user_id'];
             let elevDiff = p2.elev - p1.elev;
             let elevText = elevDiff >= 0 ? `+${elevDiff}m Incline` : `${elevDiff}m Descent`;
 
-            // Difficulty assessment
-            let diffHtml = `<span class="badge bg-success">Beginner</span>`;
+            // Route assessment
+            let diffHtml = `<span class="badge bg-success" style="padding: 6px 10px;">Fixed Resort Route</span>`;
             let gearHtml = `
                 <span class="gear-tag"><i class="bi bi-person-bounding-box"></i> Helmet & Goggles</span>
                 <span class="gear-tag"><i class="bi bi-droplet"></i> Water Bottle</span>
+                <span class="gear-tag"><i class="bi bi-gloves"></i> Riding Gloves</span>
             `;
-
-            if (p2.diff === "extreme" || p1.diff === "extreme" || elevDiff > 250 || trailDist > 5.5) {
-                diffHtml = `<span class="badge bg-danger">Extreme Terrain 🔴</span>`;
-                gearHtml += `
-                    <span class="gear-tag"><i class="bi bi-shield-shaded"></i> Chest Armor</span>
-                    <span class="gear-tag"><i class="bi bi-boot"></i> Mud Boots</span>
-                    <span class="gear-tag"><i class="bi bi-broadcast"></i> GPS Transceiver</span>
-                `;
-            } else if (p2.diff === "inter" || p1.diff === "inter" || elevDiff > 120 || trailDist > 3.5) {
-                diffHtml = `<span class="badge bg-warning text-dark">Intermediate 🟡</span>`;
-                gearHtml += `
-                    <span class="gear-tag"><i class="bi bi-boot"></i> Mud Boots</span>
-                    <span class="gear-tag"><i class="bi bi-gloves"></i> Riding Gloves</span>
-                `;
-            }
 
             // Update DOM
             document.getElementById('estTime').innerText = `${timeMins} mins`;
