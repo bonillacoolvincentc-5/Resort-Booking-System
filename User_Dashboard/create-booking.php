@@ -697,19 +697,19 @@ $userPhone = $_SESSION['user_phone'] ?? '';
 <div class="modal fade" id="packageDetailModal" tabindex="-1" aria-labelledby="packageDetailModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content modal-content-modern">
-            <div class="modal-header-modern d-flex align-items-center justify-content-between">
+            <div class="modal-header modal-header-modern d-flex align-items-center justify-content-between">
                 <h5 class="mb-0 fw-700 text-primary" id="packageDetailModalLabel" style="color:var(--text-primary);font-weight:700;"></h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body-modern" id="packageDetailBody">
+            <div class="modal-body modal-body-modern" id="packageDetailBody">
                 <!-- Injected by JS -->
             </div>
-            <div class="modal-footer-modern">
+            <div class="modal-footer modal-footer-modern" style="z-index: 10;">
                 <button type="button" class="btn-modern btn-secondary-modern" data-bs-dismiss="modal">
                     <i class="bi bi-x"></i> Close
                 </button>
-                <button type="button" class="btn-modern btn-primary-modern" id="modalBookNowBtn">
-                    <i class="bi bi-calendar-plus"></i> Book Now
+                <button type="button" class="btn-modern btn-primary-modern" id="modalBookNowBtn" style="padding: 0.75rem 1.75rem; font-weight: 600; box-shadow: 0 4px 15px rgba(59,130,246,0.3);">
+                    <i class="bi bi-calendar-plus me-1"></i> Book Now
                 </button>
             </div>
         </div>
@@ -937,6 +937,16 @@ function openDetailModal(id, type) {
                 Maximum: <strong style="color:var(--text-primary);">${pkg.max_duration_hours}h</strong>
             </p>
         </div>` : ''}
+        <div class="mt-4 pt-4 border-top d-flex flex-column flex-sm-row align-items-center justify-content-between gap-3" style="border-color: rgba(255,255,255,0.1) !important;">
+            <div>
+                <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Ready to reserve?</div>
+                <div style="font-size: 1.15rem; font-weight: 700; color: var(--accent-success);">${escHtml(pkg.starting_price)} <span style="font-size: 0.8rem; font-weight: 400; color: var(--text-muted);">${escHtml(pkg.price_label)}</span></div>
+            </div>
+            <button type="button" class="btn-modern btn-primary-modern w-100 w-sm-auto" style="padding: 0.85rem 2rem; font-size: 1rem; font-weight: 600; box-shadow: 0 4px 15px rgba(59,130,246,0.3);"
+                    onclick="detailModal.hide(); selectPackage(${pkg.id}, '${escHtml(pkg.package_type)}');">
+                <i class="bi bi-calendar-plus me-2"></i> Book This ${ucfirst(pkg.package_type === 'activity' ? 'Activity' : (pkg.type||'Package'))} Now
+            </button>
+        </div>
     `;
 
     detailModal.show();
