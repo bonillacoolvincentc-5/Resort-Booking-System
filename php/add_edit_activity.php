@@ -119,6 +119,25 @@ if ($action === 'add' || $action === 'edit') {
     } catch (Exception $e) {
         echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
     }
+} elseif ($action === 'toggle') {
+    $activityId = $_POST['activity_id'] ?? '';
+    $isActive = intval($_POST['is_active'] ?? 0);
+    
+    if (empty($activityId)) {
+        echo json_encode(['success' => false, 'message' => 'Activity ID is required']);
+        exit();
+    }
+    
+    try {
+        $query = "UPDATE activities SET is_active = ? WHERE id = ?";
+        $stmt = $conn->prepare($query);
+        $stmt->bind_param('ii', $isActive, $activityId);
+        $stmt->execute();
+        
+        echo json_encode(['success' => true, 'message' => 'Activity status updated successfully']);
+    } catch (Exception $e) {
+        echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
+    }
 } elseif ($action === 'get') {
     $activityId = $_GET['activity_id'] ?? '';
     
