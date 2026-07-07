@@ -275,6 +275,24 @@ $userPhone = $_SESSION['user_phone'] ?? '';
         .form-control-modern::placeholder { color:var(--text-muted); }
         .form-control-modern.error { border-color:var(--accent-danger); box-shadow:0 0 0 3px rgba(239,68,68,.1); }
 
+        /* Make date and time picker icons white & easily visible on dark background */
+        input[type="date"]::-webkit-calendar-picker-indicator,
+        input[type="time"]::-webkit-calendar-picker-indicator,
+        input[type="datetime-local"]::-webkit-calendar-picker-indicator,
+        input[type="month"]::-webkit-calendar-picker-indicator {
+            filter: invert(1);
+            opacity: 0.9;
+            cursor: pointer;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+        }
+        input[type="date"]::-webkit-calendar-picker-indicator:hover,
+        input[type="time"]::-webkit-calendar-picker-indicator:hover,
+        input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover,
+        input[type="month"]::-webkit-calendar-picker-indicator:hover {
+            opacity: 1;
+            transform: scale(1.15);
+        }
+
         /* ── PRICE SUMMARY PANEL ─────────────────────────────────── */
         .price-summary {
             background: linear-gradient(135deg, rgba(59,130,246,.1), rgba(139,92,246,.1));
