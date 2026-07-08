@@ -103,14 +103,85 @@ $userPhone = $_SESSION['user_phone'] ?? '';
             gap: 2rem;
             align-items: flex-start;
         }
-        .left-col { width: 35%; flex-shrink: 0; display: flex; flex-direction: column; gap: 1.5rem; height: calc(100vh - 200px); overflow-y: auto; padding-right: 10px; }
-        .right-col { width: 65%; display: flex; flex-direction: column; gap: 2rem; }
-
+        .left-col { width: 38%; flex-shrink: 0; display: flex; flex-direction: column; height: calc(100vh - 180px); }
+        .package-filters {
+            flex-shrink: 0;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-card);
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+        .search-wrap {
+            position: relative;
+        }
+        .search-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+        .filter-search-input {
+            width: 100%;
+            padding: 0.6rem 1rem 0.6rem 2.5rem;
+            border-radius: var(--radius-btn);
+            background: rgba(15, 23, 42, 0.7);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            font-size: 0.88rem;
+            outline: none;
+            transition: all 0.25s ease;
+        }
+        .filter-search-input:focus {
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+        .filter-search-input::placeholder {
+            color: var(--text-muted);
+        }
+        .filter-pills {
+            display: flex;
+            gap: 0.4rem;
+            flex-wrap: wrap;
+            margin-top: 0.6rem;
+        }
+        .filter-pill {
+            background: rgba(30, 41, 59, 0.6);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.35rem 0.75rem;
+            border-radius: 2rem;
+            cursor: pointer;
+            transition: all 0.25s ease;
+        }
+        .filter-pill:hover {
+            color: var(--text-primary);
+            background: rgba(59, 130, 246, 0.15);
+            border-color: var(--accent-primary);
+        }
+        .filter-pill.active {
+            background: var(--accent-primary);
+            color: #ffffff;
+            border-color: var(--accent-primary);
+            box-shadow: 0 2px 6px rgba(59, 130, 246, 0.35);
+        }
+        .bundles-scroll-list {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+            padding-right: 8px;
+        }
         /* SCROLLBAR */
-        .left-col::-webkit-scrollbar { width: 6px; }
-        .left-col::-webkit-scrollbar-track { background: var(--bg-tertiary); border-radius: 4px; }
-        .left-col::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
-        .left-col::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+        .bundles-scroll-list::-webkit-scrollbar { width: 6px; }
+        .bundles-scroll-list::-webkit-scrollbar-track { background: var(--bg-tertiary); border-radius: 4px; }
+        .bundles-scroll-list::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
+        .bundles-scroll-list::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
 
         /* BUNDLE CARDS */
         .bundle-card {
@@ -118,6 +189,7 @@ $userPhone = $_SESSION['user_phone'] ?? '';
             border: 2px solid var(--border-color); border-radius: var(--radius-card);
             overflow: hidden; transition: all .35s ease; cursor: pointer;
             display: flex; flex-direction: column;
+            flex-shrink: 0;
         }
         .bundle-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-xl); border-color: rgba(59,130,246, 0.5); }
         .bundle-card.active { border-color: var(--accent-primary); box-shadow: 0 0 0 4px rgba(59,130,246, 0.2); }
@@ -125,10 +197,41 @@ $userPhone = $_SESSION['user_phone'] ?? '';
         .card-img-wrap { position: relative; height: 160px; overflow: hidden; flex-shrink:0; background: var(--bg-tertiary); }
         .card-img-wrap img { width:100%; height:100%; object-fit:cover; transition: transform .5s ease; }
         .bundle-card:hover .card-img-wrap img { transform: scale(1.06); }
-        .status-badge { position: absolute; top:.75rem; right:.75rem; padding:.25rem .75rem; border-radius:2rem; font-size:.7rem; font-weight:700; text-transform:uppercase; backdrop-filter:blur(8px); }
+        .status-badge { position: absolute; top:.75rem; right:.75rem; padding:.25rem .75rem; border-radius:2rem; font-size:.7rem; font-weight:700; text-transform:uppercase; backdrop-filter:blur(8px); z-index: 2; }
         .status-available { background:rgba(16,185,129,.9); color:#fff; }
         .status-fully-booked { background:rgba(239,68,68,.9); color:#fff; }
         .status-inactive { background:rgba(100,116,139,.9); color:#fff; }
+
+        .type-badge {
+            position: absolute;
+            top: .75rem;
+            left: .75rem;
+            padding: .25rem .75rem;
+            border-radius: 2rem;
+            font-size: .68rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            backdrop-filter: blur(8px);
+            z-index: 2;
+        }
+        .type-bundle { background: rgba(139, 92, 246, 0.9); color: #fff; }
+        .type-accommodation { background: rgba(59, 130, 246, 0.9); color: #fff; }
+        .type-activity { background: rgba(16, 185, 129, 0.9); color: #fff; }
+
+        .placeholder-banner {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, rgba(30,41,59,0.95), rgba(15,23,42,0.95));
+            color: var(--text-muted);
+            gap: 0.5rem;
+        }
+        .placeholder-banner i { font-size: 2.8rem; color: var(--accent-primary); }
+        .placeholder-banner span { font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; }
 
         .card-content { padding: 1.25rem; display: flex; flex-direction: column; gap: 0.5rem; }
         .bundle-name { font-size:1.15rem; font-weight:700; color:var(--text-primary); }
@@ -223,8 +326,23 @@ $userPhone = $_SESSION['user_phone'] ?? '';
 
         <div class="bundle-layout">
             <!-- LEFT COLUMN -->
-            <div class="left-col" id="bundlesList">
-                <div class="spinner-ring mt-5"></div>
+            <div class="left-col">
+                <div class="package-filters">
+                    <div class="search-wrap">
+                        <i class="bi bi-search search-icon"></i>
+                        <input type="text" id="searchInput" class="filter-search-input" placeholder="Search packages, rooms, cottages...">
+                    </div>
+                    <div class="filter-pills">
+                        <button class="filter-pill active" data-filter="all">All (<span id="countAll">0</span>)</button>
+                        <button class="filter-pill" data-filter="bundle">Bundles (<span id="countBundle">0</span>)</button>
+                        <button class="filter-pill" data-filter="accommodation">Stays (<span id="countAcc">0</span>)</button>
+                        <button class="filter-pill" data-filter="activity">Activities (<span id="countAct">0</span>)</button>
+                    </div>
+                </div>
+
+                <div class="bundles-scroll-list" id="bundlesList">
+                    <div class="spinner-ring mt-5"></div>
+                </div>
             </div>
 
             <!-- RIGHT COLUMN -->
@@ -336,6 +454,8 @@ $userPhone = $_SESSION['user_phone'] ?? '';
         };
 
         let bundles = [];
+        let currentFilter = 'all';
+        let searchQuery = '';
         let selectedBundle = null;
         let selectedDate = null;
         let currentDate = new Date();
@@ -345,6 +465,7 @@ $userPhone = $_SESSION['user_phone'] ?? '';
 
         // Initialization
         async function init() {
+            setupFilterControls();
             await fetchBundles();
             renderCalendarHeader();
             renderCalendarGrid(); // empty skeleton
@@ -356,6 +477,25 @@ $userPhone = $_SESSION['user_phone'] ?? '';
             DOM.btnPlusGuest.addEventListener('click', () => updateGuests(1));
             
             DOM.btnContinue.addEventListener('click', submitBooking);
+        }
+
+        function setupFilterControls() {
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) {
+                searchInput.addEventListener('input', (e) => {
+                    searchQuery = e.target.value.trim().toLowerCase();
+                    renderBundles();
+                });
+            }
+
+            document.querySelectorAll('.filter-pill').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.filter-pill').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentFilter = btn.getAttribute('data-filter');
+                    renderBundles();
+                });
+            });
         }
 
         function showAlert(msg, type='danger') {
@@ -373,7 +513,8 @@ $userPhone = $_SESSION['user_phone'] ?? '';
                 const res = await fetch('../php/get_packages.php');
                 const data = await res.json();
                 if (data.success) {
-                    bundles = data.bundles || [];
+                    bundles = data.packages || data.bundles || [];
+                    updateFilterCounts();
                     renderBundles();
                 } else {
                     DOM.bundlesList.innerHTML = `<p class="text-danger text-center mt-5">Failed to load bundles.</p>`;
@@ -383,31 +524,56 @@ $userPhone = $_SESSION['user_phone'] ?? '';
             }
         }
 
+        function updateFilterCounts() {
+            const countAll = document.getElementById('countAll');
+            const countBundle = document.getElementById('countBundle');
+            const countAcc = document.getElementById('countAcc');
+            const countAct = document.getElementById('countAct');
+
+            if (countAll) countAll.textContent = bundles.length;
+            if (countBundle) countBundle.textContent = bundles.filter(b => b.package_type === 'bundle').length;
+            if (countAcc) countAcc.textContent = bundles.filter(b => b.package_type === 'accommodation').length;
+            if (countAct) countAct.textContent = bundles.filter(b => b.package_type === 'activity').length;
+        }
+
         function renderBundles() {
             DOM.bundlesList.innerHTML = '';
-            if (bundles.length === 0) {
-                DOM.bundlesList.innerHTML = `<p class="text-muted text-center mt-5">No active bundles available.</p>`;
+            
+            const filtered = bundles.filter(b => {
+                const matchType = (currentFilter === 'all') || (b.package_type === currentFilter);
+                const matchQuery = !searchQuery || 
+                    (b.name && b.name.toLowerCase().includes(searchQuery)) ||
+                    (b.description && b.description.toLowerCase().includes(searchQuery));
+                return matchType && matchQuery;
+            });
+
+            if (filtered.length === 0) {
+                DOM.bundlesList.innerHTML = `<div class="text-center mt-5 py-4"><i class="bi bi-box-seam d-block mb-2" style="font-size:2rem;color:var(--text-muted)"></i><p class="text-muted">No resort packages found.</p></div>`;
                 return;
             }
 
-            bundles.forEach(b => {
+            filtered.forEach(b => {
                 const card = document.createElement('div');
-                card.className = 'bundle-card';
+                card.className = 'bundle-card' + (selectedBundle && selectedBundle.id === b.id && selectedBundle.package_type === b.package_type ? ' active' : '');
                 card.onclick = () => selectBundle(b, card);
                 
+                const typeLabel = b.package_type === 'bundle' ? 'Bundle' : (b.package_type === 'accommodation' ? 'Stay-In / Cottage' : 'Activity');
+                const typeClass = b.package_type === 'bundle' ? 'type-bundle' : (b.package_type === 'accommodation' ? 'type-accommodation' : 'type-activity');
+                const fallbackIcon = b.icon || 'bi-box-seam';
+
                 const imgHTML = b.image_url 
-                    ? `<img src="${b.image_url}" alt="${b.name}">`
-                    : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:3rem;color:var(--text-muted)"><i class="bi bi-image"></i></div>`;
+                    ? `<img src="${b.image_url}" alt="${b.name}" onerror="this.onerror=null;this.style.display='none';this.nextElementSibling.style.display='flex';">
+                       <div class="placeholder-banner" style="display:none;"><i class="bi ${fallbackIcon}"></i><span>YP4K Resort</span></div>`
+                    : `<div class="placeholder-banner"><i class="bi ${fallbackIcon}"></i><span>YP4K Resort</span></div>`;
                 
-                // Construct inclusions string from amenities and inclusions array
                 let combinedInclusions = [...(b.amenities || []), ...(b.inclusions || [])];
-                // Filter out capacity info from combined as we show it separately
                 combinedInclusions = combinedInclusions.filter(i => !i.toLowerCase().includes('capacity: for'));
                 
                 const inclusionsPreview = combinedInclusions.slice(0,3).join(' • ') + (combinedInclusions.length > 3 ? '...' : '');
 
                 card.innerHTML = `
                     <div class="card-img-wrap">
+                        <div class="type-badge ${typeClass}">${typeLabel}</div>
                         ${imgHTML}
                         <div class="status-badge status-available">Available</div>
                     </div>
@@ -419,7 +585,7 @@ $userPhone = $_SESSION['user_phone'] ?? '';
                         <div class="bundle-desc">${b.short_description || 'A premium resort package.'}</div>
                         <div class="bundle-meta">
                             <div class="meta-pill"><i class="bi bi-people"></i> Up to ${b.capacity}</div>
-                            <div class="meta-pill"><i class="bi bi-star"></i> Included: ${inclusionsPreview}</div>
+                            ${inclusionsPreview ? `<div class="meta-pill"><i class="bi bi-star"></i> Included: ${inclusionsPreview}</div>` : ''}
                         </div>
                     </div>
                     <button class="select-btn">Select Package</button>
