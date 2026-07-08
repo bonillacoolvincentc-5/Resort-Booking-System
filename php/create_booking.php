@@ -207,7 +207,7 @@ try {
     $specialRequests = $data['special_requests'] ?? null;
     
     $stmt->bind_param(
-        'sissssssssisisdss',
+        'siiiisssssssiisdss',
         $bookingReference,
         $_SESSION['user_id'],
         $data['booking_type'],
