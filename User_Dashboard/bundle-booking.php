@@ -104,6 +104,7 @@ $userPhone = $_SESSION['user_phone'] ?? '';
             align-items: flex-start;
         }
         .left-col { width: 38%; flex-shrink: 0; display: flex; flex-direction: column; height: calc(100vh - 180px); }
+        .right-col { flex: 1; min-width: 0; }
         .package-filters {
             flex-shrink: 0;
             background: var(--bg-card);
@@ -258,7 +259,7 @@ $userPhone = $_SESSION['user_phone'] ?? '';
         
         .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.5rem; text-align: center; }
         .cal-day-header { font-size: 0.8rem; font-weight: 600; color: var(--text-muted); padding-bottom: 0.5rem; text-transform: uppercase; }
-        .cal-cell { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; border-radius: 0.5rem; font-weight: 500; cursor: pointer; transition: all 0.2s ease; border: 2px solid transparent; background: var(--bg-tertiary); color: var(--text-primary); }
+        .cal-cell { aspect-ratio: 1; min-height: 56px; display: flex; align-items: center; justify-content: center; border-radius: 0.5rem; font-weight: 500; cursor: pointer; transition: all 0.2s ease; border: 2px solid transparent; background: var(--bg-tertiary); color: var(--text-primary); }
         
         /* Calendar statuses */
         .cal-cell.empty { background: transparent; cursor: default; }
