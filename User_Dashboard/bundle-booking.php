@@ -85,7 +85,7 @@ $userPhone = $_SESSION['user_phone'] ?? '';
         .nav-link.btn-logout { background: var(--accent-danger); color: white !important; border: none; display: flex; align-items: center; justify-content: center; }
         .nav-link.btn-logout:hover { background: #dc2626; transform: translateY(-1px); }
 
-        .page-wrap { padding: 2rem 0 4rem; }
+        .page-wrap { padding: 2rem 0 2rem; }
 
         /* HEADER */
         .page-header {
@@ -103,15 +103,15 @@ $userPhone = $_SESSION['user_phone'] ?? '';
             gap: 2rem;
             align-items: flex-start;
         }
-        .left-col { width: 38%; flex-shrink: 0; display: flex; flex-direction: column; height: calc(100vh - 180px); }
+        .left-col { width: 42%; flex-shrink: 0; display: flex; flex-direction: column; height: calc(100vh - 120px); }
         .right-col { flex: 1; min-width: 0; }
         .package-filters {
             flex-shrink: 0;
             background: var(--bg-card);
             border: 1px solid var(--border-color);
             border-radius: var(--radius-card);
-            padding: 1rem;
-            margin-bottom: 1rem;
+            padding: 1.25rem 1.5rem;
+            margin-bottom: 1.25rem;
         }
         .search-wrap {
             position: relative;
@@ -126,12 +126,12 @@ $userPhone = $_SESSION['user_phone'] ?? '';
         }
         .filter-search-input {
             width: 100%;
-            padding: 0.6rem 1rem 0.6rem 2.5rem;
+            padding: 0.75rem 1rem 0.75rem 2.75rem;
             border-radius: var(--radius-btn);
             background: rgba(15, 23, 42, 0.7);
             border: 1px solid var(--border-color);
             color: var(--text-primary);
-            font-size: 0.88rem;
+            font-size: 0.9rem;
             outline: none;
             transition: all 0.25s ease;
         }
@@ -144,20 +144,21 @@ $userPhone = $_SESSION['user_phone'] ?? '';
         }
         .filter-pills {
             display: flex;
-            gap: 0.4rem;
+            gap: 0.5rem;
             flex-wrap: wrap;
-            margin-top: 0.6rem;
+            margin-top: 0.85rem;
         }
         .filter-pill {
             background: rgba(30, 41, 59, 0.6);
             border: 1px solid var(--border-color);
             color: var(--text-secondary);
-            font-size: 0.78rem;
+            font-size: 0.8rem;
             font-weight: 600;
-            padding: 0.35rem 0.75rem;
+            padding: 0.45rem 1rem;
             border-radius: 2rem;
             cursor: pointer;
             transition: all 0.25s ease;
+            letter-spacing: 0.2px;
         }
         .filter-pill:hover {
             color: var(--text-primary);
@@ -168,15 +169,16 @@ $userPhone = $_SESSION['user_phone'] ?? '';
             background: var(--accent-primary);
             color: #ffffff;
             border-color: var(--accent-primary);
-            box-shadow: 0 2px 6px rgba(59, 130, 246, 0.35);
+            box-shadow: 0 3px 10px rgba(59, 130, 246, 0.4);
         }
         .bundles-scroll-list {
             flex: 1;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
-            gap: 1.25rem;
-            padding-right: 8px;
+            gap: 1.5rem;
+            padding-right: 6px;
+            padding-bottom: 1rem;
         }
         /* SCROLLBAR */
         .bundles-scroll-list::-webkit-scrollbar { width: 6px; }
@@ -186,16 +188,17 @@ $userPhone = $_SESSION['user_phone'] ?? '';
 
         /* BUNDLE CARDS */
         .bundle-card {
-            background: var(--bg-card); backdrop-filter: blur(10px);
+            background: var(--bg-card); backdrop-filter: blur(12px);
             border: 2px solid var(--border-color); border-radius: var(--radius-card);
-            overflow: hidden; transition: all .35s ease; cursor: pointer;
+            overflow: hidden; transition: all .35s cubic-bezier(0.4,0,0.2,1); cursor: pointer;
             display: flex; flex-direction: column;
             flex-shrink: 0;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.15);
         }
-        .bundle-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-xl); border-color: rgba(59,130,246, 0.5); }
-        .bundle-card.active { border-color: var(--accent-primary); box-shadow: 0 0 0 4px rgba(59,130,246, 0.2); }
+        .bundle-card:hover { transform: translateY(-5px); box-shadow: 0 16px 40px rgba(0,0,0,0.3); border-color: rgba(59,130,246, 0.55); }
+        .bundle-card.active { border-color: var(--accent-primary); box-shadow: 0 0 0 4px rgba(59,130,246, 0.2), 0 8px 24px rgba(59,130,246,0.15); }
         
-        .card-img-wrap { position: relative; height: 160px; overflow: hidden; flex-shrink:0; background: var(--bg-tertiary); }
+        .card-img-wrap { position: relative; height: 190px; overflow: hidden; flex-shrink:0; background: var(--bg-tertiary); }
         .card-img-wrap img { width:100%; height:100%; object-fit:cover; transition: transform .5s ease; }
         .bundle-card:hover .card-img-wrap img { transform: scale(1.06); }
         .status-badge { position: absolute; top:.75rem; right:.75rem; padding:.25rem .75rem; border-radius:2rem; font-size:.7rem; font-weight:700; text-transform:uppercase; backdrop-filter:blur(8px); z-index: 2; }
@@ -231,20 +234,34 @@ $userPhone = $_SESSION['user_phone'] ?? '';
             color: var(--text-muted);
             gap: 0.5rem;
         }
-        .placeholder-banner i { font-size: 2.8rem; color: var(--accent-primary); }
-        .placeholder-banner span { font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; }
+        .placeholder-banner i { font-size: 3.2rem; color: var(--accent-primary); opacity: 0.8; }
+        .placeholder-banner span { font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1.5px; margin-top: 0.25rem; }
 
-        .card-content { padding: 1.25rem; display: flex; flex-direction: column; gap: 0.5rem; }
-        .bundle-name { font-size:1.15rem; font-weight:700; color:var(--text-primary); }
-        .bundle-price { font-size:1rem; font-weight:700; color:var(--accent-success); }
-        .bundle-desc { font-size:.85rem; color:var(--text-secondary); line-height:1.5; margin-bottom: 0.5rem; }
+        .card-content { padding: 1.5rem; display: flex; flex-direction: column; gap: 0.75rem; }
+        .bundle-name { font-size:1.1rem; font-weight:700; color:var(--text-primary); line-height: 1.3; }
+        .bundle-price { font-size:1.05rem; font-weight:800; color:var(--accent-success); letter-spacing: -0.3px; white-space: nowrap; }
+        .bundle-desc { font-size:.84rem; color:var(--text-secondary); line-height:1.6; }
         
-        .bundle-meta { display: flex; flex-wrap: wrap; gap: 0.75rem; }
-        .meta-pill { font-size: 0.75rem; background: var(--bg-tertiary); border: 1px solid var(--border-color); padding: 0.2rem 0.6rem; border-radius: 1rem; color: var(--text-primary); display: flex; align-items: center; gap: 0.3rem; }
-        .meta-pill i { color: var(--accent-primary); }
+        .bundle-meta { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.25rem; }
+        .meta-pill { font-size: 0.76rem; background: rgba(51,65,85,0.5); border: 1px solid var(--border-color); padding: 0.3rem 0.75rem; border-radius: 1rem; color: var(--text-secondary); display: flex; align-items: center; gap: 0.35rem; }
+        .meta-pill i { color: var(--accent-primary); font-size: 0.8rem; }
 
-        .select-btn { width: 100%; padding: 0.75rem; border-radius: 0 0 calc(var(--radius-card) - 2px) calc(var(--radius-card) - 2px); border: none; background: var(--bg-tertiary); color: var(--text-primary); font-weight: 600; transition: all 0.3s ease; }
-        .bundle-card.active .select-btn { background: var(--accent-primary); color: #fff; }
+        .select-btn {
+            width: 100%;
+            padding: 0.9rem;
+            border-radius: 0 0 calc(var(--radius-card) - 2px) calc(var(--radius-card) - 2px);
+            border: none;
+            border-top: 1px solid var(--border-color);
+            background: rgba(51,65,85,0.4);
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 0.9rem;
+            letter-spacing: 0.3px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .bundle-card:hover .select-btn { background: rgba(59,130,246,0.12); color: var(--accent-primary); border-color: rgba(59,130,246,0.3); }
+        .bundle-card.active .select-btn { background: var(--accent-primary); color: #fff; border-color: var(--accent-primary); box-shadow: 0 4px 15px rgba(59,130,246,0.35); }
 
         /* CALENDAR */
         .calendar-container { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-card); padding: 1.5rem; box-shadow: var(--shadow-md); position: relative; }
@@ -298,7 +315,7 @@ $userPhone = $_SESSION['user_phone'] ?? '';
 
         @media (max-width: 992px) {
             .bundle-layout { flex-direction: column; }
-            .left-col { width: 100%; height: auto; max-height: 500px; }
+            .left-col { width: 100%; height: auto; max-height: 620px; }
             .right-col { width: 100%; }
             .summary-panel { flex-direction: column; }
             .sum-img { width: 100%; height: 200px; }
