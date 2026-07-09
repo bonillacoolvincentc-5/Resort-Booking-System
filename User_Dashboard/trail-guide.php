@@ -250,6 +250,46 @@ $userId = $_SESSION['user_id'];
             background: linear-gradient(135deg, #a8ff1a, #7ce653);
         }
 
+        .btn-calculate.active-tracking {
+            background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+            color: #ffffff !important;
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+            animation: pulse-danger 1.5s infinite;
+        }
+        @keyframes pulse-danger {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6); }
+            70% { box-shadow: 0 0 0 12px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+
+        /* Custom Leaflet Live Radar Icon */
+        .live-user-container {
+            position: relative;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .live-user-dot {
+            width: 18px; height: 18px;
+            background: #10b981;
+            border: 3px solid #ffffff;
+            border-radius: 50%;
+            box-shadow: 0 0 10px rgba(16,185,129,0.8);
+            position: relative;
+            z-index: 2;
+        }
+        .live-user-pulse {
+            position: absolute;
+            width: 44px; height: 44px;
+            background: rgba(16, 185, 129, 0.35);
+            border: 2px solid rgba(16, 185, 129, 0.7);
+            border-radius: 50%;
+            animation: radar-pulse 1.8s ease-out infinite;
+            z-index: 1;
+        }
+        @keyframes radar-pulse {
+            0% { transform: scale(0.4); opacity: 1; }
+            100% { transform: scale(2.4); opacity: 0; }
+        }
+
         /* Results Panel inside Calculator */
         .results-panel {
             margin-top: 1.5rem;
@@ -766,16 +806,16 @@ $userId = $_SESSION['user_id'];
         <!-- Guide & Map Grid -->
         <div class="guide-grid">
             
-            <!-- Left: Route Calculator -->
+            <!-- Left: Live GPS Route Tracker -->
             <div class="calculator-card">
                 <div class="card-heading">
-                    <span><i class="bi bi-calculator me-2 text-accent"></i>Route Calculator</span>
-                    <span class="badge bg-secondary" style="font-size: 0.7rem;">Live GPS Est.</span>
+                    <span><i class="bi bi-broadcast me-2 text-accent"></i>Live GPS Route Tracker</span>
+                    <span class="badge bg-success" id="liveStatusBadge" style="font-size: 0.72rem;"><i class="bi bi-geo me-1"></i>Ready</span>
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label-custom">Start Point</label>
-                    <select id="startPoint" class="form-select-modern">
+                    <select id="startPoint" class="form-select-modern" onchange="calculateRoute()">
                         <option value="wp1">Point A — Start Point</option>
                         <option value="wp2">Point B — Destination</option>
                     </select>
@@ -783,7 +823,7 @@ $userId = $_SESSION['user_id'];
 
                 <div class="mb-3">
                     <label class="form-label-custom">Destination Point</label>
-                    <select id="endPoint" class="form-select-modern">
+                    <select id="endPoint" class="form-select-modern" onchange="calculateRoute()">
                         <option value="wp2" selected>Point B — Destination</option>
                         <option value="wp1">Point A — Start Point</option>
                     </select>
@@ -805,12 +845,25 @@ $userId = $_SESSION['user_id'];
                     </div>
                 </div>
 
-                <button class="btn-calculate" onclick="calculateRoute()">
-                    <i class="bi bi-map"></i> Calculate Route & Time
+                <button class="btn-calculate mb-3" id="liveTrackBtn" onclick="toggleLiveTracking()">
+                    <i class="bi bi-broadcast me-2"></i> Start Live GPS Tracking
                 </button>
 
                 <!-- Dynamic Results Panel -->
-                <div id="resultsPanel" class="results-panel">
+                <div id="resultsPanel" class="results-panel" style="display:block;">
+                    <!-- Live GPS Telemetry Box -->
+                    <div id="liveTelemetryBox" class="p-3 mb-3 rounded" style="background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3); display: none;">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span style="font-size: 0.75rem; font-weight: 700; color: #10b981; text-transform: uppercase;">
+                                <i class="bi bi-record-circle-fill me-1"></i> Live GPS Feed
+                            </span>
+                            <span id="liveAccuracy" class="badge bg-success" style="font-size: 0.68rem;">±--m</span>
+                        </div>
+                        <div id="liveCoords" style="font-family: 'Poppins', monospace; font-size: 0.95rem; font-weight: 700; color: #f1f5f9;">
+                            Waiting for satellite fix...
+                        </div>
+                    </div>
+
                     <div class="time-display">
                         <div class="time-label">Estimated Travel Time</div>
                         <div id="estTime" class="time-val">-- mins</div>
@@ -1221,6 +1274,151 @@ $userId = $_SESSION['user_id'];
             document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
             btn.classList.add('active');
             addMarkersToMap(type);
+        }
+
+        // --- 8. LIVE GPS ROUTE TRACKING SYSTEM ---
+        let gpsWatchId = null;
+        let liveUserMarker = null;
+        let liveUserAccuracyCircle = null;
+        let isLiveTracking = false;
+
+        const liveUserIcon = L.divIcon({
+            className: 'live-user-container',
+            html: '<div class="live-user-pulse"></div><div class="live-user-dot"></div>',
+            iconSize: [44, 44],
+            iconAnchor: [22, 22]
+        });
+
+        function toggleLiveTracking() {
+            const btn = document.getElementById('liveTrackBtn');
+            const badge = document.getElementById('liveStatusBadge');
+            const telemetryBox = document.getElementById('liveTelemetryBox');
+
+            if (!isLiveTracking) {
+                if (!navigator.geolocation) {
+                    alert('Geolocation is not supported by your browser or device.');
+                    return;
+                }
+
+                btn.classList.add('active-tracking');
+                btn.innerHTML = '<i class="bi bi-stop-circle-fill me-2"></i> Stop Live GPS Tracking';
+                badge.className = 'badge bg-danger';
+                badge.innerHTML = '<i class="bi bi-broadcast me-1"></i> LIVE';
+                telemetryBox.style.display = 'block';
+
+                isLiveTracking = true;
+
+                gpsWatchId = navigator.geolocation.watchPosition(
+                    onLocationSuccess,
+                    onLocationError,
+                    { enableHighAccuracy: true, maximumAge: 3000, timeout: 15000 }
+                );
+            } else {
+                stopLiveTracking();
+            }
+        }
+
+        function stopLiveTracking() {
+            if (gpsWatchId !== null) {
+                navigator.geolocation.clearWatch(gpsWatchId);
+                gpsWatchId = null;
+            }
+            isLiveTracking = false;
+
+            const btn = document.getElementById('liveTrackBtn');
+            const badge = document.getElementById('liveStatusBadge');
+            if (btn) {
+                btn.classList.remove('active-tracking');
+                btn.innerHTML = '<i class="bi bi-broadcast me-2"></i> Start Live GPS Tracking';
+            }
+            if (badge) {
+                badge.className = 'badge bg-success';
+                badge.innerHTML = '<i class="bi bi-geo me-1"></i>Ready';
+            }
+        }
+
+        function onLocationSuccess(pos) {
+            const lat = pos.coords.latitude;
+            const lng = pos.coords.longitude;
+            const acc = Math.round(pos.coords.accuracy || 10);
+
+            // Update telemetry box
+            const coordsEl = document.getElementById('liveCoords');
+            const accEl = document.getElementById('liveAccuracy');
+            if (coordsEl) coordsEl.textContent = `${lat.toFixed(5)}° N, ${lng.toFixed(5)}° E`;
+            if (accEl) accEl.textContent = `±${acc}m`;
+
+            // Create or move Live User Marker
+            if (!liveUserMarker) {
+                liveUserMarker = L.marker([lat, lng], { icon: liveUserIcon, zIndexOffset: 1000 })
+                    .addTo(map)
+                    .bindPopup('<b>🟢 You Are Here (Live GPS)</b><br>Real-time location active');
+            } else {
+                liveUserMarker.setLatLng([lat, lng]);
+            }
+
+            // Create or move Accuracy Circle
+            if (!liveUserAccuracyCircle) {
+                liveUserAccuracyCircle = L.circle([lat, lng], {
+                    radius: acc,
+                    color: '#10b981',
+                    fillColor: '#10b981',
+                    fillOpacity: 0.15,
+                    weight: 1
+                }).addTo(map);
+            } else {
+                liveUserAccuracyCircle.setLatLng([lat, lng]);
+                liveUserAccuracyCircle.setRadius(acc);
+            }
+
+            // Pan map smoothly to live location
+            map.setView([lat, lng], Math.max(map.getZoom(), 16), { animate: true });
+
+            // Dynamically calculate route distance from user's live position to selected destination
+            updateLiveRouteFromUser(lat, lng);
+        }
+
+        function onLocationError(err) {
+            console.warn('GPS error:', err);
+            let msg = 'Could not retrieve your live location.';
+            if (err.code === 1) msg = 'Location permission denied. Please enable location services in your browser/device settings.';
+            else if (err.code === 2) msg = 'Location unavailable. Please check your GPS signal.';
+            else if (err.code === 3) msg = 'Location request timed out.';
+            alert(msg);
+            stopLiveTracking();
+        }
+
+        function updateLiveRouteFromUser(userLat, userLng) {
+            let endKey = document.getElementById('endPoint').value;
+            let dest = waypoints[endKey];
+            if (!dest) return;
+
+            // Calculate direct haversine/trail distance from live position to destination
+            let dLat = (dest.lat - userLat) * 111;
+            let dLng = (dest.lng - userLng) * 108;
+            let distKm = Math.sqrt(dLat*dLat + dLng*dLng).toFixed(2);
+            let distMi = (distKm * 0.621371).toFixed(2);
+
+            let timeHours = distKm / paceSpeed;
+            let timeMins = Math.max(2, Math.round(timeHours * 60));
+
+            document.getElementById('estTime').innerText = `${timeMins} mins`;
+            document.getElementById('estDist').innerText = `${distKm} km (${distMi} mi) from You`;
+            document.getElementById('estSub').innerText = `Live route to ${dest.name}`;
+
+            if (currentRouteLine) {
+                map.removeLayer(currentRouteLine);
+            }
+
+            currentRouteLine = L.polyline([
+                [userLat, userLng],
+                [dest.lat, dest.lng]
+            ], {
+                color: '#10b981',
+                weight: 5,
+                opacity: 0.95,
+                dashArray: '10, 10'
+            }).addTo(map);
         }
     </script>
 </body>
