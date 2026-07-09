@@ -478,15 +478,31 @@ while ($row = $bundlesRes->fetch_assoc()) {
                 const amount = parseFloat(b.total_amount || 0).toLocaleString('en-PH', { style: 'currency', currency: 'PHP' });
 
                 // Dates
-                const checkIn  = b.check_in_date  ? (b.check_in_date  + (b.check_in_time  ? ' ' + b.check_in_time  : '')) : '�';
-                const checkOut = b.check_out_date ? (b.check_out_date + (b.check_out_time ? ' ' + b.check_out_time : '')) : '�';
+                const checkIn  = b.check_in_date  ? (b.check_in_date  + (b.check_in_time  ? ' ' + b.check_in_time  : '')) : '';
+                const checkOut = b.check_out_date ? (b.check_out_date + (b.check_out_time ? ' ' + b.check_out_time : '')) : '';
 
-                // Receipt
-                const receiptHtml = b.receipt_file_path
-                    ? `<a href="../${escHtml(b.receipt_file_path)}" target="_blank" class="btn-modern btn-secondary" style="font-size:.8rem;padding:.35rem .75rem;">
-                           <i class="bi bi-file-earmark-image me-1"></i>View Receipt
-                       </a>`
-                    : '<span style="color:var(--text-muted);font-size:.875rem;">No receipt uploaded</span>';
+                // GCash Payment Proof / Receipt
+                const proofPath = b.payment_proof || b.receipt_file_path;
+                const receiptHtml = proofPath
+                    ? `<div style="background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.3);border-radius:0.75rem;padding:1rem;margin-top:0.3rem;">
+                           <div class="d-flex align-items-center justify-content-between mb-2">
+                               <span style="font-size:.75rem;font-weight:700;color:#10b981;text-transform:uppercase;letter-spacing:0.5px;">
+                                   <i class="bi bi-check-circle-fill me-1"></i>GCash Payment Proof Attached
+                               </span>
+                               <a href="../${escHtml(proofPath)}" target="_blank" class="btn-modern btn-secondary" style="font-size:.75rem;padding:.3rem .75rem;">
+                                   <i class="bi bi-box-arrow-up-right me-1"></i>Open Full Size
+                               </a>
+                           </div>
+                           <div style="text-align:center;background:#0f172a;border-radius:0.5rem;padding:0.75rem;border:1px solid rgba(51,65,85,0.6);">
+                               <a href="../${escHtml(proofPath)}" target="_blank" title="Click to view full image">
+                                   <img src="../${escHtml(proofPath)}" alt="GCash Payment Proof" style="max-height:240px;max-width:100%;object-fit:contain;border-radius:0.35rem;cursor:pointer;">
+                               </a>
+                           </div>
+                       </div>`
+                    : `<div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);border-radius:0.75rem;padding:0.85rem;color:#f87171;font-size:.85rem;display:flex;align-items:center;gap:0.5rem;">
+                           <i class="bi bi-exclamation-triangle-fill"></i>
+                           <span>No GCash payment proof image attached for this booking.</span>
+                       </div>`;
 
                 // Change log
                 let logsHtml = '<p style="color:var(--text-muted);font-size:.8rem;">No history yet.</p>';
@@ -495,7 +511,7 @@ while ($row = $bundlesRes->fetch_assoc()) {
                         <div style="border-left:2px solid var(--border-color);padding:.5rem .75rem;margin-bottom:.5rem;">
                             <div style="font-size:.8rem;color:var(--text-secondary);">
                                 <strong style="color:var(--text-primary);">${escHtml(log.changed_by_name || log.changed_by)}</strong>
-                                changed status to <strong style="color:var(--accent-primary);">${escHtml(log.new_status_name || '�')}</strong>
+                                changed status to <strong style="color:var(--accent-primary);">${escHtml(log.new_status_name || '')}</strong>
                             </div>
                             ${log.notes ? `<div style="font-size:.75rem;color:var(--text-muted);margin-top:.2rem;">${escHtml(log.notes)}</div>` : ''}
                             <div style="font-size:.7rem;color:var(--text-muted);margin-top:.2rem;">${escHtml(log.created_at || '')}</div>
@@ -523,11 +539,11 @@ while ($row = $bundlesRes->fetch_assoc()) {
                             <p class="mb-1" style="font-size:.75rem;color:var(--text-muted);">CUSTOMER</p>
                             <p class="mb-0" style="color:var(--text-primary);font-weight:600;">${escHtml(b.full_name)}</p>
                             <p class="mb-0" style="font-size:.85rem;color:var(--text-secondary);">${escHtml(b.email)}</p>
-                            <p class="mb-0" style="font-size:.85rem;color:var(--text-secondary);">${escHtml(b.phone_number || '�')}</p>
+                            <p class="mb-0" style="font-size:.85rem;color:var(--text-secondary);">${escHtml(b.phone_number || '')}</p>
                         </div>
                         <div class="col-md-6">
                             <p class="mb-1" style="font-size:.75rem;color:var(--text-muted);">ITEM BOOKED</p>
-                            <p class="mb-0" style="color:var(--text-primary);font-weight:600;">${escHtml(b.item_name || '�')}</p>
+                            <p class="mb-0" style="color:var(--text-primary);font-weight:600;">${escHtml(b.item_name || '')}</p>
                         </div>
                         <div class="col-md-6">
                             <p class="mb-1" style="font-size:.75rem;color:var(--text-muted);">CHECK-IN</p>
@@ -555,7 +571,7 @@ while ($row = $bundlesRes->fetch_assoc()) {
                             <p class="mb-0" style="color:var(--text-secondary);font-size:.875rem;">${escHtml(b.special_requests)}</p>
                         </div>` : ''}
                         <div class="col-12">
-                            <p class="mb-1" style="font-size:.75rem;color:var(--text-muted);">RECEIPT</p>
+                            <p class="mb-1" style="font-size:.75rem;color:var(--text-muted);">GCASH PAYMENT PROOF</p>
                             ${receiptHtml}
                         </div>
                     </div>

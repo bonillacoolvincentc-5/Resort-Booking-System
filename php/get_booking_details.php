@@ -59,7 +59,7 @@ try {
                 WHEN b.booking_type = 'bundle'        THEN bun.image_url
             END as item_image_url,
             pr.file_name   as receipt_file_name,
-            pr.file_path   as receipt_file_path,
+            COALESCE(b.payment_proof, pr.file_path) as receipt_file_path,
             pr.file_size   as receipt_file_size,
             pr.uploaded_at as receipt_uploaded_at
         FROM bookings b
