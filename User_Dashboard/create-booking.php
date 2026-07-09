@@ -440,6 +440,166 @@ if (empty($userPhone)) {
             .step-bar      { flex-wrap:wrap; gap:.5rem; }
             .step-separator { display:none; }
         }
+        /* ═══════════════════════════════════════
+           GCASH MODAL & PAYMENT STYLES
+        ═══════════════════════════════════════ */
+        .pay-modal-backdrop {
+            position: fixed; inset: 0;
+            background: rgba(5, 10, 25, 0.85);
+            backdrop-filter: blur(8px);
+            z-index: 99999 !important;
+            display: flex; align-items: center; justify-content: center;
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.35s ease;
+        }
+        .pay-modal-backdrop.open {
+            opacity: 1; pointer-events: all;
+        }
+        .pay-modal {
+            background: linear-gradient(160deg, #1a2744 0%, #0f172a 100%);
+            border: 1px solid rgba(59,130,246,0.3);
+            border-radius: 1.25rem;
+            padding: 2rem;
+            width: min(520px, 94vw);
+            max-height: 92vh;
+            overflow-y: auto;
+            box-shadow: 0 30px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(59,130,246,0.15);
+            transform: translateY(24px) scale(0.97);
+            transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1);
+            color: #f1f5f9;
+        }
+        .pay-modal-backdrop.open .pay-modal {
+            transform: translateY(0) scale(1);
+        }
+        .pay-modal-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 1.5rem; padding-bottom: 1rem;
+            border-bottom: 1px solid rgba(51,65,85,0.6);
+        }
+        .pay-modal-title {
+            font-size: 1.2rem; font-weight: 700;
+            background: linear-gradient(135deg, #f1f5f9, #3b82f6);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+        }
+        .pay-modal-close {
+            background: rgba(51,65,85,0.5); border: none; color: #cbd5e1;
+            border-radius: 50%; width: 32px; height: 32px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; font-size: 1rem; transition: all 0.2s;
+        }
+        .pay-modal-close:hover { background: rgba(239,68,68,0.3); color: #ef4444; }
+        .qr-section { text-align: center; margin-bottom: 1.5rem; }
+        .qr-label {
+            font-size: 0.75rem; font-weight: 600; text-transform: uppercase;
+            letter-spacing: 1px; color: #10b981; margin-bottom: 0.75rem;
+            display: flex; align-items: center; justify-content: center; gap: 0.4rem;
+        }
+        .qr-frame {
+            display: inline-flex; align-items: center; justify-content: center;
+            background: #fff; border-radius: 1rem; padding: 12px;
+            box-shadow: 0 8px 32px rgba(16,185,129,0.2), 0 0 0 3px rgba(16,185,129,0.15);
+        }
+        .qr-frame img { width: 180px; height: 180px; object-fit: contain; display: block; border-radius: 0.5rem; }
+        .qr-missing {
+            width: 180px; height: 180px;
+            background: linear-gradient(135deg, #1e3a5f, #0f2744);
+            border-radius: 0.5rem; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; color: #94a3b8; gap: 0.5rem;
+        }
+        .qr-missing i { font-size: 2.5rem; color: #3b82f6; }
+        .fee-section {
+            background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.25);
+            border-radius: 0.75rem; padding: 1rem 1.25rem; margin-bottom: 1.5rem;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .fee-label { font-size: 0.85rem; color: #cbd5e1; }
+        .fee-label strong { display: block; font-size: 0.7rem; color: #94a3b8; margin-bottom: 0.15rem; text-transform: uppercase; }
+        .fee-amount { font-size: 1.6rem; font-weight: 800; color: #10b981; }
+        .upload-section { margin-bottom: 1.5rem; }
+        .upload-label {
+            font-size: 0.8rem; font-weight: 600; color: #cbd5e1;
+            margin-bottom: 0.6rem; display: flex; align-items: center; gap: 0.4rem;
+        }
+        .upload-row { display: flex; gap: 0.75rem; align-items: flex-start; }
+        .upload-drop-area {
+            flex: 1; border: 2px dashed rgba(59,130,246,0.4);
+            border-radius: 0.75rem; padding: 1.25rem; text-align: center;
+            cursor: pointer; transition: all 0.25s ease;
+            background: rgba(15,23,42,0.6); position: relative;
+        }
+        .upload-drop-area:hover, .upload-drop-area.dragover {
+            border-color: rgba(59,130,246,0.8); background: rgba(59,130,246,0.05);
+        }
+        .upload-drop-area i { font-size: 1.8rem; color: #3b82f6; margin-bottom: 0.4rem; display: block; }
+        .upload-drop-area p { font-size: 0.78rem; color: #94a3b8; margin: 0; line-height: 1.4; }
+        #proofFileInput { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+        .upload-thumb {
+            width: 80px; height: 80px; flex-shrink: 0; border-radius: 0.6rem;
+            border: 2px solid rgba(51,65,85,0.6); overflow: hidden;
+            background: rgba(15,23,42,0.8); display: flex; align-items: center; justify-content: center;
+            position: relative;
+        }
+        .upload-thumb img { width: 100%; height: 100%; object-fit: cover; display: none; }
+        .upload-thumb .thumb-placeholder {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            gap: 0.2rem; color: #475569; text-align: center; padding: 0.5rem;
+        }
+        .upload-thumb.has-image { border-color: #10b981; }
+        .thumb-check {
+            position: absolute; top: 2px; right: 2px; background: #10b981; color: white;
+            border-radius: 50%; width: 16px; height: 16px; font-size: 0.55rem; display: none;
+            align-items: center; justify-content: center;
+        }
+        .upload-thumb.has-image .thumb-check { display: flex; }
+        .upload-filename { font-size: 0.7rem; color: #64748b; margin-top: 0.4rem; text-align: center; word-break: break-all; }
+        .pay-submit-btn {
+            width: 100%; padding: 0.9rem; border: none; border-radius: 0.75rem;
+            background: linear-gradient(135deg, #10b981, #059669); color: #fff;
+            font-size: 1rem; font-weight: 700; cursor: pointer; transition: all 0.3s ease;
+            display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+            box-shadow: 0 4px 20px rgba(16,185,129,0.3);
+        }
+        .pay-submit-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(16,185,129,0.45); }
+        .pay-submit-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+
+        /* Loader & Success Overlays */
+        .submit-loader {
+            position: fixed; inset: 0; background: rgba(5, 8, 20, 0.92); backdrop-filter: blur(12px);
+            z-index: 4000; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            gap: 1.5rem; opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+        }
+        .submit-loader.show { opacity: 1; pointer-events: all; }
+        .loader-ring-wrap { position: relative; width: 90px; height: 90px; }
+        .loader-ring {
+            width: 90px; height: 90px; border-radius: 50%;
+            border: 4px solid rgba(59,130,246,0.15); border-top-color: #3b82f6;
+            animation: spin 0.9s linear infinite;
+        }
+        .loader-icon {
+            position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+            font-size: 1.6rem; color: #3b82f6;
+        }
+        .loader-text { font-size: 1.05rem; font-weight: 600; color: #e2e8f0; }
+        .success-overlay {
+            position: fixed; inset: 0;
+            background: radial-gradient(ellipse at center, rgba(10,25,50,0.97) 0%, rgba(5,10,20,0.99) 100%);
+            z-index: 3000; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            opacity: 0; pointer-events: none; transition: opacity 0.4s ease;
+        }
+        .success-overlay.show { opacity: 1; pointer-events: all; }
+        .success-icon-wrap {
+            width: 110px; height: 110px; border-radius: 50%;
+            background: rgba(16,185,129,0.15); border: 3px solid rgba(16,185,129,0.4);
+            display: flex; align-items: center; justify-content: center; margin-bottom: 1.5rem;
+        }
+        .success-icon-wrap i { font-size: 3.5rem; color: #10b981; }
+        .success-title { font-size: 2rem; font-weight: 800; color: #f1f5f9; margin-bottom: 0.5rem; }
+        .success-ref { font-size: 0.9rem; color: #10b981; font-weight: 600; margin-bottom: 0.5rem; }
+        .success-sub { font-size: 0.9rem; color: #94a3b8; text-align: center; max-width: 360px; margin-bottom: 2rem; }
+        .success-btn {
+            padding: 0.8rem 2.5rem; background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            color: #fff; border: none; border-radius: 0.75rem; font-weight: 700; cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -727,6 +887,102 @@ if (empty($userPhone)) {
     </div>
 </div>
 
+<!-- ═══════════════════════════════════════════════════
+     GCASH PAYMENT MODAL
+═══════════════════════════════════════════════════ -->
+<div class="pay-modal-backdrop" id="payModalBackdrop">
+    <div class="pay-modal">
+        <div class="pay-modal-header">
+            <div class="pay-modal-title"><i class="bi bi-phone me-2"></i>GCash Payment</div>
+            <button class="pay-modal-close" id="payModalClose"><i class="bi bi-x-lg"></i></button>
+        </div>
+
+        <!-- QR Code -->
+        <div class="qr-section">
+            <div class="qr-label"><i class="bi bi-qr-code"></i> Scan to Pay via GCash</div>
+            <div class="qr-frame">
+                <img src="../assets/gcash/gcash_qr.png" alt="GCash QR" id="gcashQrImg"
+                     onerror="this.style.display='none';document.getElementById('gcashQrMissing').style.display='flex';">
+                <div class="qr-missing" id="gcashQrMissing" style="display:none;">
+                    <i class="bi bi-qr-code-scan"></i>
+                    <span>QR code will be placed here by the admin</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reservation Fee -->
+        <div class="fee-section">
+            <div class="fee-label">
+                <strong>Total Amount / Fee</strong>
+                Send exactly this amount via GCash
+            </div>
+            <div class="fee-amount" id="modalFeeAmount">₱0</div>
+        </div>
+
+        <!-- Upload Proof -->
+        <div class="upload-section">
+            <div class="upload-label">
+                <i class="bi bi-image-fill"></i>
+                Attach GCash Payment Screenshot
+                <span style="color:#ef4444;margin-left:2px;">*</span>
+            </div>
+            <div class="upload-row">
+                <div class="upload-drop-area" id="uploadDropArea">
+                    <input type="file" id="proofFileInput" accept="image/*">
+                    <i class="bi bi-cloud-arrow-up"></i>
+                    <p><strong>Click or drag & drop</strong><br>PNG, JPG, GIF up to 5MB</p>
+                </div>
+                <div>
+                    <div class="upload-thumb" id="uploadThumb">
+                        <img id="thumbImg" src="" alt="Preview">
+                        <div class="thumb-placeholder" id="thumbPlaceholder">
+                            <i class="bi bi-image"></i>
+                            <span>Preview here</span>
+                        </div>
+                        <div class="thumb-check"><i class="bi bi-check"></i></div>
+                    </div>
+                    <div class="upload-filename" id="uploadFilename">No file</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Submit -->
+        <button class="pay-submit-btn" id="paySubmitBtn" disabled>
+            <i class="bi bi-send-fill"></i> Submit Reservation
+        </button>
+    </div>
+</div>
+
+<!-- SUBMISSION LOADER -->
+<div class="submit-loader" id="submitLoader">
+    <div class="loader-ring-wrap">
+        <div class="loader-ring"></div>
+        <div class="loader-icon"><i class="bi bi-send"></i></div>
+    </div>
+    <div>
+        <div class="loader-text">
+            Processing your reservation…
+        </div>
+        <div class="loader-sub" style="font-size:0.8rem;color:#64748b;margin-top:0.4rem;text-align:center;">Uploading payment proof &amp; securing your booking. Please don't close this page.</div>
+    </div>
+</div>
+
+<!-- SUCCESS OVERLAY -->
+<div class="success-overlay" id="successOverlay">
+    <div class="success-icon-wrap">
+        <i class="bi bi-check-circle-fill"></i>
+    </div>
+    <div class="success-title">Reservation Submitted! 🎉</div>
+    <div class="success-ref" id="successRef"></div>
+    <p class="success-sub">
+        Your booking is now <strong style="color:#10b981;">pending admin review</strong>.
+        You'll receive a confirmation once it's approved. Thank you!
+    </p>
+    <button class="success-btn" id="successGoBtn">
+        <i class="bi bi-journal-check me-2"></i>View My Bookings
+    </button>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
 /* ══════════════════════════════════════════════════════════════════
@@ -735,10 +991,11 @@ if (empty($userPhone)) {
 'use strict';
 
 // ── State ──────────────────────────────────────────────────────────
-let allPackages  = [];
-let selectedPkg  = null;
-let addonsMap    = {};      // {id: {name, price, selected}}
+let allPackages   = [];
+let selectedPkg   = null;
+let addonsMap     = {};      // {id: {name, price, selected}}
 let currentFilter = 'all';
+let proofFile     = null;
 
 const detailModal = new bootstrap.Modal(document.getElementById('packageDetailModal'));
 
@@ -746,6 +1003,7 @@ const detailModal = new bootstrap.Modal(document.getElementById('packageDetailMo
 document.addEventListener('DOMContentLoaded', () => {
     loadPackages();
     initDateInputs();
+    initPaymentModal();
     document.getElementById('bookingForm').addEventListener('submit', handleBookingSubmit);
     document.getElementById('bookingDate').addEventListener('change', recalcPrice);
     document.getElementById('checkoutDate').addEventListener('change',  recalcPrice);
@@ -1127,18 +1385,30 @@ function validateTime() {
     return true;
 }
 
-// ── Form submit ────────────────────────────────────────────────────
+// ── Form submit & GCash Modal ──────────────────────────────────────
 async function handleBookingSubmit(e) {
     e.preventDefault();
     hideAllAlerts();
 
-    if (!selectedPkg) { showError('Please select a package first.'); return; }
+    console.log("==========================================");
+    console.log(" [DEBUG] Confirm Booking clicked!");
+    console.log(" [DEBUG] Selected Package:", selectedPkg);
+    console.log("==========================================");
 
-    const date    = document.getElementById('bookingDate').value;
-    const guests  = parseInt(document.getElementById('numberOfGuests').value);
-    const tIn     = document.getElementById('timeIn').value;
-    const tOut    = document.getElementById('timeOut').value;
-    const checkOut= document.getElementById('checkoutDate').value;
+    if (!selectedPkg) { 
+        console.warn(" [DEBUG] No selectedPkg found.");
+        showError('Please select a package first.'); 
+        return; 
+    }
+
+    const date     = document.getElementById('bookingDate')?.value;
+    const guestsEl = document.getElementById('numberOfGuests');
+    const guests   = parseInt(guestsEl ? guestsEl.value : 1);
+    const tIn      = document.getElementById('timeIn')?.value;
+    const tOut     = document.getElementById('timeOut')?.value;
+    const checkOut = document.getElementById('checkoutDate')?.value;
+
+    console.log(" [DEBUG] Form Values =>", { date, guests, tIn, tOut, checkOut });
 
     if (!date) { showError('Please select a booking date.'); return; }
     if (selectedPkg.package_type === 'activity' && (!tIn || !tOut)) {
@@ -1150,69 +1420,205 @@ async function handleBookingSubmit(e) {
     }
     if (guests < 1) { showError('At least 1 guest is required.'); return; }
 
-    const btn = document.getElementById('submitBtn');
-    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing…';
-    btn.disabled = true;
+    // Display total amount in modal & open GCash modal
+    const totalEl = document.getElementById('grandTotal');
+    const totalTxt = totalEl ? totalEl.textContent : '₱0';
+    console.log(" [DEBUG] Calculated Total:", totalTxt);
 
-    // Collect selected add-on IDs
-    const selectedAddons = Object.values(addonsMap).filter(a => a.selected).map(a => a.id);
+    const feeEl = document.getElementById('modalFeeAmount');
+    if (feeEl) feeEl.textContent = totalTxt;
 
-    const payload = {
-        booking_type:     selectedPkg.package_type,
-        full_name:        '<?php echo addslashes($userName); ?>',
-        email:            '<?php echo addslashes($userEmail); ?>',
-        phone_number:     '<?php echo addslashes($userPhone); ?>',
-        check_in_date:    date,
-        check_out_date:   checkOut || null,
-        check_in_time:    tIn  || null,
-        check_out_time:   tOut || null,
-        number_of_guests: guests,
-        special_requests: document.getElementById('specialRequests').value,
-        addon_activity_ids: selectedAddons,
+    console.log(" [DEBUG] Now calling openGcashModal()...");
+    openGcashModal();
+}
+
+function initPaymentModal() {
+    console.log(" [DEBUG] Initializing GCash Payment Modal listeners...");
+    const backdrop = document.getElementById('payModalBackdrop');
+    const closeBtn = document.getElementById('payModalClose');
+    const dropArea = document.getElementById('uploadDropArea');
+    const fileInp  = document.getElementById('proofFileInput');
+    const submitBtn = document.getElementById('paySubmitBtn');
+
+    if (closeBtn) closeBtn.addEventListener('click', closePayModal);
+    if (backdrop) {
+        backdrop.addEventListener('click', e => {
+            if (e.target === backdrop) closePayModal();
+        });
+    }
+
+    if (fileInp) {
+        fileInp.addEventListener('change', e => {
+            if (e.target.files && e.target.files[0]) {
+                handleFileSelect(e.target.files[0]);
+            }
+        });
+    }
+
+    if (dropArea) {
+        ['dragenter', 'dragover'].forEach(evt => {
+            dropArea.addEventListener(evt, e => { e.preventDefault(); dropArea.classList.add('dragover'); });
+        });
+        ['dragleave', 'drop'].forEach(evt => {
+            dropArea.addEventListener(evt, e => { e.preventDefault(); dropArea.classList.remove('dragover'); });
+        });
+        dropArea.addEventListener('drop', e => {
+            const files = e.dataTransfer.files;
+            if (files && files[0]) {
+                fileInp.files = files;
+                handleFileSelect(files[0]);
+            }
+        });
+    }
+
+    if (submitBtn) {
+        submitBtn.addEventListener('click', submitWithProof);
+    }
+}
+
+function openGcashModal() {
+    console.log(" [DEBUG] openGcashModal() called!");
+    const backdrop = document.getElementById('payModalBackdrop');
+    if (backdrop) {
+        console.log(" [DEBUG] #payModalBackdrop found! Adding 'open' class...");
+        backdrop.classList.add('open');
+        document.body.style.overflow = 'hidden';
+    } else {
+        console.error(" [DEBUG ERROR] #payModalBackdrop element NOT FOUND in DOM!");
+    }
+}
+
+function closePayModal() {
+    console.log(" [DEBUG] closePayModal() called.");
+    const backdrop = document.getElementById('payModalBackdrop');
+    if (backdrop) {
+        backdrop.classList.remove('open');
+        document.body.style.overflow = '';
+    }
+}
+
+function handleFileSelect(file) {
+    if (!file.type.startsWith('image/')) {
+        showError('Please upload an image file (JPG, PNG, GIF).');
+        return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+        showError('File size exceeds 5MB limit.');
+        return;
+    }
+    proofFile = file;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const thumbImg = document.getElementById('thumbImg');
+        const placeholder = document.getElementById('thumbPlaceholder');
+        const thumb = document.getElementById('uploadThumb');
+        const filenameEl = document.getElementById('uploadFilename');
+        const submitBtn = document.getElementById('paySubmitBtn');
+
+        thumbImg.src = e.target.result;
+        thumbImg.style.display = 'block';
+        placeholder.style.display = 'none';
+        thumb.classList.add('has-image');
+
+        const name = file.name.length > 18 ? file.name.substring(0, 15) + '...' : file.name;
+        filenameEl.textContent = name;
+        submitBtn.disabled = false;
     };
+    reader.readAsDataURL(file);
+}
+
+function showLoader() {
+    document.getElementById('submitLoader').classList.add('show');
+    document.body.style.overflow = 'hidden';
+}
+
+function hideLoader() {
+    document.getElementById('submitLoader').classList.remove('show');
+    document.body.style.overflow = '';
+}
+
+async function submitWithProof() {
+    if (!proofFile || !selectedPkg) {
+        showError('Please select an image screenshot of your GCash payment first.');
+        return;
+    }
+
+    const submitBtn = document.getElementById('paySubmitBtn');
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="bi bi-send-fill"></i> Submitting...';
+
+    closePayModal();
+    showLoader();
+
+    const date     = document.getElementById('bookingDate').value;
+    const guests   = parseInt(document.getElementById('numberOfGuests').value);
+    const tIn      = document.getElementById('timeIn').value;
+    const tOut     = document.getElementById('timeOut').value;
+    const checkOut = document.getElementById('checkoutDate').value;
+
+    const fd = new FormData();
+    fd.append('booking_type',     selectedPkg.package_type);
+    fd.append('full_name',        '<?php echo addslashes($userName); ?>');
+    fd.append('email',            '<?php echo addslashes($userEmail); ?>');
+    fd.append('phone_number',     '<?php echo addslashes($userPhone); ?>' || 'N/A');
+    fd.append('check_in_date',    date);
+    fd.append('check_out_date',   checkOut || '');
+    fd.append('check_in_time',    tIn || '');
+    fd.append('check_out_time',   tOut || '');
+    fd.append('number_of_guests', guests);
+    fd.append('special_requests', document.getElementById('specialRequests').value || '');
+    fd.append('payment_proof',    proofFile, proofFile.name);
 
     if (selectedPkg.package_type === 'activity') {
-        payload.activity_id = selectedPkg.id;
+        fd.append('activity_id', selectedPkg.id);
     } else if (selectedPkg.package_type === 'bundle') {
-        payload.bundle_id = selectedPkg.id;
+        fd.append('bundle_id', selectedPkg.id);
     } else {
-        payload.accommodation_id = selectedPkg.id;
+        fd.append('accommodation_id', selectedPkg.id);
     }
 
     try {
-        const res  = await fetch('../php/create_booking.php', {
-            method: 'POST', headers: {'Content-Type':'application/json'},
-            body: JSON.stringify(payload)
-        });
+        const res = await fetch('../php/upload_payment_proof.php', { method: 'POST', body: fd });
         const rawText = await res.text();
         let data;
         try {
             data = JSON.parse(rawText);
         } catch(e) {
-            console.error("Server HTTP Status:", res.status, "Raw response:", rawText);
-            showError('Server error: ' + (rawText.substring(0, 100) || 'Unexpected server response'));
-            btn.innerHTML = '<i class="bi bi-check-circle"></i> Confirm Booking';
-            btn.disabled  = false;
+            console.error("Server raw response:", rawText);
+            hideLoader();
+            openGcashModal();
+            showError('Server error: ' + rawText.substring(0, 100));
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="bi bi-send-fill"></i> Submit Reservation';
             return;
         }
 
         if (data.success) {
-            document.getElementById('bookingRefDisplay').textContent =
-                'Booking Reference: ' + data.booking_reference;
-            goToStep3();
-            // Auto-redirect after 4 seconds
-            setTimeout(() => { window.location.href = 'dashboard.php?success=Booking+created+successfully!'; }, 4000);
+            hideLoader();
+            showSuccessOverlay(data.booking_reference);
         } else {
-            showError(data.message || 'Failed to create booking. Please try again.');
-            btn.innerHTML = '<i class="bi bi-check-circle"></i> Confirm Booking';
-            btn.disabled  = false;
+            hideLoader();
+            openGcashModal();
+            showError(data.message || 'Failed to submit booking.');
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="bi bi-send-fill"></i> Submit Reservation';
         }
-    } catch(err) {
+    } catch (err) {
         console.error(err);
-        showError('Connection error. Please check your internet and try again.');
-        btn.innerHTML = '<i class="bi bi-check-circle"></i> Confirm Booking';
-        btn.disabled  = false;
+        hideLoader();
+        openGcashModal();
+        showError('Network error. Please check your internet and try again.');
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="bi bi-send-fill"></i> Submit Reservation';
     }
+}
+
+function showSuccessOverlay(ref) {
+    document.getElementById('successRef').textContent = `Booking Reference: ${ref || ''}`;
+    document.getElementById('successOverlay').classList.add('show');
+    // Redirect to my-bookings or dashboard after 4.5 seconds
+    setTimeout(() => { window.location.href = 'my-bookings.php'; }, 4500);
 }
 
 // ── Guest counter ──────────────────────────────────────────────────

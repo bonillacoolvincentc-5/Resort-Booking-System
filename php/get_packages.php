@@ -10,6 +10,15 @@ require_once '../phpAuthentication/db_config.php';
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 
+function normalizeImageUrl($url) {
+    if (empty($url)) return null;
+    $url = trim($url);
+    if (preg_match('#^https?://#i', $url)) return $url;
+    if (substr($url, 0, 1) === '/') return $url;
+    if (substr($url, 0, 3) === '../') return $url;
+    return '../' . ltrim($url, '/');
+}
+
 try {
     // ── Activities ──────────────────────────────────────────────────────────
     $actStmt = $conn->prepare("
@@ -51,7 +60,7 @@ try {
             'starting_price'     => '₱' . number_format($row['price_per_hour'], 2),
             'capacity'           => $row['capacity'],
             'icon'               => 'bi-activity',
-            'image_url'          => $row['image_url'],
+            'image_url'          => normalizeImageUrl($row['image_url']),
             'min_duration_hours' => (float) $row['min_duration_hours'],
             'max_duration_hours' => (float) $row['max_duration_hours'],
             'amenities'          => [],
@@ -112,7 +121,7 @@ try {
             'capacity'         => $row['capacity'],
             'icon'             => $row['type'] === 'room' ? 'bi-door-open' :
                                   ($row['type'] === 'cottage' ? 'bi-house' : 'bi-building'),
-            'image_url'        => $row['image_url'],
+            'image_url'        => normalizeImageUrl($row['image_url']),
             'amenities'        => $amenitiesList,
             'inclusions'       => [
                 ucfirst($row['type']) . ' for up to ' . $row['capacity'] . ' guest(s)',
@@ -204,7 +213,7 @@ try {
             'starting_price'    => '₱' . number_format($row['price'], 2),
             'capacity'          => $row['capacity'],
             'icon'              => 'bi-box-seam',
-            'image_url'         => $row['image_url'],
+            'image_url'         => normalizeImageUrl($row['image_url']),
             'amenities'         => $amenitiesList,
             'inclusions'        => $inclusions
         ];

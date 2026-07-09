@@ -22,14 +22,20 @@ try {
     }
 
     $bookingType    = $_POST['booking_type'];
-    $bundleId       = intval($_POST['bundle_id'] ?? 0);
     $checkInDate    = $_POST['check_in_date'];
-    $checkOutDate   = $_POST['check_out_date'] ?? null;
+    $checkOutDate   = !empty($_POST['check_out_date']) ? $_POST['check_out_date'] : null;
+    $checkInTime    = !empty($_POST['check_in_time']) ? $_POST['check_in_time'] : null;
+    $checkOutTime   = !empty($_POST['check_out_time']) ? $_POST['check_out_time'] : null;
     $numberOfGuests = intval($_POST['number_of_guests']);
     $specialReqs    = $_POST['special_requests'] ?? null;
 
-    if ($bookingType !== 'bundle' || !$bundleId) {
-        throw new Exception('Invalid booking type or missing bundle ID.');
+    $itemId = 0;
+    if ($bookingType === 'activity') $itemId = intval($_POST['activity_id'] ?? 0);
+    elseif ($bookingType === 'accommodation') $itemId = intval($_POST['accommodation_id'] ?? 0);
+    elseif ($bookingType === 'bundle') $itemId = intval($_POST['bundle_id'] ?? 0);
+
+    if (!$itemId || !in_array($bookingType, ['activity', 'accommodation', 'bundle'])) {
+        throw new Exception('Invalid booking type or missing item ID.');
     }
 
     // ── Check blocked dates ───────────────────────────────────────
@@ -51,18 +57,48 @@ try {
         throw new Exception('This date is blocked. Please choose another date.');
     }
 
-    // ── Fetch bundle ─────────────────────────────────────────────
-    $s = $conn->prepare("SELECT price, capacity FROM bundles WHERE id = ? AND is_active = 1");
-    $s->bind_param('i', $bundleId);
-    $s->execute();
-    $bundle = $s->get_result()->fetch_assoc();
-    if (!$bundle) throw new Exception('Bundle not found or inactive.');
+    // ── Fetch item and calculate price ─────────────────────────────
+    $price = 0;
+    $numberOfDays = 1;
 
-    if ($numberOfGuests > $bundle['capacity']) {
-        throw new Exception("Bundle capacity is {$bundle['capacity']} guests.");
+    if ($bookingType === 'activity') {
+        $s = $conn->prepare("SELECT price_per_hour, capacity FROM activities WHERE id = ? AND is_active = 1");
+        $s->bind_param('i', $itemId);
+        $s->execute();
+        $item = $s->get_result()->fetch_assoc();
+        if (!$item) throw new Exception('Activity not found or inactive.');
+        if ($numberOfGuests > $item['capacity']) throw new Exception("Activity capacity is {$item['capacity']} guests.");
+        $tIn = strtotime($checkInTime);
+        $tOut = strtotime($checkOutTime);
+        $hours = max(1, ($tOut - $tIn) / 3600);
+        $price = $item['price_per_hour'] * $hours;
+    } elseif ($bookingType === 'accommodation') {
+        $s = $conn->prepare("SELECT price_per_night, capacity FROM accommodations WHERE id = ? AND is_active = 1");
+        $s->bind_param('i', $itemId);
+        $s->execute();
+        $item = $s->get_result()->fetch_assoc();
+        if (!$item) throw new Exception('Accommodation not found or inactive.');
+        if ($numberOfGuests > $item['capacity']) throw new Exception("Accommodation capacity is {$item['capacity']} guests.");
+        if ($checkOutDate) {
+            $d1 = new DateTime($checkInDate);
+            $d2 = new DateTime($checkOutDate);
+            $numberOfDays = max(1, $d1->diff($d2)->days);
+        }
+        $price = $item['price_per_night'] * $numberOfDays;
+    } else {
+        $s = $conn->prepare("SELECT price, capacity FROM bundles WHERE id = ? AND is_active = 1");
+        $s->bind_param('i', $itemId);
+        $s->execute();
+        $item = $s->get_result()->fetch_assoc();
+        if (!$item) throw new Exception('Bundle not found or inactive.');
+        if ($numberOfGuests > $item['capacity']) throw new Exception("Bundle capacity is {$item['capacity']} guests.");
+        if ($checkOutDate) {
+            $d1 = new DateTime($checkInDate);
+            $d2 = new DateTime($checkOutDate);
+            $numberOfDays = max(1, $d1->diff($d2)->days);
+        }
+        $price = $item['price'];
     }
-
-    $price = $bundle['price'];
 
     // ── Handle payment proof upload ───────────────────────────────
     $proofPath = null;
@@ -97,15 +133,16 @@ try {
     }
 
     // ── Check availability ────────────────────────────────────────
+    $itemColumn = $bookingType === 'activity' ? 'activity_id' : ($bookingType === 'accommodation' ? 'accommodation_id' : 'bundle_id');
     $avCheck = $conn->prepare("
         SELECT COUNT(*) as cnt FROM bookings
-        WHERE booking_type = 'bundle' AND bundle_id = ? AND check_in_date = ?
+        WHERE booking_type = ? AND $itemColumn = ? AND check_in_date = ?
         AND status_id IN (SELECT id FROM booking_status WHERE name IN ('pending_review','approved'))
     ");
-    $avCheck->bind_param('is', $bundleId, $checkInDate);
+    $avCheck->bind_param('sis', $bookingType, $itemId, $checkInDate);
     $avCheck->execute();
     $avRow = $avCheck->get_result()->fetch_assoc();
-    if ($avRow['cnt'] >= $bundle['capacity']) {
+    if ($avRow['cnt'] >= $item['capacity']) {
         throw new Exception('This slot is fully booked. Please choose another date.');
     }
 
@@ -130,29 +167,29 @@ try {
 
     $ins = $conn->prepare("
         INSERT INTO bookings (
-            booking_reference, user_id, booking_type, bundle_id,
+            booking_reference, user_id, booking_type, $itemColumn,
             status_id, full_name, email, phone_number,
-            check_in_date, check_out_date,
+            check_in_date, check_in_time, check_out_date, check_out_time,
             number_of_days, number_of_guests, special_requests,
             total_amount, payment_status, payment_method, payment_proof
-        ) VALUES (?, ?, 'bundle', ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, 'pending', 'gcash', ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', 'gcash', ?)
     ");
 
-    // types: s=string, i=int, d=double
-    // booking_reference(s), user_id(i), bundle_id(i), status_id(i),
-    // full_name(s), email(s), phone(s), check_in_date(s), check_out_date(s),
-    // number_of_guests(i), special_requests(s), total_amount(d), payment_proof(s)
     $ins->bind_param(
-        'siiisssssisds',
+        'sisiisssssssiisds',
         $bookingRef,
         $userId,
-        $bundleId,
+        $bookingType,
+        $itemId,
         $statusId,
         $fullName,
         $email,
         $phone,
         $checkInDate,
+        $checkInTime,
         $checkOutDate,
+        $checkOutTime,
+        $numberOfDays,
         $numberOfGuests,
         $specialReqs,
         $price,
@@ -160,44 +197,9 @@ try {
     );
 
     if (!$ins->execute()) {
-        // Fallback without payment_proof column (in case column doesn't exist yet)
-        $ins2 = $conn->prepare("
-            INSERT INTO bookings (
-                booking_reference, user_id, booking_type, bundle_id,
-                status_id, full_name, email, phone_number,
-                check_in_date, check_out_date,
-                number_of_days, number_of_guests, special_requests,
-                total_amount, payment_status, payment_method
-            ) VALUES (?, ?, 'bundle', ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, 'pending', 'gcash')
-        ");
-        $ins2->bind_param(
-            'siiisssssisd',
-            $bookingRef,
-            $userId,
-            $bundleId,
-            $statusId,
-            $fullName,
-            $email,
-            $phone,
-            $checkInDate,
-            $checkOutDate,
-            $numberOfGuests,
-            $specialReqs,
-            $price
-        );
-        if (!$ins2->execute()) {
-            throw new Exception('Failed to create booking: ' . $conn->error);
-        }
-        $bookingId = $conn->insert_id;
-        // Try attaching proof afterwards
-        $upd = $conn->prepare("UPDATE bookings SET payment_proof = ? WHERE id = ?");
-        if ($upd) {
-            $upd->bind_param('si', $proofPath, $bookingId);
-            $upd->execute();
-        }
-    } else {
-        $bookingId = $conn->insert_id;
+        throw new Exception('Failed to create booking: ' . $conn->error);
     }
+    $bookingId = $conn->insert_id;
 
     if (!$bookingId) throw new Exception('Failed to save booking. Please try again.');
 
@@ -210,8 +212,8 @@ try {
     $log->execute();
 
     // ── Update availability ───────────────────────────────────────
-    $avRec = $conn->prepare("SELECT id, available_slots FROM availability WHERE item_type = 'bundle' AND item_id = ? AND date = ?");
-    $avRec->bind_param('is', $bundleId, $checkInDate);
+    $avRec = $conn->prepare("SELECT id, available_slots FROM availability WHERE item_type = ? AND item_id = ? AND date = ?");
+    $avRec->bind_param('sis', $bookingType, $itemId, $checkInDate);
     $avRec->execute();
     $avData = $avRec->get_result()->fetch_assoc();
     if ($avData) {
