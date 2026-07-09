@@ -26,8 +26,23 @@ try {
         throw new Exception('Invalid request data');
     }
     
+    // Ensure phone_number fallback if empty
+    if (empty($data['phone_number'])) {
+        $data['phone_number'] = $_SESSION['user_phone'] ?? '';
+        if (empty($data['phone_number']) && isset($_SESSION['user_id'])) {
+            $stmtP = $conn->prepare("SELECT phone_number FROM users WHERE id = ?");
+            $stmtP->bind_param('i', $_SESSION['user_id']);
+            $stmtP->execute();
+            $rowP = $stmtP->get_result()->fetch_assoc();
+            $data['phone_number'] = $rowP['phone_number'] ?? '';
+        }
+        if (empty($data['phone_number'])) {
+            $data['phone_number'] = 'N/A';
+        }
+    }
+
     // Validate required fields
-    $required_fields = ['booking_type', 'full_name', 'email', 'phone_number', 'check_in_date', 'number_of_guests'];
+    $required_fields = ['booking_type', 'full_name', 'email', 'check_in_date', 'number_of_guests'];
     foreach ($required_fields as $field) {
         if (empty($data[$field])) {
             throw new Exception("Field '$field' is required");
@@ -203,11 +218,13 @@ try {
     $checkInTime = $data['check_in_time'] ?? null;
     $checkOutDate = $data['check_out_date'] ?? null;
     $checkOutTime = $data['check_out_time'] ?? null;
-    $numberOfDays = $data['number_of_days'] ?? null;
+    $numberOfDays = $data['number_of_days'] ?? 1;
     $specialRequests = $data['special_requests'] ?? null;
-    
+    $payStatus = 'pending';
+    $payMethod = 'gcash';
+
     $stmt->bind_param(
-        'siiiisssssssiisdss',
+        'sisiisssssssiisdss',
         $bookingReference,
         $_SESSION['user_id'],
         $data['booking_type'],
@@ -224,8 +241,8 @@ try {
         $data['number_of_guests'],
         $specialRequests,
         $price,
-        'pending',
-        'gcash'
+        $payStatus,
+        $payMethod
     );
     
     $stmt->execute();

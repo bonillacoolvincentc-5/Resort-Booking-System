@@ -13,6 +13,17 @@ $userName  = $_SESSION['user_name'];
 $userEmail = $_SESSION['user_email'];
 $userId    = $_SESSION['user_id'];
 $userPhone = $_SESSION['user_phone'] ?? '';
+
+if (empty($userPhone) && $userId) {
+    $stmtP = $conn->prepare("SELECT phone_number FROM users WHERE id = ?");
+    $stmtP->bind_param("i", $userId);
+    $stmtP->execute();
+    $rowP = $stmtP->get_result()->fetch_assoc();
+    $userPhone = $rowP['phone_number'] ?? 'N/A';
+}
+if (empty($userPhone)) {
+    $userPhone = 'N/A';
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -1173,7 +1184,17 @@ async function handleBookingSubmit(e) {
             method: 'POST', headers: {'Content-Type':'application/json'},
             body: JSON.stringify(payload)
         });
-        const data = await res.json();
+        const rawText = await res.text();
+        let data;
+        try {
+            data = JSON.parse(rawText);
+        } catch(e) {
+            console.error("Server HTTP Status:", res.status, "Raw response:", rawText);
+            showError('Server error: ' + (rawText.substring(0, 100) || 'Unexpected server response'));
+            btn.innerHTML = '<i class="bi bi-check-circle"></i> Confirm Booking';
+            btn.disabled  = false;
+            return;
+        }
 
         if (data.success) {
             document.getElementById('bookingRefDisplay').textContent =
