@@ -553,17 +553,13 @@ while ($row = $bundlesRes->fetch_assoc()) {
                             <p class="mb-1" style="font-size:.75rem;color:var(--text-muted);">CHECK-OUT</p>
                             <p class="mb-0" style="color:var(--text-primary);">${escHtml(checkOut)}</p>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-6">
                             <p class="mb-1" style="font-size:.75rem;color:var(--text-muted);">GUESTS</p>
                             <p class="mb-0" style="color:var(--text-primary);">${escHtml(String(b.number_of_guests))}</p>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-6">
                             <p class="mb-1" style="font-size:.75rem;color:var(--text-muted);">TOTAL AMOUNT</p>
                             <p class="mb-0" style="color:var(--accent-success);font-weight:700;">${amount}</p>
-                        </div>
-                        <div class="col-md-4">
-                            <p class="mb-1" style="font-size:.75rem;color:var(--text-muted);">PAYMENT STATUS</p>
-                            <p class="mb-0" style="color:var(--text-primary);">${escHtml((b.payment_status || 'Pending').toUpperCase())}</p>
                         </div>
                         ${b.special_requests ? `
                         <div class="col-12">
