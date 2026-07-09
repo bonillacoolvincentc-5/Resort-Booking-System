@@ -174,10 +174,11 @@ $userPhone = $_SESSION['user_phone'] ?? '';
         .bundles-scroll-list {
             flex: 1;
             overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
-            padding-right: 6px;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            align-content: start;
+            padding-right: 4px;
             padding-bottom: 1rem;
         }
         /* SCROLLBAR */
@@ -188,34 +189,38 @@ $userPhone = $_SESSION['user_phone'] ?? '';
 
         /* BUNDLE CARDS */
         .bundle-card {
-            background: var(--bg-card); backdrop-filter: blur(12px);
-            border: 2px solid var(--border-color); border-radius: var(--radius-card);
-            overflow: hidden; transition: all .35s cubic-bezier(0.4,0,0.2,1); cursor: pointer;
-            display: flex; flex-direction: column;
-            flex-shrink: 0;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+            background: rgba(30, 41, 59, 0.95);
+            border: 1px solid rgba(51, 65, 85, 0.8);
+            border-radius: var(--radius-card);
+            overflow: hidden;
+            transition: all .35s cubic-bezier(0.4,0,0.2,1);
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            min-height: 260px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.3);
         }
-        .bundle-card:hover { transform: translateY(-5px); box-shadow: 0 16px 40px rgba(0,0,0,0.3); border-color: rgba(59,130,246, 0.55); }
-        .bundle-card.active { border-color: var(--accent-primary); box-shadow: 0 0 0 4px rgba(59,130,246, 0.2), 0 8px 24px rgba(59,130,246,0.15); }
+        .bundle-card:hover { transform: translateY(-4px); box-shadow: 0 14px 36px rgba(0,0,0,0.4); border-color: rgba(59,130,246, 0.6); }
+        .bundle-card.active { border-color: var(--accent-primary); border-width: 2px; box-shadow: 0 0 0 3px rgba(59,130,246, 0.25), 0 8px 24px rgba(59,130,246,0.2); }
         
-        .card-img-wrap { position: relative; height: 190px; overflow: hidden; flex-shrink:0; background: var(--bg-tertiary); }
+        .card-img-wrap { position: relative; height: 120px; overflow: hidden; flex-shrink: 0; background: linear-gradient(135deg, #1e3a5f 0%, #0f2744 100%); }
         .card-img-wrap img { width:100%; height:100%; object-fit:cover; transition: transform .5s ease; }
         .bundle-card:hover .card-img-wrap img { transform: scale(1.06); }
-        .status-badge { position: absolute; top:.75rem; right:.75rem; padding:.25rem .75rem; border-radius:2rem; font-size:.7rem; font-weight:700; text-transform:uppercase; backdrop-filter:blur(8px); z-index: 2; }
+        .status-badge { position: absolute; top:.5rem; right:.5rem; padding:.15rem .5rem; border-radius:2rem; font-size:.6rem; font-weight:700; text-transform:uppercase; backdrop-filter:blur(8px); z-index: 2; }
         .status-available { background:rgba(16,185,129,.9); color:#fff; }
         .status-fully-booked { background:rgba(239,68,68,.9); color:#fff; }
         .status-inactive { background:rgba(100,116,139,.9); color:#fff; }
 
         .type-badge {
             position: absolute;
-            top: .75rem;
-            left: .75rem;
-            padding: .25rem .75rem;
+            top: .5rem;
+            left: .5rem;
+            padding: .15rem .5rem;
             border-radius: 2rem;
-            font-size: .68rem;
+            font-size: .6rem;
             font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.4px;
             backdrop-filter: blur(8px);
             z-index: 2;
         }
@@ -234,31 +239,35 @@ $userPhone = $_SESSION['user_phone'] ?? '';
             color: var(--text-muted);
             gap: 0.5rem;
         }
-        .placeholder-banner i { font-size: 3.2rem; color: var(--accent-primary); opacity: 0.8; }
-        .placeholder-banner span { font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1.5px; margin-top: 0.25rem; }
+        .placeholder-banner i { font-size: 2rem; color: var(--accent-primary); opacity: 0.8; }
+        .placeholder-banner span { font-size: 0.65rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1.5px; margin-top: 0.15rem; }
 
-        .card-content { padding: 1.5rem; display: flex; flex-direction: column; gap: 0.75rem; }
-        .bundle-name { font-size:1.1rem; font-weight:700; color:var(--text-primary); line-height: 1.3; }
-        .bundle-price { font-size:1.05rem; font-weight:800; color:var(--accent-success); letter-spacing: -0.3px; white-space: nowrap; }
-        .bundle-desc { font-size:.84rem; color:var(--text-secondary); line-height:1.6; }
+        .card-content { padding: 0.85rem; display: flex; flex-direction: column; gap: 0.4rem; flex: 1; }
+        .card-name-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 0.3rem; }
+        .bundle-name { font-size:0.82rem; font-weight:700; color:var(--text-primary); line-height: 1.3; }
+        .bundle-price { font-size:0.82rem; font-weight:800; color:var(--accent-success); letter-spacing: -0.3px; white-space: nowrap; flex-shrink: 0; }
+        .bundle-desc { display: none; } /* hidden in grid view to save space */
         
-        .bundle-meta { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.25rem; }
-        .meta-pill { font-size: 0.76rem; background: rgba(51,65,85,0.5); border: 1px solid var(--border-color); padding: 0.3rem 0.75rem; border-radius: 1rem; color: var(--text-secondary); display: flex; align-items: center; gap: 0.35rem; }
-        .meta-pill i { color: var(--accent-primary); font-size: 0.8rem; }
+        .bundle-meta { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+        .meta-pill { font-size: 0.68rem; background: rgba(51,65,85,0.5); border: 1px solid var(--border-color); padding: 0.2rem 0.55rem; border-radius: 1rem; color: var(--text-secondary); display: flex; align-items: center; gap: 0.25rem; }
+        .meta-pill i { color: var(--accent-primary); font-size: 0.7rem; }
+        /* hide the long inclusions pill, only show capacity */
+        .meta-pill.meta-inclusions { display: none; }
 
         .select-btn {
             width: 100%;
-            padding: 0.9rem;
+            padding: 0.6rem;
             border-radius: 0 0 calc(var(--radius-card) - 2px) calc(var(--radius-card) - 2px);
             border: none;
-            border-top: 1px solid var(--border-color);
-            background: rgba(51,65,85,0.4);
-            color: var(--text-secondary);
+            border-top: 1px solid rgba(51, 65, 85, 0.8);
+            background: rgba(51, 65, 85, 0.7);
+            color: var(--text-primary);
             font-weight: 600;
-            font-size: 0.9rem;
+            font-size: 0.75rem;
             letter-spacing: 0.3px;
             transition: all 0.3s ease;
             cursor: pointer;
+            margin-top: auto;
         }
         .bundle-card:hover .select-btn { background: rgba(59,130,246,0.12); color: var(--accent-primary); border-color: rgba(59,130,246,0.3); }
         .bundle-card.active .select-btn { background: var(--accent-primary); color: #fff; border-color: var(--accent-primary); box-shadow: 0 4px 15px rgba(59,130,246,0.35); }
@@ -593,20 +602,20 @@ $userPhone = $_SESSION['user_phone'] ?? '';
                     <div class="card-img-wrap">
                         <div class="type-badge ${typeClass}">${typeLabel}</div>
                         ${imgHTML}
-                        <div class="status-badge status-available">Available</div>
+                        <div class="status-badge status-available">✓</div>
                     </div>
                     <div class="card-content">
-                        <div class="d-flex justify-content-between align-items-start">
+                        <div class="card-name-row">
                             <div class="bundle-name">${b.name}</div>
                             <div class="bundle-price">₱${parseFloat(b.price).toLocaleString()}</div>
                         </div>
                         <div class="bundle-desc">${b.short_description || 'A premium resort package.'}</div>
                         <div class="bundle-meta">
-                            <div class="meta-pill"><i class="bi bi-people"></i> Up to ${b.capacity}</div>
-                            ${inclusionsPreview ? `<div class="meta-pill"><i class="bi bi-star"></i> Included: ${inclusionsPreview}</div>` : ''}
+                            <div class="meta-pill"><i class="bi bi-people"></i> ${b.capacity}</div>
+                            ${inclusionsPreview ? `<div class="meta-pill meta-inclusions"><i class="bi bi-star"></i> ${inclusionsPreview}</div>` : ''}
                         </div>
                     </div>
-                    <button class="select-btn">Select Package</button>
+                    <button class="select-btn"><i class="bi bi-check-circle me-1"></i>Select</button>
                 `;
                 DOM.bundlesList.appendChild(card);
             });
