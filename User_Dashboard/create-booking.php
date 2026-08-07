@@ -1344,15 +1344,35 @@ function recalcPrice() {
 }
 
 // ── Time validation ────────────────────────────────────────────────
-// ── Time validation ────────────────────────────────────────────────
 function validateTime() {
     const tIn  = document.getElementById('timeIn').value;
     const tOut = document.getElementById('timeOut').value;
+    const date = document.getElementById('bookingDate').value;
     const msg  = document.getElementById('timeValidation');
     const disp = document.getElementById('durationDisplay');
 
     msg.classList.add('d-none');
-    if (!tIn || !tOut) { disp.textContent = 'Duration: —'; return true; }
+    if (!tIn || !tOut) { disp.textContent = 'Duration: \u2014'; return true; }
+
+    // ── Advance booking rule: Time-In must be at least 2 hours from now ──
+    if (date && tIn) {
+        const now = new Date();
+        const todayStr = now.toISOString().split('T')[0];
+        if (date === todayStr) {
+            const BUFFER_HOURS = 2;
+            const [selH, selM] = tIn.split(':').map(Number);
+            const nowMins = now.getHours() * 60 + now.getMinutes();
+            const selMins = selH * 60 + selM;
+            if (selMins < nowMins + (BUFFER_HOURS * 60)) {
+                const earliest = new Date(now.getTime() + BUFFER_HOURS * 60 * 60 * 1000);
+                const earliestFmt = earliest.toLocaleTimeString('en-PH', { hour: '2-digit', minute: '2-digit', hour12: true });
+                msg.textContent = `⚠️ Bookings must be made at least ${BUFFER_HOURS} hours in advance. Earliest available Time-In today is ${earliestFmt}.`;
+                msg.classList.remove('d-none');
+                disp.textContent = 'Duration: —';
+                return false;
+            }
+        }
+    }
 
     const mIn  = toMinutes(tIn);
     const mOut = toMinutes(tOut);
@@ -1361,7 +1381,7 @@ function validateTime() {
     if (diff <= 0) {
         msg.textContent = 'Time-Out must be after Time-In.';
         msg.classList.remove('d-none');
-        disp.textContent = 'Duration: —';
+        disp.textContent = 'Duration: \u2014';
         return false;
     }
     if (diff < 30) {
@@ -1401,6 +1421,25 @@ async function handleBookingSubmit(e) {
     console.log(" [DEBUG] Form Values =>", { date, guests, tIn, tOut, checkOut });
 
     if (!date) { showError('Please select a booking date.'); return; }
+
+    // ── Advance booking rule: Time-In must be at least 2 hours from now ──
+    if (selectedPkg.package_type === 'activity' && tIn) {
+        const now = new Date();
+        const todayStr = now.toISOString().split('T')[0];
+        if (date === todayStr) {
+            const BUFFER_HOURS = 2;
+            const [selH, selM] = tIn.split(':').map(Number);
+            const nowMins = now.getHours() * 60 + now.getMinutes();
+            const selMins = selH * 60 + selM;
+            if (selMins < nowMins + (BUFFER_HOURS * 60)) {
+                const earliest = new Date(now.getTime() + BUFFER_HOURS * 60 * 60 * 1000);
+                const earliestFmt = earliest.toLocaleTimeString('en-PH', { hour: '2-digit', minute: '2-digit', hour12: true });
+                showError(`⚠️ Bookings must be made at least ${BUFFER_HOURS} hours in advance. Earliest available Time-In today is ${earliestFmt}.`);
+                return;
+            }
+        }
+    }
+
     if (selectedPkg.package_type === 'activity' && (!tIn || !tOut)) {
         showError('Please select both Time-In and Time-Out.'); return;
     }
