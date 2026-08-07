@@ -1009,6 +1009,8 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('checkoutDate').addEventListener('change',  recalcPrice);
     document.getElementById('timeIn').addEventListener('change',  () => { validateTime(); recalcPrice(); });
     document.getElementById('timeOut').addEventListener('change', () => { validateTime(); recalcPrice(); });
+    const guestsInput = document.getElementById('numberOfGuests');
+    if (guestsInput) guestsInput.addEventListener('input', recalcPrice);
 
     // Show success toast if redirected from login
     const params = new URLSearchParams(window.location.search);
@@ -1297,6 +1299,9 @@ function toggleAddon(id, price, chk) {
 function recalcPrice() {
     if (!selectedPkg) return;
 
+    const guestsEl = document.getElementById('numberOfGuests');
+    const guests   = Math.max(1, parseInt(guestsEl ? guestsEl.value : 1) || 1);
+
     let base = 0;
     let baseLabel = 'Base price';
 
@@ -1308,16 +1313,16 @@ function recalcPrice() {
             const mins = toMinutes(tOut) - toMinutes(tIn);
             if (mins > 0) {
                 const hrs = mins / 60;
-                base = selectedPkg.price * hrs;
-                baseLabel = `${selectedPkg.price_label} × ${hrs.toFixed(2)}h`;
+                base = selectedPkg.price * hrs * guests;
+                baseLabel = `${selectedPkg.price_label} × ${hrs.toFixed(2)}h × ${guests} guest${guests > 1 ? 's' : ''}`;
             }
         } else {
-            base = selectedPkg.price; // show per-hour rate
-            baseLabel = `${selectedPkg.price_label} (per hour)`;
+            base = selectedPkg.price * guests; // show per-hour rate with guests
+            baseLabel = `${selectedPkg.price_label} × ${guests} guest${guests > 1 ? 's' : ''} (per hour)`;
         }
     } else if (selectedPkg.package_type === 'bundle') {
-        base = selectedPkg.price;
-        baseLabel = `${selectedPkg.price_label} (Flat package rate)`;
+        base = selectedPkg.price * guests;
+        baseLabel = `${selectedPkg.price_label} × ${guests} guest${guests > 1 ? 's' : ''}`;
     } else {
         // Accommodation — nights
         const ci = document.getElementById('bookingDate').value;
@@ -1325,12 +1330,12 @@ function recalcPrice() {
         if (ci && co) {
             const nights = Math.round((new Date(co) - new Date(ci)) / 86400000);
             if (nights > 0) {
-                base = selectedPkg.price * nights;
-                baseLabel = `${selectedPkg.price_label} × ${nights} night${nights>1?'s':''}`;
+                base = selectedPkg.price * nights * guests;
+                baseLabel = `${selectedPkg.price_label} × ${nights} night${nights>1?'s':''} × ${guests} guest${guests > 1 ? 's' : ''}`;
             }
         } else {
-            base = selectedPkg.price;
-            baseLabel = selectedPkg.price_label;
+            base = selectedPkg.price * guests;
+            baseLabel = `${selectedPkg.price_label} × ${guests} guest${guests > 1 ? 's' : ''}`;
         }
     }
 
