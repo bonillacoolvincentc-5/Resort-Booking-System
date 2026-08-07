@@ -1388,37 +1388,90 @@ $userId = $_SESSION['user_id'];
             stopLiveTracking();
         }
 
-        function updateLiveRouteFromUser(userLat, userLng) {
+        let isFetchingRoute = false;
+
+        async function updateLiveRouteFromUser(userLat, userLng) {
             let endKey = document.getElementById('endPoint').value;
+            // Determine starting point of the trail
+            let startWpKey = (endKey === 'wp2') ? 'wp1' : 'wp2';
+            let startWp = waypoints[startWpKey];
             let dest = waypoints[endKey];
-            if (!dest) return;
+            
+            if (!dest || !startWp) return;
+            if (isFetchingRoute) return; // Prevent race conditions
+            isFetchingRoute = true;
 
-            // Calculate direct haversine/trail distance from live position to destination
-            let dLat = (dest.lat - userLat) * 111;
-            let dLng = (dest.lng - userLng) * 108;
-            let distKm = Math.sqrt(dLat*dLat + dLng*dLng).toFixed(2);
-            let distMi = (distKm * 0.621371).toFixed(2);
+            try {
+                // 1. Fetch route from user to startWp via OSRM
+                let routeLatLngs = [];
+                let osrmDistKm = 0;
+                
+                try {
+                    const url = `https://router.project-osrm.org/route/v1/driving/${userLng},${userLat};${startWp.lng},${startWp.lat}?overview=full&geometries=geojson`;
+                    const response = await fetch(url);
+                    const data = await response.json();
+                    if (data.routes && data.routes.length > 0) {
+                        // OSRM coords are [lng, lat]
+                        routeLatLngs = data.routes[0].geometry.coordinates.map(c => [c[1], c[0]]);
+                        osrmDistKm = data.routes[0].distance / 1000;
+                    } else {
+                        throw new Error("No route found");
+                    }
+                } catch (error) {
+                    console.error("OSRM Routing Error:", error);
+                    // Fallback to straight line
+                    routeLatLngs = [[userLat, userLng], [startWp.lat, startWp.lng]];
+                    let dLat = (startWp.lat - userLat) * 111;
+                    let dLng = (startWp.lng - userLng) * 108;
+                    osrmDistKm = Math.sqrt(dLat*dLat + dLng*dLng);
+                }
 
-            let timeHours = distKm / paceSpeed;
-            let timeMins = Math.max(2, Math.round(timeHours * 60));
+                // 2. Append the trail from startWp to dest
+                let trailDistKm = 0;
+                if (endKey === 'wp2') {
+                    for (let i = 0; i < roadPathSequence.length; i++) {
+                        routeLatLngs.push(roadPathSequence[i]);
+                    }
+                } else if (endKey === 'wp1') {
+                    for (let i = roadPathSequence.length - 1; i >= 0; i--) {
+                        routeLatLngs.push(roadPathSequence[i]);
+                    }
+                }
 
-            document.getElementById('estTime').innerText = `${timeMins} mins`;
-            document.getElementById('estDist').innerText = `${distKm} km (${distMi} mi) from You`;
-            document.getElementById('estSub').innerText = `Live route to ${dest.name}`;
+                // Calculate exact distance along the trail route for accurate metrics
+                for (let i = 0; i < roadPathSequence.length - 1; i++) {
+                    let dLat = (roadPathSequence[i+1][0] - roadPathSequence[i][0]) * 111;
+                    let dLng = (roadPathSequence[i+1][1] - roadPathSequence[i][1]) * 108;
+                    trailDistKm += Math.sqrt(dLat*dLat + dLng*dLng);
+                }
+                
+                let totalDistKm = osrmDistKm + trailDistKm;
+                let distKm = totalDistKm.toFixed(2);
+                let distMi = (distKm * 0.621371).toFixed(2);
 
-            if (currentRouteLine) {
-                map.removeLayer(currentRouteLine);
+                // Assuming user drives a car/motorcycle to the starting point (~40km/h) 
+                // and then rides the ATV on the trail at paceSpeed
+                let timeHours = (osrmDistKm / 40) + (trailDistKm / paceSpeed);
+                let timeMins = Math.max(2, Math.round(timeHours * 60));
+
+                document.getElementById('estTime').innerText = `${timeMins} mins`;
+                document.getElementById('estDist').innerText = `${distKm} km (${distMi} mi) from You`;
+                document.getElementById('estSub').innerText = `Live route to ${dest.name}`;
+
+                if (currentRouteLine) {
+                    map.removeLayer(currentRouteLine);
+                }
+
+                currentRouteLine = L.polyline(routeLatLngs, {
+                    color: '#10b981',
+                    weight: 5,
+                    opacity: 0.95,
+                    dashArray: '10, 10'
+                }).addTo(map);
+
+            } finally {
+                isFetchingRoute = false;
             }
-
-            currentRouteLine = L.polyline([
-                [userLat, userLng],
-                [dest.lat, dest.lng]
-            ], {
-                color: '#10b981',
-                weight: 5,
-                opacity: 0.95,
-                dashArray: '10, 10'
-            }).addTo(map);
         }
     </script>
 </body>
