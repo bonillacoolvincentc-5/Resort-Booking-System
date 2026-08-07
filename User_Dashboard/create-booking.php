@@ -1206,16 +1206,6 @@ function openDetailModal(id, type) {
                 Maximum: <strong style="color:var(--text-primary);">${pkg.max_duration_hours}h</strong>
             </p>
         </div>` : ''}
-        <div class="mt-4 pt-4 border-top d-flex flex-column flex-sm-row align-items-center justify-content-between gap-3" style="border-color: rgba(255,255,255,0.1) !important;">
-            <div>
-                <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Ready to reserve?</div>
-                <div style="font-size: 1.15rem; font-weight: 700; color: var(--accent-success);">${escHtml(pkg.starting_price)} <span style="font-size: 0.8rem; font-weight: 400; color: var(--text-muted);">${escHtml(pkg.price_label)}</span></div>
-            </div>
-            <button type="button" class="btn-modern btn-primary-modern w-100 w-sm-auto" style="padding: 0.85rem 2rem; font-size: 1rem; font-weight: 600; box-shadow: 0 4px 15px rgba(59,130,246,0.3);"
-                    onclick="detailModal.hide(); selectPackage(${pkg.id}, '${escHtml(pkg.package_type)}');">
-                <i class="bi bi-calendar-plus me-2"></i> Book This ${ucfirst(pkg.package_type === 'activity' ? 'Activity' : (pkg.type||'Package'))} Now
-            </button>
-        </div>
     `;
 
     detailModal.show();
