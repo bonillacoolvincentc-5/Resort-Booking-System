@@ -850,9 +850,36 @@ while ($row = $statsResult->fetch_assoc()) {
                         <!-- Booking details will be loaded here -->
                     </div>
                 </div>
+                <div class="modal-footer modal-footer-modern d-flex justify-content-between align-items-center">
+                    <button type="button" class="btn-modern btn-secondary-modern" data-bs-dismiss="modal">Close</button>
+                    <div class="d-flex gap-2">
+                        <button type="button" id="viewBundleBtn" class="btn d-flex align-items-center gap-2" style="background: linear-gradient(135deg, rgba(157,255,0,0.15), rgba(0,212,255,0.15)); border: 1px solid rgba(157,255,0,0.5); color: #9dff00; border-radius: 8px; padding: 0.5rem 1.2rem; font-weight: 600; font-size: 0.9rem; transition: all 0.2s ease;" onmouseover="this.style.background='linear-gradient(135deg, rgba(157,255,0,0.3), rgba(0,212,255,0.25))';this.style.boxShadow='0 0 15px rgba(157,255,0,0.3)'" onmouseout="this.style.background='linear-gradient(135deg, rgba(157,255,0,0.15), rgba(0,212,255,0.15))';this.style.boxShadow='none'" onclick="openBundleModal()">
+                            <i class="bi bi-box-seam"></i> View Bundle Details
+                        </button>
+                        <button type="button" class="btn-modern btn-primary-modern" onclick="printBooking()">Print</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bundle Breakdown Modal -->
+    <div class="modal fade" id="bundleModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content modal-content-modern">
+                <div class="modal-header modal-header-modern">
+                    <h5 class="modal-title">
+                        <i class="bi bi-box-seam me-2" style="color: #9dff00;"></i>Bundle & Booking Breakdown
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body modal-body-modern">
+                    <div id="bundleDetails">
+                        <!-- Bundle details loaded here -->
+                    </div>
+                </div>
                 <div class="modal-footer modal-footer-modern">
                     <button type="button" class="btn-modern btn-secondary-modern" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn-modern btn-primary-modern" onclick="printBooking()">Print</button>
                 </div>
             </div>
         </div>
@@ -913,7 +940,8 @@ while ($row = $statsResult->fetch_assoc()) {
             };
             
             const booking = bookingData[bookingId] || bookingData['BK001'];
-            
+            currentBundleId = bookingId;
+
             document.getElementById('bookingDetails').innerHTML = `
                 <div class="row">
                     <div class="col-md-6">
@@ -1003,6 +1031,94 @@ while ($row = $statsResult->fetch_assoc()) {
             `;
             
             new bootstrap.Modal(document.getElementById('bookingModal')).show();
+        }
+
+        // Bundle breakdown data per booking
+        const bundleBreakdownData = {
+            'BK001': {
+                bundleName: 'Basketball Court Package',
+                bundleDesc: 'Full court access package with all necessary equipment and facilities.',
+                items: [
+                    { icon: 'bi-building', name: 'Court Reservation', detail: 'Court A – Indoor Sports Complex (2 hrs)', price: '₱15.00' },
+                    { icon: 'bi-circle', name: 'Ball Rental', detail: 'Standard NBA-size basketball', price: '₱5.00' },
+                    { icon: 'bi-lightning', name: 'Flood Lights', detail: 'Full court lighting (1 hr)', price: '₱5.00' }
+                ],
+                total: '₱25.00'
+            },
+            'BK002': {
+                bundleName: 'Swimming Pool Package',
+                bundleDesc: 'Relaxing pool access bundle including locker storage for your belongings.',
+                items: [
+                    { icon: 'bi-water', name: 'Pool Access', detail: 'Main Pool – Adult entry (1 hr)', price: '₱10.00' },
+                    { icon: 'bi-lock', name: 'Locker Rental', detail: 'Secure locker for the session', price: '₱5.00' }
+                ],
+                total: '₱15.00'
+            },
+            'BK003': {
+                bundleName: 'Fitness Gym Package',
+                bundleDesc: 'Full gym access with professional instructor and all equipment included.',
+                items: [
+                    { icon: 'bi-person-arms-up', name: 'Gym Day Pass', detail: 'Full access to all gym equipment', price: '₱15.00' },
+                    { icon: 'bi-wind', name: 'Towel Rental', detail: 'Fresh towel for the session', price: '₱5.00' }
+                ],
+                total: '₱20.00'
+            },
+            'BK004': {
+                bundleName: 'Adventure Rides Package',
+                bundleDesc: 'Thrilling ATV adventure bundle with complete safety gear included.',
+                items: [
+                    { icon: 'bi-truck', name: 'ATV Rental', detail: '4-wheel all-terrain vehicle (2 hrs)', price: '₱35.00' },
+                    { icon: 'bi-shield-check', name: 'Safety Gear Bundle', detail: 'Helmet, knee pads & gloves', price: '₱10.00' }
+                ],
+                total: '₱45.00'
+            }
+        };
+
+        let currentBundleId = null;
+
+        function openBundleModal() {
+            if (!currentBundleId) return;
+            const data = bundleBreakdownData[currentBundleId] || bundleBreakdownData['BK001'];
+
+            const rows = data.items.map(item => `
+                <div class="d-flex align-items-start gap-3 py-3" style="border-bottom: 1px solid rgba(255,255,255,0.07);">
+                    <div style="width: 42px; height: 42px; flex-shrink: 0; border-radius: 10px; background: rgba(157,255,0,0.1); border: 1px solid rgba(157,255,0,0.25); display: flex; align-items: center; justify-content: center;">
+                        <i class="${item.icon}" style="color: #9dff00; font-size: 1.1rem;"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="fw-bold text-white" style="font-size: 0.95rem;">${item.name}</div>
+                        <div style="color: #94a3b8; font-size: 0.82rem; margin-top: 2px;">${item.detail}</div>
+                    </div>
+                    <div class="fw-bold text-end" style="color: #00d4ff; font-size: 0.95rem; white-space: nowrap;">${item.price}</div>
+                </div>
+            `).join('');
+
+            document.getElementById('bundleDetails').innerHTML = `
+                <div class="mb-4 p-3 rounded" style="background: rgba(157,255,0,0.05); border: 1px solid rgba(157,255,0,0.2);">
+                    <div class="fw-bold text-white mb-1" style="font-size: 1.05rem;">
+                        <i class="bi bi-stars me-2" style="color: #9dff00;"></i>${data.bundleName}
+                    </div>
+                    <div style="color: #94a3b8; font-size: 0.875rem;">${data.bundleDesc}</div>
+                </div>
+
+                <h6 class="text-uppercase mb-3" style="color: #94a3b8; font-size: 0.75rem; letter-spacing: 0.08em;">What's Included</h6>
+
+                <div>${rows}</div>
+
+                <div class="d-flex justify-content-between align-items-center mt-4 pt-3" style="border-top: 1px solid rgba(255,255,255,0.1);">
+                    <span class="fw-bold text-white" style="font-size: 1rem;">Total Amount</span>
+                    <span class="fw-bold" style="font-size: 1.4rem; color: #9dff00;">${data.total}</span>
+                </div>
+            `;
+
+            // Hide booking modal first, then show bundle modal
+            const bookingModalEl = document.getElementById('bookingModal');
+            const bundleModalEl = document.getElementById('bundleModal');
+            bootstrap.Modal.getInstance(bookingModalEl)?.hide();
+            bookingModalEl.addEventListener('hidden.bs.modal', function handler() {
+                new bootstrap.Modal(bundleModalEl).show();
+                bookingModalEl.removeEventListener('hidden.bs.modal', handler);
+            });
         }
 
         function rescheduleBooking(bookingId) {
