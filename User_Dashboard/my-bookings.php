@@ -868,7 +868,7 @@ while ($row = $statsResult->fetch_assoc()) {
                     time: '10:00 AM - 12:00 PM',
                     duration: '2 hours',
                     status: 'Confirmed',
-                    price: '$25.00',
+                    price: '₱25.00',
                     location: 'Court A - Indoor Sports Complex',
                     instructor: 'John Smith',
                     equipment: 'Basketball provided',
@@ -880,7 +880,7 @@ while ($row = $statsResult->fetch_assoc()) {
                     time: '2:00 PM - 3:00 PM',
                     duration: '1 hour',
                     status: 'Pending',
-                    price: '$15.00',
+                    price: '₱15.00',
                     location: 'Main Pool - Recreation Center',
                     instructor: 'Self-guided',
                     equipment: 'Bring your own towel',
@@ -892,7 +892,7 @@ while ($row = $statsResult->fetch_assoc()) {
                     time: '6:00 AM - 7:30 AM',
                     duration: '1.5 hours',
                     status: 'Confirmed',
-                    price: '$20.00',
+                    price: '₱20.00',
                     location: 'Gym Floor - Fitness Center',
                     instructor: 'Sarah Johnson',
                     equipment: 'All equipment provided',
@@ -904,7 +904,7 @@ while ($row = $statsResult->fetch_assoc()) {
                     time: '3:00 PM - 6:00 PM',
                     duration: '3 hours',
                     status: 'Completed',
-                    price: '$45.00',
+                    price: '₱45.00',
                     location: 'Adventure Zone - Outdoor Area',
                     instructor: 'Mike Wilson',
                     equipment: 'Safety gear provided',
@@ -919,15 +919,6 @@ while ($row = $statsResult->fetch_assoc()) {
                     <div class="col-md-6">
                         <h6 class="text-primary mb-3">Booking Information</h6>
                         <div class="booking-info">
-                            <div class="booking-info-item">
-                                <div class="booking-info-icon">
-                                    <i class="bi bi-hash"></i>
-                                </div>
-                                <div class="booking-info-content">
-                                    <div class="booking-info-label">Booking ID</div>
-                                    <div class="booking-info-value">${bookingId}</div>
-                                </div>
-                            </div>
                             <div class="booking-info-item">
                                 <div class="booking-info-icon">
                                     <i class="bi bi-activity"></i>

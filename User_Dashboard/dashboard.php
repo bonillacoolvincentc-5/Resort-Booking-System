@@ -461,7 +461,7 @@
                     <div class="stat-icon warning">
                         <i class="bi bi-credit-card"></i>
                     </div>
-                    <div class="stat-number">$450</div>
+                    <div class="stat-number">₱450</div>
                     <div class="stat-label">Total Spent</div>
                 </div>
             </div>

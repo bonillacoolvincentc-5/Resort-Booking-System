@@ -93,7 +93,7 @@ $adminEmail = $_SESSION['admin_email'];
                             <div class="item-name">Grilled Chicken</div>
                             <div class="item-description">Herb-marinated grilled chicken with vegetables</div>
                         </div>
-                        <div class="item-price">$18.99</div>
+                        <div class="item-price">₱18.99</div>
                         <div class="item-actions">
                             <button class="action-btn edit-btn">
                                 <i class="bi bi-pencil"></i>
@@ -112,7 +112,7 @@ $adminEmail = $_SESSION['admin_email'];
                             <div class="item-name">Grilled Salmon</div>
                             <div class="item-description">Fresh Atlantic salmon with lemon butter</div>
                         </div>
-                        <div class="item-price">$24.99</div>
+                        <div class="item-price">₱24.99</div>
                         <div class="item-actions">
                             <button class="action-btn edit-btn">
                                 <i class="bi bi-pencil"></i>
@@ -131,7 +131,7 @@ $adminEmail = $_SESSION['admin_email'];
                             <div class="item-name">Pasta Carbonara</div>
                             <div class="item-description">Classic Italian pasta with creamy sauce</div>
                         </div>
-                        <div class="item-price">$16.99</div>
+                        <div class="item-price">₱16.99</div>
                         <div class="item-actions">
                             <button class="action-btn edit-btn">
                                 <i class="bi bi-pencil"></i>
@@ -150,7 +150,7 @@ $adminEmail = $_SESSION['admin_email'];
                             <div class="item-name">Beef Steak</div>
                             <div class="item-description">Premium cut beef with grilled vegetables</div>
                         </div>
-                        <div class="item-price">$28.99</div>
+                        <div class="item-price">₱28.99</div>
                         <div class="item-actions">
                             <button class="action-btn edit-btn">
                                 <i class="bi bi-pencil"></i>
@@ -169,7 +169,7 @@ $adminEmail = $_SESSION['admin_email'];
                             <div class="item-name">Vegetarian Bowl</div>
                             <div class="item-description">Fresh vegetables with quinoa and tahini</div>
                         </div>
-                        <div class="item-price">$14.99</div>
+                        <div class="item-price">₱14.99</div>
                         <div class="item-actions">
                             <button class="action-btn edit-btn">
                                 <i class="bi bi-pencil"></i>

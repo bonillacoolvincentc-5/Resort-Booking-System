@@ -60,7 +60,7 @@ $adminEmail = $_SESSION['admin_email'];
                 <div class="overview-icon">
                     <i class="bi bi-currency-dollar"></i>
                 </div>
-                <div class="overview-value">$45,678</div>
+                <div class="overview-value">₱45,678</div>
                 <div class="overview-label">Total Revenue</div>
             </div>
 
@@ -105,7 +105,7 @@ $adminEmail = $_SESSION['admin_email'];
                     <tr>
                         <td class="payment-id">#TRX001</td>
                         <td>John Doe</td>
-                        <td class="amount">$25.00</td>
+                        <td class="amount">₱25.00</td>
                         <td>Credit Card</td>
                         <td>Mar 21, 2026</td>
                         <td><span class="status-badge status-completed">Completed</span></td>
@@ -113,7 +113,7 @@ $adminEmail = $_SESSION['admin_email'];
                     <tr>
                         <td class="payment-id">#TRX002</td>
                         <td>Jane Smith</td>
-                        <td class="amount">$15.00</td>
+                        <td class="amount">₱15.00</td>
                         <td>PayPal</td>
                         <td>Mar 21, 2026</td>
                         <td><span class="status-badge status-completed">Completed</span></td>
@@ -121,7 +121,7 @@ $adminEmail = $_SESSION['admin_email'];
                     <tr>
                         <td class="payment-id">#TRX003</td>
                         <td>Mike Johnson</td>
-                        <td class="amount pending">$45.00</td>
+                        <td class="amount pending">₱45.00</td>
                         <td>Bank Transfer</td>
                         <td>Mar 21, 2026</td>
                         <td><span class="status-badge status-pending">Pending</span></td>
@@ -129,7 +129,7 @@ $adminEmail = $_SESSION['admin_email'];
                     <tr>
                         <td class="payment-id">#TRX004</td>
                         <td>Sarah Wilson</td>
-                        <td class="amount">$20.00</td>
+                        <td class="amount">₱20.00</td>
                         <td>Credit Card</td>
                         <td>Mar 20, 2026</td>
                         <td><span class="status-badge status-completed">Completed</span></td>
@@ -137,7 +137,7 @@ $adminEmail = $_SESSION['admin_email'];
                     <tr>
                         <td class="payment-id">#TRX005</td>
                         <td>Robert Chen</td>
-                        <td class="amount failed">$30.00</td>
+                        <td class="amount failed">₱30.00</td>
                         <td>Credit Card</td>
                         <td>Mar 20, 2026</td>
                         <td><span class="status-badge status-failed">Failed</span></td>
