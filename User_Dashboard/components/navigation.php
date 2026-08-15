@@ -85,16 +85,35 @@ $currentPage = basename($_SERVER['PHP_SELF']);
 .resort-dash-nav .navbar-toggler:focus { box-shadow: none; }
 
 /* ═══════════════════════════════════════════════════════
-   MOBILE BOTTOM NAV BAR — mobile only, zero desktop impact
-   @media max-width: 767.98px
+   MOBILE-ONLY OVERRIDES  (≤ 767.98px)
+   — zero impact on desktop/tablet
 ═══════════════════════════════════════════════════════ */
 @media (max-width: 767.98px) {
-    /* Push page content above the fixed bar */
+
+    /* 1. Push ALL page content above the fixed bottom bar */
     body {
         padding-bottom: calc(65px + env(safe-area-inset-bottom)) !important;
     }
 
-    /* The fixed bar itself */
+    /* 2. Hide the 5 operational nav-items from the hamburger on mobile
+          (they live in the bottom bar instead) */
+    .mobile-hide-in-hamburger {
+        display: none !important;
+    }
+
+    /* 3. Show the account section divider label inside hamburger */
+    .mobile-hamburger-account-label {
+        display: block;
+        font-size: 0.65rem;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        padding: 0.5rem 0.9rem 0.25rem;
+        margin-top: 0.25rem;
+    }
+
+    /* 4. Fixed bottom navigation bar — 5 tabs only */
     .mobile-bottom-nav {
         display: flex !important;
         position: fixed;
@@ -109,39 +128,42 @@ $currentPage = basename($_SERVER['PHP_SELF']);
         padding-bottom: env(safe-area-inset-bottom);
         height: calc(65px + env(safe-area-inset-bottom));
         align-items: stretch;
-        justify-content: space-around;
+        justify-content: stretch;
     }
 
-    /* Each tap target */
+    /* Each of the 5 tap targets — equal width share */
     .mobile-bottom-nav .mbn-item {
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        gap: 0.2rem;
-        flex: 1;
-        padding: 0.45rem 0.15rem;
+        gap: 0.18rem;
+        flex: 1 1 0;          /* equal share across 5 items */
+        padding: 0.4rem 0.1rem;
         text-decoration: none;
         color: var(--text-muted);
-        font-size: 0.65rem;
+        font-size: 0.6rem;    /* slightly compact so labels never clip */
         font-weight: 500;
         border-radius: 0;
         transition: color 0.2s ease, background 0.2s ease;
         -webkit-tap-highlight-color: transparent;
         min-width: 0;
+        overflow: hidden;
     }
 
     .mobile-bottom-nav .mbn-item i {
-        font-size: 1.2rem;
+        font-size: 1.25rem;
         line-height: 1;
+        flex-shrink: 0;
     }
 
     .mobile-bottom-nav .mbn-item span {
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
-        max-width: 100%;
+        width: 100%;
         text-align: center;
+        display: block;
     }
 
     .mobile-bottom-nav .mbn-item:hover,
@@ -149,22 +171,11 @@ $currentPage = basename($_SERVER['PHP_SELF']);
         color: var(--accent);
         background: rgba(157, 255, 0, 0.07);
     }
-
-    /* Logout tab uses the error color */
-    .mobile-bottom-nav .mbn-item.mbn-logout {
-        color: var(--error, #ff5a5f);
-    }
-
-    .mobile-bottom-nav .mbn-item.mbn-logout:hover {
-        color: var(--error, #ff5a5f);
-        background: rgba(255, 90, 95, 0.1);
-    }
 }
 
-/* Hide bottom nav on tablet/desktop */
-.mobile-bottom-nav {
-    display: none;
-}
+/* Desktop/tablet guards — bottom bar and account label invisible */
+.mobile-bottom-nav          { display: none; }
+.mobile-hamburger-account-label { display: none; }
 </style>
 
 <nav class="resort-dash-nav navbar navbar-expand-lg" id="dashNav">
@@ -178,31 +189,36 @@ $currentPage = basename($_SERVER['PHP_SELF']);
         </button>
         <div class="collapse navbar-collapse" id="dashNavbar">
             <ul class="navbar-nav mx-auto gap-1">
-                <li class="nav-item">
+                <!-- Operational links: shown in hamburger on DESKTOP;
+                     hidden on mobile (bottom bar handles them). -->
+                <li class="nav-item mobile-hide-in-hamburger">
                     <a class="nav-link <?php echo $currentPage === 'dashboard.php' ? 'active' : ''; ?>" href="dashboard.php">
                         <i class="bi bi-grid-3x3-gap"></i> Dashboard
                     </a>
                 </li>
-                <li class="nav-item">
+                <li class="nav-item mobile-hide-in-hamburger">
                     <a class="nav-link <?php echo $currentPage === 'create-booking.php' ? 'active' : ''; ?>" href="create-booking.php">
                         <i class="bi bi-plus-circle"></i> Create Booking
                     </a>
                 </li>
-                <li class="nav-item">
+                <li class="nav-item mobile-hide-in-hamburger">
                     <a class="nav-link <?php echo $currentPage === 'bundle-booking.php' ? 'active' : ''; ?>" href="bundle-booking.php">
                         <i class="bi bi-box-seam"></i> Bundle Booking
                     </a>
                 </li>
-                <li class="nav-item">
+                <li class="nav-item mobile-hide-in-hamburger">
                     <a class="nav-link <?php echo $currentPage === 'trail-guide.php' ? 'active' : ''; ?>" href="trail-guide.php">
                         <i class="bi bi-compass"></i> Trail Guide
                     </a>
                 </li>
-                <li class="nav-item">
+                <li class="nav-item mobile-hide-in-hamburger">
                     <a class="nav-link <?php echo $currentPage === 'my-bookings.php' ? 'active' : ''; ?>" href="my-bookings.php">
                         <i class="bi bi-calendar-check"></i> My Bookings
                     </a>
                 </li>
+
+                <!-- Account items: visible in hamburger on BOTH mobile & desktop -->
+                <span class="mobile-hamburger-account-label">Account</span>
                 <li class="nav-item">
                     <a class="nav-link <?php echo $currentPage === 'profile.php' ? 'active' : ''; ?>" href="profile.php">
                         <i class="bi bi-person"></i> Profile
@@ -218,7 +234,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
     </div>
 </nav>
 
-<!-- ═══ MOBILE BOTTOM NAV BAR (mobile only — hidden on desktop) ═══ -->
+<!-- ═══ MOBILE BOTTOM NAV BAR — 5 operational tabs, mobile only ═══ -->
 <div class="mobile-bottom-nav" id="mobileBottomNav">
     <a class="mbn-item <?php echo $currentPage === 'dashboard.php' ? 'active' : ''; ?>" href="dashboard.php" id="mbn-dashboard">
         <i class="bi bi-grid-3x3-gap"></i>
@@ -239,14 +255,6 @@ $currentPage = basename($_SERVER['PHP_SELF']);
     <a class="mbn-item <?php echo $currentPage === 'trail-guide.php' ? 'active' : ''; ?>" href="trail-guide.php" id="mbn-trail">
         <i class="bi bi-compass"></i>
         <span>Trail</span>
-    </a>
-    <a class="mbn-item <?php echo $currentPage === 'profile.php' ? 'active' : ''; ?>" href="profile.php" id="mbn-profile">
-        <i class="bi bi-person"></i>
-        <span>Profile</span>
-    </a>
-    <a class="mbn-item mbn-logout" href="../phpAuthentication/logout.php" id="mbn-logout">
-        <i class="bi bi-box-arrow-right"></i>
-        <span>Logout</span>
     </a>
 </div>
 
