@@ -234,6 +234,92 @@ function navActive($key) {
 /* Desktop/tablet guards — bottom bar and account label invisible */
 .mobile-bottom-nav          { display: none; }
 .mobile-hamburger-account-label { display: none; }
+
+/* ═══════════════════════════════════════════════════════
+   MOBILE HAMBURGER FLOATING DROPDOWN  (≤ 767.98px)
+   The collapse panel is pulled out of document flow so it
+   floats over the page, anchored top-right below the navbar.
+═══════════════════════════════════════════════════════ */
+@media (max-width: 767.98px) {
+
+    /* Make the navbar a positioning context for the floating panel */
+    .resort-dash-nav {
+        position: sticky !important;
+    }
+    .resort-dash-nav .container-fluid {
+        position: relative;
+    }
+
+    /* Detach the collapse from document flow — float over page */
+    .resort-dash-nav #dashNavbar {
+        position: absolute;
+        top: calc(100% + 0.4rem);  /* just below the navbar */
+        right: 0.75rem;            /* aligned to hamburger button side */
+        left: auto;                /* don't stretch full width */
+        width: 220px;              /* compact dropdown width */
+        z-index: 1200;
+        /* Glass panel styling */
+        background: rgba(9, 18, 15, 0.97);
+        backdrop-filter: blur(24px) saturate(200%);
+        -webkit-backdrop-filter: blur(24px) saturate(200%);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        box-shadow: 0 16px 48px rgba(0, 0, 0, 0.55),
+                    0 0 0 1px rgba(157, 255, 0, 0.06);
+        padding: 0.5rem;
+        overflow: hidden;
+    }
+
+    /* Slide-in animation when Bootstrap adds .show */
+    @keyframes mobileMenuSlideIn {
+        from {
+            opacity: 0;
+            transform: translateY(-8px) scale(0.97);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+    .resort-dash-nav #dashNavbar.show {
+        animation: mobileMenuSlideIn 0.22s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+
+    /* Nav links inside the floating dropdown */
+    .resort-dash-nav #dashNavbar .nav-link {
+        border-radius: 8px;
+        padding: 0.6rem 0.85rem !important;
+        font-size: 0.88rem;
+        margin: 0.1rem 0;
+        width: 100%;
+    }
+
+    /* Remove the mx-auto centering and stack items vertically */
+    .resort-dash-nav #dashNavbar .navbar-nav {
+        margin: 0 !important;
+        width: 100%;
+    }
+
+    /* Logout button inside dropdown — full width, no margin-top gap */
+    .resort-dash-nav #dashNavbar .d-flex {
+        margin-top: 0.25rem !important;
+        padding: 0 0.1rem;
+        width: 100%;
+    }
+    .resort-dash-nav #dashNavbar .nav-logout {
+        width: 100%;
+        justify-content: center;
+        border-radius: 8px;
+        font-size: 0.85rem;
+    }
+
+    /* Thin divider between Profile and Logout */
+    .resort-dash-nav #dashNavbar .d-flex {
+        border-top: 1px solid var(--border);
+        padding-top: 0.35rem;
+        margin-top: 0.25rem !important;
+    }
+}
 </style>
 
 <nav class="resort-dash-nav navbar navbar-expand-lg" id="dashNav">
@@ -283,7 +369,7 @@ function navActive($key) {
                     </a>
                 </li>
             </ul>
-            <div class="d-flex align-items-center mt-3 mt-lg-0">
+            <div class="d-flex align-items-center mt-lg-0">
                 <a class="nav-logout" href="../phpAuthentication/logout.php">
                     <i class="bi bi-box-arrow-right"></i> Logout
                 </a>
@@ -323,4 +409,22 @@ if (dashNav) {
         dashNav.classList.toggle('scrolled', window.scrollY > 40);
     }, { passive: true });
 }
+
+// Close the floating mobile dropdown when clicking outside it
+(function () {
+    const toggler  = document.querySelector('.resort-dash-nav .navbar-toggler');
+    const collapse = document.getElementById('dashNavbar');
+    if (!toggler || !collapse) return;
+
+    document.addEventListener('click', function (e) {
+        // Only act on mobile widths
+        if (window.innerWidth > 767) return;
+        // If click is outside the collapse panel AND outside the toggler, close it
+        if (!collapse.contains(e.target) && !toggler.contains(e.target)) {
+            // Use Bootstrap's Collapse API to hide
+            const bsCollapse = bootstrap.Collapse.getInstance(collapse);
+            if (bsCollapse) bsCollapse.hide();
+        }
+    }, { capture: true });
+})();
 </script>
