@@ -83,6 +83,88 @@ $currentPage = basename($_SERVER['PHP_SELF']);
     background: transparent;
 }
 .resort-dash-nav .navbar-toggler:focus { box-shadow: none; }
+
+/* ═══════════════════════════════════════════════════════
+   MOBILE BOTTOM NAV BAR — mobile only, zero desktop impact
+   @media max-width: 767.98px
+═══════════════════════════════════════════════════════ */
+@media (max-width: 767.98px) {
+    /* Push page content above the fixed bar */
+    body {
+        padding-bottom: calc(65px + env(safe-area-inset-bottom)) !important;
+    }
+
+    /* The fixed bar itself */
+    .mobile-bottom-nav {
+        display: flex !important;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        z-index: 1050;
+        background: rgba(9, 18, 15, 0.97);
+        backdrop-filter: blur(20px) saturate(180%);
+        -webkit-backdrop-filter: blur(20px) saturate(180%);
+        border-top: 1px solid var(--border);
+        padding-bottom: env(safe-area-inset-bottom);
+        height: calc(65px + env(safe-area-inset-bottom));
+        align-items: stretch;
+        justify-content: space-around;
+    }
+
+    /* Each tap target */
+    .mobile-bottom-nav .mbn-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0.2rem;
+        flex: 1;
+        padding: 0.45rem 0.15rem;
+        text-decoration: none;
+        color: var(--text-muted);
+        font-size: 0.65rem;
+        font-weight: 500;
+        border-radius: 0;
+        transition: color 0.2s ease, background 0.2s ease;
+        -webkit-tap-highlight-color: transparent;
+        min-width: 0;
+    }
+
+    .mobile-bottom-nav .mbn-item i {
+        font-size: 1.2rem;
+        line-height: 1;
+    }
+
+    .mobile-bottom-nav .mbn-item span {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 100%;
+        text-align: center;
+    }
+
+    .mobile-bottom-nav .mbn-item:hover,
+    .mobile-bottom-nav .mbn-item.active {
+        color: var(--accent);
+        background: rgba(157, 255, 0, 0.07);
+    }
+
+    /* Logout tab uses the error color */
+    .mobile-bottom-nav .mbn-item.mbn-logout {
+        color: var(--error, #ff5a5f);
+    }
+
+    .mobile-bottom-nav .mbn-item.mbn-logout:hover {
+        color: var(--error, #ff5a5f);
+        background: rgba(255, 90, 95, 0.1);
+    }
+}
+
+/* Hide bottom nav on tablet/desktop */
+.mobile-bottom-nav {
+    display: none;
+}
 </style>
 
 <nav class="resort-dash-nav navbar navbar-expand-lg" id="dashNav">
@@ -135,6 +217,38 @@ $currentPage = basename($_SERVER['PHP_SELF']);
         </div>
     </div>
 </nav>
+
+<!-- ═══ MOBILE BOTTOM NAV BAR (mobile only — hidden on desktop) ═══ -->
+<div class="mobile-bottom-nav" id="mobileBottomNav">
+    <a class="mbn-item <?php echo $currentPage === 'dashboard.php' ? 'active' : ''; ?>" href="dashboard.php" id="mbn-dashboard">
+        <i class="bi bi-grid-3x3-gap"></i>
+        <span>Dashboard</span>
+    </a>
+    <a class="mbn-item <?php echo $currentPage === 'create-booking.php' ? 'active' : ''; ?>" href="create-booking.php" id="mbn-create-booking">
+        <i class="bi bi-plus-circle"></i>
+        <span>Book</span>
+    </a>
+    <a class="mbn-item <?php echo $currentPage === 'bundle-booking.php' ? 'active' : ''; ?>" href="bundle-booking.php" id="mbn-bundle">
+        <i class="bi bi-box-seam"></i>
+        <span>Bundle</span>
+    </a>
+    <a class="mbn-item <?php echo $currentPage === 'my-bookings.php' ? 'active' : ''; ?>" href="my-bookings.php" id="mbn-my-bookings">
+        <i class="bi bi-calendar-check"></i>
+        <span>Bookings</span>
+    </a>
+    <a class="mbn-item <?php echo $currentPage === 'trail-guide.php' ? 'active' : ''; ?>" href="trail-guide.php" id="mbn-trail">
+        <i class="bi bi-compass"></i>
+        <span>Trail</span>
+    </a>
+    <a class="mbn-item <?php echo $currentPage === 'profile.php' ? 'active' : ''; ?>" href="profile.php" id="mbn-profile">
+        <i class="bi bi-person"></i>
+        <span>Profile</span>
+    </a>
+    <a class="mbn-item mbn-logout" href="../phpAuthentication/logout.php" id="mbn-logout">
+        <i class="bi bi-box-arrow-right"></i>
+        <span>Logout</span>
+    </a>
+</div>
 
 <script>
 const dashNav = document.getElementById('dashNav');
