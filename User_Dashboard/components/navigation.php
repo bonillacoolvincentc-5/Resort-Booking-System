@@ -1,6 +1,22 @@
 <?php
 // Get current page filename for active state
 $currentPage = basename($_SERVER['PHP_SELF']);
+
+// Alias map: canonical page => list of filenames that should activate it
+$pageAliases = [
+    'dashboard'     => ['dashboard.php'],
+    'book'          => ['create-booking.php', 'book.php', 'packages.php'],
+    'bundle'        => ['bundle-booking.php', 'bundle.php', 'bundles.php'],
+    'bookings'      => ['my-bookings.php', 'bookings.php', 'my_bookings.php'],
+    'trail'         => ['trail-guide.php', 'trail.php', 'activities.php'],
+    'profile'       => ['profile.php'],
+];
+
+// Helper: returns 'active' if $currentPage matches any alias for the given key
+function navActive($key) {
+    global $currentPage, $pageAliases;
+    return in_array($currentPage, $pageAliases[$key] ?? []) ? 'active' : '';
+}
 ?>
 <!-- YP4K Resort — User Dashboard Navigation -->
 <link rel="stylesheet" href="../css/resort-theme.css">
@@ -51,13 +67,29 @@ $currentPage = basename($_SERVER['PHP_SELF']);
     color: var(--accent) !important;
     background: rgba(157,255,0,0.1);
 }
-.resort-dash-nav .nav-link.active::after {
+/* Desktop underline dot — shown only in the expanded (desktop) navbar */
+.resort-dash-nav .navbar-collapse.show .nav-link.active::after,
+.resort-dash-nav .navbar-collapse:not(.show) .nav-link.active::after {
     content: '';
     position: absolute; bottom: 4px; left: 50%;
     transform: translateX(-50%);
     width: 50%; height: 2px;
     background: var(--accent);
     border-radius: 2px;
+}
+/* On mobile the collapse is .show when open — suppress the ::after there
+   so it never stretches across the full dropdown row */
+@media (max-width: 767.98px) {
+    .resort-dash-nav .nav-link.active::after {
+        display: none !important;
+    }
+    /* Replace with a clean pill background for hamburger active items */
+    .resort-dash-nav .nav-link.active {
+        background: rgba(118, 255, 3, 0.15) !important;
+        color: #76ff03 !important;
+        border: 1px solid rgba(118, 255, 3, 0.3);
+        border-radius: 8px;
+    }
 }
 .resort-dash-nav .nav-logout {
     display: inline-flex; align-items: center; gap: 0.4rem;
@@ -151,10 +183,21 @@ $currentPage = basename($_SERVER['PHP_SELF']);
         overflow: hidden;
     }
 
-    .mobile-bottom-nav .mbn-item i {
-        font-size: 1.25rem;
-        line-height: 1;
+    /* Active bottom-bar tab icon wrapper pill */
+    .mobile-bottom-nav .mbn-item .mbn-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 2rem;
+        height: 1.75rem;
+        border-radius: 8px;
+        transition: background 0.2s ease, border-color 0.2s ease;
         flex-shrink: 0;
+    }
+
+    .mobile-bottom-nav .mbn-item .mbn-icon i {
+        font-size: 1.15rem;
+        line-height: 1;
     }
 
     .mobile-bottom-nav .mbn-item span {
@@ -166,10 +209,25 @@ $currentPage = basename($_SERVER['PHP_SELF']);
         display: block;
     }
 
-    .mobile-bottom-nav .mbn-item:hover,
-    .mobile-bottom-nav .mbn-item.active {
+    .mobile-bottom-nav .mbn-item:hover {
         color: var(--accent);
-        background: rgba(157, 255, 0, 0.07);
+        background: rgba(157, 255, 0, 0.05);
+    }
+
+    /* Active bottom-bar tab: neon icon pill + bright label */
+    .mobile-bottom-nav .mbn-item.active {
+        color: #76ff03;
+        background: transparent;
+    }
+    .mobile-bottom-nav .mbn-item.active .mbn-icon {
+        background: rgba(118, 255, 3, 0.15);
+        border: 1px solid rgba(118, 255, 3, 0.3);
+    }
+    .mobile-bottom-nav .mbn-item.active .mbn-icon i {
+        color: #76ff03;
+    }
+    .mobile-bottom-nav .mbn-item.active span {
+        font-weight: 700;
     }
 }
 
@@ -189,30 +247,30 @@ $currentPage = basename($_SERVER['PHP_SELF']);
         </button>
         <div class="collapse navbar-collapse" id="dashNavbar">
             <ul class="navbar-nav mx-auto gap-1">
-                <!-- Operational links: shown in hamburger on DESKTOP;
+                    <!-- Operational links: shown in hamburger on DESKTOP;
                      hidden on mobile (bottom bar handles them). -->
                 <li class="nav-item mobile-hide-in-hamburger">
-                    <a class="nav-link <?php echo $currentPage === 'dashboard.php' ? 'active' : ''; ?>" href="dashboard.php">
+                    <a class="nav-link <?php echo navActive('dashboard'); ?>" href="dashboard.php">
                         <i class="bi bi-grid-3x3-gap"></i> Dashboard
                     </a>
                 </li>
                 <li class="nav-item mobile-hide-in-hamburger">
-                    <a class="nav-link <?php echo $currentPage === 'create-booking.php' ? 'active' : ''; ?>" href="create-booking.php">
+                    <a class="nav-link <?php echo navActive('book'); ?>" href="create-booking.php">
                         <i class="bi bi-plus-circle"></i> Create Booking
                     </a>
                 </li>
                 <li class="nav-item mobile-hide-in-hamburger">
-                    <a class="nav-link <?php echo $currentPage === 'bundle-booking.php' ? 'active' : ''; ?>" href="bundle-booking.php">
+                    <a class="nav-link <?php echo navActive('bundle'); ?>" href="bundle-booking.php">
                         <i class="bi bi-box-seam"></i> Bundle Booking
                     </a>
                 </li>
                 <li class="nav-item mobile-hide-in-hamburger">
-                    <a class="nav-link <?php echo $currentPage === 'trail-guide.php' ? 'active' : ''; ?>" href="trail-guide.php">
+                    <a class="nav-link <?php echo navActive('trail'); ?>" href="trail-guide.php">
                         <i class="bi bi-compass"></i> Trail Guide
                     </a>
                 </li>
                 <li class="nav-item mobile-hide-in-hamburger">
-                    <a class="nav-link <?php echo $currentPage === 'my-bookings.php' ? 'active' : ''; ?>" href="my-bookings.php">
+                    <a class="nav-link <?php echo navActive('bookings'); ?>" href="my-bookings.php">
                         <i class="bi bi-calendar-check"></i> My Bookings
                     </a>
                 </li>
@@ -220,7 +278,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                 <!-- Account items: visible in hamburger on BOTH mobile & desktop -->
                 <span class="mobile-hamburger-account-label">Account</span>
                 <li class="nav-item">
-                    <a class="nav-link <?php echo $currentPage === 'profile.php' ? 'active' : ''; ?>" href="profile.php">
+                    <a class="nav-link <?php echo navActive('profile'); ?>" href="profile.php">
                         <i class="bi bi-person"></i> Profile
                     </a>
                 </li>
@@ -236,24 +294,24 @@ $currentPage = basename($_SERVER['PHP_SELF']);
 
 <!-- ═══ MOBILE BOTTOM NAV BAR — 5 operational tabs, mobile only ═══ -->
 <div class="mobile-bottom-nav" id="mobileBottomNav">
-    <a class="mbn-item <?php echo $currentPage === 'dashboard.php' ? 'active' : ''; ?>" href="dashboard.php" id="mbn-dashboard">
-        <i class="bi bi-grid-3x3-gap"></i>
+    <a class="mbn-item <?php echo navActive('dashboard'); ?>" href="dashboard.php" id="mbn-dashboard">
+        <span class="mbn-icon"><i class="bi bi-grid-3x3-gap"></i></span>
         <span>Dashboard</span>
     </a>
-    <a class="mbn-item <?php echo $currentPage === 'create-booking.php' ? 'active' : ''; ?>" href="create-booking.php" id="mbn-create-booking">
-        <i class="bi bi-plus-circle"></i>
+    <a class="mbn-item <?php echo navActive('book'); ?>" href="create-booking.php" id="mbn-create-booking">
+        <span class="mbn-icon"><i class="bi bi-plus-circle"></i></span>
         <span>Book</span>
     </a>
-    <a class="mbn-item <?php echo $currentPage === 'bundle-booking.php' ? 'active' : ''; ?>" href="bundle-booking.php" id="mbn-bundle">
-        <i class="bi bi-box-seam"></i>
+    <a class="mbn-item <?php echo navActive('bundle'); ?>" href="bundle-booking.php" id="mbn-bundle">
+        <span class="mbn-icon"><i class="bi bi-box-seam"></i></span>
         <span>Bundle</span>
     </a>
-    <a class="mbn-item <?php echo $currentPage === 'my-bookings.php' ? 'active' : ''; ?>" href="my-bookings.php" id="mbn-my-bookings">
-        <i class="bi bi-calendar-check"></i>
+    <a class="mbn-item <?php echo navActive('bookings'); ?>" href="my-bookings.php" id="mbn-my-bookings">
+        <span class="mbn-icon"><i class="bi bi-calendar-check"></i></span>
         <span>Bookings</span>
     </a>
-    <a class="mbn-item <?php echo $currentPage === 'trail-guide.php' ? 'active' : ''; ?>" href="trail-guide.php" id="mbn-trail">
-        <i class="bi bi-compass"></i>
+    <a class="mbn-item <?php echo navActive('trail'); ?>" href="trail-guide.php" id="mbn-trail">
+        <span class="mbn-icon"><i class="bi bi-compass"></i></span>
         <span>Trail</span>
     </a>
 </div>
