@@ -723,20 +723,12 @@ if ($diff->y >= 1) {
             font-size: 0.9rem;
         }
 
-        /* Responsive */
+        /* ── Responsive ─────────────────────────────────────────── */
         @media (max-width: 768px) {
             .profile-sidebar {
                 position: relative;
                 top: 0;
                 margin-bottom: 2rem;
-            }
-
-            .profile-tabs {
-                flex-direction: column;
-            }
-
-            .profile-tab {
-                border-bottom: 1px solid var(--border-color);
             }
 
             .profile-stats {
@@ -747,6 +739,80 @@ if ($diff->y >= 1) {
                 font-size: 1.5rem;
             }
         }
+
+        /* ── Mobile-only form container refinements (≤ 767.98px) ── */
+        @media (max-width: 767.98px) {
+
+            /* ① Outer card: smooth rounded corners + glass-dark card look */
+            .profile-main {
+                background: rgba(10, 20, 16, 0.82);
+                backdrop-filter: blur(20px) saturate(180%);
+                -webkit-backdrop-filter: blur(20px) saturate(180%);
+                border: 1px solid rgba(157, 255, 0, 0.14);
+                border-radius: 1.25rem;          /* smooth, not boxy */
+                overflow: hidden;                /* clip tabs to rounded corners */
+                box-shadow:
+                    0 8px 32px rgba(0, 0, 0, 0.45),
+                    0 0 0 1px rgba(157, 255, 0, 0.04);
+            }
+
+            /* ② Neon accent bar along the top edge of the card */
+            .profile-main::before {
+                content: '';
+                display: block;
+                height: 2px;
+                background: linear-gradient(
+                    90deg,
+                    transparent 0%,
+                    rgba(157, 255, 0, 0.7) 40%,
+                    rgba(157, 255, 0, 0.7) 60%,
+                    transparent 100%
+                );
+            }
+
+            /* ③ Mobile tab strip: horizontal scroll instead of vertical stack */
+            .profile-tabs {
+                flex-direction: row;           /* keep horizontal on mobile */
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
+                padding: 0 0.75rem;
+                gap: 0.25rem;
+                background: rgba(8, 16, 12, 0.6);
+                border-bottom: 1px solid rgba(157, 255, 0, 0.12);
+            }
+            .profile-tabs::-webkit-scrollbar { display: none; }
+
+            /* ④ Individual tabs: compact, pill-shaped, no pointer-overflow */
+            .profile-tab {
+                flex-shrink: 0;
+                padding: 0.85rem 1.1rem;
+                font-size: 0.85rem;
+                border-bottom: 3px solid transparent;
+                white-space: nowrap;
+                border-radius: 0;
+            }
+
+            /* ⑤ Tab content area: generous inner breathing room */
+            .tab-content {
+                padding: 1.5rem 1.25rem;
+            }
+
+            /* ⑥ Form section header (h5 "Account Security") */
+            .tab-content h5 {
+                font-size: 1rem;
+            }
+
+            /* ⑦ Action buttons row: stack vertically on small screens */
+            .tab-content .d-flex.gap-2 {
+                flex-direction: column;
+            }
+            .tab-content .d-flex.gap-2 .btn-modern {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
     </style>
 </head>
 <body>
