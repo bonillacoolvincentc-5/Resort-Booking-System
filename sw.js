@@ -3,11 +3,11 @@ const CACHE_NAME = 'yp4k-resort-v1';
 
 // Core assets to cache for offline use
 const PRECACHE_ASSETS = [
-  '/YP4K_Resort/index-new.html',
-  '/YP4K_Resort/manifest.json',
-  '/YP4K_Resort/assets/icon-192.png',
-  '/YP4K_Resort/assets/icon-512.png',
-  '/YP4K_Resort/css/resort-theme.css',
+  './index-new.html',
+  './manifest.json',
+  './assets/icon-192.png',
+  './assets/icon-512.png',
+  './css/resort-theme.css',
   'https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css',
   'https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css'
 ];
@@ -60,7 +60,7 @@ self.addEventListener('fetch', event => {
           if (cached) return cached;
           // Fallback to index page for navigation requests
           if (event.request.mode === 'navigate') {
-            return caches.match('/YP4K_Resort/index-new.html');
+            return caches.match('./index-new.html');
           }
           return new Response('Offline — please reconnect.', { status: 503 });
         });
