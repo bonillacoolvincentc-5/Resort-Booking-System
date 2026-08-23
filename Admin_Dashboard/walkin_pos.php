@@ -805,12 +805,12 @@ while ($r = $res->fetch_assoc()) $bundles[] = $r;
 
     PHP_ACCOMMODATIONS.forEach(a => {
         CATALOG.push({
-            id:          a.id,
+            id:          parseInt(a.id, 10),
             type:        a.type,       // 'room' | 'cottage' | 'stay-in'
             booking_type:'accommodation',
             name:        a.name,
             description: a.description || '',
-            capacity:    a.capacity,
+            capacity:    parseInt(a.capacity, 10) || 1,
             price:       parseFloat(a.price_per_night) || parseFloat(a.price_per_day) || 0,
             price_label: '/ night',
             amenities:   a.amenities   || '',
@@ -820,12 +820,12 @@ while ($r = $res->fetch_assoc()) $bundles[] = $r;
 
     PHP_ACTIVITIES.forEach(a => {
         CATALOG.push({
-            id:          a.id,
+            id:          parseInt(a.id, 10),
             type:        'activity',
             booking_type:'activity',
             name:        a.name,
             description: a.description || '',
-            capacity:    a.capacity,
+            capacity:    parseInt(a.capacity, 10) || 1,
             price:       parseFloat(a.price_per_hour) || 0,
             price_label: '/ hr',
             min_hrs:     parseFloat(a.min_duration_hours) || 1,
@@ -837,12 +837,12 @@ while ($r = $res->fetch_assoc()) $bundles[] = $r;
 
     PHP_BUNDLES.forEach(b => {
         CATALOG.push({
-            id:          b.id,
+            id:          parseInt(b.id, 10),
             type:        'bundle',
             booking_type:'bundle',
             name:        b.name,
             description: b.description || '',
-            capacity:    b.capacity,
+            capacity:    parseInt(b.capacity, 10) || 1,
             price:       parseFloat(b.price) || 0,
             price_label: 'flat rate',
             amenities:   b.amenities   || '',
@@ -889,7 +889,7 @@ while ($r = $res->fetch_assoc()) $bundles[] = $r;
 
         grid.innerHTML = filtered.map(item => {
             const meta  = TYPE_META[item.type] || { badge:'badge-activity', label:item.type, icon:'bi-grid' };
-            const isSelected = selectedItem && selectedItem.id === item.id && selectedItem.booking_type === item.booking_type;
+            const isSelected = selectedItem && Number(selectedItem.id) === Number(item.id) && selectedItem.booking_type === item.booking_type;
             const priceStr   = '₱' + item.price.toLocaleString('en-PH', {minimumFractionDigits:2}) + ' <span>' + item.price_label + '</span>';
             const imgHtml    = item.image
                 ? `<img class="pos-card-img" src="../${escH(item.image)}" alt="${escH(item.name)}" loading="lazy" onerror="this.parentElement.innerHTML='<div class=pos-card-img-placeholder><i class=bi-${escH(meta.icon)}></i></div>'">`
@@ -911,7 +911,7 @@ while ($r = $res->fetch_assoc()) $bundles[] = $r;
                     <div class="pos-card-desc">${escH(item.description || 'No description available.')}</div>
                 </div>
                 <div class="pos-card-footer mt-auto">
-                    <button class="pos-select-btn">
+                    <button type="button" class="pos-select-btn" onclick="selectItem(${item.id},'${item.booking_type}');">
                         <i class="bi bi-${isSelected ? 'check-circle-fill' : 'plus-circle'} me-1"></i>
                         ${isSelected ? 'Selected' : 'Select Item'}
                     </button>
@@ -936,7 +936,7 @@ while ($r = $res->fetch_assoc()) $bundles[] = $r;
 
     // ── Select item ───────────────────────────────────────────────────────────
     function selectItem(id, btype) {
-        selectedItem = CATALOG.find(i => i.id === id && i.booking_type === btype) || null;
+        selectedItem = CATALOG.find(i => Number(i.id) === Number(id) && i.booking_type === btype) || null;
         renderCatalog();          // re-render to update selected state
         updatePreview();
         recalcTotal();
