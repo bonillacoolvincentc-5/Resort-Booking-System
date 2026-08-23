@@ -39,6 +39,7 @@ function setBreadcrumb() {
     const pageNames = {
         'dashboard':  'Dashboard',
         'bookings':   'Bookings Management',
+        'walkin_pos': 'Walk-In',
         'calendar':   'Calendar',
         'activities': 'Activities Management',
         'bundles':    'Bundle Packages',

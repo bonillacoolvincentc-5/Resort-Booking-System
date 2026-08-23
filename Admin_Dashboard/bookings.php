@@ -155,12 +155,12 @@ while ($row = $bundlesRes->fetch_assoc()) {
                     <i class="bi bi-download"></i>
                     Export
                 </button>
-                <button class="btn-modern btn-primary" id="openWalkInBtn"
-                        onclick="openWalkInModal()"
-                        style="background:linear-gradient(135deg,#6366f1,#4f46e5);border:none;">
-                    <i class="bi bi-person-walking me-1"></i>
+                <a href="walkin_pos.php" class="btn-modern btn-primary"
+                   id="openWalkInBtn"
+                   style="background:linear-gradient(135deg,#6366f1,#4f46e5);border:none;text-decoration:none;display:inline-flex;align-items:center;gap:.4rem;">
+                    <i class="bi bi-person-walking"></i>
                     New Walk-In
-                </button>
+                </a>
             </div>
         </div>
 
