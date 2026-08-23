@@ -1,5 +1,5 @@
 // YP4K Resort — Service Worker
-const CACHE_NAME = 'yp4k-resort-v1';
+const CACHE_NAME = 'yp4k-resort-v2';
 
 // Core assets to cache for offline use
 const PRECACHE_ASSETS = [
@@ -8,7 +8,8 @@ const PRECACHE_ASSETS = [
   './assets/icon-192.png',
   './assets/icon-512.png',
   './css/resort-theme.css',
-  'https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css',
+  './assets/css/bootstrap.min.css',
+  './assets/js/bootstrap.bundle.min.js',
   'https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css'
 ];
 

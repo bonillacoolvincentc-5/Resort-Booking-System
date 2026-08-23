@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 session_start();
 
 // Auth guard
@@ -32,7 +32,7 @@ if (empty($userPhone)) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Create Booking — YP4K Resort</title>
     <meta name="description" content="Browse and book resort packages at YP4K Resort. Select from activities and accommodations with real-time pricing.">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="../assets/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="../css/resort-theme.css">
     <link rel="stylesheet" href="../css/dashboard-resort.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
@@ -983,7 +983,7 @@ if (empty($userPhone)) {
     </button>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../assets/js/bootstrap.bundle.min.js"></script>
 <script>
 /* ══════════════════════════════════════════════════════════════════
    YP4K Resort — Create Booking JS
