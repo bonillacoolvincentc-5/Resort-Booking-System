@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 session_start();
 
 // Include admin configuration
@@ -155,6 +155,12 @@ while ($row = $bundlesRes->fetch_assoc()) {
                     <i class="bi bi-download"></i>
                     Export
                 </button>
+                <button class="btn-modern btn-primary" id="openWalkInBtn"
+                        onclick="openWalkInModal()"
+                        style="background:linear-gradient(135deg,#6366f1,#4f46e5);border:none;">
+                    <i class="bi bi-person-walking me-1"></i>
+                    New Walk-In
+                </button>
             </div>
         </div>
 
@@ -255,6 +261,182 @@ while ($row = $bundlesRes->fetch_assoc()) {
             </div>
         </div>
     </div>
+
+    <!-- ═══ Walk-In Reservation Modal ════════════════════════════════════ -->
+    <div class="modal fade" id="walkInModal" tabindex="-1" aria-labelledby="walkInModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content modal-content-modern">
+
+                <!-- Header -->
+                <div class="modal-header modal-header-modern">
+                    <h5 class="modal-title" id="walkInModalLabel">
+                        <i class="bi bi-person-walking me-2"></i>New Walk-In Reservation
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <!-- Body -->
+                <div class="modal-body modal-body-modern">
+
+                    <!-- Alert area -->
+                    <div id="walkInAlert" class="mb-3" style="display:none;"></div>
+
+                    <form id="walkInForm" novalidate>
+
+                        <!-- Row 1: Guest Name + Contact -->
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <div class="form-group-modern">
+                                    <label class="form-label-modern" for="wi_guest_name">
+                                        <i class="bi bi-person me-1"></i>Guest Name <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="text" id="wi_guest_name"
+                                           class="form-control-modern"
+                                           placeholder="e.g. Juan dela Cruz"
+                                           maxlength="255" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group-modern">
+                                    <label class="form-label-modern" for="wi_guest_contact">
+                                        <i class="bi bi-telephone me-1"></i>Contact Number <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="tel" id="wi_guest_contact"
+                                           class="form-control-modern"
+                                           placeholder="09XXXXXXXXX"
+                                           maxlength="11"
+                                           pattern="^09\d{9}$" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Row 2: Booking Category + Item -->
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-5">
+                                <div class="form-group-modern">
+                                    <label class="form-label-modern" for="wi_booking_type">
+                                        <i class="bi bi-grid me-1"></i>Booking Category <span class="text-danger">*</span>
+                                    </label>
+                                    <select id="wi_booking_type" class="form-control-modern" required
+                                            onchange="wiPopulateItems()">
+                                        <option value="">-- Select Category --</option>
+                                        <option value="activity">Activity</option>
+                                        <option value="accommodation">Room / Cottage</option>
+                                        <option value="bundle">Bundle Package</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-7">
+                                <div class="form-group-modern">
+                                    <label class="form-label-modern" for="wi_item_id">
+                                        <i class="bi bi-list-ul me-1"></i>Specific Item <span class="text-danger">*</span>
+                                    </label>
+                                    <select id="wi_item_id" class="form-control-modern" required>
+                                        <option value="">-- Choose category first --</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Row 3: Check-In Date + Time -->
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-4">
+                                <div class="form-group-modern">
+                                    <label class="form-label-modern" for="wi_checkin_date">
+                                        <i class="bi bi-calendar-event me-1"></i>Check-In Date <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="date" id="wi_checkin_date"
+                                           class="form-control-modern" required>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group-modern">
+                                    <label class="form-label-modern" for="wi_checkin_time">
+                                        <i class="bi bi-clock me-1"></i>Start Time
+                                    </label>
+                                    <input type="time" id="wi_checkin_time"
+                                           class="form-control-modern">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group-modern">
+                                    <label class="form-label-modern" for="wi_checkout_time">
+                                        <i class="bi bi-clock-history me-1"></i>End Time
+                                    </label>
+                                    <input type="time" id="wi_checkout_time"
+                                           class="form-control-modern">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Row 4: Check-Out Date + Guests -->
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <div class="form-group-modern">
+                                    <label class="form-label-modern" for="wi_checkout_date">
+                                        <i class="bi bi-calendar-check me-1"></i>Check-Out Date
+                                        <small class="text-muted">(rooms/bundles)</small>
+                                    </label>
+                                    <input type="date" id="wi_checkout_date"
+                                           class="form-control-modern">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group-modern">
+                                    <label class="form-label-modern" for="wi_num_guests">
+                                        <i class="bi bi-people me-1"></i>Number of Guests
+                                    </label>
+                                    <input type="number" id="wi_num_guests"
+                                           class="form-control-modern"
+                                           value="1" min="1" max="100">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Row 5: Payment Method -->
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <div class="form-group-modern">
+                                    <label class="form-label-modern">
+                                        <i class="bi bi-cash-coin me-1"></i>Payment Method
+                                    </label>
+                                    <input type="text" class="form-control-modern"
+                                           value="Cash" readonly
+                                           style="opacity:0.7;cursor:default;">
+                                    <input type="hidden" id="wi_payment_method" value="cash">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group-modern">
+                                    <label class="form-label-modern" for="wi_special_requests">
+                                        <i class="bi bi-chat-left-text me-1"></i>Special Requests
+                                    </label>
+                                    <textarea id="wi_special_requests"
+                                              class="form-control-modern"
+                                              rows="2"
+                                              placeholder="Any notes for this guest..."></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                    </form>
+                </div><!-- /.modal-body -->
+
+                <!-- Footer -->
+                <div class="modal-footer modal-footer-modern">
+                    <button type="button" class="btn-modern btn-secondary"
+                            data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn-modern btn-primary" id="walkInSubmitBtn"
+                            onclick="submitWalkIn()"
+                            style="background:linear-gradient(135deg,#6366f1,#4f46e5);border:none;">
+                        <i class="bi bi-check-circle me-1"></i>Confirm Walk-In
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    <!-- ═══ End Walk-In Modal ════════════════════════════════════════════ -->
 
     <!-- Edit Booking Modal -->
     <div class="modal fade" id="editBookingModal" tabindex="-1">
@@ -364,13 +546,137 @@ while ($row = $bundlesRes->fetch_assoc()) {
 
         // -- Move modals to <body> on load to escape backdrop-filter stacking contexts --
         document.addEventListener('DOMContentLoaded', function () {
-            ['editBookingModal', 'viewBookingModal'].forEach(function(id) {
+            ['editBookingModal', 'viewBookingModal', 'walkInModal'].forEach(function(id) {
                 const el = document.getElementById(id);
                 if (el && el.parentElement !== document.body) {
                     document.body.appendChild(el);
                 }
             });
+            // Set today as minimum date for walk-in check-in
+            document.getElementById('wi_checkin_date').min = new Date().toISOString().split('T')[0];
         });
+
+        // ── Walk-In Modal Logic ───────────────────────────────────────────────
+        let walkInModalObj = null;
+
+        function openWalkInModal() {
+            if (!walkInModalObj) {
+                walkInModalObj = new bootstrap.Modal(document.getElementById('walkInModal'));
+            }
+            // Reset form
+            document.getElementById('walkInForm').reset();
+            wiSetAlert('', '');
+            document.getElementById('wi_item_id').innerHTML = '<option value="">-- Choose category first --</option>';
+            document.getElementById('walkInSubmitBtn').disabled = false;
+            document.getElementById('walkInSubmitBtn').innerHTML = '<i class="bi bi-check-circle me-1"></i>Confirm Walk-In';
+            walkInModalObj.show();
+        }
+
+        // Populate item <select> based on chosen category
+        function wiPopulateItems() {
+            const type = document.getElementById('wi_booking_type').value;
+            const sel  = document.getElementById('wi_item_id');
+            sel.innerHTML = '<option value="">-- Select item --</option>';
+
+            let list = [];
+            if      (type === 'activity')      list = activitiesList;
+            else if (type === 'accommodation') list = accommodationsList;
+            else if (type === 'bundle')        list = bundlesList;
+
+            list.forEach(item => {
+                const opt = document.createElement('option');
+                opt.value       = item.id;
+                const priceHint = item.price_per_hour
+                    ? ` — ₱${parseFloat(item.price_per_hour).toLocaleString()}/hr`
+                    : (item.price_per_night
+                        ? ` — ₱${parseFloat(item.price_per_night).toLocaleString()}/night`
+                        : (item.price ? ` — ₱${parseFloat(item.price).toLocaleString()}` : ''));
+                opt.textContent = item.name + priceHint;
+                sel.appendChild(opt);
+            });
+        }
+
+        // Show/hide alert inside the walk-in modal
+        function wiSetAlert(msg, type) {
+            const el = document.getElementById('walkInAlert');
+            if (!msg) { el.style.display = 'none'; return; }
+            el.style.display = 'block';
+            const icon = type === 'success' ? 'check-circle-fill' : 'exclamation-triangle-fill';
+            const bg   = type === 'success'
+                ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)';
+            const border = type === 'success'
+                ? 'rgba(16,185,129,0.35)' : 'rgba(239,68,68,0.35)';
+            const color  = type === 'success' ? '#34d399' : '#f87171';
+            el.innerHTML = `
+                <div style="background:${bg};border:1px solid ${border};border-radius:.6rem;
+                            padding:.75rem 1rem;color:${color};font-size:.875rem;display:flex;align-items:flex-start;gap:.5rem;">
+                    <i class="bi bi-${icon}" style="margin-top:.1rem;"></i>
+                    <span>${escHtml(msg)}</span>
+                </div>`;
+        }
+
+        // Submit walk-in booking via fetch
+        async function submitWalkIn() {
+            const btn = document.getElementById('walkInSubmitBtn');
+
+            const payload = {
+                guest_name:      document.getElementById('wi_guest_name').value.trim(),
+                guest_contact:   document.getElementById('wi_guest_contact').value.trim(),
+                booking_type:    document.getElementById('wi_booking_type').value,
+                item_id:         parseInt(document.getElementById('wi_item_id').value) || 0,
+                check_in_date:   document.getElementById('wi_checkin_date').value,
+                check_in_time:   document.getElementById('wi_checkin_time').value || null,
+                check_out_date:  document.getElementById('wi_checkout_date').value || null,
+                check_out_time:  document.getElementById('wi_checkout_time').value || null,
+                num_guests:      parseInt(document.getElementById('wi_num_guests').value) || 1,
+                payment_method:  document.getElementById('wi_payment_method').value,
+                special_requests:document.getElementById('wi_special_requests').value.trim() || null,
+            };
+
+            // Client-side quick checks
+            if (!payload.guest_name)    { wiSetAlert('Guest name is required.', 'danger'); return; }
+            if (!/^09\d{9}$/.test(payload.guest_contact)) {
+                wiSetAlert('Contact must be a valid PH mobile number (09XXXXXXXXX).', 'danger'); return;
+            }
+            if (!payload.booking_type)  { wiSetAlert('Please select a booking category.', 'danger'); return; }
+            if (!payload.item_id)       { wiSetAlert('Please select a specific item.', 'danger'); return; }
+            if (!payload.check_in_date) { wiSetAlert('Check-in date is required.', 'danger'); return; }
+
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status"></span>Processing…';
+            wiSetAlert('', '');
+
+            try {
+                const res    = await fetch('../php/process_walkin_booking.php', {
+                    method:  'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body:    JSON.stringify(payload),
+                });
+                const result = await res.json();
+
+                if (result.success) {
+                    wiSetAlert(
+                        `✅ Walk-in booked! Reference: <strong>${escHtml(result.reference)}</strong> — ${escHtml(result.item_name)} | ₱${parseFloat(result.total).toLocaleString()}`,
+                        'success'
+                    );
+                    btn.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i>Done!';
+                    setTimeout(() => {
+                        if (walkInModalObj) walkInModalObj.hide();
+                        location.reload();
+                    }, 2500);
+                } else {
+                    wiSetAlert(result.message || 'Something went wrong. Please try again.', 'danger');
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="bi bi-check-circle me-1"></i>Confirm Walk-In';
+                }
+            } catch (err) {
+                console.error('Walk-in submit error:', err);
+                wiSetAlert('Connection error. Please check your network and retry.', 'danger');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-check-circle me-1"></i>Confirm Walk-In';
+            }
+        }
+        // ── End Walk-In Modal Logic ───────────────────────────────────────────
 
         // Approve booking
         async function approveBooking(bookingId) {
