@@ -48,6 +48,13 @@
             display: none;
         }
 
+        /* Hide install button when running as installed PWA (standalone mode) */
+        @media (display-mode: standalone) {
+            #pwaInstallBtn {
+                display: none !important;
+            }
+        }
+
         .nav-btn-login:hover {
             transform: translateY(-2px);
             box-shadow: 0 6px 25px rgba(157, 255, 0, 0.45);
@@ -1268,6 +1275,11 @@
         const isStandalone = window.matchMedia('(display-mode: standalone)').matches
             || window.navigator.standalone === true;
 
+        // Early exit: inside the installed PWA — button must stay hidden
+        if (isStandalone) {
+            if (installBtn) installBtn.style.display = 'none';
+        } else {
+
         // Persist install state across browser cooldown gaps
         let isInstalledLocally = localStorage.getItem('pwa_installed') === 'true';
 
@@ -1353,8 +1365,10 @@
             isInstalledLocally = true;
             deferredInstallPrompt = null;
             setButtonState('installed');
-            showInstallToast('\uD83C\uDF89 YP4K Resort installed! Find it on your home screen or Start menu.', 'success');
+            showInstallToast('🎉 YP4K Resort installed! Find it on your home screen or Start menu.', 'success');
         });
+
+        } // end: else (not standalone)
 
         // ── Toast Notification ───────────────────────────────────────────
         function showInstallToast(message, type) {
