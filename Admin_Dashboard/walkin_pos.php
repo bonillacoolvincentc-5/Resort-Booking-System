@@ -150,6 +150,7 @@ while ($r = $res->fetch_assoc()) $bundles[] = $r;
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
             gap: 1rem;
+            align-items: stretch;
         }
 
         /* Item card */
@@ -895,11 +896,11 @@ while ($r = $res->fetch_assoc()) $bundles[] = $r;
                 : `<div class="pos-card-img-placeholder"><i class="bi ${escH(meta.icon)}"></i></div>`;
 
             return `
-            <div class="pos-card${isSelected ? ' selected' : ''}"
+            <div class="pos-card${isSelected ? ' selected' : ''} h-100 d-flex flex-column"
                  id="card_${item.booking_type}_${item.id}"
                  onclick="selectItem(${item.id},'${item.booking_type}')">
                 ${imgHtml}
-                <div class="pos-card-body">
+                <div class="pos-card-body d-flex flex-column flex-grow-1">
                     <div class="pos-card-name">${escH(item.name)}</div>
                     <span class="pos-card-type-badge ${meta.badge}">${meta.label}</span>
                     <div class="pos-card-price">${priceStr}</div>
@@ -909,7 +910,7 @@ while ($r = $res->fetch_assoc()) $bundles[] = $r;
                     </div>
                     <div class="pos-card-desc">${escH(item.description || 'No description available.')}</div>
                 </div>
-                <div class="pos-card-footer">
+                <div class="pos-card-footer mt-auto">
                     <button class="pos-select-btn">
                         <i class="bi bi-${isSelected ? 'check-circle-fill' : 'plus-circle'} me-1"></i>
                         ${isSelected ? 'Selected' : 'Select Item'}
