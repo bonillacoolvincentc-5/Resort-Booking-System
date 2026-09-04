@@ -296,3 +296,31 @@ body {
 }
 
 .resend-link button:hover { color: var(--accent); }
+
+/* ── WEBKIT AUTOFILL FIX ─────────────────────────────────────
+   Browsers (Chrome/Edge/Safari) forcibly inject a white or light-
+   blue background when autofill is applied.  The only reliable fix
+   is to paint over it with a large inset box-shadow that matches
+   the dark card background, combined with -webkit-text-fill-color
+   to restore white text.  The green border and border-radius are
+   kept via border/border-color on the same selectors.
+──────────────────────────────────────────────────────────────── */
+.auth-input:-webkit-autofill,
+.auth-input:-webkit-autofill:hover,
+.auth-input:-webkit-autofill:focus,
+.auth-input:-webkit-autofill:active {
+    /* Flood the autofill layer with the same dark background */
+    -webkit-box-shadow: 0 0 0 1000px rgba(8, 18, 14, 1) inset;
+    box-shadow:         0 0 0 1000px rgba(8, 18, 14, 1) inset;
+
+    /* Restore white text (color: is ignored by autofill) */
+    -webkit-text-fill-color: var(--text, #f0fff4);
+
+    /* Keep the green border and border-radius */
+    border-color: rgba(157, 255, 0, 0.45);
+    border-radius: var(--radius-sm);
+
+    /* Keep our own transition */
+    transition: background-color 9999s ease 0s, color 9999s ease 0s;
+}
+
