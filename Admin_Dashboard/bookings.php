@@ -332,6 +332,11 @@ while ($row = $bundlesRes->fetch_assoc()) {
                                             <i class="bi bi-pencil"></i>
                                             Edit
                                         </button>
+                                        <?php if ($booking['status_name'] === 'approved'): ?>
+                                            <button class="notification-btn" onclick="notifyBooking(<?php echo $booking['id']; ?>)" title="Notify">
+                                                <i class="bi bi-bell"></i>
+                                            </button>
+                                        <?php endif; ?>
                                     </div>
                                 </td>
                             </tr>
