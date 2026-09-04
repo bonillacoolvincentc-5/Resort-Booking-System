@@ -187,6 +187,97 @@ class EmailHelper {
     }
     
     /**
+     * Send Arrival Reminder Email
+     */
+    public static function sendArrivalReminderEmail($email, $firstName, $bookingRef, $itemName, $checkInDate, $checkInTime) {
+        try {
+            $mail = new PHPMailer\PHPMailer\PHPMailer(true);
+            
+            // Server settings
+            $mail->isSMTP();
+            $mail->Host = self::$emailConfig['host'];
+            $mail->SMTPAuth = true;
+            $mail->Username = self::$emailConfig['username'];
+            $mail->Password = self::$emailConfig['password'];
+            $mail->SMTPSecure = self::$emailConfig['encryption'] === 'ssl' ? 
+                               PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_SMTPS : 
+                               PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
+            $mail->Port = self::$emailConfig['port'];
+            
+            // Recipients
+            $mail->setFrom(self::$emailConfig['from_email'], self::$emailConfig['from_name']);
+            $mail->addAddress($email);
+            
+            // Content
+            $mail->Subject = 'Important: Arrival Reminder for your Reservation at YP4K Resort';
+            $mail->isHTML(true);
+            $mail->Body = self::generateArrivalReminderEmailTemplate($firstName, $bookingRef, $itemName, $checkInDate, $checkInTime);
+            $mail->AltBody = "Hello $firstName,\n\nThis is a friendly reminder that your scheduled check-in time ($checkInTime on $checkInDate) is approaching. You have 1 hour or less to arrive. Failure to arrive on time may lead to automatic cancellation of your slot.\n\nBooking Ref: $bookingRef\nReserved: $itemName\n\nThank you,\nYP4K Resort";
+            
+            $mail->send();
+            
+            return ['success' => true, 'message' => 'Arrival reminder sent successfully'];
+            
+        } catch (Exception $e) {
+            error_log("Arrival reminder email failed: " . $e->getMessage());
+            return ['success' => false, 'message' => 'Failed to send arrival reminder: ' . $e->getMessage()];
+        }
+    }
+
+    private static function generateArrivalReminderEmailTemplate($firstName, $bookingRef, $itemName, $checkInDate, $checkInTime) {
+        $greeting = $firstName ? "Dear $firstName," : "Hello,";
+        
+        return "
+        <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #f8f9fa;'>
+            <div style='background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;'>
+                <h1 style='margin: 0; font-size: 24px;'>YP4K Resort</h1>
+                <p style='margin: 5px 0 0; opacity: 0.9;'>Arrival Reminder</p>
+            </div>
+            
+            <div style='background: white; padding: 30px; border-radius: 0 0 10px 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);'>
+                <p style='color: #333; margin-bottom: 20px; font-size: 16px;'>{$greeting}</p>
+                <p style='color: #666; line-height: 1.6; font-size: 15px;'>This is a friendly reminder regarding your upcoming reservation at YP4K Resort.</p>
+                
+                <div style='background: #f8f9fa; border: 1px solid #e9ecef; padding: 20px; border-radius: 8px; margin: 25px 0;'>
+                    <h3 style='margin-top: 0; color: #0f172a; border-bottom: 1px solid #dee2e6; padding-bottom: 10px;'>Reservation Details</h3>
+                    <table style='width: 100%; border-collapse: collapse;'>
+                        <tr>
+                            <td style='padding: 8px 0; color: #666; width: 40%;'><strong>Booking Ref:</strong></td>
+                            <td style='padding: 8px 0; color: #333;'>{$bookingRef}</td>
+                        </tr>
+                        <tr>
+                            <td style='padding: 8px 0; color: #666;'><strong>Reserved Item:</strong></td>
+                            <td style='padding: 8px 0; color: #333;'>{$itemName}</td>
+                        </tr>
+                        <tr>
+                            <td style='padding: 8px 0; color: #666;'><strong>Check-in Date:</strong></td>
+                            <td style='padding: 8px 0; color: #333;'>{$checkInDate}</td>
+                        </tr>
+                        <tr>
+                            <td style='padding: 8px 0; color: #666;'><strong>Check-in Time:</strong></td>
+                            <td style='padding: 8px 0; color: #333;'>{$checkInTime}</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div style='background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 25px 0; border-radius: 4px;'>
+                    <p style='margin: 0; color: #856404; font-size: 15px; line-height: 1.5;'>
+                        <strong>Important Notice:</strong> Your scheduled check-in time is approaching. You have <strong>1 hour or less</strong> to arrive on schedule. Please note that failure to arrive on time may lead to automatic cancellation of your slot.
+                    </p>
+                </div>
+                
+                <p style='color: #666; line-height: 1.6;'>We look forward to welcoming you soon!</p>
+                
+                <hr style='border: none; border-top: 1px solid #eee; margin: 30px 0;'>
+                
+                <p style='color: #999; font-size: 12px; text-align: center; margin: 0;'>
+                    This is an automated message from YP4K Resort. Please do not reply to this email.
+                </p>
+            </div>
+        </div>";
+    }
+    
+    /**
      * Test email configuration
      */
     public static function testEmailConfig() {

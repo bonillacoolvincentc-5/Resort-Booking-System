@@ -1230,6 +1230,44 @@ while ($row = $bundlesRes->fetch_assoc()) {
                 .replace(/'/g,  '&#39;');
         }
 
+        // -- Send Arrival Reminder ------------------------------------------
+        async function notifyBooking(id) {
+            if (!confirm('Send arrival reminder email to this guest?')) return;
+            
+            // Show loading state on the button
+            const btn = document.querySelector(`tr[data-booking-id="${id}"] .notification-btn`);
+            const originalHTML = btn ? btn.innerHTML : '';
+            if (btn) {
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="width: 1rem; height: 1rem; border-width: 0.15em;"></span>';
+                btn.disabled = true;
+            }
+
+            try {
+                const res = await fetch('../php/send_arrival_reminder.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ booking_id: id })
+                });
+                
+                const result = await res.json();
+                
+                if (result.success) {
+                    showNotification(result.message, 'success');
+                } else {
+                    showNotification(result.message || 'Failed to send reminder.', 'danger');
+                }
+            } catch (err) {
+                console.error(err);
+                showNotification('Connection error. Please try again.', 'danger');
+            } finally {
+                if (btn) {
+                    btn.innerHTML = originalHTML;
+                    btn.disabled = false;
+                }
+            }
+        }
+
+
     </script>
 
     <!-- Bootstrap JS already loaded above -->
