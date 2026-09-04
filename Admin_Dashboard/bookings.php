@@ -189,6 +189,111 @@ while ($row = $bundlesRes->fetch_assoc()) {
 
         <!-- Bookings Table -->
         <div class="bookings-card">
+
+            <!-- ── Status Filter Tabs ──────────────────────────────── -->
+            <div class="booking-status-tabs" id="bookingStatusTabs">
+                <button class="bst-tab bst-pending active" data-filter="pending_review">
+                    <span class="bst-dot"></span>
+                    Pending Review
+                    <span class="bst-count" id="cntPending">0</span>
+                </button>
+                <button class="bst-tab bst-approved" data-filter="approved">
+                    <span class="bst-dot"></span>
+                    Approved
+                    <span class="bst-count" id="cntApproved">0</span>
+                </button>
+                <button class="bst-tab bst-rejected" data-filter="rejected">
+                    <span class="bst-dot"></span>
+                    Rejected
+                    <span class="bst-count" id="cntRejected">0</span>
+                </button>
+                <button class="bst-tab bst-all" data-filter="all">
+                    All Bookings
+                    <span class="bst-count" id="cntAll">0</span>
+                </button>
+            </div>
+
+            <style>
+                .booking-status-tabs {
+                    display: flex;
+                    align-items: center;
+                    gap: 0.35rem;
+                    padding: 1rem 1.5rem 0;
+                    flex-wrap: wrap;
+                    border-bottom: 1px solid var(--border);
+                    margin-bottom: 0;
+                }
+                .bst-tab {
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 0.45rem;
+                    padding: 0.55rem 1rem;
+                    font-family: var(--font, 'Poppins', sans-serif);
+                    font-size: 0.82rem;
+                    font-weight: 600;
+                    color: var(--text-muted);
+                    background: transparent;
+                    border: 1px solid transparent;
+                    border-bottom: none;
+                    border-radius: var(--radius-sm, 10px) var(--radius-sm, 10px) 0 0;
+                    cursor: pointer;
+                    transition: all 0.2s ease;
+                    position: relative;
+                    bottom: -1px;
+                    white-space: nowrap;
+                }
+                .bst-tab:hover { color: var(--text); background: rgba(255,255,255,0.04); }
+                .bst-dot {
+                    width: 7px; height: 7px;
+                    border-radius: 50%;
+                    display: inline-block;
+                    flex-shrink: 0;
+                }
+                .bst-pending .bst-dot  { background: #F7B731; box-shadow: 0 0 6px rgba(247,183,49,0.5); }
+                .bst-approved .bst-dot { background: #27C46A; box-shadow: 0 0 6px rgba(39,196,106,0.5); }
+                .bst-rejected .bst-dot { background: #FF5A5F; box-shadow: 0 0 6px rgba(255,90,95,0.5); }
+                .bst-all .bst-dot      { display: none; }
+                .bst-count {
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    min-width: 20px; height: 18px;
+                    padding: 0 5px;
+                    border-radius: 9px;
+                    font-size: 0.7rem;
+                    font-weight: 700;
+                    background: rgba(255,255,255,0.08);
+                    color: var(--text-muted);
+                    transition: all 0.2s ease;
+                }
+                .bst-tab.active {
+                    color: var(--text);
+                    background: rgba(21,34,29,0.9);
+                    border-color: var(--border);
+                }
+                .bst-pending.active  { color: #F7B731; border-top-color: #F7B731; }
+                .bst-approved.active { color: #27C46A; border-top-color: #27C46A; }
+                .bst-rejected.active { color: #FF5A5F; border-top-color: #FF5A5F; }
+                .bst-all.active      { color: var(--accent); border-top-color: var(--accent); }
+                .bst-pending.active  .bst-count { background: rgba(247,183,49,0.15);  color: #F7B731; }
+                .bst-approved.active .bst-count { background: rgba(39,196,106,0.15);  color: #27C46A; }
+                .bst-rejected.active .bst-count { background: rgba(255,90,95,0.15);   color: #FF5A5F; }
+                .bst-all.active      .bst-count { background: rgba(157,255,0,0.12);   color: var(--accent); }
+                #bookingsTableBody tr.bst-hidden { display: none; }
+                #bstEmptyRow { display: none; }
+                #bstEmptyRow td {
+                    text-align: center;
+                    padding: 2.5rem 1rem;
+                    color: var(--text-muted);
+                }
+                #bstEmptyRow .bst-empty-icon {
+                    font-size: 2rem;
+                    display: block;
+                    margin-bottom: 0.5rem;
+                    opacity: 0.4;
+                }
+            </style>
+
             <table class="table-modern">
                 <thead>
                     <tr>
@@ -202,7 +307,7 @@ while ($row = $bundlesRes->fetch_assoc()) {
                 <tbody id="bookingsTableBody">
                     <?php if (count($bookings) > 0): ?>
                         <?php foreach ($bookings as $booking): ?>
-                            <tr data-booking-id="<?php echo $booking['id']; ?>">
+                            <tr data-booking-id="<?php echo $booking['id']; ?>" data-status="<?php echo htmlspecialchars($booking['status_name']); ?>">
                                 <td class="customer-name"><?php echo htmlspecialchars($booking['full_name']); ?></td>
                                 <td><?php echo date('M j, Y', strtotime($booking['check_in_date'])); ?></td>
                                 <td><?php echo htmlspecialchars($booking['item_name']); ?></td>
@@ -239,6 +344,13 @@ while ($row = $bundlesRes->fetch_assoc()) {
                             </td>
                         </tr>
                     <?php endif; ?>
+                    <!-- Empty-state: shown by JS when the active tab has 0 rows -->
+                    <tr id="bstEmptyRow">
+                        <td colspan="5">
+                            <i class="bi bi-funnel bst-empty-icon"></i>
+                            No bookings found under this status.
+                        </td>
+                    </tr>
                 </tbody>
             </table>
 
@@ -1018,48 +1130,80 @@ while ($row = $bundlesRes->fetch_assoc()) {
             }, 3000);
         }
 
-        // Filter functionality
+        // Filter functionality + Status Tab wiring
         document.addEventListener('DOMContentLoaded', function() {
-            const searchInput = document.getElementById('searchInput');
+            const searchInput  = document.getElementById('searchInput');
             const statusFilter = document.getElementById('statusFilter');
-            const dateFilter = document.getElementById('dateFilter');
-            
-            function applyFilters() {
-                const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
-                const statusValue = statusFilter ? statusFilter.value.toLowerCase() : '';
-                const dateValue = dateFilter ? dateFilter.value : '';
-                
-                const rows = document.querySelectorAll('#bookingsTableBody tr');
-                
-                rows.forEach(row => {
-                    if (!row.dataset.bookingId) return;
-                    
-                    const customerName = (row.querySelector('.customer-name')?.textContent || '').toLowerCase();
-                    const statusText = (row.querySelector('.status-badge')?.textContent || '').toLowerCase();
-                    const dateText = (row.cells[1]?.textContent || '').toLowerCase();
-                    
-                    let showRow = true;
-                    
-                    if (searchTerm && !customerName.includes(searchTerm)) {
-                        showRow = false;
-                    }
-                    
-                    if (statusValue && !statusText.includes(statusValue)) {
-                        showRow = false;
-                    }
-                    
-                    if (dateValue && !dateText.includes(dateValue.toLowerCase())) {
-                        showRow = false;
-                    }
-                    
-                    row.style.display = showRow ? '' : 'none';
+            const dateFilter   = document.getElementById('dateFilter');
+            const emptyRow     = document.getElementById('bstEmptyRow');
+
+            // Active tab — default to Pending Review on load
+            let activeBstFilter = 'pending_review';
+
+            // Count badges: tally rows by status
+            function updateCounts() {
+                const allRows = document.querySelectorAll('#bookingsTableBody tr[data-status]');
+                const counts  = { pending_review: 0, approved: 0, rejected: 0 };
+                allRows.forEach(r => {
+                    const s = r.dataset.status;
+                    if (s in counts) counts[s]++;
                 });
+                document.getElementById('cntPending').textContent  = counts.pending_review;
+                document.getElementById('cntApproved').textContent = counts.approved;
+                document.getElementById('cntRejected').textContent = counts.rejected;
+                document.getElementById('cntAll').textContent      = allRows.length;
             }
-            
-            // Add event listeners
-            if (searchInput) searchInput.addEventListener('input', applyFilters);
+
+            // Unified filter: tab + search + status-select + date
+            function applyFilters() {
+                const searchTerm = searchInput  ? searchInput.value.toLowerCase()  : '';
+                const selectVal  = statusFilter ? statusFilter.value.toLowerCase() : '';
+                const dateValue  = dateFilter   ? dateFilter.value                 : '';
+
+                const rows = document.querySelectorAll('#bookingsTableBody tr[data-status]');
+                let visible = 0;
+
+                rows.forEach(row => {
+                    const rowStatus    = row.dataset.status || '';
+                    const customerName = (row.querySelector('.customer-name')?.textContent || '').toLowerCase();
+                    const statusText   = (row.querySelector('.status-badge')?.textContent  || '').toLowerCase();
+                    const dateText     = (row.cells[1]?.textContent || '').toLowerCase();
+
+                    const tabOk    = activeBstFilter === 'all' || rowStatus === activeBstFilter;
+                    const searchOk = !searchTerm || customerName.includes(searchTerm);
+                    const selectOk = !selectVal  || statusText.includes(selectVal);
+                    const dateOk   = !dateValue  || dateText.includes(dateValue.toLowerCase());
+
+                    if (tabOk && searchOk && selectOk && dateOk) {
+                        row.classList.remove('bst-hidden');
+                        visible++;
+                    } else {
+                        row.classList.add('bst-hidden');
+                    }
+                });
+
+                if (emptyRow) emptyRow.style.display = visible === 0 ? '' : 'none';
+            }
+
+            // Tab click handler
+            document.querySelectorAll('#bookingStatusTabs .bst-tab').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('#bookingStatusTabs .bst-tab')
+                            .forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    activeBstFilter = this.dataset.filter;
+                    applyFilters();
+                });
+            });
+
+            // Existing filter inputs
+            if (searchInput)  searchInput.addEventListener('input',  applyFilters);
             if (statusFilter) statusFilter.addEventListener('change', applyFilters);
-            if (dateFilter) dateFilter.addEventListener('change', applyFilters);
+            if (dateFilter)   dateFilter.addEventListener('change',   applyFilters);
+
+            // Boot: populate counts then apply the default Pending Review tab
+            updateCounts();
+            applyFilters();
         });
 
         // Pagination
