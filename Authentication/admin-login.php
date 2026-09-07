@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -88,9 +88,7 @@
             <i class="bi bi-person me-1" style="color:var(--accent-2);"></i>
             User account? <a href="login.php" class="auth-link">Sign in as User</a>
         </p>
-        <p class="auth-text mt-2">
-            Need admin access? <a href="admin-register.php" class="auth-link">Register Admin Account</a>
-        </p>
+
     </div>
 </div>
 
