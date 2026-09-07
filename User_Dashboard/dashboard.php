@@ -1,4 +1,139 @@
-﻿<!DOCTYPE html>
+<?php
+session_start();
+
+// Auth guard — consistent with my-bookings.php and profile.php
+if (!isset($_SESSION['user_id'])) {
+    header('Location: ../Authentication/login.php');
+    exit();
+}
+
+require_once '../phpAuthentication/db_config.php';
+
+$userId    = $_SESSION['user_id'];
+$userEmail = $_SESSION['user_email'];
+$userName  = $_SESSION['user_name'];
+
+// ── 1. Fetch full user record (avatar, verified status) ──────────────────────
+$stmt = $conn->prepare("SELECT first_name, last_name, email, avatar, is_verified FROM users WHERE id = ?");
+$stmt->bind_param('i', $userId);
+$stmt->execute();
+$userRow = $stmt->get_result()->fetch_assoc();
+$stmt->close();
+
+$firstName  = $userRow['first_name'] ?? explode(' ', $userName)[0];
+$fullName   = trim(($userRow['first_name'] ?? '') . ' ' . ($userRow['last_name'] ?? '')) ?: $userName;
+$isVerified = !empty($userRow['is_verified']);
+$avatarPath = !empty($userRow['avatar']) ? htmlspecialchars($userRow['avatar']) : '';
+
+// ── 2. Active bookings count (Confirmed or Pending) ──────────────────────────
+$stmt = $conn->prepare("
+    SELECT COUNT(*) as cnt
+    FROM bookings b
+    JOIN booking_status bs ON b.status_id = bs.id
+    WHERE b.user_id = ? AND bs.name IN ('Confirmed','Pending')
+");
+$stmt->bind_param('i', $userId);
+$stmt->execute();
+$activeBookings = (int)($stmt->get_result()->fetch_assoc()['cnt'] ?? 0);
+$stmt->close();
+
+// ── 3. Available activities count ────────────────────────────────────────────
+$result = $conn->query("SELECT COUNT(*) as cnt FROM activities WHERE is_active = 1");
+$activitiesCount = (int)($result->fetch_assoc()['cnt'] ?? 0);
+
+// ── 4. Total spent ───────────────────────────────────────────────────────────
+$stmt = $conn->prepare("SELECT COALESCE(SUM(total_amount), 0) as total FROM bookings WHERE user_id = ?");
+$stmt->bind_param('i', $userId);
+$stmt->execute();
+$totalSpent = (float)($stmt->get_result()->fetch_assoc()['total'] ?? 0);
+$stmt->close();
+
+// ── 5. Recent activity — last 5 bookings ─────────────────────────────────────
+$stmt = $conn->prepare("
+    SELECT
+        CASE
+            WHEN b.booking_type = 'activity' THEN a.name
+            ELSE acc.name
+        END as item_name,
+        b.booking_type,
+        b.check_in_date,
+        b.check_in_time,
+        b.created_at,
+        bs.name  as status_name
+    FROM bookings b
+    LEFT JOIN booking_status bs  ON b.status_id       = bs.id
+    LEFT JOIN activities     a   ON b.activity_id      = a.id
+    LEFT JOIN accommodations acc ON b.accommodation_id = acc.id
+    WHERE b.user_id = ?
+    ORDER BY b.created_at DESC
+    LIMIT 5
+");
+$stmt->bind_param('i', $userId);
+$stmt->execute();
+$recentBookings = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+$stmt->close();
+
+// ── 6. Upcoming events — next 2 future confirmed/pending bookings ─────────────
+$stmt = $conn->prepare("
+    SELECT
+        CASE
+            WHEN b.booking_type = 'activity' THEN a.name
+            ELSE acc.name
+        END as item_name,
+        b.check_in_date,
+        b.check_in_time,
+        bs.name as status_name
+    FROM bookings b
+    LEFT JOIN booking_status bs  ON b.status_id       = bs.id
+    LEFT JOIN activities     a   ON b.activity_id      = a.id
+    LEFT JOIN accommodations acc ON b.accommodation_id = acc.id
+    WHERE b.user_id = ?
+      AND b.check_in_date >= CURDATE()
+      AND bs.name IN ('Confirmed','Pending')
+    ORDER BY b.check_in_date ASC, b.check_in_time ASC
+    LIMIT 2
+");
+$stmt->bind_param('i', $userId);
+$stmt->execute();
+$upcomingEvents = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+$stmt->close();
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function statusBadgeClass(string $s): string {
+    return match (strtolower($s)) {
+        'confirmed' => 'bg-success',
+        'pending'   => 'bg-warning text-dark',
+        'cancelled' => 'bg-danger',
+        'completed' => 'bg-primary',
+        default     => 'bg-secondary',
+    };
+}
+function bookingTypeIcon(string $t): string {
+    return match ($t) {
+        'activity'      => 'bi-lightning-charge',
+        'accommodation' => 'bi-house-door',
+        'bundle'        => 'bi-collection',
+        default         => 'bi-calendar-check',
+    };
+}
+function bookingIconColour(string $t): string {
+    return match ($t) { 'activity' => 'primary', 'accommodation' => 'success', default => 'warning' };
+}
+function fmtBookingDate(string $d, ?string $ti): string {
+    if (!$d) return '—';
+    try {
+        $dt  = new DateTime($d . ($ti ? ' '.$ti : ''));
+        $now = new DateTime();
+        $diff = (int)$now->diff($dt)->days;
+        $past = $dt < $now;
+        if ($diff === 0) return 'Today, '.$dt->format('g:i A');
+        if ($diff === 1 && !$past) return 'Tomorrow, '.$dt->format('g:i A');
+        if ($diff === 1 && $past)  return 'Yesterday, '.$dt->format('g:i A');
+        return $dt->format('M j, Y');
+    } catch (Exception) { return $d; }
+}
+?>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -426,10 +561,10 @@
                 <div class="welcome-card">
                     <div class="position-relative">
                         <h1 class="welcome-title">
-                            <i class="bi bi-hand-wave me-3"></i>Welcome back, John!
+                            <i class="bi bi-hand-wave me-3"></i>Welcome back, <?= htmlspecialchars($firstName) ?>!
                         </h1>
                         <p class="welcome-text">
-                            Ready for your next adventure? You have <strong>3 active bookings</strong> and <strong>12 activities</strong> to explore.
+                            Ready for your next adventure? You have <strong><?= $activeBookings ?> active <?= $activeBookings === 1 ? 'booking' : 'bookings' ?></strong> and <strong><?= $activitiesCount ?> <?= $activitiesCount === 1 ? 'activity' : 'activities' ?></strong> to explore.
                         </p>
                     </div>
                 </div>
@@ -443,7 +578,7 @@
                     <div class="stat-icon primary">
                         <i class="bi bi-calendar-check"></i>
                     </div>
-                    <div class="stat-number">3</div>
+                    <div class="stat-number" data-target="<?= $activeBookings ?>" data-prefix="">—</div>
                     <div class="stat-label">Active Bookings</div>
                 </div>
             </div>
@@ -452,7 +587,7 @@
                     <div class="stat-icon success">
                         <i class="bi bi-star-fill"></i>
                     </div>
-                    <div class="stat-number">12</div>
+                    <div class="stat-number" data-target="<?= $activitiesCount ?>" data-prefix="">—</div>
                     <div class="stat-label">Activities</div>
                 </div>
             </div>
@@ -461,7 +596,7 @@
                     <div class="stat-icon warning">
                         <i class="bi bi-credit-card"></i>
                     </div>
-                    <div class="stat-number">₱450</div>
+                    <div class="stat-number" data-target="<?= (int)$totalSpent ?>" data-prefix="₱">—</div>
                     <div class="stat-label">Total Spent</div>
                 </div>
             </div>
@@ -477,42 +612,38 @@
                     </div>
                     <div class="card-body-modern">
                         <div class="activity-list">
-                            <div class="d-flex align-items-center justify-content-between py-3 border-bottom border-secondary">
-                                <div class="d-flex align-items-center">
-                                    <div class="stat-icon primary me-3" style="width: 40px; height: 40px; font-size: 1rem;">
-                                        <i class="bi bi-basketball"></i>
-                                    </div>
-                                    <div>
-                                        <div class="fw-semibold">Basketball Court</div>
-                                        <div class="text-muted small">Today, 10:00 AM</div>
-                                    </div>
+                            <?php if (empty($recentBookings)): ?>
+                                <div class="text-center py-4 text-muted">
+                                    <i class="bi bi-calendar-x" style="font-size:2rem;opacity:0.4;"></i>
+                                    <p class="mt-2 mb-0">No bookings yet. Start exploring!</p>
                                 </div>
-                                <span class="badge bg-success">Confirmed</span>
-                            </div>
-                            <div class="d-flex align-items-center justify-content-between py-3 border-bottom border-secondary">
-                                <div class="d-flex align-items-center">
-                                    <div class="stat-icon success me-3" style="width: 40px; height: 40px; font-size: 1rem;">
-                                        <i class="bi bi-water"></i>
+                            <?php else: ?>
+                                <?php foreach ($recentBookings as $idx => $booking):
+                                    $isLast     = $idx === count($recentBookings) - 1;
+                                    $itemName   = htmlspecialchars($booking['item_name'] ?? 'Booking');
+                                    $statusName = $booking['status_name'] ?? 'Unknown';
+                                    $badgeClass = statusBadgeClass($statusName);
+                                    $iconClass  = bookingTypeIcon($booking['booking_type'] ?? '');
+                                    $iconColour = bookingIconColour($booking['booking_type'] ?? '');
+                                    $dateLabel  = fmtBookingDate(
+                                        $booking['check_in_date'] ?? $booking['created_at'] ?? '',
+                                        $booking['check_in_time'] ?? null
+                                    );
+                                ?>
+                                <div class="d-flex align-items-center justify-content-between py-3<?= $isLast ? '' : ' border-bottom border-secondary' ?>">
+                                    <div class="d-flex align-items-center">
+                                        <div class="stat-icon <?= $iconColour ?> me-3" style="width:40px;height:40px;font-size:1rem;flex-shrink:0;">
+                                            <i class="bi <?= $iconClass ?>"></i>
+                                        </div>
+                                        <div>
+                                            <div class="fw-semibold"><?= $itemName ?></div>
+                                            <div class="text-muted small"><?= htmlspecialchars($dateLabel) ?></div>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <div class="fw-semibold">Swimming Pool</div>
-                                        <div class="text-muted small">Tomorrow, 2:00 PM</div>
-                                    </div>
+                                    <span class="badge <?= $badgeClass ?>"><?= htmlspecialchars($statusName) ?></span>
                                 </div>
-                                <span class="badge bg-warning">Pending</span>
-                            </div>
-                            <div class="d-flex align-items-center justify-content-between py-3">
-                                <div class="d-flex align-items-center">
-                                    <div class="stat-icon warning me-3" style="width: 40px; height: 40px; font-size: 1rem;">
-                                        <i class="bi bi-heart-pulse"></i>
-                                    </div>
-                                    <div>
-                                        <div class="fw-semibold">Fitness Gym</div>
-                                        <div class="text-muted small">Yesterday, 6:00 AM</div>
-                                    </div>
-                                </div>
-                                <span class="badge bg-success">Completed</span>
-                            </div>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
                         </div>
                         <div class="mt-4">
                             <a href="my-bookings.php" class="btn-modern btn-primary-modern">
@@ -560,13 +691,21 @@
                         <i class="bi bi-person-circle me-2"></i>Profile Overview
                     </div>
                     <div class="card-body-modern text-center">
-                        <div class="profile-avatar">
-                            <i class="bi bi-person-fill"></i>
+                        <div class="profile-avatar" style="overflow:hidden;">
+                            <?php if ($avatarPath): ?>
+                                <img src="<?= $avatarPath ?>" alt="Profile photo" style="width:100%;height:100%;object-fit:cover;" loading="lazy">
+                            <?php else: ?>
+                                <i class="bi bi-person-fill"></i>
+                            <?php endif; ?>
                         </div>
-                        <div class="profile-name">John Doe</div>
-                        <div class="profile-email">john.doe@email.com</div>
+                        <div class="profile-name"><?= htmlspecialchars($fullName) ?></div>
+                        <div class="profile-email"><?= htmlspecialchars($userEmail) ?></div>
                         <div class="d-flex justify-content-center gap-2 mb-3">
-                            <span class="badge bg-success">Verified</span>
+                            <?php if ($isVerified): ?>
+                                <span class="badge bg-success">Verified</span>
+                            <?php else: ?>
+                                <span class="badge bg-warning text-dark">Unverified</span>
+                            <?php endif; ?>
                         </div>
                         <a href="profile.php" class="btn-modern btn-primary-modern w-100">
                             <i class="bi bi-gear"></i>Manage Profile
@@ -580,34 +719,46 @@
                         <i class="bi bi-calendar-event me-2"></i>Upcoming Events
                     </div>
                     <div class="card-body-modern">
-                        <div class="event-item mb-3">
-                            <div class="d-flex align-items-start">
-                                <div class="event-date me-3">
-                                    <div class="text-center">
-                                        <div class="badge bg-primary">MAR</div>
-                                        <div class="fw-bold">25</div>
+                        <?php
+                        $monthColors = ['bg-primary','bg-success','bg-warning','bg-danger','bg-info'];
+                        if (empty($upcomingEvents)):
+                        ?>
+                            <div class="text-center py-3 text-muted">
+                                <i class="bi bi-calendar3" style="font-size:1.75rem;opacity:0.4;"></i>
+                                <p class="mt-2 mb-0 small">No upcoming events scheduled.</p>
+                            </div>
+                        <?php else: ?>
+                            <?php foreach ($upcomingEvents as $ei => $ev):
+                                try {
+                                    $evDt    = new DateTime($ev['check_in_date']);
+                                    $evMonth = $evDt->format('M');
+                                    $evDay   = $evDt->format('j');
+                                } catch (Exception) { $evMonth = '—'; $evDay = '—'; }
+                                $evName  = htmlspecialchars($ev['item_name'] ?? 'Event');
+                                $evTime  = !empty($ev['check_in_time'])
+                                    ? (new DateTime($ev['check_in_time']))->format('g:i A')
+                                    : '';
+                                $badgeCl = $monthColors[$ei % count($monthColors)];
+                                $isLastEv = $ei === count($upcomingEvents) - 1;
+                            ?>
+                            <div class="event-item <?= $isLastEv ? '' : 'mb-3' ?>">
+                                <div class="d-flex align-items-start">
+                                    <div class="event-date me-3">
+                                        <div class="text-center">
+                                            <div class="badge <?= $badgeCl ?>"><?= strtoupper($evMonth) ?></div>
+                                            <div class="fw-bold"><?= $evDay ?></div>
+                                        </div>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <div class="fw-semibold"><?= $evName ?></div>
+                                        <?php if ($evTime): ?>
+                                            <div class="text-muted small"><?= $evTime ?></div>
+                                        <?php endif; ?>
                                     </div>
                                 </div>
-                                <div class="flex-grow-1">
-                                    <div class="fw-semibold">Basketball Tournament</div>
-                                    <div class="text-muted small">10:00 AM - Court A</div>
-                                </div>
                             </div>
-                        </div>
-                        <div class="event-item">
-                            <div class="d-flex align-items-start">
-                                <div class="event-date me-3">
-                                    <div class="text-center">
-                                        <div class="badge bg-success">MAR</div>
-                                        <div class="fw-bold">26</div>
-                                    </div>
-                                </div>
-                                <div class="flex-grow-1">
-                                    <div class="fw-semibold">Swimming Lessons</div>
-                                    <div class="text-muted small">2:00 PM - Main Pool</div>
-                                </div>
-                            </div>
-                        </div>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
@@ -657,24 +808,20 @@
 
         // Add smooth transitions
         document.addEventListener('DOMContentLoaded', function() {
-            // Animate stats on load
-            const statNumbers = document.querySelectorAll('.stat-number');
-            statNumbers.forEach(stat => {
-                const finalValue = stat.innerText;
-                const isNumber = !isNaN(finalValue.replace(/[^0-9.]/g, ''));
-                if (isNumber) {
-                    const numValue = parseFloat(finalValue.replace(/[^0-9.]/g, ''));
-                    let currentValue = 0;
-                    const increment = numValue / 50;
-                    const timer = setInterval(() => {
-                        currentValue += increment;
-                        if (currentValue >= numValue) {
-                            currentValue = numValue;
-                            clearInterval(timer);
-                        }
-                        stat.innerText = Math.floor(currentValue).toLocaleString();
-                    }, 30);
-                }
+            // Animate stats using data-target attributes set by PHP
+            document.querySelectorAll('.stat-number[data-target]').forEach(el => {
+                const target = parseInt(el.dataset.target, 10);
+                const prefix = el.dataset.prefix || '';
+                if (isNaN(target)) { el.textContent = prefix + '0'; return; }
+                let current = 0;
+                const steps    = 50;
+                const increment = target / steps;
+                el.textContent = prefix + '0';
+                const timer = setInterval(() => {
+                    current = Math.min(current + increment, target);
+                    el.textContent = prefix + Math.floor(current).toLocaleString();
+                    if (current >= target) clearInterval(timer);
+                }, 30);
             });
 
             // Check for messages on page load
