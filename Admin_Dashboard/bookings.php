@@ -654,6 +654,235 @@ while ($row = $bundlesRes->fetch_assoc()) {
     </div>
 
 
+    <!-- ═══ Reject Booking Modal ═════════════════════════════════════════ -->
+    <div id="rejectBookingModal" class="rbm-overlay" role="dialog" aria-modal="true" aria-labelledby="rbmTitle" style="display:none;">
+        <div class="rbm-dialog">
+            <!-- Header -->
+            <div class="rbm-header">
+                <div class="rbm-header-icon">
+                    <i class="bi bi-x-octagon-fill"></i>
+                </div>
+                <div>
+                    <h5 class="rbm-title" id="rbmTitle">Reject Booking</h5>
+                    <p class="rbm-subtitle">This action will notify the guest of the rejection.</p>
+                </div>
+                <button class="rbm-close" onclick="closeRejectModal()" aria-label="Close">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+
+            <!-- Body -->
+            <div class="rbm-body">
+                <label class="rbm-label" for="rbmReason">Please enter reason for rejection:</label>
+                <textarea
+                    id="rbmReason"
+                    class="rbm-textarea"
+                    rows="4"
+                    placeholder="e.g. Booking slot is no longer available for the requested date…"
+                    maxlength="1000"
+                ></textarea>
+                <div id="rbmError" class="rbm-error" style="display:none;">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                    <span id="rbmErrorMsg">Please enter a rejection reason.</span>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="rbm-footer">
+                <button class="rbm-btn rbm-btn-cancel" onclick="closeRejectModal()" id="rbmCancelBtn">
+                    Cancel
+                </button>
+                <button class="rbm-btn rbm-btn-confirm" onclick="confirmRejectBooking()" id="rbmConfirmBtn">
+                    <i class="bi bi-x-circle me-1"></i>
+                    Confirm Rejection
+                </button>
+            </div>
+        </div>
+    </div>
+    <!-- ═══ End Reject Booking Modal ════════════════════════════════════ -->
+
+    <style>
+        /* ── Reject Booking Modal ─────────────────────────────────────── */
+        .rbm-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 1060;
+            background: rgba(0, 0, 0, 0.65);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            animation: rbmFadeIn 0.2s ease;
+        }
+        @keyframes rbmFadeIn {
+            from { opacity: 0; }
+            to   { opacity: 1; }
+        }
+        .rbm-dialog {
+            background: #15221d;
+            border: 1px solid rgba(157, 255, 0, 0.18);
+            border-radius: 16px;
+            width: 100%;
+            max-width: 460px;
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255,255,255,0.04);
+            animation: rbmSlideUp 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+            overflow: hidden;
+        }
+        @keyframes rbmSlideUp {
+            from { transform: translateY(24px) scale(0.97); opacity: 0; }
+            to   { transform: translateY(0)     scale(1);    opacity: 1; }
+        }
+        .rbm-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.85rem;
+            padding: 1.4rem 1.5rem 1rem;
+            border-bottom: 1px solid rgba(255,255,255,0.07);
+        }
+        .rbm-header-icon {
+            flex-shrink: 0;
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: rgba(255, 90, 95, 0.15);
+            border: 1px solid rgba(255, 90, 95, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #FF5A5F;
+            font-size: 1.1rem;
+        }
+        .rbm-title {
+            margin: 0 0 0.1rem;
+            font-family: 'Inter', 'Poppins', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            color: #f1f5f9;
+            line-height: 1.3;
+        }
+        .rbm-subtitle {
+            margin: 0;
+            font-size: 0.78rem;
+            color: #64748b;
+            line-height: 1.4;
+        }
+        .rbm-close {
+            margin-left: auto;
+            flex-shrink: 0;
+            background: transparent;
+            border: none;
+            color: #64748b;
+            font-size: 1rem;
+            cursor: pointer;
+            padding: 0.25rem;
+            border-radius: 6px;
+            line-height: 1;
+            transition: color 0.15s, background 0.15s;
+        }
+        .rbm-close:hover {
+            color: #f1f5f9;
+            background: rgba(255,255,255,0.07);
+        }
+        .rbm-body {
+            padding: 1.25rem 1.5rem;
+        }
+        .rbm-label {
+            display: block;
+            font-family: 'Inter', 'Poppins', sans-serif;
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-bottom: 0.6rem;
+        }
+        .rbm-textarea {
+            width: 100%;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 10px;
+            color: #f1f5f9;
+            font-family: 'Inter', 'Poppins', sans-serif;
+            font-size: 0.875rem;
+            padding: 0.75rem 1rem;
+            resize: vertical;
+            min-height: 100px;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            box-sizing: border-box;
+        }
+        .rbm-textarea::placeholder { color: #475569; }
+        .rbm-textarea:focus {
+            border-color: rgba(157, 255, 0, 0.45);
+            box-shadow: 0 0 0 3px rgba(157, 255, 0, 0.08);
+        }
+        .rbm-textarea.rbm-invalid {
+            border-color: rgba(255, 90, 95, 0.55);
+            box-shadow: 0 0 0 3px rgba(255, 90, 95, 0.08);
+        }
+        .rbm-error {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            margin-top: 0.6rem;
+            font-size: 0.8rem;
+            color: #f87171;
+        }
+        .rbm-footer {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 0.65rem;
+            padding: 1rem 1.5rem 1.4rem;
+            border-top: 1px solid rgba(255,255,255,0.07);
+        }
+        .rbm-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.35rem;
+            padding: 0.55rem 1.25rem;
+            font-family: 'Inter', 'Poppins', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 600;
+            border-radius: 9px;
+            cursor: pointer;
+            transition: all 0.18s ease;
+            border: 1px solid transparent;
+            line-height: 1;
+        }
+        .rbm-btn:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+        }
+        .rbm-btn-cancel {
+            background: transparent;
+            border-color: rgba(255,255,255,0.18);
+            color: #94a3b8;
+        }
+        .rbm-btn-cancel:hover:not(:disabled) {
+            background: rgba(255,255,255,0.06);
+            border-color: rgba(255,255,255,0.28);
+            color: #f1f5f9;
+        }
+        .rbm-btn-confirm {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            border-color: transparent;
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.35);
+        }
+        .rbm-btn-confirm:hover:not(:disabled) {
+            background: linear-gradient(135deg, #f87171, #ef4444);
+            box-shadow: 0 6px 18px rgba(239, 68, 68, 0.45);
+            transform: translateY(-1px);
+        }
+        .rbm-btn-confirm:active:not(:disabled) {
+            transform: translateY(0);
+        }
+    </style>
+
     <script src="../assets/js/bootstrap.bundle.min.js"></script>
     <script>
         // Data arrays from PHP
@@ -663,7 +892,7 @@ while ($row = $bundlesRes->fetch_assoc()) {
 
         // -- Move modals to <body> on load to escape backdrop-filter stacking contexts --
         document.addEventListener('DOMContentLoaded', function () {
-            ['editBookingModal', 'viewBookingModal', 'walkInModal'].forEach(function(id) {
+            ['editBookingModal', 'viewBookingModal', 'walkInModal', 'rejectBookingModal'].forEach(function(id) {
                 const el = document.getElementById(id);
                 if (el && el.parentElement !== document.body) {
                     document.body.appendChild(el);
@@ -828,21 +1057,80 @@ while ($row = $bundlesRes->fetch_assoc()) {
             }
         }
 
-        // Reject booking
-        async function rejectBooking(bookingId) {
-            const reason = prompt('Please enter reason for rejection:');
+        // ── Reject Booking Modal Logic ────────────────────────────────────────
+        let _rejectBookingId = null;
+
+        function rejectBooking(bookingId) {
+            _rejectBookingId = bookingId;
+            // Reset state
+            const textarea = document.getElementById('rbmReason');
+            const errorEl  = document.getElementById('rbmError');
+            const confirmBtn = document.getElementById('rbmConfirmBtn');
+            const cancelBtn  = document.getElementById('rbmCancelBtn');
+            textarea.value = '';
+            textarea.classList.remove('rbm-invalid');
+            errorEl.style.display = 'none';
+            confirmBtn.disabled = false;
+            confirmBtn.innerHTML = '<i class="bi bi-x-circle me-1"></i>Confirm Rejection';
+            cancelBtn.disabled = false;
+            // Show modal
+            const modal = document.getElementById('rejectBookingModal');
+            modal.style.display = 'flex';
+            setTimeout(() => textarea.focus(), 60);
+        }
+
+        function closeRejectModal() {
+            const modal = document.getElementById('rejectBookingModal');
+            modal.style.display = 'none';
+            _rejectBookingId = null;
+            document.getElementById('rbmReason').value = '';
+            document.getElementById('rbmReason').classList.remove('rbm-invalid');
+            document.getElementById('rbmError').style.display = 'none';
+        }
+
+        // Close on overlay backdrop click
+        document.addEventListener('DOMContentLoaded', function () {
+            document.getElementById('rejectBookingModal').addEventListener('click', function (e) {
+                if (e.target === this) closeRejectModal();
+            });
+            // Close on Escape key
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape' && document.getElementById('rejectBookingModal').style.display !== 'none') {
+                    closeRejectModal();
+                }
+            });
+        });
+
+        async function confirmRejectBooking() {
+            const textarea   = document.getElementById('rbmReason');
+            const errorEl    = document.getElementById('rbmError');
+            const errorMsg   = document.getElementById('rbmErrorMsg');
+            const confirmBtn = document.getElementById('rbmConfirmBtn');
+            const cancelBtn  = document.getElementById('rbmCancelBtn');
+            const reason     = textarea.value.trim();
+
+            // Validate
             if (!reason) {
+                textarea.classList.add('rbm-invalid');
+                errorMsg.textContent = 'Please enter a rejection reason before confirming.';
+                errorEl.style.display = 'flex';
+                textarea.focus();
                 return;
             }
+            textarea.classList.remove('rbm-invalid');
+            errorEl.style.display = 'none';
+
+            // Lock UI
+            confirmBtn.disabled = true;
+            cancelBtn.disabled  = true;
+            confirmBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status"></span>Rejecting…';
 
             try {
                 const response = await fetch('../php/update_booking_status.php', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        booking_id: bookingId,
+                        booking_id: _rejectBookingId,
                         status: 'rejected',
                         notes: reason
                     })
@@ -851,16 +1139,28 @@ while ($row = $bundlesRes->fetch_assoc()) {
                 const result = await response.json();
 
                 if (result.success) {
-                    // Reload page to show updated data
-                    location.reload();
+                    confirmBtn.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i>Rejected!';
+                    setTimeout(() => {
+                        closeRejectModal();
+                        location.reload();
+                    }, 900);
                 } else {
-                    showNotification(result.message || 'Failed to reject booking', 'danger');
+                    errorMsg.textContent = result.message || 'Failed to reject booking. Please try again.';
+                    errorEl.style.display = 'flex';
+                    confirmBtn.disabled = false;
+                    cancelBtn.disabled  = false;
+                    confirmBtn.innerHTML = '<i class="bi bi-x-circle me-1"></i>Confirm Rejection';
                 }
             } catch (error) {
                 console.error('Error rejecting booking:', error);
-                showNotification('Failed to reject booking. Please try again.', 'danger');
+                errorMsg.textContent = 'Connection error. Check your network and try again.';
+                errorEl.style.display = 'flex';
+                confirmBtn.disabled = false;
+                cancelBtn.disabled  = false;
+                confirmBtn.innerHTML = '<i class="bi bi-x-circle me-1"></i>Confirm Rejection';
             }
         }
+        // ── End Reject Booking Modal Logic ───────────────────────────────────
 
         // -- View Booking Details (Issue #2 fix) -------------------------
         let viewBookingModalObj = null;
