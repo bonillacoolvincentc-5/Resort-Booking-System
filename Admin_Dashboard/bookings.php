@@ -20,6 +20,16 @@ $adminEmail = $_SESSION['admin_email'];
 // Get database connection
 global $conn;
 
+// Auto-archive past-due approved bookings → Completed (before UI loads)
+$conn->query("
+    UPDATE bookings b
+    INNER JOIN booking_status bs_approved ON b.status_id = bs_approved.id AND bs_approved.name = 'approved'
+    INNER JOIN booking_status bs_completed ON bs_completed.name = 'completed'
+    SET b.status_id = bs_completed.id,
+        b.updated_at = NOW()
+    WHERE b.check_in_date < CURDATE()
+");
+
 // Fetch real bookings from database
 $statusFilter = $_GET['status'] ?? null;
 
@@ -70,7 +80,7 @@ $query = "
     LEFT JOIN accommodations acc ON b.accommodation_id = acc.id
     LEFT JOIN bundles bun ON b.bundle_id = bun.id
     LEFT JOIN payment_receipts pr ON b.id = pr.booking_id
-    WHERE 1=1
+    WHERE bs.name <> 'completed'
 ";
 
 $params = [];

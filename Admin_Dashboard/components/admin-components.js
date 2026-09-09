@@ -41,6 +41,7 @@ function setBreadcrumb() {
         'bookings':   'Bookings Management',
         'walkin_pos': 'Walk-In',
         'calendar':   'Calendar',
+        'booking-records': 'Booking Records',
         'activities': 'Activities Management',
         'bundles':    'Bundle Packages',
         'menu':       'Menu Management',
