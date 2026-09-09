@@ -141,6 +141,8 @@ try {
             description,
             price,
             capacity,
+            start_time,
+            duration_hours,
             amenities,
             image_url,
             is_active
@@ -212,6 +214,8 @@ try {
             'price_label'       => '₱' . number_format($row['price'], 2) . ' flat package price',
             'starting_price'    => '₱' . number_format($row['price'], 2),
             'capacity'          => $row['capacity'],
+            'start_time'        => $row['start_time'],
+            'duration_hours'    => $row['duration_hours'] !== null ? (int) $row['duration_hours'] : null,
             'icon'              => 'bi-box-seam',
             'image_url'         => normalizeImageUrl($row['image_url']),
             'amenities'         => $amenitiesList,

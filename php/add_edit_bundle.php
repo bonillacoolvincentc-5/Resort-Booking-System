@@ -17,6 +17,12 @@ if (!isset($_SESSION['is_admin']) || $_SESSION['is_admin'] !== true) {
 header('Content-Type: application/json');
 global $conn;
 
+// Ensure duration columns exist on bundles
+$colCheck = $conn->query("SHOW COLUMNS FROM `bundles` LIKE 'start_time'");
+if ($colCheck && $colCheck->num_rows === 0) {
+    $conn->query("ALTER TABLE `bundles` ADD COLUMN `start_time` TIME DEFAULT NULL AFTER `capacity`, ADD COLUMN `duration_hours` INT(11) DEFAULT NULL AFTER `start_time`");
+}
+
 // ── Auto-create tables if missing ─────────────────────────────────
 $conn->query("
     CREATE TABLE IF NOT EXISTS `bundles` (
@@ -103,6 +109,8 @@ if ($action === 'add' || $action === 'edit') {
     $description = trim($_POST['description'] ?? '');
     $price       = floatval($_POST['price'] ?? 0);
     $capacity    = intval($_POST['capacity'] ?? 1);
+    $startTimeRaw = trim($_POST['start_time'] ?? '');
+    $durationHours = intval($_POST['duration_hours'] ?? 0);
     $amenities   = trim($_POST['amenities'] ?? '');
     $isActive    = intval($_POST['is_active'] ?? 1);
     $activityIds = array_filter(array_map('intval', explode(',', $_POST['activity_ids'] ?? '')));
@@ -110,6 +118,16 @@ if ($action === 'add' || $action === 'edit') {
 
     if (empty($name)) { echo json_encode(['success' => false, 'message' => 'Bundle name is required']); exit(); }
     if ($price < 0)   { echo json_encode(['success' => false, 'message' => 'Price must be a positive number']); exit(); }
+    if ($startTimeRaw === '') { echo json_encode(['success' => false, 'message' => 'Start time is required']); exit(); }
+    if ($durationHours < 1) { echo json_encode(['success' => false, 'message' => 'Duration hours must be at least 1']); exit(); }
+
+    $startTime = $startTimeRaw;
+    if (preg_match('/^\d{2}:\d{2}$/', $startTimeRaw)) {
+        $startTime = $startTimeRaw . ':00';
+    } elseif (!preg_match('/^\d{2}:\d{2}:\d{2}$/', $startTimeRaw)) {
+        echo json_encode(['success' => false, 'message' => 'Start time must be a valid time (e.g. 15:00:00)']);
+        exit();
+    }
 
     // Slug
     $slug = strtolower(preg_replace('/[^a-zA-Z0-9]+/', '-', $name));
@@ -149,22 +167,22 @@ if ($action === 'add' || $action === 'edit') {
 
         if ($action === 'add') {
             if ($imagePath) {
-                $stmt = $conn->prepare("INSERT INTO bundles (name, slug, description, price, capacity, amenities, image_url, is_active) VALUES (?,?,?,?,?,?,?,?)");
-                $stmt->bind_param('sssdiisi', $name, $slug, $description, $price, $capacity, $amenities, $imagePath, $isActive);
+                $stmt = $conn->prepare("INSERT INTO bundles (name, slug, description, price, capacity, start_time, duration_hours, amenities, image_url, is_active) VALUES (?,?,?,?,?,?,?,?,?,?)");
+                $stmt->bind_param('sssdisissi', $name, $slug, $description, $price, $capacity, $startTime, $durationHours, $amenities, $imagePath, $isActive);
             } else {
-                $stmt = $conn->prepare("INSERT INTO bundles (name, slug, description, price, capacity, amenities, is_active) VALUES (?,?,?,?,?,?,?)");
-                $stmt->bind_param('sssdisi', $name, $slug, $description, $price, $capacity, $amenities, $isActive);
+                $stmt = $conn->prepare("INSERT INTO bundles (name, slug, description, price, capacity, start_time, duration_hours, amenities, is_active) VALUES (?,?,?,?,?,?,?,?,?)");
+                $stmt->bind_param('sssdisisi', $name, $slug, $description, $price, $capacity, $startTime, $durationHours, $amenities, $isActive);
             }
             $stmt->execute();
             $bundleId = $conn->insert_id;
         } else {
             if (!$bundleId) { throw new Exception('Bundle ID required for editing'); }
             if ($imagePath) {
-                $stmt = $conn->prepare("UPDATE bundles SET name=?, slug=?, description=?, price=?, capacity=?, amenities=?, image_url=?, is_active=? WHERE id=?");
-                $stmt->bind_param('sssdiisii', $name, $slug, $description, $price, $capacity, $amenities, $imagePath, $isActive, $bundleId);
+                $stmt = $conn->prepare("UPDATE bundles SET name=?, slug=?, description=?, price=?, capacity=?, start_time=?, duration_hours=?, amenities=?, image_url=?, is_active=? WHERE id=?");
+                $stmt->bind_param('sssdisissii', $name, $slug, $description, $price, $capacity, $startTime, $durationHours, $amenities, $imagePath, $isActive, $bundleId);
             } else {
-                $stmt = $conn->prepare("UPDATE bundles SET name=?, slug=?, description=?, price=?, capacity=?, amenities=?, is_active=? WHERE id=?");
-                $stmt->bind_param('sssdisii', $name, $slug, $description, $price, $capacity, $amenities, $isActive, $bundleId);
+                $stmt = $conn->prepare("UPDATE bundles SET name=?, slug=?, description=?, price=?, capacity=?, start_time=?, duration_hours=?, amenities=?, is_active=? WHERE id=?");
+                $stmt->bind_param('sssdisisii', $name, $slug, $description, $price, $capacity, $startTime, $durationHours, $amenities, $isActive, $bundleId);
             }
             $stmt->execute();
 

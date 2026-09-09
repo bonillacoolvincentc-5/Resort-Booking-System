@@ -245,6 +245,17 @@ while ($r = $accResult->fetch_assoc()) $allAccommodations[] = $r;
 
                                 <div class="row g-3 mb-3">
                                     <div class="col-6">
+                                        <label class="form-label-custom">Start Time <span style="color:var(--accent-danger)">*</span></label>
+                                        <input type="time" class="form-ctrl" id="bundleStartTime" name="start_time" step="1" value="15:00:00" required>
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label-custom">Duration (hours) <span style="color:var(--accent-danger)">*</span></label>
+                                        <input type="number" min="1" class="form-ctrl" id="bundleDurationHours" name="duration_hours" value="6" placeholder="e.g., 6 or 22" required>
+                                    </div>
+                                </div>
+
+                                <div class="row g-3 mb-3">
+                                    <div class="col-6">
                                         <label class="form-label-custom">Status</label>
                                         <select class="form-ctrl" id="bundleStatus" name="is_active">
                                             <option value="1">Available</option>
@@ -408,6 +419,8 @@ while ($r = $accResult->fetch_assoc()) $allAccommodations[] = $r;
             document.getElementById('bundleDescription').value = b.description || '';
             document.getElementById('bundlePrice').value       = b.price;
             document.getElementById('bundleCapacity').value    = b.capacity;
+            document.getElementById('bundleStartTime').value   = (b.start_time || '').toString().substring(0, 8);
+            document.getElementById('bundleDurationHours').value = b.duration_hours || '';
             document.getElementById('bundleAmenities').value   = b.amenities || '';
             document.getElementById('bundleStatus').value      = b.is_active;
             document.getElementById('imgPreviewWrap').classList.add('d-none');
@@ -435,6 +448,10 @@ while ($r = $accResult->fetch_assoc()) $allAccommodations[] = $r;
         const price = document.getElementById('bundlePrice').value;
         if (!name)  { toast('Bundle name is required', 'error'); return; }
         if (!price || parseFloat(price) < 0) { toast('Please enter a valid price', 'error'); return; }
+        const startTime = document.getElementById('bundleStartTime').value;
+        const durationHours = parseInt(document.getElementById('bundleDurationHours').value, 10);
+        if (!startTime) { toast('Start time is required', 'error'); return; }
+        if (!durationHours || durationHours < 1) { toast('Duration hours must be at least 1', 'error'); return; }
 
         // Collect checked activities & accommodations
         const actIds = [...document.querySelectorAll('.act-chk:checked')].map(c => c.value).join(',');

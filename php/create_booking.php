@@ -153,8 +153,8 @@ try {
         }
         $item_id = $data['bundle_id'];
         
-        // Get bundle price
-        $stmt = $conn->prepare("SELECT price, capacity FROM bundles WHERE id = ? AND is_active = 1");
+        // Get bundle price and fixed duration
+        $stmt = $conn->prepare("SELECT price, capacity, start_time, duration_hours FROM bundles WHERE id = ? AND is_active = 1");
         $stmt->bind_param('i', $item_id);
         $stmt->execute();
         $result = $stmt->get_result();
@@ -168,21 +168,21 @@ try {
         if ($data['number_of_guests'] > $bundle['capacity']) {
             throw new Exception("Bundle capacity is {$bundle['capacity']} guests");
         }
-        
-        // Calculate number of days and price
-        if (empty($data['check_out_date'])) {
-            throw new Exception('Check-out date is required for bundle bookings');
-        }
-        
-        $checkIn = new DateTime($data['check_in_date']);
-        $checkOut = new DateTime($data['check_out_date']);
-        $interval = $checkIn->diff($checkOut);
-        $numberOfDays = $interval->days;
-        
-        if ($numberOfDays < 1) {
-            throw new Exception('Minimum stay is 1 day');
-        }
-        
+
+        $startTime = $bundle['start_time'] ?: '00:00:00';
+        $durationHours = intval($bundle['duration_hours'] ?? 0);
+        if ($durationHours < 1) $durationHours = 24;
+
+        $checkInDT = new DateTime($data['check_in_date'] . ' ' . $startTime);
+        $checkOutDT = clone $checkInDT;
+        $checkOutDT->modify('+' . $durationHours . ' hours');
+
+        $data['check_in_time']  = $checkInDT->format('H:i:s');
+        $data['check_out_date'] = $checkOutDT->format('Y-m-d');
+        $data['check_out_time'] = $checkOutDT->format('H:i:s');
+        $numberOfDays = max(1, (int) $checkInDT->diff($checkOutDT)->days);
+        $data['number_of_days'] = $numberOfDays;
+
         $price = $bundle['price']; // Flat price for the bundle package
     }
     

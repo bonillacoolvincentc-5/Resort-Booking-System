@@ -86,17 +86,25 @@ try {
         }
         $price = $item['price_per_night'] * $numberOfDays;
     } else {
-        $s = $conn->prepare("SELECT price, capacity FROM bundles WHERE id = ? AND is_active = 1");
+        $s = $conn->prepare("SELECT price, capacity, start_time, duration_hours FROM bundles WHERE id = ? AND is_active = 1");
         $s->bind_param('i', $itemId);
         $s->execute();
         $item = $s->get_result()->fetch_assoc();
         if (!$item) throw new Exception('Bundle not found or inactive.');
         if ($numberOfGuests > $item['capacity']) throw new Exception("Bundle capacity is {$item['capacity']} guests.");
-        if ($checkOutDate) {
-            $d1 = new DateTime($checkInDate);
-            $d2 = new DateTime($checkOutDate);
-            $numberOfDays = max(1, $d1->diff($d2)->days);
-        }
+
+        $startTime = $item['start_time'] ?: '00:00:00';
+        $durationHours = intval($item['duration_hours'] ?? 0);
+        if ($durationHours < 1) $durationHours = 24;
+
+        $checkInDT = new DateTime($checkInDate . ' ' . $startTime);
+        $checkOutDT = clone $checkInDT;
+        $checkOutDT->modify('+' . $durationHours . ' hours');
+
+        $checkInTime  = $checkInDT->format('H:i:s');
+        $checkOutDate = $checkOutDT->format('Y-m-d');
+        $checkOutTime = $checkOutDT->format('H:i:s');
+        $numberOfDays = max(1, (int) $checkInDT->diff($checkOutDT)->days);
         $price = $item['price'];
     }
 

@@ -1427,6 +1427,28 @@ $userPhone = $_SESSION['user_phone'] ?? '';
             document.body.style.overflow = '';
         }
 
+        function pad2(n) { return String(n).padStart(2, '0'); }
+
+        function computeBundleStay(bundle, dateStr) {
+            let startTime = (bundle && bundle.start_time ? String(bundle.start_time) : '00:00:00');
+            if (/^\d{2}:\d{2}$/.test(startTime)) startTime += ':00';
+            if (!/^\d{2}:\d{2}:\d{2}/.test(startTime)) startTime = '00:00:00';
+            startTime = startTime.substring(0, 8);
+
+            const parsedHours = parseInt(bundle && bundle.duration_hours, 10);
+            const durationHours = Number.isFinite(parsedHours) && parsedHours > 0 ? parsedHours : 24;
+
+            const checkIn = new Date(`${dateStr}T${startTime}`);
+            const checkOut = new Date(checkIn.getTime() + durationHours * 60 * 60 * 1000);
+
+            return {
+                checkInDate:  `${checkIn.getFullYear()}-${pad2(checkIn.getMonth() + 1)}-${pad2(checkIn.getDate())}`,
+                checkInTime:  `${pad2(checkIn.getHours())}:${pad2(checkIn.getMinutes())}:${pad2(checkIn.getSeconds())}`,
+                checkOutDate: `${checkOut.getFullYear()}-${pad2(checkOut.getMonth() + 1)}-${pad2(checkOut.getDate())}`,
+                checkOutTime: `${pad2(checkOut.getHours())}:${pad2(checkOut.getMinutes())}:${pad2(checkOut.getSeconds())}`
+            };
+        }
+
         async function submitWithProof() {
             if (!proofFile || !selectedBundle || !selectedDate) {
                 console.warn("Submit aborted: missing fields", { proofFile, selectedBundle, selectedDate });
@@ -1446,10 +1468,7 @@ $userPhone = $_SESSION['user_phone'] ?? '';
             closePayModal();
             showLoader();
 
-            const checkIn  = new Date(selectedDate + 'T00:00:00');
-            const checkOut = new Date(checkIn);
-            checkOut.setDate(checkOut.getDate() + 1);
-            const checkOutStr = `${checkOut.getFullYear()}-${String(checkOut.getMonth()+1).padStart(2,'0')}-${String(checkOut.getDate()).padStart(2,'0')}`;
+            const stay = computeBundleStay(selectedBundle, selectedDate);
 
             const fd = new FormData();
             fd.append('booking_type',    'bundle');
@@ -1457,8 +1476,10 @@ $userPhone = $_SESSION['user_phone'] ?? '';
             fd.append('full_name',       '<?= htmlspecialchars(addslashes($userName), ENT_QUOTES, "UTF-8") ?>');
             fd.append('email',           '<?= htmlspecialchars(addslashes($userEmail), ENT_QUOTES, "UTF-8") ?>');
             fd.append('phone_number',    '<?= htmlspecialchars(addslashes($userPhone), ENT_QUOTES, "UTF-8") ?>' || 'N/A');
-            fd.append('check_in_date',   selectedDate);
-            fd.append('check_out_date',  checkOutStr);
+            fd.append('check_in_date',   stay.checkInDate);
+            fd.append('check_in_time',   stay.checkInTime);
+            fd.append('check_out_date',  stay.checkOutDate);
+            fd.append('check_out_time',  stay.checkOutTime);
             fd.append('number_of_guests',DOM.guestCount.value);
             fd.append('special_requests','');
             fd.append('payment_proof',   proofFile, proofFile.name);
