@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 session_start();
 
 // Check if user is logged in
@@ -878,9 +878,6 @@ if ($diff->y >= 1) {
                         <button class="profile-tab active" onclick="switchTab('personal')">
                             <i class="bi bi-person"></i>Personal Info
                         </button>
-                        <button class="profile-tab" onclick="switchTab('activity')">
-                            <i class="bi bi-clock-history"></i>Activity
-                        </button>
                     </div>
 
                     <!-- Tab Content -->
@@ -990,42 +987,6 @@ if ($diff->y >= 1) {
                             </div>
                         </div>
 
-                        <!-- Activity Tab -->
-                        <div class="tab-pane" id="activity-tab">
-                            <h5 class="mb-4">Recent Activity</h5>
-
-                            <div class="activity-timeline">
-                                <div class="activity-item">
-                                    <div class="activity-time">2 hours ago</div>
-                                    <div class="activity-title">Profile Updated</div>
-                                    <div class="activity-description">Changed phone number and address</div>
-                                </div>
-
-                                <div class="activity-item">
-                                    <div class="activity-time">1 day ago</div>
-                                    <div class="activity-title">Booking Confirmed</div>
-                                    <div class="activity-description">Basketball Court - March 25, 10:00 AM</div>
-                                </div>
-
-                                <div class="activity-item">
-                                    <div class="activity-time">3 days ago</div>
-                                    <div class="activity-title">Password Changed</div>
-                                    <div class="activity-description">Security settings updated</div>
-                                </div>
-
-                                <div class="activity-item">
-                                    <div class="activity-time">1 week ago</div>
-                                    <div class="activity-title">New Booking</div>
-                                    <div class="activity-description">Swimming Pool - March 26, 2:00 PM</div>
-                                </div>
-
-                                <div class="activity-item">
-                                    <div class="activity-time">2 weeks ago</div>
-                                    <div class="activity-title">Account Created</div>
-                                    <div class="activity-description">Welcome to YP4K Resort</div>
-                                </div>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
