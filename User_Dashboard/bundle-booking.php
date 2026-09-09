@@ -322,7 +322,12 @@ $userPhone = $_SESSION['user_phone'] ?? '';
             letter-spacing: 0.05em;
             line-height: 1;
         }
-        .guest-input input { background: transparent; border: none; color: var(--text-primary); text-align: center; width: 40px; font-weight: 600; }
+        .guest-input input { background: transparent; border: none; color: var(--text-primary); text-align: center; width: 40px; font-weight: 600; -moz-appearance: textfield; appearance: textfield; }
+        .guest-input input::-webkit-outer-spin-button,
+        .guest-input input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
         
         .sum-footer { display: flex; justify-content: space-between; align-items: center; margin-top: auto; padding-top: 1rem; border-top: 1px solid var(--border-color); }
         .sum-total-lbl { font-size: 0.9rem; color: var(--text-muted); }
@@ -860,7 +865,7 @@ $userPhone = $_SESSION['user_phone'] ?? '';
                         <div class="guest-input" style="opacity: 0.5; pointer-events: none;" id="guestControl">
                             <span class="text-secondary" style="font-size: 0.85rem">Guests:</span>
                             <button id="btnMinusGuest" type="button"><i class="bi bi-dash"></i></button>
-                            <input type="number" id="guestCount" value="1" readonly>
+                            <input type="number" id="guestCount" value="1" min="1" step="1" inputmode="numeric">
                             <button id="btnPlusGuest" type="button"><i class="bi bi-plus"></i></button>
                             <button id="btnMaxGuest" class="btn-max-guest" type="button" title="Set to maximum capacity">MAX</button>
                             <span class="text-muted ms-2" style="font-size: 0.8rem" id="maxCapText">Max: -</span>
@@ -1049,6 +1054,8 @@ $userPhone = $_SESSION['user_phone'] ?? '';
             DOM.btnMinusGuest.addEventListener('click', () => updateGuests(-1));
             DOM.btnPlusGuest.addEventListener('click', () => updateGuests(1));
             DOM.btnMaxGuest.addEventListener('click', setGuestsToMax);
+            DOM.guestCount.addEventListener('input', handleGuestManualInput);
+            DOM.guestCount.addEventListener('blur', handleGuestManualBlur);
             DOM.btnContinue.addEventListener('click', openPayModal);
             setupModal();
         }
@@ -1272,21 +1279,53 @@ $userPhone = $_SESSION['user_phone'] ?? '';
             checkButtonState();
         }
 
+        function getGuestMaxCapacity() {
+            return selectedBundle ? (parseInt(selectedBundle.capacity, 10) || 1) : 1;
+        }
+
+        function clampGuestCount(value, { allowEmpty = false } = {}) {
+            if (allowEmpty && (value === '' || value === null || value === undefined)) {
+                return null;
+            }
+            let v = parseInt(value, 10);
+            if (isNaN(v)) v = 1;
+            if (v < 1) v = 1;
+            const maxCap = getGuestMaxCapacity();
+            if (v > maxCap) v = maxCap;
+            return v;
+        }
+
+        function applyGuestCount(value, { allowEmpty = false } = {}) {
+            const clamped = clampGuestCount(value, { allowEmpty });
+            if (clamped === null) {
+                updateTotal();
+                return;
+            }
+            if (String(DOM.guestCount.value) !== String(clamped)) {
+                DOM.guestCount.value = clamped;
+            }
+            DOM.guestCount.min = 1;
+            DOM.guestCount.max = getGuestMaxCapacity();
+            updateTotal();
+        }
+
+        function handleGuestManualInput() {
+            applyGuestCount(DOM.guestCount.value, { allowEmpty: true });
+        }
+
+        function handleGuestManualBlur() {
+            applyGuestCount(DOM.guestCount.value, { allowEmpty: false });
+        }
+
         function updateGuests(delta) {
             if (!selectedBundle) return;
-            let v = parseInt(DOM.guestCount.value) + delta;
-            if (v < 1) v = 1;
-            if (v > selectedBundle.capacity) v = selectedBundle.capacity;
-            DOM.guestCount.value = v;
-            DOM.guestCount.dispatchEvent(new Event('change', { bubbles: true }));
-            updateTotal();
+            const current = clampGuestCount(DOM.guestCount.value) || 1;
+            applyGuestCount(current + delta);
         }
 
         function setGuestsToMax() {
             if (!selectedBundle) return;
-            const current = parseInt(DOM.guestCount.value, 10) || 1;
-            const maxCap = parseInt(selectedBundle.capacity, 10) || 1;
-            updateGuests(maxCap - current);
+            applyGuestCount(getGuestMaxCapacity());
         }
 
         function updateTotal() {
