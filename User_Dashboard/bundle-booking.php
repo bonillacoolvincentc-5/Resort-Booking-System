@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 session_start();
 
 // Auth guard
@@ -85,26 +85,26 @@ $userPhone = $_SESSION['user_phone'] ?? '';
         .nav-link.btn-logout { background: var(--accent-danger); color: white !important; border: none; display: flex; align-items: center; justify-content: center; }
         .nav-link.btn-logout:hover { background: #dc2626; transform: translateY(-1px); }
 
-        .page-wrap { padding: 2rem 0 2rem; }
-
-        /* HEADER */
-        .page-header {
-            background: var(--bg-card); backdrop-filter: blur(12px);
-            border: 1px solid var(--border-color); border-radius: var(--radius-card);
-            padding: 2rem; margin-bottom: 2rem; position: relative; overflow: hidden;
+        .page-wrap {
+            padding: 1rem 0 0;
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 62px);
+            overflow: hidden;
         }
-        .page-header::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background: var(--gradient-primary); }
-        .page-title { font-size: 2rem; font-weight:700; margin-bottom:.4rem; background: linear-gradient(135deg, var(--text-primary), var(--accent-primary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-        .page-subtitle { color: var(--text-secondary); font-size:1rem; }
 
         /* TWO COLUMN LAYOUT */
         .bundle-layout {
             display: flex;
             gap: 2rem;
-            align-items: flex-start;
+            align-items: stretch;
+            flex: 1;
+            overflow: hidden;
+            min-height: 0;
+            padding-bottom: 1.5rem;
         }
-        .left-col { width: 42%; flex-shrink: 0; display: flex; flex-direction: column; height: calc(100vh - 120px); }
-        .right-col { flex: 1; min-width: 0; }
+        .left-col { width: 42%; flex-shrink: 0; display: flex; flex-direction: column; height: 100%; min-height: 0; }
+        .right-col { flex: 1; min-width: 0; display: flex; flex-direction: column; height: 100%; min-height: 0; overflow-y: auto; }
         .package-filters {
             flex-shrink: 0;
             background: var(--bg-card);
@@ -323,9 +323,10 @@ $userPhone = $_SESSION['user_phone'] ?? '';
         .btn-continue:disabled { opacity: 0.5; cursor: not-allowed; filter: grayscale(100%); }
 
         @media (max-width: 992px) {
-            .bundle-layout { flex-direction: column; }
-            .left-col { width: 100%; height: auto; max-height: 620px; }
-            .right-col { width: 100%; }
+            .page-wrap { height: auto; overflow: visible; }
+            .bundle-layout { flex-direction: column; flex: none; overflow: visible; }
+            .left-col { width: 100%; height: auto; min-height: 0; }
+            .right-col { width: 100%; height: auto; overflow-y: visible; }
             .summary-panel { flex-direction: column; }
             .sum-img { width: 100%; height: 200px; }
         }
@@ -650,13 +651,17 @@ $userPhone = $_SESSION['user_phone'] ?? '';
            RESPONSIVE / PWA MOBILE VIEW
         ═══════════════════════════════════════ */
         @media (max-width: 991.98px) {
+            .page-wrap { height: auto; overflow: visible; }
             .bundle-layout {
                 flex-direction: column;
                 gap: 1.75rem;
+                flex: none;
+                overflow: visible;
             }
             .left-col {
                 width: 100%;
                 height: auto;
+                min-height: 0;
             }
             .bundles-scroll-list {
                 max-height: 540px;
@@ -664,6 +669,8 @@ $userPhone = $_SESSION['user_phone'] ?? '';
             }
             .right-col {
                 width: 100%;
+                height: auto;
+                overflow-y: visible;
             }
         }
 
@@ -758,11 +765,6 @@ $userPhone = $_SESSION['user_phone'] ?? '';
     <?php include 'components/navigation.php'; ?>
 
     <div class="container-fluid px-4 page-wrap">
-        <div class="page-header">
-            <h1 class="page-title"><i class="bi bi-box-seam me-2"></i>Premium Bundle Booking</h1>
-            <p class="page-subtitle">Select an exclusive resort package and check availability instantly.</p>
-        </div>
-
         <div id="alertContainer"></div>
 
         <div class="bundle-layout">
