@@ -384,10 +384,18 @@ while ($row = $accResult->fetch_assoc()) {
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group-modern">
-                                    <label class="form-label-modern">Price per Hour (₱)</label>
+                                    <label class="form-label-modern">Price (₱)</label>
                                     <input type="number" step="0.01" class="form-control-modern" id="activityPrice" name="price_per_hour" required>
                                 </div>
                             </div>
+                        </div>
+                        <div class="form-group-modern">
+                            <label class="form-label-modern">Pricing Type</label>
+                            <select class="form-control-modern" id="activityPriceType" name="price_type">
+                                <option value="flat_rate">Flat Rate</option>
+                                <option value="per_head">Per Head</option>
+                                <option value="per_hour">Per Hour</option>
+                            </select>
                         </div>
                         <div class="form-group-modern">
                             <label class="form-label-modern">Description</label>
@@ -560,6 +568,7 @@ while ($row = $accResult->fetch_assoc()) {
                     document.getElementById('activityName').value = activity.name;
                     document.getElementById('activityDescription').value = activity.description || '';
                     document.getElementById('activityPrice').value = activity.price_per_hour;
+                    document.getElementById('activityPriceType').value = activity.price_type || 'flat_rate';
                     document.getElementById('activityStatus').value = activity.is_active;
                     document.getElementById('minDuration').value = activity.min_duration_hours;
                     document.getElementById('maxDuration').value = activity.max_duration_hours;

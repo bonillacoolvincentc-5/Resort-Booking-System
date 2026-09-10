@@ -15,6 +15,11 @@ header('Content-Type: application/json');
 
 global $conn;
 
+$colCheck = $conn->query("SHOW COLUMNS FROM `activities` LIKE 'price_type'");
+if ($colCheck && $colCheck->num_rows === 0) {
+    $conn->query("ALTER TABLE `activities` ADD COLUMN `price_type` ENUM('per_head','per_hour','flat_rate') NOT NULL DEFAULT 'flat_rate' AFTER `price_per_hour`");
+}
+
 $action = $_POST['action'] ?? $_GET['action'] ?? '';
 
 if ($action === 'add' || $action === 'edit') {
@@ -22,10 +27,16 @@ if ($action === 'add' || $action === 'edit') {
     $name = trim($_POST['name'] ?? '');
     $description = trim($_POST['description'] ?? '');
     $pricePerHour = floatval($_POST['price_per_hour'] ?? 0);
+    $priceType = trim($_POST['price_type'] ?? 'flat_rate');
     $isActive = intval($_POST['is_active'] ?? 1);
     $minDuration = floatval($_POST['min_duration_hours'] ?? 1.0);
     $maxDuration = floatval($_POST['max_duration_hours'] ?? 4.0);
     $capacity = intval($_POST['capacity'] ?? 10);
+
+    $allowedPriceTypes = ['per_head', 'per_hour', 'flat_rate'];
+    if (!in_array($priceType, $allowedPriceTypes, true)) {
+        $priceType = 'flat_rate';
+    }
     
     // Generate slug from name
     $slug = strtolower(preg_replace('/[^a-zA-Z0-9]+/', '-', $name));
@@ -55,11 +66,10 @@ if ($action === 'add' || $action === 'edit') {
     try {
         if ($action === 'add') {
             // Insert new activity
-            $query = "INSERT INTO activities (name, slug, description, price_per_hour, min_duration_hours, max_duration_hours, capacity, image_url, is_active) 
-                      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            $query = "INSERT INTO activities (name, slug, description, price_per_hour, price_type, min_duration_hours, max_duration_hours, capacity, image_url, is_active) 
+                      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             $stmt = $conn->prepare($query);
-            // s,s,s = name/slug/desc; d,d,d = price/minDur/maxDur; i = capacity; s = image; i = is_active
-            $stmt->bind_param('sssdddisi', $name, $slug, $description, $pricePerHour, $minDuration, $maxDuration, $capacity, $imagePath, $isActive);
+            $stmt->bind_param('sssdsddisi', $name, $slug, $description, $pricePerHour, $priceType, $minDuration, $maxDuration, $capacity, $imagePath, $isActive);
             $stmt->execute();
             
             echo json_encode(['success' => true, 'message' => 'Activity added successfully']);
@@ -72,16 +82,14 @@ if ($action === 'add' || $action === 'edit') {
             
             if ($imagePath) {
                 // Update with new image
-                $query = "UPDATE activities SET name = ?, slug = ?, description = ?, price_per_hour = ?, min_duration_hours = ?, max_duration_hours = ?, capacity = ?, image_url = ?, is_active = ? WHERE id = ?";
+                $query = "UPDATE activities SET name = ?, slug = ?, description = ?, price_per_hour = ?, price_type = ?, min_duration_hours = ?, max_duration_hours = ?, capacity = ?, image_url = ?, is_active = ? WHERE id = ?";
                 $stmt = $conn->prepare($query);
-                // s,s,s,d,d,d,i,s,i,i = name/slug/desc, price/min/max, capacity, image, isActive, id
-                $stmt->bind_param('sssdddisii', $name, $slug, $description, $pricePerHour, $minDuration, $maxDuration, $capacity, $imagePath, $isActive, $activityId);
+                $stmt->bind_param('sssdsddisii', $name, $slug, $description, $pricePerHour, $priceType, $minDuration, $maxDuration, $capacity, $imagePath, $isActive, $activityId);
             } else {
                 // Update without changing image
-                $query = "UPDATE activities SET name = ?, slug = ?, description = ?, price_per_hour = ?, min_duration_hours = ?, max_duration_hours = ?, capacity = ?, is_active = ? WHERE id = ?";
+                $query = "UPDATE activities SET name = ?, slug = ?, description = ?, price_per_hour = ?, price_type = ?, min_duration_hours = ?, max_duration_hours = ?, capacity = ?, is_active = ? WHERE id = ?";
                 $stmt = $conn->prepare($query);
-                // s,s,s,d,d,d,i,i,i = name/slug/desc, price/min/max, capacity, isActive, id
-                $stmt->bind_param('sssdddiii', $name, $slug, $description, $pricePerHour, $minDuration, $maxDuration, $capacity, $isActive, $activityId);
+                $stmt->bind_param('sssdsddiii', $name, $slug, $description, $pricePerHour, $priceType, $minDuration, $maxDuration, $capacity, $isActive, $activityId);
             }
             $stmt->execute();
             

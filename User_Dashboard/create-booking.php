@@ -9,6 +9,9 @@ if (!isset($_SESSION['user_id'])) {
 
 require_once '../phpAuthentication/db_config.php';
 
+/** @var mysqli $conn */
+global $conn;
+
 $userName  = $_SESSION['user_name'];
 $userEmail = $_SESSION['user_email'];
 $userId    = $_SESSION['user_id'];
@@ -1032,7 +1035,13 @@ async function loadPackages() {
 
         // Load activities as potential add-ons
         (data.activities || []).forEach(a => {
-            addonsMap[a.id] = { id: a.id, name: a.name, price: a.price, selected: false };
+            addonsMap[a.id] = {
+                id: a.id,
+                name: a.name,
+                price: a.price,
+                price_type: a.price_type || 'flat_rate',
+                selected: false
+            };
         });
 
         if (!allPackages.length) { renderEmptyState('No packages available yet. Check back soon!'); return; }
@@ -1271,26 +1280,39 @@ function renderAddons(currentPkg) {
         return;
     }
 
-    listEl.innerHTML = available.map(a => `
-        <label class="addon-item" id="addon-${a.id}">
+    listEl.innerHTML = available.map(a => {
+        const priceType = a.price_type || 'flat_rate';
+        const guestsEl = document.getElementById('numberOfGuests');
+        const maxQty = Math.max(1, parseInt(guestsEl ? guestsEl.value : 1, 10) || 1);
+        return `
+        <div class="addon-item" id="addon-${a.id}" data-type="${escHtml(priceType)}">
             <div class="addon-check">
                 <input type="checkbox" id="addonChk-${a.id}" value="${a.id}"
                        onchange="toggleAddon(${a.id},${a.price},this)">
             </div>
             <div class="addon-name">${escHtml(a.name)}</div>
+            <input type="number" class="addon-qty" id="addonQty-${a.id}" min="1" max="${maxQty}" value="1" step="1"
+                   style="display:none;width:4.5rem;text-align:center;background:var(--bg-secondary);border:1px solid var(--border-color);color:var(--text-primary);border-radius:.5rem;padding:.25rem .35rem;"
+                   title="Quantity for this add-on"
+                   onclick="event.stopPropagation()"
+                   oninput="recalcPrice()">
             <div class="addon-price">+${escHtml(a.starting_price)}</div>
-        </label>
-    `).join('');
+        </div>`;
+    }).join('');
 }
 
 function toggleAddon(id, price, chk) {
     const item = document.getElementById('addon-' + id);
+    const qtyEl = document.getElementById('addonQty-' + id);
+    const priceType = (item && item.dataset.type) || (addonsMap[id] && addonsMap[id].price_type) || 'flat_rate';
     if (chk.checked) {
         item.classList.add('selected');
-        addonsMap[id] = { ...addonsMap[id], selected: true, price };
+        addonsMap[id] = { ...addonsMap[id], selected: true, price, price_type: priceType };
+        if (qtyEl) qtyEl.style.display = (priceType === 'flat_rate') ? 'none' : 'inline-block';
     } else {
         item.classList.remove('selected');
         if (addonsMap[id]) addonsMap[id].selected = false;
+        if (qtyEl) qtyEl.style.display = 'none';
     }
     recalcPrice();
 }
@@ -1301,6 +1323,12 @@ function recalcPrice() {
 
     const guestsEl = document.getElementById('numberOfGuests');
     const guests   = Math.max(1, parseInt(guestsEl ? guestsEl.value : 1) || 1);
+    document.querySelectorAll('.addon-qty').forEach(qtyEl => {
+        qtyEl.max = guests;
+        const current = parseInt(qtyEl.value, 10) || 1;
+        if (current > guests) qtyEl.value = guests;
+        if (current < 1) qtyEl.value = 1;
+    });
 
     let base = 0;
     let baseLabel = 'Base price';
@@ -1339,7 +1367,20 @@ function recalcPrice() {
         }
     }
 
-    const addonsTotal = Object.values(addonsMap).filter(a => a.selected).reduce((s,a) => s + Number(a.price), 0);
+    const addonsTotal = Object.values(addonsMap).filter(a => a.selected).reduce((sum, a) => {
+        const type = a.price_type || 'flat_rate';
+        if (type === 'flat_rate') return sum + Number(a.price);
+        const qtyEl = document.getElementById('addonQty-' + a.id);
+        let qty = Math.max(1, parseInt(qtyEl ? qtyEl.value : 1, 10) || 1);
+        if (qtyEl) {
+            qtyEl.max = guests;
+            if (qty > guests) {
+                qty = guests;
+                qtyEl.value = guests;
+            }
+        }
+        return sum + (Number(a.price) * qty);
+    }, 0);
     const grand = base + addonsTotal;
 
     document.getElementById('basePriceLabel').textContent = baseLabel;

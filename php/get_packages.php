@@ -5,7 +5,10 @@
  * YP4K Resort — Booking System
  */
 
-require_once '../phpAuthentication/db_config.php';
+require_once __DIR__ . '/../phpAuthentication/db_config.php';
+
+/** @var mysqli $conn */
+global $conn;
 
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
@@ -28,6 +31,7 @@ try {
             slug,
             description,
             price_per_hour,
+            price_type,
             min_duration_hours,
             max_duration_hours,
             capacity,
@@ -56,6 +60,7 @@ try {
             'description'        => $row['description'],
             'short_description'  => mb_strimwidth($row['description'] ?? '', 0, 120, '...'),
             'price'              => (float) $row['price_per_hour'],
+            'price_type'         => $row['price_type'] ?? 'flat_rate',
             'price_label'        => '₱' . number_format($row['price_per_hour'], 2) . '/hr',
             'starting_price'     => '₱' . number_format($row['price_per_hour'], 2),
             'capacity'           => $row['capacity'],
