@@ -44,10 +44,8 @@ function setBreadcrumb() {
         'booking-records': 'Booking Records',
         'activities': 'Activities Management',
         'bundles':    'Bundle Packages',
-        'menu':       'Menu Management',
         'users':      'User Management',
-        'payments':   'Payments',
-        'reports':    'Reports & Analytics'
+        'payments':   'Payments'
     };
     if (breadcrumbText && pageNames[currentPage]) {
         breadcrumbText.textContent = pageNames[currentPage];
