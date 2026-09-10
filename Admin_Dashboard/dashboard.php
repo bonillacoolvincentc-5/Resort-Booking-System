@@ -198,18 +198,15 @@ while ($row = $result->fetch_assoc()) {
         <div class="charts-section">
             <div class="chart-card">
                 <div class="chart-header">
-                    <h5 class="chart-title">Revenue Overview</h5>
+                    <h5 class="chart-title">Bookings Overview</h5>
                     <div class="chart-options">
-                        <button class="chart-option active">Week</button>
-                        <button class="chart-option">Month</button>
-                        <button class="chart-option">Year</button>
+                        <button type="button" class="chart-option active" data-range="week">Week</button>
+                        <button type="button" class="chart-option" data-range="month">Month</button>
+                        <button type="button" class="chart-option" data-range="year">Year</button>
                     </div>
                 </div>
                 <div class="chart-container">
-                    <div class="chart-placeholder">
-                        <i class="bi bi-graph-up"></i>
-                        <p>Revenue Chart</p>
-                    </div>
+                    <canvas id="bookingsOverviewChart"></canvas>
                 </div>
             </div>
 
@@ -273,13 +270,101 @@ while ($row = $result->fetch_assoc()) {
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script>
+        // ── Bookings Overview chart ──────────────────────────────────────────
+        let bookingsOverviewChart = null;
+
+        function renderBookingsOverview(labels, data) {
+            const canvas = document.getElementById('bookingsOverviewChart');
+            if (!canvas || typeof Chart === 'undefined') return;
+            const ctx = canvas.getContext('2d');
+            if (bookingsOverviewChart) bookingsOverviewChart.destroy();
+            const areaGradient = ctx.createLinearGradient(0, 0, 0, canvas.offsetHeight || 220);
+            areaGradient.addColorStop(0, 'rgba(130, 214, 22, 0.35)');
+            areaGradient.addColorStop(1, 'rgba(130, 214, 22, 0.02)');
+            bookingsOverviewChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Bookings',
+                        data: data,
+                        borderColor: '#82d616',
+                        backgroundColor: areaGradient,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 3,
+                        pointHoverRadius: 5,
+                        pointBackgroundColor: '#82d616',
+                        pointBorderColor: '#82d616'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            grid: {
+                                color: 'rgba(92, 107, 99, 0.18)',
+                                borderDash: [4, 4],
+                                drawBorder: false
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(92, 107, 99, 0.22)',
+                                borderDash: [4, 4],
+                                drawBorder: false
+                            },
+                            ticks: {
+                                precision: 0,
+                                callback: function (value) {
+                                    return value;
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: true },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    const value = context.parsed.y ?? 0;
+                                    return 'Bookings: ' + value;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        async function loadBookingsOverview(range) {
+            try {
+                const res = await fetch('get_bookings_overview.php?range=' + encodeURIComponent(range));
+                const json = await res.json();
+                if (json.success) {
+                    renderBookingsOverview(json.labels || [], json.data || []);
+                }
+            } catch (err) {
+                console.error('Failed to load bookings overview', err);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            loadBookingsOverview('week');
+        });
+
         // ── Dashboard-specific: chart option switching ───────────────────────
         document.addEventListener('click', function(e) {
             if (e.target.classList.contains('chart-option')) {
                 const options = e.target.parentElement.querySelectorAll('.chart-option');
                 options.forEach(opt => opt.classList.remove('active'));
                 e.target.classList.add('active');
+                const range = e.target.dataset.range || 'week';
+                loadBookingsOverview(range);
             }
         });
 
