@@ -34,9 +34,10 @@ $query = "
         a.image_url,
         a.is_active,
         a.created_at,
-        COUNT(b.id) as total_bookings
+        COUNT(CASE WHEN bs.name IN ('pending_review', 'approved') THEN b.id END) as total_bookings
     FROM activities a
     LEFT JOIN bookings b ON a.id = b.activity_id
+    LEFT JOIN booking_status bs ON b.status_id = bs.id
     GROUP BY a.id
     ORDER BY a.created_at DESC
 ";
@@ -49,6 +50,38 @@ $activities = [];
 while ($row = $result->fetch_assoc()) {
     $activities[] = $row;
 }
+
+// #region agent log
+try {
+    $dbgBreakdown = $conn->query("
+        SELECT a.id AS activity_id, a.name,
+               COUNT(b.id) AS all_bookings,
+               SUM(CASE WHEN bs.name IN ('pending_review','approved') THEN 1 ELSE 0 END) AS active_bookings,
+               GROUP_CONCAT(DISTINCT bs.name) AS status_names
+        FROM activities a
+        LEFT JOIN bookings b ON a.id = b.activity_id
+        LEFT JOIN booking_status bs ON b.status_id = bs.id
+        GROUP BY a.id
+        ORDER BY a.id
+    ");
+    $dbgRows = [];
+    if ($dbgBreakdown) {
+        while ($dbgRow = $dbgBreakdown->fetch_assoc()) { $dbgRows[] = $dbgRow; }
+    }
+    $dbgPayload = json_encode([
+        'sessionId' => '1b1b88',
+        'runId' => 'post-fix',
+        'hypothesisId' => 'A',
+        'location' => 'Admin_Dashboard/activities.php:display-count',
+        'message' => 'Activity card booking counts vs status breakdown',
+        'data' => ['rows' => $dbgRows, 'unfiltered_card_counts' => array_map(function ($a) {
+            return ['id' => $a['id'], 'total_bookings' => $a['total_bookings']];
+        }, $activities)],
+        'timestamp' => round(microtime(true) * 1000)
+    ]) . "\n";
+    file_put_contents(dirname(__DIR__) . '/debug-1b1b88.log', $dbgPayload, FILE_APPEND);
+} catch (Throwable $e) {}
+// #endregion
 
 // Fetch real accommodations/amenities from database
 $accQuery = "
@@ -501,8 +534,16 @@ while ($row = $accResult->fetch_assoc()) {
 
         // Edit Activity
         async function editActivity(activityId) {
+            if (!activityId) {
+                alert('Activity ID is missing. Please try again.');
+                return;
+            }
             try {
-                const response = await fetch(`../php/add_edit_activity.php?action=get&activity_id=${activityId}`);
+                const params = new URLSearchParams({
+                    action: 'get',
+                    activity_id: String(activityId)
+                });
+                const response = await fetch(`../php/add_edit_activity.php?${params.toString()}`);
                 const result = await response.json();
 
                 if (result.success) {
