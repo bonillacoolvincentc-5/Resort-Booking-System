@@ -1,3 +1,10 @@
+<?php
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+$navbarAdminName  = $_SESSION['admin_name']  ?? 'Administrator';
+$navbarAdminEmail = $_SESSION['admin_email'] ?? '';
+?>
 <!-- YP4K Resort — Admin Top Navbar Component -->
 <!-- All styles live in: components/navbar.css (loaded in <head> of each page) -->
 
@@ -65,7 +72,7 @@
                         <i class="bi bi-person-circle"></i>
                     </div>
                     <div class="admin-info-small">
-                        <div class="admin-name-small">Admin User</div>
+                        <div class="admin-name-small"><?php echo htmlspecialchars($navbarAdminName, ENT_QUOTES, 'UTF-8'); ?></div>
                     </div>
                     <i class="bi bi-chevron-down"></i>
                 </button>
@@ -76,8 +83,8 @@
                             <i class="bi bi-person-circle"></i>
                         </div>
                         <div class="profile-info">
-                            <div class="profile-name">Admin User</div>
-                            <div class="profile-email">admin@yp4kresort.com</div>
+                            <div class="profile-name"><?php echo htmlspecialchars($navbarAdminName, ENT_QUOTES, 'UTF-8'); ?></div>
+                            <div class="profile-email"><?php echo htmlspecialchars($navbarAdminEmail, ENT_QUOTES, 'UTF-8'); ?></div>
                         </div>
                     </div>
                     <div class="profile-menu">

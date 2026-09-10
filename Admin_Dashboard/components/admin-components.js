@@ -187,7 +187,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // Load navbar independently
-    loadHTML('components/navbar.html', 'navbar-container', function () {
+    loadHTML('components/navbar.php', 'navbar-container', function () {
         setBreadcrumb();          // also try after navbar loads (element now in DOM)
         fetchAdminNotifications();
     });
