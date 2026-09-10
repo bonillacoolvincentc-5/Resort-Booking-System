@@ -217,10 +217,6 @@ while ($row = $bundlesRes->fetch_assoc()) {
                     Rejected
                     <span class="bst-count" id="cntRejected">0</span>
                 </button>
-                <button class="bst-tab bst-all" data-filter="all">
-                    All Bookings
-                    <span class="bst-count" id="cntAll">0</span>
-                </button>
                 <button class="bst-tab bst-all" data-filter="booking_records">
                     Booking Records
                     <span class="bst-count" id="cntRecords">0</span>
@@ -1470,7 +1466,6 @@ while ($row = $bundlesRes->fetch_assoc()) {
                 document.getElementById('cntPending').textContent  = counts.pending_review;
                 document.getElementById('cntApproved').textContent = counts.approved;
                 document.getElementById('cntRejected').textContent = counts.rejected;
-                document.getElementById('cntAll').textContent      = counts.pending_review + counts.approved + counts.rejected;
                 const cntRecords = document.getElementById('cntRecords');
                 if (cntRecords) cntRecords.textContent = counts.completed + counts.rejected;
             }
@@ -1491,9 +1486,6 @@ while ($row = $bundlesRes->fetch_assoc()) {
                     const dateText     = (row.cells[1]?.textContent || '').toLowerCase();
 
                     const tabOk = (() => {
-                        if (activeBstFilter === 'all') {
-                            return rowStatus !== 'completed';
-                        }
                         if (activeBstFilter === 'booking_records') {
                             return rowStatus === 'completed' || rowStatus === 'rejected';
                         }
