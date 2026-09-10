@@ -80,7 +80,7 @@ $query = "
     LEFT JOIN accommodations acc ON b.accommodation_id = acc.id
     LEFT JOIN bundles bun ON b.bundle_id = bun.id
     LEFT JOIN payment_receipts pr ON b.id = pr.booking_id
-    WHERE bs.name <> 'completed'
+    WHERE 1=1
 ";
 
 $params = [];
@@ -220,6 +220,10 @@ while ($row = $bundlesRes->fetch_assoc()) {
                 <button class="bst-tab bst-all" data-filter="all">
                     All Bookings
                     <span class="bst-count" id="cntAll">0</span>
+                </button>
+                <button class="bst-tab bst-all" data-filter="booking_records">
+                    Booking Records
+                    <span class="bst-count" id="cntRecords">0</span>
                 </button>
             </div>
 
@@ -1458,7 +1462,7 @@ while ($row = $bundlesRes->fetch_assoc()) {
             // Count badges: tally rows by status
             function updateCounts() {
                 const allRows = document.querySelectorAll('#bookingsTableBody tr[data-status]');
-                const counts  = { pending_review: 0, approved: 0, rejected: 0 };
+                const counts  = { pending_review: 0, approved: 0, rejected: 0, completed: 0 };
                 allRows.forEach(r => {
                     const s = r.dataset.status;
                     if (s in counts) counts[s]++;
@@ -1466,7 +1470,9 @@ while ($row = $bundlesRes->fetch_assoc()) {
                 document.getElementById('cntPending').textContent  = counts.pending_review;
                 document.getElementById('cntApproved').textContent = counts.approved;
                 document.getElementById('cntRejected').textContent = counts.rejected;
-                document.getElementById('cntAll').textContent      = allRows.length;
+                document.getElementById('cntAll').textContent      = counts.pending_review + counts.approved + counts.rejected;
+                const cntRecords = document.getElementById('cntRecords');
+                if (cntRecords) cntRecords.textContent = counts.completed + counts.rejected;
             }
 
             // Unified filter: tab + search + status-select + date
@@ -1484,7 +1490,15 @@ while ($row = $bundlesRes->fetch_assoc()) {
                     const statusText   = (row.querySelector('.status-badge')?.textContent  || '').toLowerCase();
                     const dateText     = (row.cells[1]?.textContent || '').toLowerCase();
 
-                    const tabOk    = activeBstFilter === 'all' || rowStatus === activeBstFilter;
+                    const tabOk = (() => {
+                        if (activeBstFilter === 'all') {
+                            return rowStatus !== 'completed';
+                        }
+                        if (activeBstFilter === 'booking_records') {
+                            return rowStatus === 'completed' || rowStatus === 'rejected';
+                        }
+                        return rowStatus === activeBstFilter;
+                    })();
                     const searchOk = !searchTerm || customerName.includes(searchTerm);
                     const selectOk = !selectVal  || statusText.includes(selectVal);
                     const dateOk   = !dateValue  || dateText.includes(dateValue.toLowerCase());
@@ -1495,6 +1509,11 @@ while ($row = $bundlesRes->fetch_assoc()) {
                     } else {
                         row.classList.add('bst-hidden');
                     }
+
+                    const hideArchiveActions = activeBstFilter === 'booking_records';
+                    row.querySelectorAll('.btn-approve, .btn-reject').forEach(btn => {
+                        btn.style.display = hideArchiveActions ? 'none' : '';
+                    });
                 });
 
                 if (emptyRow) emptyRow.style.display = visible === 0 ? '' : 'none';
