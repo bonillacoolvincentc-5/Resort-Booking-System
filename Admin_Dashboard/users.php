@@ -170,7 +170,6 @@ while ($row = $result->fetch_assoc()) {
                                 <i class="bi bi-person-fill"></i>
                             </div>
                             <h4 id="modalUserName" class="mb-1" style="font-weight: 700; color: #fff;">---</h4>
-                            <span id="modalUserStatus" class="badge rounded-pill mb-2 px-3 py-2">---</span>
                             <p id="modalUserEmail" class="text-muted small mb-0">---</p>
                         </div>
                         <div class="col-md-8">
@@ -255,16 +254,6 @@ while ($row = $result->fetch_assoc()) {
                 document.getElementById('modalJoined').textContent = d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
             } else {
                 document.getElementById('modalJoined').textContent = 'N/A';
-            }
-
-            // Status badge
-            const statusBadge = document.getElementById('modalUserStatus');
-            if (user.is_verified == 1 || user.is_verified == '1') {
-                statusBadge.textContent = 'Verified';
-                statusBadge.className = 'badge rounded-pill mb-2 px-3 py-2 bg-success';
-            } else {
-                statusBadge.textContent = 'Unverified';
-                statusBadge.className = 'badge rounded-pill mb-2 px-3 py-2 bg-warning text-dark';
             }
 
             const modal = new bootstrap.Modal(document.getElementById('viewUserModal'));

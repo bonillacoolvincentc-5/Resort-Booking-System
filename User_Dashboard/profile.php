@@ -843,10 +843,6 @@ if ($diff->y >= 1) {
                     </div>
                     <h3 class="profile-name"><?php echo htmlspecialchars($fullName); ?></h3>
                     <p class="profile-email"><?php echo htmlspecialchars($userEmail); ?></p>
-                    
-                    <div class="profile-badges">
-                        <span class="profile-badge badge-verified">Verified</span>
-                    </div>
 
                     <div class="profile-stats">
                         <div class="stat-item">

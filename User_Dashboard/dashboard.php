@@ -700,13 +700,6 @@ function fmtBookingDate(string $d, ?string $ti): string {
                         </div>
                         <div class="profile-name"><?= htmlspecialchars($fullName) ?></div>
                         <div class="profile-email"><?= htmlspecialchars($userEmail) ?></div>
-                        <div class="d-flex justify-content-center gap-2 mb-3">
-                            <?php if ($isVerified): ?>
-                                <span class="badge bg-success">Verified</span>
-                            <?php else: ?>
-                                <span class="badge bg-warning text-dark">Unverified</span>
-                            <?php endif; ?>
-                        </div>
                         <a href="profile.php" class="btn-modern btn-primary-modern w-100">
                             <i class="bi bi-gear"></i>Manage Profile
                         </a>
