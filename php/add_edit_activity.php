@@ -33,19 +33,22 @@ if ($action === 'add' || $action === 'edit') {
     // Handle image upload
     $imagePath = null;
     if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
-        $uploadDir = '../assets/uploads/activities/';
+        $uploadDir = dirname(__DIR__) . '/assets/uploads/activities/';
         
         // Create directory if it doesn't exist
         if (!file_exists($uploadDir)) {
             mkdir($uploadDir, 0777, true);
         }
         
-        $fileExtension = pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION);
-        $fileName = uniqid() . '.' . $fileExtension;
-        $uploadPath = $uploadDir . $fileName;
-        
-        if (move_uploaded_file($_FILES['image']['tmp_name'], $uploadPath)) {
-            $imagePath = 'assets/uploads/activities/' . $fileName;
+        $fileExtension = strtolower(pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION));
+        $allowed = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+        if (in_array($fileExtension, $allowed, true)) {
+            $fileName = uniqid() . '.' . $fileExtension;
+            $uploadPath = $uploadDir . $fileName;
+            
+            if (move_uploaded_file($_FILES['image']['tmp_name'], $uploadPath)) {
+                $imagePath = 'assets/uploads/activities/' . $fileName;
+            }
         }
     }
     

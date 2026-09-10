@@ -226,7 +226,13 @@ while ($row = $accResult->fetch_assoc()) {
                             <div class="activity-card">
                                 <div class="activity-image position-relative">
                                     <?php if ($activity['image_url']): ?>
-                                        <img src="<?php echo htmlspecialchars($activity['image_url']); ?>" alt="<?php echo htmlspecialchars($activity['name']); ?>" style="width: 100%; height: 100%; object-fit: cover;">
+                                        <?php
+                                            $activityImgSrc = $activity['image_url'];
+                                            if (!preg_match('#^(https?:)?//#i', $activityImgSrc) && strpos($activityImgSrc, '/') !== 0 && strpos($activityImgSrc, '../') !== 0) {
+                                                $activityImgSrc = '../' . ltrim($activityImgSrc, '/');
+                                            }
+                                        ?>
+                                        <img src="<?php echo htmlspecialchars($activityImgSrc); ?>" alt="<?php echo htmlspecialchars($activity['name']); ?>" style="width: 100%; height: 100%; object-fit: cover;">
                                     <?php else: ?>
                                         <i class="bi <?php echo $icon; ?>"></i>
                                     <?php endif; ?>
@@ -367,7 +373,7 @@ while ($row = $accResult->fetch_assoc()) {
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body modal-body-modern">
-                    <form id="activityForm">
+                    <form id="activityForm" enctype="multipart/form-data">
                         <input type="hidden" id="activityId" name="activity_id">
                         <div class="row">
                             <div class="col-md-6">
