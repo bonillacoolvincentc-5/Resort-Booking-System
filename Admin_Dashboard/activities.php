@@ -28,6 +28,7 @@ $query = "
         a.slug,
         a.description,
         a.price_per_hour,
+        a.price_type,
         a.min_duration_hours,
         a.max_duration_hours,
         a.capacity,
@@ -222,6 +223,12 @@ while ($row = $accResult->fetch_assoc()) {
                                 $statusText = $activity['is_active'] ? 'Active' : 'Inactive';
                                 $icon = 'bi-activity';
                                 $price = number_format($activity['price_per_hour'], 2);
+                                $priceTypeLabels = [
+                                    'per_head'  => 'Per Head',
+                                    'per_hour'  => 'Per Hour',
+                                    'flat_rate' => 'Flat Rate',
+                                ];
+                                $priceUnit = $priceTypeLabels[$activity['price_type'] ?? 'flat_rate'] ?? 'Per Hour';
                             ?>
                             <div class="activity-card">
                                 <div class="activity-image position-relative">
@@ -251,7 +258,7 @@ while ($row = $accResult->fetch_assoc()) {
                                     <div class="activity-stats">
                                         <div class="stat-item">
                                             <div class="stat-value">&#8369;<?php echo $price; ?></div>
-                                            <div class="stat-label">Per Hour</div>
+                                            <div class="stat-label"><?php echo htmlspecialchars($priceUnit); ?></div>
                                         </div>
                                         <div class="stat-item">
                                             <div class="stat-value"><i class="bi bi-people me-1"></i><?php echo $activity['capacity']; ?></div>
