@@ -1096,7 +1096,6 @@ function renderPackages(pkgs) {
             </div>
             <div class="card-content">
                 <div class="card-pkg-name">${escHtml(pkg.name)}</div>
-                <div class="card-pkg-desc">${escHtml(pkg.short_description || pkg.description || '')}</div>
                 <div class="card-meta">
                     <div class="card-meta-item">
                         <i class="bi bi-people"></i>
