@@ -212,13 +212,6 @@ if (empty($userPhone)) {
          .badge-accommodation { background:rgba(139,92,246,.9); color:#fff; }
          .badge-bundle        { background:rgba(16,185,129,.9); color:#fff; }
 
-        .card-price-badge {
-            position:absolute; bottom:.75rem; right:.75rem;
-            background:rgba(15,23,42,.85); backdrop-filter:blur(8px);
-            border:1px solid var(--border-color); border-radius:.5rem;
-            padding:.3rem .75rem; font-size:.8rem; font-weight:700; color:var(--accent-success);
-        }
-
         /* Card body */
         .card-content { padding:1.25rem 1.25rem .75rem; flex:1; display:flex; flex-direction:column; }
         .card-pkg-name { font-size:1.05rem; font-weight:700; color:var(--text-primary); margin-bottom:.4rem; }
@@ -1092,7 +1085,6 @@ function renderPackages(pkgs) {
                 <span class="card-type-badge badge-${escHtml(pkg.package_type)}">
                     ${pkg.package_type === 'activity' ? 'Activity' : (pkg.package_type === 'bundle' ? 'Bundle' : ucfirst(pkg.type || 'Accommodation'))}
                 </span>
-                <span class="card-price-badge">from ${escHtml(pkg.starting_price)}</span>
             </div>
             <div class="card-content">
                 <div class="card-pkg-name">${escHtml(pkg.name)}</div>
