@@ -1090,10 +1090,6 @@ function renderPackages(pkgs) {
                 <div class="card-pkg-name">${escHtml(pkg.name)}</div>
                 <div class="card-meta">
                     <div class="card-meta-item">
-                        <i class="bi bi-people"></i>
-                        <span>Up to ${pkg.capacity} guest${pkg.capacity>1?'s':''}</span>
-                    </div>
-                    <div class="card-meta-item">
                         <i class="bi bi-tag"></i>
                         <span>${escHtml(pkg.price_label)}</span>
                     </div>
