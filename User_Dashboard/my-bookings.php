@@ -729,7 +729,6 @@ while ($row = $statsResult->fetch_assoc()) {
                 <?php foreach ($bookings as $booking): ?>
                     <div class="booking-card" data-status="<?php echo $booking['status_name']; ?>" data-activity="<?php echo $booking['item_name']; ?>">
                         <div class="booking-header">
-                            <span class="booking-id">#<?php echo htmlspecialchars($booking['booking_reference']); ?></span>
                             <span class="booking-status status-<?php echo $booking['status_name']; ?>">
                                 <?php echo ucfirst(str_replace('_', ' ', $booking['status_name'])); ?>
                             </span>
