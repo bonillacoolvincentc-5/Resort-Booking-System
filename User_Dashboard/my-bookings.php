@@ -9,6 +9,9 @@ if (!isset($_SESSION['user_id'])) {
 
 require_once '../phpAuthentication/db_config.php';
 
+/** @var mysqli $conn */
+global $conn;
+
 // Get user info
 $userName = $_SESSION['user_name'];
 $userEmail = $_SESSION['user_email'];
@@ -1003,15 +1006,6 @@ while ($row = $statsResult->fetch_assoc()) {
                                 <div class="booking-info-content">
                                     <div class="booking-info-label">Location</div>
                                     <div class="booking-info-value">${booking.location}</div>
-                                </div>
-                            </div>
-                            <div class="booking-info-item">
-                                <div class="booking-info-icon">
-                                    <i class="bi bi-person"></i>
-                                </div>
-                                <div class="booking-info-content">
-                                    <div class="booking-info-label">Instructor</div>
-                                    <div class="booking-info-value">${booking.instructor}</div>
                                 </div>
                             </div>
                         </div>
