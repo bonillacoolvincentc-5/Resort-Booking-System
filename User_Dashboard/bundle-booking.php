@@ -929,7 +929,7 @@ $userPhone = $_SESSION['user_phone'] ?? '';
                     <div class="upload-drop-area" id="uploadDropArea">
                         <input type="file" id="proofFileInput" accept="image/*">
                         <i class="bi bi-cloud-arrow-up"></i>
-                        <p><strong>Click or drag & drop</strong><br>PNG, JPG, GIF up to 5MB</p>
+                        <p><strong>Click or drag & drop</strong><br>PNG, JPG, GIF up to 1MB</p>
                     </div>
                     <div>
                         <div class="upload-thumb" id="uploadThumb">
@@ -1398,24 +1398,75 @@ $userPhone = $_SESSION['user_phone'] ?? '';
                 showAlert('Please select a valid image file (JPG, PNG, GIF, WEBP).');
                 return;
             }
-            if (file.size > 5 * 1024 * 1024) {
-                showAlert('File too large. Max 5MB.');
-                return;
-            }
-            proofFile = file;
-            // Show thumbnail preview
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                DOM.thumbImg.src = e.target.result;
-                DOM.thumbImg.style.display = 'block';
-                DOM.thumbPlaceholder.style.display = 'none';
-                DOM.uploadThumb.classList.add('has-image');
-            };
-            reader.readAsDataURL(file);
-            // Show filename (truncated)
-            const name = file.name.length > 18 ? file.name.substring(0,15) + '...' : file.name;
-            DOM.uploadFilename.textContent = name;
-            DOM.paySubmitBtn.disabled = false;
+            compressGcashProof(file).then(compressed => {
+                proofFile = compressed;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    DOM.thumbImg.src = e.target.result;
+                    DOM.thumbImg.style.display = 'block';
+                    DOM.thumbPlaceholder.style.display = 'none';
+                    DOM.uploadThumb.classList.add('has-image');
+                };
+                reader.readAsDataURL(compressed);
+                const name = compressed.name.length > 18 ? compressed.name.substring(0,15) + '...' : compressed.name;
+                DOM.uploadFilename.textContent = name;
+                DOM.paySubmitBtn.disabled = false;
+            }).catch(err => {
+                proofFile = null;
+                DOM.paySubmitBtn.disabled = true;
+                alert(err.message || 'Could not process the image.');
+                showAlert(err.message || 'Could not process the image.');
+            });
+        }
+
+        const GCASH_MAX_BYTES = 1048576;
+
+        function compressGcashProof(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onerror = () => reject(new Error('Could not read the image file.'));
+                reader.onload = () => {
+                    const img = new Image();
+                    img.onload = () => {
+                        let width = img.naturalWidth || img.width;
+                        let height = img.naturalHeight || img.height;
+                        const scale = Math.min(1, 854 / width, 480 / height);
+                        width = Math.max(1, Math.round(width * scale));
+                        height = Math.max(1, Math.round(height * scale));
+                        const canvas = document.createElement('canvas');
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+
+                        const toBlob = (type, quality) => new Promise(res => canvas.toBlob(res, type, quality));
+                        (async () => {
+                            let blob = await toBlob('image/webp', 0.82);
+                            let mime = 'image/webp';
+                            let ext = 'webp';
+                            if (!blob) {
+                                blob = await toBlob('image/jpeg', 0.82);
+                                mime = 'image/jpeg';
+                                ext = 'jpg';
+                            }
+                            let quality = 0.7;
+                            while (blob && blob.size > GCASH_MAX_BYTES && quality >= 0.4) {
+                                const next = await toBlob(mime, quality);
+                                if (next) blob = next;
+                                quality -= 0.15;
+                            }
+                            if (!blob || blob.size > GCASH_MAX_BYTES) {
+                                reject(new Error('Image is still larger than 1MB after compression. Please choose a smaller screenshot.'));
+                                return;
+                            }
+                            resolve(new File([blob], 'gcash-proof.' + ext, { type: blob.type || mime, lastModified: Date.now() }));
+                        })().catch(() => reject(new Error('Could not compress the image.')));
+                    };
+                    img.onerror = () => reject(new Error('Could not load the image.'));
+                    img.src = reader.result;
+                };
+                reader.readAsDataURL(file);
+            });
         }
 
         function showLoader() {
@@ -1452,6 +1503,11 @@ $userPhone = $_SESSION['user_phone'] ?? '';
         async function submitWithProof() {
             if (!proofFile || !selectedBundle || !selectedDate) {
                 console.warn("Submit aborted: missing fields", { proofFile, selectedBundle, selectedDate });
+                return;
+            }
+            if (proofFile.size > 1048576) {
+                alert('Image is still larger than 1MB after compression. Please choose a smaller screenshot.');
+                showAlert('Payment screenshot must be 1MB or smaller.');
                 return;
             }
 
