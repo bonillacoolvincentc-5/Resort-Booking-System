@@ -116,19 +116,23 @@ try {
             mkdir($uploadDir, 0755, true);
         }
 
-        $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-        $fileType = mime_content_type($_FILES['payment_proof']['tmp_name']);
-        if (!in_array($fileType, $allowedTypes)) {
-            throw new Exception('Invalid file type. Only JPG, PNG, GIF, WEBP allowed.');
+        // Server-side MIME detection (never trust client-supplied type)
+        $finfo = new finfo(FILEINFO_MIME_TYPE);
+        $detectedMime = $finfo->file($_FILES['payment_proof']['tmp_name']);
+        $allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+        if (!in_array($detectedMime, $allowedTypes, true)) {
+            throw new Exception('Invalid file type. Only JPG, PNG, and WEBP images are accepted.');
         }
 
-        $maxSize = 5 * 1024 * 1024; // 5MB
+        $maxSize = 1048576; // 1 MiB
         if ($_FILES['payment_proof']['size'] > $maxSize) {
-            throw new Exception('File too large. Max 5MB.');
+            throw new Exception('File too large. Maximum allowed size is 1 MB.');
         }
 
-        $ext      = pathinfo($_FILES['payment_proof']['name'], PATHINFO_EXTENSION);
-        $filename = 'proof_' . $_SESSION['user_id'] . '_' . time() . '.' . strtolower($ext);
+        // Derive extension from the detected MIME type (safe — not from client filename)
+        $mimeExtMap = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
+        $ext = $mimeExtMap[$detectedMime];
+        $filename = 'proof_' . $_SESSION['user_id'] . '_' . time() . '.' . $ext;
         $fullPath = $uploadDir . $filename;
 
         if (!move_uploaded_file($_FILES['payment_proof']['tmp_name'], $fullPath)) {

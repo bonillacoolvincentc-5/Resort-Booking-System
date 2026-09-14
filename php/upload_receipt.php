@@ -31,16 +31,18 @@ try {
         throw new Exception('Booking ID is required');
     }
     
-    // Validate file type
-    $allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
-    if (!in_array($file['type'], $allowedTypes)) {
-        throw new Exception('Invalid file type. Only JPG, PNG, and GIF images are allowed');
+    // Validate file type using server-side MIME detection (never trust $_FILES['type'])
+    $finfo = new finfo(FILEINFO_MIME_TYPE);
+    $detectedMime = $finfo->file($file['tmp_name']);
+    $allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!in_array($detectedMime, $allowedTypes, true)) {
+        throw new Exception('Invalid file type. Only JPG, PNG, and WEBP images are allowed.');
     }
     
-    // Validate file size (max 5MB)
-    $maxSize = 5 * 1024 * 1024; // 5MB
+    // Validate file size (max 1 MiB)
+    $maxSize = 1048576; // 1 MiB
     if ($file['size'] > $maxSize) {
-        throw new Exception('File size exceeds 5MB limit');
+        throw new Exception('File size exceeds 1 MB limit.');
     }
     
     // Verify booking belongs to user
@@ -60,8 +62,9 @@ try {
         mkdir($uploadDir, 0777, true);
     }
     
-    // Generate unique filename
-    $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
+    // Generate unique filename with MIME-derived extension
+    $mimeExtMap = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
+    $extension = $mimeExtMap[$detectedMime];
     $filename = 'receipt_' . $bookingId . '_' . time() . '.' . $extension;
     $filepath = $uploadDir . $filename;
     

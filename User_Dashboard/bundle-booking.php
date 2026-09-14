@@ -927,9 +927,9 @@ $userPhone = $_SESSION['user_phone'] ?? '';
                 </div>
                 <div class="upload-row">
                     <div class="upload-drop-area" id="uploadDropArea">
-                        <input type="file" id="proofFileInput" accept="image/*">
+                        <input type="file" id="proofFileInput" accept="image/jpeg,image/jpg,image/png,image/webp">
                         <i class="bi bi-cloud-arrow-up"></i>
-                        <p><strong>Click or drag & drop</strong><br>PNG, JPG, GIF up to 1MB</p>
+                        <p><strong>Click or drag &amp; drop</strong><br>JPG, PNG, or WEBP &mdash; max 1MB</p>
                     </div>
                     <div>
                         <div class="upload-thumb" id="uploadThumb">
@@ -1259,9 +1259,10 @@ $userPhone = $_SESSION['user_phone'] ?? '';
                 if (selectedBundle && availData[dateStr]) {
                     const status = availData[dateStr].status;
                     statusClass = `status-${status}`;
-                    if (dateStr >= todayStr && (status === 'available' || status === 'limited')) isSelectable = true;
-                    else if (dateStr < todayStr) statusClass = 'status-blocked';
-                } else if (dateStr < todayStr) statusClass = 'status-blocked';
+                    // Disallow today (<=) — only dates strictly after today are bookable
+                    if (dateStr > todayStr && (status === 'available' || status === 'limited')) isSelectable = true;
+                    else if (dateStr <= todayStr) statusClass = 'status-blocked';
+                } else if (dateStr <= todayStr) statusClass = 'status-blocked';
 
                 let classes = `cal-cell ${statusClass}`;
                 if (selectedDate === dateStr) classes += ' selected';
@@ -1394,8 +1395,9 @@ $userPhone = $_SESSION['user_phone'] ?? '';
         }
 
         function processFile(file) {
-            if (!file.type.startsWith('image/')) {
-                showAlert('Please select a valid image file (JPG, PNG, GIF, WEBP).');
+            const allowedMimes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+            if (!allowedMimes.includes(file.type)) {
+                showAlert('Invalid file type. Please select a JPG, PNG, or WEBP image only.');
                 return;
             }
             compressGcashProof(file).then(compressed => {

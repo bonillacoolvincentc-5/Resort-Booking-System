@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 session_start();
 
 // Auth guard
@@ -924,9 +924,9 @@ if (empty($userPhone)) {
             </div>
             <div class="upload-row">
                 <div class="upload-drop-area" id="uploadDropArea">
-                    <input type="file" id="proofFileInput" accept="image/*">
+                    <input type="file" id="proofFileInput" accept="image/jpeg,image/jpg,image/png,image/webp">
                     <i class="bi bi-cloud-arrow-up"></i>
-                    <p><strong>Click or drag & drop</strong><br>PNG, JPG, GIF up to 1MB</p>
+                    <p><strong>Click or drag &amp; drop</strong><br>JPG, PNG, or WEBP &mdash; max 1MB</p>
                 </div>
                 <div>
                     <div class="upload-thumb" id="uploadThumb">
@@ -1560,8 +1560,9 @@ function closePayModal() {
 }
 
 function handleFileSelect(file) {
-    if (!file.type.startsWith('image/')) {
-        showError('Please upload an image file (JPG, PNG, GIF).');
+    const allowedMimes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!allowedMimes.includes(file.type)) {
+        showError('Invalid file type. Please select a JPG, PNG, or WEBP image only.');
         return;
     }
     compressGcashProof(file).then(compressed => {
