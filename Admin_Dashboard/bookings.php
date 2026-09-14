@@ -181,15 +181,7 @@ while ($row = $bundlesRes->fetch_assoc()) {
                     <label class="filter-label">Search Customer</label>
                     <input type="text" class="filter-input" placeholder="Search by customer name..." id="searchInput">
                 </div>
-                <div class="filter-group">
-                    <label class="filter-label">Status</label>
-                    <select class="filter-input" id="statusFilter">
-                        <option value="">All Status</option>
-                        <option value="pending">Pending</option>
-                        <option value="approved">Approved</option>
-                        <option value="rejected">Rejected</option>
-                    </select>
-                </div>
+
                 <div class="filter-group">
                     <label class="filter-label">Date Range</label>
                     <input type="date" class="filter-input" id="dateFilter">
@@ -1448,7 +1440,6 @@ while ($row = $bundlesRes->fetch_assoc()) {
         // Filter functionality + Status Tab wiring
         document.addEventListener('DOMContentLoaded', function() {
             const searchInput  = document.getElementById('searchInput');
-            const statusFilter = document.getElementById('statusFilter');
             const dateFilter   = document.getElementById('dateFilter');
             const emptyRow     = document.getElementById('bstEmptyRow');
 
@@ -1473,7 +1464,6 @@ while ($row = $bundlesRes->fetch_assoc()) {
             // Unified filter: tab + search + status-select + date
             function applyFilters() {
                 const searchTerm = searchInput  ? searchInput.value.toLowerCase()  : '';
-                const selectVal  = statusFilter ? statusFilter.value.toLowerCase() : '';
                 const dateValue  = dateFilter   ? dateFilter.value                 : '';
 
                 const rows = document.querySelectorAll('#bookingsTableBody tr[data-status]');
@@ -1492,10 +1482,9 @@ while ($row = $bundlesRes->fetch_assoc()) {
                         return rowStatus === activeBstFilter;
                     })();
                     const searchOk = !searchTerm || customerName.includes(searchTerm);
-                    const selectOk = !selectVal  || statusText.includes(selectVal);
                     const dateOk   = !dateValue  || dateText.includes(dateValue.toLowerCase());
 
-                    if (tabOk && searchOk && selectOk && dateOk) {
+                    if (tabOk && searchOk && dateOk) {
                         row.classList.remove('bst-hidden');
                         visible++;
                     } else {
@@ -1524,7 +1513,6 @@ while ($row = $bundlesRes->fetch_assoc()) {
 
             // Existing filter inputs
             if (searchInput)  searchInput.addEventListener('input',  applyFilters);
-            if (statusFilter) statusFilter.addEventListener('change', applyFilters);
             if (dateFilter)   dateFilter.addEventListener('change',   applyFilters);
 
             // Boot: populate counts then apply the default Pending Review tab
