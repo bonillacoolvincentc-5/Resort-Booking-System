@@ -709,8 +709,8 @@ while ($r = $res->fetch_assoc()) $bundles[] = $r;
 
                     <div class="pos-input-row pos-field-group">
                         <div>
-                            <label class="pos-label" for="bi_checkin_date">Check-In Date <span style="color:#ff5a5f;">*</span></label>
-                            <input type="date" id="bi_checkin_date" class="pos-input" onchange="recalcTotal()">
+                            <label class="pos-label" for="bi_checkin_date">Check-In Date <span class="text-danger">*</span></label>
+                            <input type="date" id="bi_checkin_date" class="pos-input" required min="<?php echo date('Y-m-d', strtotime('+1 day')); ?>" onchange="recalcTotal()">
                         </div>
                         <div>
                             <label class="pos-label" for="bi_checkin_time">Start Time</label>
@@ -740,13 +740,7 @@ while ($r = $res->fetch_assoc()) $bundles[] = $r;
                         <i class="bi bi-cash-stack"></i> Billing & Payment
                     </div>
 
-                    <div class="pos-field-group">
-                        <label class="pos-label" for="bi_payment_method">Payment Method</label>
-                        <select id="bi_payment_method" class="pos-select">
-                            <option value="cash">Cash</option>
-                            <option value="gcash">GCash</option>
-                        </select>
-                    </div>
+                    <!-- Payment method removed -->
 
                     <div class="pos-total-strip">
                         <span class="pos-total-label">
@@ -940,6 +934,18 @@ while ($r = $res->fetch_assoc()) $bundles[] = $r;
         renderCatalog();          // re-render to update selected state
         updatePreview();
         recalcTotal();
+        
+        // Update guest capacity max
+        if (selectedItem) {
+            const guestInput = document.getElementById('bi_num_guests');
+            if (guestInput) {
+                guestInput.max = selectedItem.capacity;
+                if (parseInt(guestInput.value) > selectedItem.capacity) {
+                    guestInput.value = selectedItem.capacity;
+                }
+            }
+        }
+        
         // Scroll billing pane to top
         document.getElementById('posAlert').className = 'pos-alert';
     }
@@ -1013,7 +1019,7 @@ while ($r = $res->fetch_assoc()) $bundles[] = $r;
         const ciTime  = document.getElementById('bi_checkin_time').value  || null;
         const coTime  = document.getElementById('bi_checkout_time').value  || null;
         const guests  = parseInt(document.getElementById('bi_num_guests').value) || 1;
-        const pm      = document.getElementById('bi_payment_method').value;
+        const pm      = 'cash';
         const notes   = document.getElementById('bi_special_requests').value.trim() || null;
 
         if (!name)              { showAlert('Guest full name is required.', 'danger'); return; }
