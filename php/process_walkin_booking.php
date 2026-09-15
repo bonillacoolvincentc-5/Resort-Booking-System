@@ -9,7 +9,7 @@ session_start();
 header('Content-Type: application/json');
 
 // ── 1. Admin auth guard ──────────────────────────────────────────────────────
-if (!isset($_SESSION['is_admin']) || $_SESSION['is_admin'] !== true) {
+if (empty($_SESSION['is_admin']) && empty($_SESSION['is_staff'])) {
     http_response_code(403);
     echo json_encode(['success' => false, 'message' => 'Unauthorised access.']);
     exit;

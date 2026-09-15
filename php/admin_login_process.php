@@ -8,7 +8,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     try {
         // Check if it's an admin login
-        $stmt = $conn->prepare("SELECT id, first_name, last_name, email, password, created_at FROM admins WHERE email = ?");
+        $stmt = $conn->prepare("SELECT id, first_name, last_name, email, password, role, created_at FROM admins WHERE email = ?");
         $stmt->bind_param("s", $email);
         $stmt->execute();
         $result = $stmt->get_result();
@@ -19,11 +19,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['admin_id'] = $admin['id'];
             $_SESSION['admin_email'] = $admin['email'];
             $_SESSION['admin_name'] = $admin['first_name'] . ' ' . $admin['last_name'];
-            $_SESSION['is_admin'] = true;
+            
+            $role = $admin['role'] ?? 'admin';
+            $_SESSION['admin_role'] = $role;
             $_SESSION['login_time'] = time();
             
-            // Redirect to admin dashboard
-            header('Location: ../Admin_Dashboard/dashboard.php');
+            if ($role === 'staff') {
+                $_SESSION['is_staff'] = true;
+                header('Location: ../Staff_Dashboard/bookings.php');
+            } else {
+                $_SESSION['is_admin'] = true;
+                header('Location: ../Admin_Dashboard/dashboard.php');
+            }
             exit();
         } else {
             // Check if it's a regular user (to show appropriate error)

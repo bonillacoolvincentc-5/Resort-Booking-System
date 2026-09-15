@@ -1,0 +1,64 @@
+<!-- YP4K Resort — Staff Sidebar Component -->
+<!-- Styles from: components/sidebar.css -->
+
+<div class="sidebar" id="sidebar">
+    <!-- Header -->
+    <div class="sidebar-header">
+        <div class="logo-section">
+            <div class="logo-icon"><i class="bi bi-gem"></i></div>
+            <div>
+                <div class="logo-text">YP4K Resort</div>
+                <span class="logo-sub">Staff Panel</span>
+            </div>
+        </div>
+        <button class="sidebar-toggle" onclick="toggleSidebar()" title="Toggle Sidebar">
+            <i class="bi bi-layout-sidebar-reverse"></i>
+        </button>
+    </div>
+
+    <!-- Navigation (4 links only) -->
+    <nav class="sidebar-nav">
+        <ul class="nav-list">
+            <li class="nav-section-label">Main</li>
+            <li class="nav-item">
+                <a href="bookings.php" class="nav-link" data-page="bookings">
+                    <i class="bi bi-calendar-check-fill"></i>
+                    <span class="nav-text">Bookings</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="walkin.php" class="nav-link" data-page="walkin">
+                    <i class="bi bi-person-walking"></i>
+                    <span class="nav-text">Walk-In</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="calendar.php" class="nav-link" data-page="calendar">
+                    <i class="bi bi-calendar3"></i>
+                    <span class="nav-text">Calendar</span>
+                </a>
+            </li>
+            <li class="nav-section-label">Account</li>
+            <li class="nav-item">
+                <a href="settings.php" class="nav-link" data-page="settings">
+                    <i class="bi bi-gear-fill"></i>
+                    <span class="nav-text">Settings</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- Footer -->
+    <div class="sidebar-footer">
+        <div class="admin-info">
+            <div class="admin-avatar"><i class="bi bi-person-fill"></i></div>
+            <div class="admin-details">
+                <div class="admin-name" id="sidebarAdminName">Staff</div>
+            </div>
+        </div>
+        <a href="../phpAuthentication/logout.php" class="logout-btn">
+            <i class="bi bi-box-arrow-right"></i>
+            <span>Sign Out</span>
+        </a>
+    </div>
+</div>

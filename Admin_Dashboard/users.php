@@ -69,7 +69,9 @@ while ($row = $result->fetch_assoc()) {
                 <p class="text-muted">Manage all registered users and their permissions</p>
             </div>
             <div class="page-actions">
-
+                <button class="btn-modern btn-primary" onclick="openAddStaffModal()">
+                    <i class="bi bi-person-plus"></i> Add Staff Account
+                </button>
             </div>
         </div>
 
@@ -216,7 +218,130 @@ while ($row = $result->fetch_assoc()) {
         </div>
     </div>
 
+    <!-- Add Staff Modal -->
+    <div class="modal fade" id="addStaffModal" tabindex="-1" aria-labelledby="addStaffModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="background: #101B17 !important; border: 1px solid rgba(255,255,255,0.1) !important; border-radius: 1rem !important; overflow: hidden; box-shadow: 0 25px 50px rgba(0,0,0,0.8) !important;">
+                <div class="modal-header" style="border-bottom: 1px solid rgba(255,255,255,0.1) !important; background: #15221D !important; padding: 1.5rem;">
+                    <h5 class="modal-title d-flex align-items-center gap-2" id="addStaffModalLabel" style="color: #fff !important; font-weight: 700;">
+                        <i class="bi bi-person-plus text-primary" style="font-size: 1.5rem;"></i> Add Staff Account
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4" style="color: #B8C4BE !important; background: #101B17 !important;">
+                    <div id="addStaffAlert" class="alert" style="display:none; border-radius: 0.5rem; font-size: 0.875rem;"></div>
+                    <form id="addStaffForm" novalidate>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small fw-bold">First Name <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="staffFirstName" required style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff;">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small fw-bold">Last Name <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="staffLastName" required style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff;">
+                            </div>
+                            <div class="col-md-12">
+                                <label class="form-label text-muted small fw-bold">Email Address <span class="text-danger">*</span></label>
+                                <input type="email" class="form-control" id="staffEmail" required style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff;">
+                            </div>
+                            <div class="col-md-12">
+                                <label class="form-label text-muted small fw-bold">Phone Number <span class="text-danger">*</span></label>
+                                <input type="tel" class="form-control" id="staffPhone" required pattern="^09\d{9}$" placeholder="09XXXXXXXXX" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff;">
+                            </div>
+                            <div class="col-md-12">
+                                <label class="form-label text-muted small fw-bold">Temporary Password <span class="text-danger">*</span></label>
+                                <div class="auth-input-group" style="position: relative; display: flex; align-items: center;">
+                                    <input type="password" class="form-control" id="staffPassword" required minlength="8" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; width: 100%; padding-right: 2.5rem;">
+                                    <button type="button" class="auth-eye-btn" onclick="toggleStaffPasswordVisibility()" id="toggleStaffPassword" aria-label="Toggle password visibility" style="position: absolute; right: 0.5rem; background: transparent; border: none; color: #94a3b8; display: flex; align-items: center; justify-content: center; height: 100%; padding: 0 0.5rem; cursor: pointer; z-index: 10;">
+                                        <i class="bi bi-eye" id="staffEyeIcon"></i>
+                                    </button>
+                                </div>
+                                <div class="form-text" style="color: #64748b; font-size: 0.75rem; margin-top: 0.25rem;">Must be at least 8 characters long.</div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer" style="border-top: 1px solid rgba(255,255,255,0.1) !important; background: #15221D !important; padding: 1rem 1.5rem;">
+                    <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal" style="border-radius: 0.5rem; background: rgba(255,255,255,0.1); border: none; color: #fff;">Cancel</button>
+                    <button type="button" class="btn btn-primary px-4" id="addStaffSubmitBtn" onclick="submitAddStaff()" style="border-radius: 0.5rem; border: none;">Add Staff Account</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
+        function toggleStaffPasswordVisibility() {
+            const passwordField = document.getElementById('staffPassword');
+            const eyeIcon = document.getElementById('staffEyeIcon');
+            if (passwordField.type === 'password') {
+                passwordField.type = 'text';
+                eyeIcon.classList.replace('bi-eye', 'bi-eye-slash');
+            } else {
+                passwordField.type = 'password';
+                eyeIcon.classList.replace('bi-eye-slash', 'bi-eye');
+            }
+        }
+
+        function openAddStaffModal() {
+            const modal = new bootstrap.Modal(document.getElementById('addStaffModal'));
+            document.getElementById('addStaffForm').reset();
+            document.getElementById('addStaffAlert').style.display = 'none';
+            modal.show();
+        }
+
+        async function submitAddStaff() {
+            const btn = document.getElementById('addStaffSubmitBtn');
+            const alertEl = document.getElementById('addStaffAlert');
+            const form = document.getElementById('addStaffForm');
+
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Processing...';
+            alertEl.style.display = 'none';
+
+            const payload = {
+                first_name: document.getElementById('staffFirstName').value.trim(),
+                last_name: document.getElementById('staffLastName').value.trim(),
+                email: document.getElementById('staffEmail').value.trim(),
+                password: document.getElementById('staffPassword').value,
+                phone: document.getElementById('staffPhone').value.trim()
+            };
+
+            try {
+                const res = await fetch('../php/add_staff_account.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                const data = await res.json();
+                if (data.success) {
+                    alertEl.className = 'alert alert-success';
+                    alertEl.innerHTML = '<i class="bi bi-check-circle me-1"></i>Staff account added successfully!';
+                    alertEl.style.display = 'block';
+                    btn.innerHTML = '<i class="bi bi-check-circle me-1"></i>Done';
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    alertEl.className = 'alert alert-danger';
+                    alertEl.innerHTML = '<i class="bi bi-exclamation-triangle me-1"></i>' + (data.message || 'Error adding staff account.');
+                    alertEl.style.display = 'block';
+                    btn.disabled = false;
+                    btn.innerHTML = 'Add Staff Account';
+                }
+            } catch (err) {
+                console.error(err);
+                alertEl.className = 'alert alert-danger';
+                alertEl.innerHTML = '<i class="bi bi-exclamation-triangle me-1"></i>Connection error. Please try again.';
+                alertEl.style.display = 'block';
+                btn.disabled = false;
+                btn.innerHTML = 'Add Staff Account';
+            }
+        }
+
         const usersData = <?php echo json_encode($users); ?>;
 
         function viewUser(userId) {

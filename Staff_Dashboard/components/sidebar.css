@@ -1,0 +1,367 @@
+/* ═══════════════════════════════════════════════════════════════════
+   YP4K Admin — Sidebar CSS  (single source of truth)
+   Replaces both the old sidebar.css and the inline <style> in sidebar.html
+═══════════════════════════════════════════════════════════════════ */
+
+/* ── Variables (fall back to page :root if CSS vars not resolved) ── */
+:root {
+    --sidebar-width:          255px;
+    --sidebar-collapsed-width: 72px;
+    --navbar-height:           68px;
+}
+
+/* ── Sidebar shell ──────────────────────────────────────────────── */
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: var(--sidebar-width);
+    height: 100vh;
+    background: linear-gradient(180deg, #060E09 0%, #0A1510 50%, #060E09 100%);
+    border-right: 1px solid rgba(157, 255, 0, 0.08);
+    z-index: 1000;
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+    box-shadow: 4px 0 30px rgba(0, 0, 0, 0.4);
+    overflow: hidden;           /* prevents content spill when collapsed */
+}
+
+/* Right-edge green shimmer */
+.sidebar::before {
+    content: '';
+    position: absolute;
+    top: 0; right: 0;
+    width: 1px; height: 100%;
+    background: linear-gradient(180deg,
+        transparent 0%,
+        rgba(157, 255, 0, 0.15) 30%,
+        rgba(157, 255, 0, 0.15) 70%,
+        transparent 100%
+    );
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* ── Header ─────────────────────────────────────────────────────── */
+.sidebar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    flex-shrink: 0;
+    min-height: var(--navbar-height); /* aligns with top navbar */
+}
+
+.logo-section {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    overflow: hidden;
+}
+
+.logo-icon {
+    width: 34px;
+    height: 34px;
+    background: linear-gradient(135deg, #9DFF00, #6EDC45);
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.95rem;
+    color: #000;
+    flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(157, 255, 0, 0.3);
+}
+
+.logo-text {
+    font-family: 'Poppins', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #ffffff;
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+}
+
+.logo-sub {
+    display: block;
+    font-size: 0.65rem;
+    color: #9DFF00;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    line-height: 1;
+}
+
+.sidebar-toggle {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: #8C9992;
+    font-size: 1.1rem;
+    cursor: pointer;
+    padding: 0.4rem 0.5rem;
+    border-radius: 7px;
+    transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+    flex-shrink: 0;
+    /* Hidden by default on desktop — shown via media query */
+    display: none;
+}
+
+.sidebar-toggle:hover {
+    background: rgba(157, 255, 0, 0.08);
+    color: #9DFF00;
+    border-color: rgba(157, 255, 0, 0.2);
+}
+
+/* ── Section labels ─────────────────────────────────────────────── */
+.nav-section-label {
+    font-size: 0.62rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: #5C6B63;
+    padding: 1.25rem 1.5rem 0.4rem;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+/* ── Nav scrollable area ────────────────────────────────────────── */
+.sidebar-nav {
+    flex: 1;
+    padding: 0.75rem 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: none;
+}
+.sidebar-nav::-webkit-scrollbar { display: none; }
+
+.nav-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.nav-item {
+    margin-bottom: 0.1rem;
+}
+
+/* ── Nav links ──────────────────────────────────────────────────── */
+.nav-link {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1.5rem;
+    color: #8C9992;
+    text-decoration: none;
+    transition: background 0.25s ease, color 0.25s ease;
+    position: relative;
+    font-weight: 500;
+    font-size: 0.875rem;
+    margin: 0 0.75rem;
+    border-radius: 9px;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.nav-link:hover {
+    background: rgba(157, 255, 0, 0.06);
+    color: #ffffff;
+}
+
+.nav-link.active {
+    background: rgba(157, 255, 0, 0.1);
+    color: #9DFF00;
+}
+
+/* Green left indicator for active */
+.nav-link.active::before {
+    content: '';
+    position: absolute;
+    left: -0.75rem;
+    top: 20%;
+    bottom: 20%;
+    width: 3px;
+    background: linear-gradient(180deg, #9DFF00, #6EDC45);
+    border-radius: 2px;
+}
+
+.nav-link i {
+    font-size: 1.05rem;
+    width: 20px;
+    text-align: center;
+    flex-shrink: 0;
+    transition: color 0.25s ease;
+}
+
+.nav-link:hover i,
+.nav-link.active i {
+    color: #9DFF00;
+}
+
+.nav-text {
+    font-size: 0.875rem;
+    transition: opacity 0.2s ease, width 0.2s ease;
+}
+
+.nav-badge {
+    margin-left: auto;
+    background: rgba(157, 255, 0, 0.15);
+    color: #9DFF00;
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 0.1rem 0.45rem;
+    border-radius: 100px;
+    letter-spacing: 0.05em;
+    flex-shrink: 0;
+}
+
+/* ── Footer ─────────────────────────────────────────────────────── */
+.sidebar-footer {
+    padding: 1rem 1.5rem 1.25rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    flex-shrink: 0;
+}
+
+.admin-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.85rem;
+    padding: 0.75rem;
+    background: rgba(157, 255, 0, 0.04);
+    border: 1px solid rgba(157, 255, 0, 0.08);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.admin-avatar {
+    width: 36px;
+    height: 36px;
+    background: linear-gradient(135deg, #9DFF00, #6EDC45);
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #000;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+
+.admin-details {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.admin-name {
+    color: #ffffff;
+    font-weight: 600;
+    font-size: 0.82rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.admin-role {
+    color: #9DFF00;
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.logout-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.65rem 1rem;
+    background: rgba(255, 90, 95, 0.08);
+    border: 1px solid rgba(255, 90, 95, 0.15);
+    color: #FF5A5F;
+    text-decoration: none;
+    border-radius: 9px;
+    font-weight: 600;
+    font-size: 0.825rem;
+    transition: background 0.25s ease, border-color 0.25s ease, transform 0.25s ease;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.logout-btn:hover {
+    background: rgba(255, 90, 95, 0.15);
+    border-color: rgba(255, 90, 95, 0.3);
+    transform: translateX(2px);
+    color: #FF5A5F;
+}
+
+/* ── Collapsed state (icon-only) ────────────────────────────────── */
+.sidebar.collapsed {
+    width: var(--sidebar-collapsed-width);
+}
+
+.sidebar.collapsed .nav-text,
+.sidebar.collapsed .logo-text,
+.sidebar.collapsed .logo-sub,
+.sidebar.collapsed .admin-details,
+.sidebar.collapsed .nav-section-label,
+.sidebar.collapsed .nav-badge,
+.sidebar.collapsed .logout-btn span {
+    display: none;
+}
+
+.sidebar.collapsed .nav-link {
+    justify-content: center;
+    padding: 0.75rem;
+    margin: 0 0.5rem;
+}
+
+.sidebar.collapsed .nav-link i {
+    width: auto;
+}
+
+.sidebar.collapsed .nav-link.active::before {
+    display: none;
+}
+
+.sidebar.collapsed .sidebar-header {
+    justify-content: center;
+    padding: 1.25rem 0.75rem;
+}
+
+.sidebar.collapsed .admin-info {
+    justify-content: center;
+    padding: 0.6rem;
+}
+
+.sidebar.collapsed .logout-btn {
+    justify-content: center;
+    padding: 0.65rem;
+}
+
+/* ── Mobile: off-canvas ─────────────────────────────────────────── */
+@media (max-width: 900px) {
+    .sidebar {
+        transform: translateX(-100%);
+        width: var(--sidebar-width); /* always full width on mobile overlay */
+    }
+
+    .sidebar.active {
+        transform: translateX(0);
+    }
+
+    .sidebar-toggle {
+        display: flex;
+        align-items: center;
+    }
+
+    /* Restore text/labels on mobile overlay (don't use collapsed mode) */
+    .sidebar.collapsed .nav-text,
+    .sidebar.collapsed .logo-text,
+    .sidebar.collapsed .logo-sub,
+    .sidebar.collapsed .admin-details,
+    .sidebar.collapsed .nav-section-label {
+        display: block;
+    }
+}
