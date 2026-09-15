@@ -90,7 +90,7 @@ $navbarAdminEmail = $_SESSION['admin_email'] ?? '';
                             <span>Settings</span>
                         </a>
                         <div class="profile-divider"></div>
-                        <a href="../phpAuthentication/logout.php" class="profile-menu-item logout-item">
+                        <a href="../phpAuthentication/logout.php" class="profile-menu-item logout-item text-danger">
                             <i class="bi bi-box-arrow-right"></i>
                             <span>Logout</span>
                         </a>

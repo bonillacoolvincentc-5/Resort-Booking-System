@@ -950,12 +950,7 @@ if ($diff->y >= 1) {
                                     </div>
                                 </div>
 
-                                <div class="form-group-modern">
-                                    <label class="form-label-modern">
-                                        <i class="bi bi-file-text"></i>Bio
-                                    </label>
-                                    <textarea class="form-control-modern" id="bio" rows="3" placeholder="Tell us about yourself..."><?php echo htmlspecialchars($userBio); ?></textarea>
-                                </div>
+
 
                                 <div class="d-flex gap-2">
                                     <button type="button" class="btn-modern btn-primary-modern" onclick="saveProfile()">

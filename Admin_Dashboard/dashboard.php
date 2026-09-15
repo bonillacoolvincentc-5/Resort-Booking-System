@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 session_start();
 
 // Include admin configuration
@@ -129,9 +129,7 @@ while ($row = $result->fetch_assoc()) {
                 <p class="text-muted mb-0">Welcome back! Here's what's happening at YP4K Resort today.</p>
             </div>
             <div class="d-flex gap-2">
-                <button class="btn btn-outline-secondary">
-                    <i class="bi bi-download me-2"></i>Export Report
-                </button>
+
             </div>
         </div>
 

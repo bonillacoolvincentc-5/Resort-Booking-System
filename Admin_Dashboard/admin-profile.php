@@ -843,53 +843,7 @@ $adminEmail = $_SESSION['admin_email'] ?? '';
                 </form>
             </div><!-- /.profile-card password -->
 
-            <!-- ─── ③ Operational Alerts Card (full width) ──────────── -->
-            <div class="profile-card span-full">
-                <div class="profile-card-title">
-                    <div class="card-icon"><i class="bi bi-bell-fill"></i></div>
-                    Operational Alerts
-                </div>
 
-                <form id="alertsForm" onsubmit="savePreferences(event)">
-                    <div class="toggle-row">
-                        <div class="toggle-info">
-                            <h4>
-                                <i class="bi bi-calendar-check me-2"
-                                   style="color:var(--accent);font-size:0.85rem;"></i>
-                                New Booking Notifications
-                            </h4>
-                            <p>Receive an in-dashboard alert whenever a guest submits a new booking request.</p>
-                        </div>
-                        <label class="toggle-switch"
-                               aria-label="Toggle new booking notifications">
-                            <input type="checkbox" id="toggleNewBooking" name="notify_booking" checked>
-                            <span class="toggle-slider"></span>
-                        </label>
-                    </div>
-
-                    <div class="toggle-row">
-                        <div class="toggle-info">
-                            <h4>
-                                <i class="bi bi-arrow-repeat me-2"
-                                   style="color:var(--warning);font-size:0.85rem;"></i>
-                                Cancellation / Reschedule Alerts
-                            </h4>
-                            <p>Get notified whenever a guest cancels or requests to reschedule their booking.</p>
-                        </div>
-                        <label class="toggle-switch"
-                               aria-label="Toggle cancellation and reschedule alerts">
-                            <input type="checkbox" id="toggleCancelAlert" name="notify_cancel">
-                            <span class="toggle-slider"></span>
-                        </label>
-                    </div>
-
-                    <div class="profile-actions">
-                        <button type="submit" class="btn-profile-primary" id="btnSavePrefs">
-                            <i class="bi bi-floppy-fill"></i> Save Preferences
-                        </button>
-                    </div>
-                </form>
-            </div><!-- /.profile-card alerts -->
 
         </div><!-- /.profile-grid -->
     </div><!-- /.main-content -->

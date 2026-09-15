@@ -870,7 +870,7 @@ while ($row = $statsResult->fetch_assoc()) {
                         <button type="button" id="viewBundleBtn" class="btn d-flex align-items-center gap-2" style="background: linear-gradient(135deg, rgba(157,255,0,0.15), rgba(0,212,255,0.15)); border: 1px solid rgba(157,255,0,0.5); color: #9dff00; border-radius: 8px; padding: 0.5rem 1.2rem; font-weight: 600; font-size: 0.9rem; transition: all 0.2s ease;" onmouseover="this.style.background='linear-gradient(135deg, rgba(157,255,0,0.3), rgba(0,212,255,0.25))';this.style.boxShadow='0 0 15px rgba(157,255,0,0.3)'" onmouseout="this.style.background='linear-gradient(135deg, rgba(157,255,0,0.15), rgba(0,212,255,0.15))';this.style.boxShadow='none'" onclick="openBundleModal()">
                             <i class="bi bi-box-seam"></i> View Bundle Details
                         </button>
-                        <button type="button" class="btn-modern btn-primary-modern" onclick="printBooking()">Print</button>
+
                     </div>
                 </div>
             </div>

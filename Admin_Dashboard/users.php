@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 session_start();
 
 // Include admin configuration
@@ -69,9 +69,7 @@ while ($row = $result->fetch_assoc()) {
                 <p class="text-muted">Manage all registered users and their permissions</p>
             </div>
             <div class="page-actions">
-                <button class="btn-modern btn-primary">
-                    <i class="bi bi-person-plus"></i> Add User
-                </button>
+
             </div>
         </div>
 

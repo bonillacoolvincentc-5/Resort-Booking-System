@@ -161,10 +161,7 @@ while ($row = $bundlesRes->fetch_assoc()) {
                 <p class="text-muted">Manage and approve resort bookings</p>
             </div>
             <div class="page-actions">
-                <button class="btn-modern btn-secondary">
-                    <i class="bi bi-download"></i>
-                    Export
-                </button>
+
                 <a href="walkin_pos.php" class="btn-modern btn-primary"
                    id="openWalkInBtn"
                    style="background:linear-gradient(135deg,#6366f1,#4f46e5);border:none;text-decoration:none;display:inline-flex;align-items:center;gap:.4rem;">
