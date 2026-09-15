@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 session_start();
 
 // Check if user is logged in
@@ -6,6 +6,9 @@ if (!isset($_SESSION['user_id'])) {
     header('Location: ../Authentication/login.php');
     exit();
 }
+
+$lastVisitedBookings = $_SESSION['last_visited_bookings'] ?? '2000-01-01 00:00:00';
+$_SESSION['last_visited_bookings'] = date('Y-m-d H:i:s');
 
 require_once '../phpAuthentication/db_config.php';
 
@@ -641,6 +644,11 @@ while ($row = $statsResult->fetch_assoc()) {
                 justify-content: center;
             }
         }
+
+        .unread-highlight {
+            border: 1px solid #22c55e !important;
+            box-shadow: 0 0 12px rgba(34,197,94,0.4) !important;
+        }
     </style>
 </head>
 <body>
@@ -730,7 +738,11 @@ while ($row = $statsResult->fetch_assoc()) {
         <div id="bookingsList">
             <?php if (count($bookings) > 0): ?>
                 <?php foreach ($bookings as $booking): ?>
-                    <div class="booking-card" data-status="<?php echo $booking['status_name']; ?>" data-activity="<?php echo $booking['item_name']; ?>">
+                    <?php 
+                        $isUnread = ($booking['status_name'] === 'pending_review' && $booking['created_at'] > $lastVisitedBookings);
+                        $highlightClass = $isUnread ? ' unread-highlight' : '';
+                    ?>
+                    <div class="booking-card<?php echo $highlightClass; ?>" data-status="<?php echo $booking['status_name']; ?>" data-activity="<?php echo $booking['item_name']; ?>">
                         <div class="booking-header">
                             <span class="booking-status status-<?php echo $booking['status_name']; ?>">
                                 <?php echo ucfirst(str_replace('_', ' ', $booking['status_name'])); ?>

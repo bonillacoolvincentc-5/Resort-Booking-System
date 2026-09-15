@@ -732,16 +732,20 @@ if (empty($userPhone)) {
                             <!-- Number of guests -->
                             <div class="mb-4">
                                 <label class="form-label-modern"><i class="bi bi-people me-1"></i>Number of Guests</label>
-                                <div class="d-flex align-items-center gap-3">
-                                    <button type="button" class="btn-modern btn-secondary-modern" onclick="adjustGuests(-1)" id="guestMinus">
+                                <div class="d-flex align-items-center gap-2 flex-wrap">
+                                    <button type="button" class="btn-modern btn-secondary-modern" onclick="adjustGuests(-1)" id="guestMinus" title="Decrease guests">
                                         <i class="bi bi-dash"></i>
                                     </button>
                                     <input type="number" id="numberOfGuests" name="number_of_guests"
                                            class="form-control-modern text-center" value="1" min="1" max="100"
-                                           style="width:80px;" readonly>
-                                    <button type="button" class="btn-modern btn-secondary-modern" onclick="adjustGuests(1)" id="guestPlus">
+                                           style="width:80px;"
+                                           oninput="clampGuestInput(this)">
+                                    <button type="button" class="btn-modern btn-secondary-modern" onclick="adjustGuests(1)" id="guestPlus" title="Increase guests">
                                         <i class="bi bi-plus"></i>
                                     </button>
+                                    <button type="button" class="btn-modern btn-secondary-modern" onclick="setGuestsMax()" id="guestMax"
+                                            title="Set to maximum capacity"
+                                            style="font-size:.75rem;font-weight:700;padding:.35rem .65rem;letter-spacing:.04em;">MAX</button>
                                     <span id="capacityHint" class="text-muted" style="font-size:.8rem;"></span>
                                 </div>
                             </div>
@@ -1749,6 +1753,26 @@ function adjustGuests(delta) {
     let val = parseInt(input.value) + delta;
     val = Math.max(1, Math.min(max, val));
     input.value = val;
+    recalcPrice();
+}
+
+// Called on direct keyboard entry — clamps without blocking typing mid-digit
+function clampGuestInput(input) {
+    const max = parseInt(input.max) || 100;
+    const min = parseInt(input.min) || 1;
+    let val = parseInt(input.value);
+    if (!isNaN(val)) {
+        if (val > max) input.value = max;
+        if (val < min) input.value = min;
+    }
+    recalcPrice();
+}
+
+// Sets guest count to the current maximum capacity
+function setGuestsMax() {
+    const input = document.getElementById('numberOfGuests');
+    const max   = parseInt(input.max) || 100;
+    input.value = max;
     recalcPrice();
 }
 

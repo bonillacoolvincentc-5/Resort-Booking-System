@@ -20,13 +20,6 @@ $navbarAdminEmail = $_SESSION['admin_email'] ?? '';
         </div>
 
         <div class="navbar-right">
-            <div class="search-section">
-                <div class="search-box">
-                    <i class="bi bi-search"></i>
-                    <input type="text" placeholder="Search..." class="search-input">
-                </div>
-            </div>
-
             <div class="notification-section">
                 <button class="notification-btn" onclick="toggleNotifications()">
                     <i class="bi bi-bell"></i>

@@ -17,10 +17,77 @@ function navActive($key) {
     global $currentPage, $pageAliases;
     return in_array($currentPage, $pageAliases[$key] ?? []) ? 'active' : '';
 }
+
+// Fetch pending booking count for the badge
+$_navPendingCount = 0;
+if (isset($_SESSION['user_id'])) {
+    // $conn is available via db_config.php, already required by the parent page
+    global $conn;
+    if ($conn) {
+        $__lastVisited = $_SESSION['last_visited_bookings'] ?? '2000-01-01 00:00:00';
+        $__navStmt = $conn->prepare(
+            "SELECT COUNT(*) AS cnt FROM bookings b
+             JOIN booking_status bs ON b.status_id = bs.id
+             WHERE b.user_id = ? AND bs.name = 'pending_review' AND b.created_at > ?"
+        );
+        if ($__navStmt) {
+            $__navStmt->bind_param('is', $_SESSION['user_id'], $__lastVisited);
+            $__navStmt->execute();
+            $__navRow = $__navStmt->get_result()->fetch_assoc();
+            $_navPendingCount = (int)($__navRow['cnt'] ?? 0);
+            $__navStmt->close();
+        }
+    }
+}
 ?>
 <!-- YP4K Resort — User Dashboard Navigation -->
 <link rel="stylesheet" href="../css/resort-theme.css">
 <style>
+/* ── Pending-bookings badge on My Bookings nav link ── */
+.nav-booking-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    border-radius: 9px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    line-height: 1;
+    background: #22c55e;
+    color: #050505;
+    margin-left: 4px;
+    box-shadow: 0 0 6px rgba(34,197,94,0.5);
+    animation: badgePulse 2s ease-in-out infinite;
+    vertical-align: middle;
+}
+.nav-booking-badge[data-count="0"],
+.nav-booking-badge:empty { display: none; }
+/* Mobile bottom-nav badge sits top-right of the icon wrapper */
+.mbn-icon { position: relative; display: inline-flex; }
+.mbn-booking-badge {
+    position: absolute;
+    top: -5px;
+    right: -7px;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    border-radius: 8px;
+    font-size: 0.6rem;
+    font-weight: 700;
+    line-height: 16px;
+    background: #22c55e;
+    color: #050505;
+    box-shadow: 0 0 5px rgba(34,197,94,0.55);
+    animation: badgePulse 2s ease-in-out infinite;
+}
+.mbn-booking-badge[data-count="0"],
+.mbn-booking-badge:empty { display: none; }
+@keyframes badgePulse {
+    0%,100% { box-shadow: 0 0 5px rgba(34,197,94,0.45); }
+    50%      { box-shadow: 0 0 10px rgba(34,197,94,0.8); }
+}
 .resort-dash-nav {
     position: sticky;
     top: 0;
@@ -357,7 +424,7 @@ function navActive($key) {
                 </li>
                 <li class="nav-item mobile-hide-in-hamburger">
                     <a class="nav-link <?php echo navActive('bookings'); ?>" href="my-bookings.php">
-                        <i class="bi bi-calendar-check"></i> My Bookings
+                        <i class="bi bi-calendar-check"></i> My Bookings<?php if ($_navPendingCount > 0): ?><span class="nav-booking-badge" data-count="<?php echo $_navPendingCount; ?>"><?php echo $_navPendingCount; ?></span><?php endif; ?>
                     </a>
                 </li>
 
@@ -393,7 +460,7 @@ function navActive($key) {
         <span>Bundle</span>
     </a>
     <a class="mbn-item <?php echo navActive('bookings'); ?>" href="my-bookings.php" id="mbn-my-bookings">
-        <span class="mbn-icon"><i class="bi bi-calendar-check"></i></span>
+        <span class="mbn-icon"><i class="bi bi-calendar-check"></i><?php if ($_navPendingCount > 0): ?><span class="mbn-booking-badge" data-count="<?php echo $_navPendingCount; ?>"><?php echo $_navPendingCount; ?></span><?php endif; ?></span>
         <span>Bookings</span>
     </a>
     <a class="mbn-item <?php echo navActive('trail'); ?>" href="trail-guide.php" id="mbn-trail">
