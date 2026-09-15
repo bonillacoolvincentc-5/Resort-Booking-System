@@ -157,7 +157,7 @@ function fetchAdminNotifications() {
             if (badge) {
                 if (unreadCount > 0) {
                     badge.textContent = unreadCount;
-                    badge.style.display = 'inline-block';
+                    badge.style.display = '';
                 } else {
                     badge.style.display = 'none';
                 }

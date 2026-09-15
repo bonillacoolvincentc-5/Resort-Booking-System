@@ -23,7 +23,7 @@ $navbarAdminEmail = $_SESSION['admin_email'] ?? '';
             <div class="notification-section">
                 <button class="notification-btn" onclick="toggleNotifications()">
                     <i class="bi bi-bell"></i>
-                    <span class="notification-badge">3</span>
+                    <span class="notification-badge" style="display: none;"></span>
                 </button>
 
                 <div class="notification-dropdown" id="notificationDropdown">
