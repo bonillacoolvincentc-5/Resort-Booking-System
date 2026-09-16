@@ -1027,8 +1027,16 @@ async function loadPackages() {
 
         if (!data.success) { renderEmptyState('Could not load packages.'); return; }
 
-        // Exclude bundles from this page since they have a dedicated premium page
-        allPackages = (data.packages || []).filter(p => p.package_type !== 'bundle');
+        // Exclude bundles from this page since they have a dedicated premium page.
+        // Also exclude add-on-only activities that should not appear as standalone bookings.
+        const ADDON_ONLY = ['Billiards', 'Fitness Gym', 'Kids Playground', 'Videoke'];
+        const ADDON_ONLY_PARTIAL = ['Pickleball']; // covers all "Pickleball Court" variants
+        allPackages = (data.packages || []).filter(p => {
+            if (p.package_type === 'bundle') return false;
+            if (ADDON_ONLY.includes(p.name)) return false;
+            if (ADDON_ONLY_PARTIAL.some(kw => p.name.includes(kw))) return false;
+            return true;
+        });
 
         // Load activities as potential add-ons
         (data.activities || []).forEach(a => {
