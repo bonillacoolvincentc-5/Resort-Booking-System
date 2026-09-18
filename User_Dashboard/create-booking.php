@@ -27,6 +27,21 @@ if (empty($userPhone) && $userId) {
 if (empty($userPhone)) {
     $userPhone = 'N/A';
 }
+
+// ── Sidebar: fetch up to 4 random active activities for "Other Activities" panel
+$sidebarActivities = [];
+$stmtSide = $conn->prepare(
+    "SELECT id, name, description, price_per_hour, price_type, image_url
+     FROM activities
+     WHERE is_active = 1
+     ORDER BY RAND()
+     LIMIT 4"
+);
+if ($stmtSide) {
+    $stmtSide->execute();
+    $sidebarActivities = $stmtSide->get_result()->fetch_all(MYSQLI_ASSOC);
+    $stmtSide->close();
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -823,71 +838,71 @@ if (empty($userPhone)) {
 
             <!-- Sidebar — Other Activities -->
             <div class="col-lg-4">
-                <div class="card-modern">
+                <div class="card-modern" style="position:sticky;top:1.5rem;align-self:flex-start;">
                     <div class="card-header-modern">
                         <i class="bi bi-stars"></i> Other Activities
                     </div>
                     <div class="card-body-modern" style="padding-top:.75rem;">
 
-                        <!-- Activity Card 1 -->
+                        <?php if (!empty($sidebarActivities)): ?>
+                        <?php
+                        // Cycle through gradient palettes for visual variety
+                        $gradients = [
+                            'linear-gradient(135deg,rgba(59,130,246,.3),rgba(139,92,246,.3))',
+                            'linear-gradient(135deg,rgba(16,185,129,.3),rgba(59,130,246,.25))',
+                            'linear-gradient(135deg,rgba(245,158,11,.25),rgba(239,68,68,.2))',
+                            'linear-gradient(135deg,rgba(139,92,246,.3),rgba(16,185,129,.25))',
+                        ];
+                        $icons = ['bi-activity','bi-water','bi-tree','bi-controller'];
+                        foreach ($sidebarActivities as $idx => $act):
+                            $isLast   = ($idx === count($sidebarActivities) - 1);
+                            $grad     = $gradients[$idx % count($gradients)];
+                            $icon     = $icons[$idx % count($icons)];
+                            $imgSrc   = !empty($act['image_url'])
+                                        ? '../' . htmlspecialchars($act['image_url'], ENT_QUOTES)
+                                        : '';
+                            $priceLabel = '₱' . number_format($act['price_per_hour'], 0)
+                                        . ($act['price_type'] === 'per_head' ? ' / person' : ' / session');
+                            $desc = mb_strimwidth($act['description'] ?? '', 0, 100, '…');
+                        ?>
                         <div class="other-activity-card" style="
                             background:var(--bg-tertiary);
                             border:1px solid var(--border-color);
                             border-radius:.75rem;
                             overflow:hidden;
-                            margin-bottom:1rem;
+                            margin-bottom:<?= $isLast ? '.25rem' : '1rem' ?>;
                             transition:all .25s ease;
                         " onmouseover="this.style.borderColor='var(--accent-primary)';this.style.transform='translateY(-3px)'"
                            onmouseout="this.style.borderColor='var(--border-color)';this.style.transform='translateY(0)'">
-                            <div style="height:110px;background:linear-gradient(135deg,rgba(59,130,246,.3),rgba(139,92,246,.3));display:flex;align-items:center;justify-content:center;font-size:2.75rem;">
-                                🏄
+                            <?php if ($imgSrc): ?>
+                            <div style="height:110px;overflow:hidden;">
+                                <img src="<?= $imgSrc ?>" alt="<?= htmlspecialchars($act['name'], ENT_QUOTES) ?>"
+                                     style="width:100%;height:100%;object-fit:cover;"
+                                     onerror="this.parentElement.style.background='<?= $grad ?>';this.style.display='none';">
                             </div>
+                            <?php else: ?>
+                            <div style="height:110px;background:<?= $grad ?>;display:flex;align-items:center;justify-content:center;font-size:2.25rem;">
+                                <i class="bi <?= $icon ?>" style="color:rgba(255,255,255,.7);"></i>
+                            </div>
+                            <?php endif; ?>
                             <div style="padding:.85rem 1rem;">
-                                <div style="font-weight:700;color:var(--text-primary);font-size:.9rem;margin-bottom:.25rem;">Wave Surfing Experience</div>
-                                <div style="font-size:.78rem;color:var(--text-secondary);line-height:1.5;">Ride the waves with our certified instructors. Beginner-friendly sessions available every morning.</div>
-                                <div style="margin-top:.6rem;font-size:.75rem;font-weight:700;color:var(--accent-success);">From ₱850 / person</div>
+                                <div style="font-weight:700;color:var(--text-primary);font-size:.9rem;margin-bottom:.25rem;">
+                                    <?= htmlspecialchars($act['name'], ENT_QUOTES) ?>
+                                </div>
+                                <div style="font-size:.78rem;color:var(--text-secondary);line-height:1.5;">
+                                    <?= htmlspecialchars($desc, ENT_QUOTES) ?>
+                                </div>
+                                <div style="margin-top:.6rem;font-size:.75rem;font-weight:700;color:var(--accent-success);">
+                                    From <?= $priceLabel ?>
+                                </div>
                             </div>
                         </div>
-
-                        <!-- Activity Card 2 -->
-                        <div class="other-activity-card" style="
-                            background:var(--bg-tertiary);
-                            border:1px solid var(--border-color);
-                            border-radius:.75rem;
-                            overflow:hidden;
-                            margin-bottom:1rem;
-                            transition:all .25s ease;
-                        " onmouseover="this.style.borderColor='var(--accent-primary)';this.style.transform='translateY(-3px)'"
-                           onmouseout="this.style.borderColor='var(--border-color)';this.style.transform='translateY(0)'">
-                            <div style="height:110px;background:linear-gradient(135deg,rgba(16,185,129,.3),rgba(59,130,246,.25));display:flex;align-items:center;justify-content:center;font-size:2.75rem;">
-                                🤿
-                            </div>
-                            <div style="padding:.85rem 1rem;">
-                                <div style="font-weight:700;color:var(--text-primary);font-size:.9rem;margin-bottom:.25rem;">Coral Reef Snorkeling</div>
-                                <div style="font-size:.78rem;color:var(--text-secondary);line-height:1.5;">Explore vibrant coral gardens teeming with tropical fish. Equipment and guide included.</div>
-                                <div style="margin-top:.6rem;font-size:.75rem;font-weight:700;color:var(--accent-success);">From ₱1,200 / person</div>
-                            </div>
-                        </div>
-
-                        <!-- Activity Card 3 -->
-                        <div class="other-activity-card" style="
-                            background:var(--bg-tertiary);
-                            border:1px solid var(--border-color);
-                            border-radius:.75rem;
-                            overflow:hidden;
-                            margin-bottom:.25rem;
-                            transition:all .25s ease;
-                        " onmouseover="this.style.borderColor='var(--accent-primary)';this.style.transform='translateY(-3px)'"
-                           onmouseout="this.style.borderColor='var(--border-color)';this.style.transform='translateY(0)'">
-                            <div style="height:110px;background:linear-gradient(135deg,rgba(245,158,11,.25),rgba(239,68,68,.2));display:flex;align-items:center;justify-content:center;font-size:2.75rem;">
-                                🏕️
-                            </div>
-                            <div style="padding:.85rem 1rem;">
-                                <div style="font-weight:700;color:var(--text-primary);font-size:.9rem;margin-bottom:.25rem;">Sunset Beach Camping</div>
-                                <div style="font-size:.78rem;color:var(--text-secondary);line-height:1.5;">Spend a magical night under the stars with bonfire, s'mores, and a panoramic ocean view.</div>
-                                <div style="margin-top:.6rem;font-size:.75rem;font-weight:700;color:var(--accent-success);">From ₱2,500 / group</div>
-                            </div>
-                        </div>
+                        <?php endforeach; ?>
+                        <?php else: ?>
+                        <p style="font-size:.8rem;color:var(--text-muted);text-align:center;padding:1rem 0;">
+                            <i class="bi bi-info-circle me-1"></i>No other activities available right now.
+                        </p>
+                        <?php endif; ?>
 
                     </div>
                 </div>
