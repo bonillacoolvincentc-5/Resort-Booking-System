@@ -790,11 +790,9 @@ if (empty($userPhone)) {
                         </form>
                     </div>
                 </div>
-            </div>
 
-            <!-- Sidebar — price summary -->
-            <div class="col-lg-4">
-                <div class="card-modern">
+                <!-- Price Summary — moved here from sidebar -->
+                <div class="card-modern mt-4">
                     <div class="card-header-modern">
                         <i class="bi bi-receipt"></i> Price Summary
                     </div>
@@ -821,15 +819,76 @@ if (empty($userPhone)) {
                     </div>
                 </div>
 
-                <!-- What's included mini-card -->
-                <div class="card-modern mt-3">
+            </div>
+
+            <!-- Sidebar — Other Activities -->
+            <div class="col-lg-4">
+                <div class="card-modern">
                     <div class="card-header-modern">
-                        <i class="bi bi-gift"></i> What's Included
+                        <i class="bi bi-stars"></i> Other Activities
                     </div>
-                    <div class="card-body-modern">
-                        <ul class="detail-list" id="inclusionsList">
-                            <li><i class="bi bi-dash"></i> Select a package to see inclusions</li>
-                        </ul>
+                    <div class="card-body-modern" style="padding-top:.75rem;">
+
+                        <!-- Activity Card 1 -->
+                        <div class="other-activity-card" style="
+                            background:var(--bg-tertiary);
+                            border:1px solid var(--border-color);
+                            border-radius:.75rem;
+                            overflow:hidden;
+                            margin-bottom:1rem;
+                            transition:all .25s ease;
+                        " onmouseover="this.style.borderColor='var(--accent-primary)';this.style.transform='translateY(-3px)'"
+                           onmouseout="this.style.borderColor='var(--border-color)';this.style.transform='translateY(0)'">
+                            <div style="height:110px;background:linear-gradient(135deg,rgba(59,130,246,.3),rgba(139,92,246,.3));display:flex;align-items:center;justify-content:center;font-size:2.75rem;">
+                                🏄
+                            </div>
+                            <div style="padding:.85rem 1rem;">
+                                <div style="font-weight:700;color:var(--text-primary);font-size:.9rem;margin-bottom:.25rem;">Wave Surfing Experience</div>
+                                <div style="font-size:.78rem;color:var(--text-secondary);line-height:1.5;">Ride the waves with our certified instructors. Beginner-friendly sessions available every morning.</div>
+                                <div style="margin-top:.6rem;font-size:.75rem;font-weight:700;color:var(--accent-success);">From ₱850 / person</div>
+                            </div>
+                        </div>
+
+                        <!-- Activity Card 2 -->
+                        <div class="other-activity-card" style="
+                            background:var(--bg-tertiary);
+                            border:1px solid var(--border-color);
+                            border-radius:.75rem;
+                            overflow:hidden;
+                            margin-bottom:1rem;
+                            transition:all .25s ease;
+                        " onmouseover="this.style.borderColor='var(--accent-primary)';this.style.transform='translateY(-3px)'"
+                           onmouseout="this.style.borderColor='var(--border-color)';this.style.transform='translateY(0)'">
+                            <div style="height:110px;background:linear-gradient(135deg,rgba(16,185,129,.3),rgba(59,130,246,.25));display:flex;align-items:center;justify-content:center;font-size:2.75rem;">
+                                🤿
+                            </div>
+                            <div style="padding:.85rem 1rem;">
+                                <div style="font-weight:700;color:var(--text-primary);font-size:.9rem;margin-bottom:.25rem;">Coral Reef Snorkeling</div>
+                                <div style="font-size:.78rem;color:var(--text-secondary);line-height:1.5;">Explore vibrant coral gardens teeming with tropical fish. Equipment and guide included.</div>
+                                <div style="margin-top:.6rem;font-size:.75rem;font-weight:700;color:var(--accent-success);">From ₱1,200 / person</div>
+                            </div>
+                        </div>
+
+                        <!-- Activity Card 3 -->
+                        <div class="other-activity-card" style="
+                            background:var(--bg-tertiary);
+                            border:1px solid var(--border-color);
+                            border-radius:.75rem;
+                            overflow:hidden;
+                            margin-bottom:.25rem;
+                            transition:all .25s ease;
+                        " onmouseover="this.style.borderColor='var(--accent-primary)';this.style.transform='translateY(-3px)'"
+                           onmouseout="this.style.borderColor='var(--border-color)';this.style.transform='translateY(0)'">
+                            <div style="height:110px;background:linear-gradient(135deg,rgba(245,158,11,.25),rgba(239,68,68,.2));display:flex;align-items:center;justify-content:center;font-size:2.75rem;">
+                                🏕️
+                            </div>
+                            <div style="padding:.85rem 1rem;">
+                                <div style="font-weight:700;color:var(--text-primary);font-size:.9rem;margin-bottom:.25rem;">Sunset Beach Camping</div>
+                                <div style="font-size:.78rem;color:var(--text-secondary);line-height:1.5;">Spend a magical night under the stars with bonfire, s'mores, and a panoramic ocean view.</div>
+                                <div style="margin-top:.6rem;font-size:.75rem;font-weight:700;color:var(--accent-success);">From ₱2,500 / group</div>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
             </div>
@@ -1257,9 +1316,10 @@ function selectPackage(id, type) {
     document.getElementById('capacityHint').textContent = `(max ${pkg.capacity})`;
     document.getElementById('numberOfGuests').max = pkg.capacity;
 
-    // Inclusions
+    // Inclusions (element removed from DOM; guard against null to avoid crashing the handler)
     const inclHtml = (pkg.inclusions||[]).map(i => `<li><i class="bi bi-check-circle-fill"></i>${escHtml(i)}</li>`).join('');
-    document.getElementById('inclusionsList').innerHTML = inclHtml || '<li><i class="bi bi-dash"></i>No inclusions listed</li>';
+    const inclEl = document.getElementById('inclusionsList');
+    if (inclEl) inclEl.innerHTML = inclHtml || '<li><i class="bi bi-dash"></i>No inclusions listed</li>';
 
     // Add-on activities (only show OTHER activities if current pkg is accommodation or different activity)
     renderAddons(pkg);
