@@ -793,15 +793,6 @@ if ($stmtSide) {
                             <input type="hidden" id="selectedPackageId"   name="package_id">
                             <input type="hidden" id="selectedPackageType" name="package_type">
 
-                            <!-- Action buttons -->
-                            <div class="d-flex gap-3 flex-wrap">
-                                <button type="button" class="btn-modern btn-secondary-modern" onclick="goToStep1()">
-                                    <i class="bi bi-arrow-left"></i> Back to Packages
-                                </button>
-                                <button type="submit" class="btn-modern btn-primary-modern" id="submitBtn">
-                                    <i class="bi bi-check-circle"></i> Confirm Booking
-                                </button>
-                            </div>
                         </form>
                     </div>
                 </div>
@@ -832,6 +823,16 @@ if ($stmtSide) {
                             Final amount calculated upon admin review. Prices in Philippine Peso (₱).
                         </div>
                     </div>
+                </div>
+
+                <!-- Action buttons — below Price Summary, right-aligned -->
+                <div class="d-flex gap-3 flex-wrap justify-content-end mt-3">
+                    <button type="button" class="btn-modern btn-secondary-modern" onclick="goToStep1()">
+                        <i class="bi bi-arrow-left"></i> Back to Packages
+                    </button>
+                    <button type="submit" form="bookingForm" class="btn-modern btn-primary-modern" id="submitBtn">
+                        <i class="bi bi-check-circle"></i> Confirm Booking
+                    </button>
                 </div>
 
             </div>
@@ -865,12 +866,12 @@ if ($stmtSide) {
                                         . ($act['price_type'] === 'per_head' ? ' / person' : ' / session');
                             $desc = mb_strimwidth($act['description'] ?? '', 0, 100, '…');
                         ?>
+                        <a href="create-booking.php?id=<?= (int)$act['id'] ?>" class="text-decoration-none d-block" style="margin-bottom:<?= $isLast ? '.25rem' : '1rem' ?>;">
                         <div class="other-activity-card" style="
                             background:var(--bg-tertiary);
                             border:1px solid var(--border-color);
                             border-radius:.75rem;
                             overflow:hidden;
-                            margin-bottom:<?= $isLast ? '.25rem' : '1rem' ?>;
                             transition:all .25s ease;
                         " onmouseover="this.style.borderColor='var(--accent-primary)';this.style.transform='translateY(-3px)'"
                            onmouseout="this.style.borderColor='var(--border-color)';this.style.transform='translateY(0)'">
@@ -897,6 +898,7 @@ if ($stmtSide) {
                                 </div>
                             </div>
                         </div>
+                        </a>
                         <?php endforeach; ?>
                         <?php else: ?>
                         <p style="font-size:.8rem;color:var(--text-muted);text-align:center;padding:1rem 0;">
