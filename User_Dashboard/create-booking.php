@@ -34,6 +34,8 @@ $stmtSide = $conn->prepare(
     "SELECT id, name, description, price_per_hour, price_type, image_url
      FROM activities
      WHERE is_active = 1
+       AND name NOT IN ('Billiards','Fitness Gym','Kids Playground','Videoke Rental')
+       AND name NOT LIKE 'Pickleball%'
      ORDER BY RAND()
      LIMIT 4"
 );
@@ -866,7 +868,7 @@ if ($stmtSide) {
                                         . ($act['price_type'] === 'per_head' ? ' / person' : ' / session');
                             $desc = mb_strimwidth($act['description'] ?? '', 0, 100, '…');
                         ?>
-                        <a href="create-booking.php?id=<?= (int)$act['id'] ?>" class="text-decoration-none d-block" style="margin-bottom:<?= $isLast ? '.25rem' : '1rem' ?>;">
+                        <a href="create-booking.php?id=<?= (int)$act['id'] ?>&type=activity" class="text-decoration-none d-block" style="margin-bottom:<?= $isLast ? '.25rem' : '1rem' ?>;">
                         <div class="other-activity-card" style="
                             background:var(--bg-tertiary);
                             border:1px solid var(--border-color);
@@ -1129,6 +1131,15 @@ async function loadPackages() {
 
         renderPackages(allPackages);
         document.getElementById('packageCount').textContent = allPackages.length + ' packages';
+
+        // ── Auto-select via ?id=&type= (e.g. from sidebar card links) ──
+        const _p = new URLSearchParams(window.location.search);
+        const _id   = _p.get('id');
+        const _type = _p.get('type') || 'activity';
+        if (_id) {
+            const _pkg = allPackages.find(p => p.id == _id && p.package_type === _type);
+            if (_pkg) selectPackage(_pkg.id, _pkg.package_type);
+        }
     } catch(e) {
         console.error(e);
         document.getElementById('packagesLoading').remove();
