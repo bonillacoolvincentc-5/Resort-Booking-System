@@ -837,7 +837,7 @@ if ($stmtSide) {
             </div>
 
             <!-- Sidebar — Other Activities -->
-            <div class="col-lg-4">
+            <div class="col-lg-4 d-none d-lg-block">
                 <div class="card-modern" style="position:sticky;top:1.5rem;align-self:flex-start;">
                     <div class="card-header-modern">
                         <i class="bi bi-stars"></i> Other Activities
