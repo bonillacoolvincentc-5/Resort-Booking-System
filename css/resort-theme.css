@@ -247,6 +247,18 @@ body {
   width: 60%;
 }
 
+/* ── Mobile: indicator must not overflow the collapsed stacked links ── */
+@media (max-width: 991.98px) {
+  .resort-nav .nav-link::after {
+    left: 1rem;
+    transform: none;
+  }
+  .resort-nav .nav-link:hover::after,
+  .resort-nav .nav-link.active::after {
+    width: 2rem;
+  }
+}
+
 .resort-nav .nav-link.active {
   color: var(--accent) !important;
   background: rgba(157, 255, 0, 0.08);
