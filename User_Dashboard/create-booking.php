@@ -44,6 +44,18 @@ if ($stmtSide) {
     $sidebarActivities = $stmtSide->get_result()->fetch_all(MYSQLI_ASSOC);
     $stmtSide->close();
 }
+
+// ── Fetch admin-defined time slots ────────────────────────────────
+$timeSlots = [];
+$stmtSlots = $conn->query(
+    "SELECT id, label, start_time, end_time
+     FROM time_slots
+     WHERE is_active = 1
+     ORDER BY start_time ASC"
+);
+if ($stmtSlots) {
+    $timeSlots = $stmtSlots->fetch_all(MYSQLI_ASSOC);
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -715,19 +727,41 @@ if ($stmtSide) {
 
                             <!-- Time range — shown only for activities -->
                             <div id="timeRangeSection" class="mb-4 d-none">
-                                <label class="form-label-modern"><i class="bi bi-clock me-1"></i>Time Range</label>
-                                <div class="row g-3">
-                                    <div class="col-6">
-                                        <label class="form-label-modern" style="font-size:.8rem;color:var(--text-muted);">Time-In (Start)</label>
-                                        <input type="time" id="timeIn" name="time_in"
-                                               class="form-control-modern" min="07:00" max="22:00">
+                                <label class="form-label-modern"><i class="bi bi-clock me-1"></i>Time Slot</label>
+                                <?php if (empty($timeSlots)): ?>
+                                    <div class="p-3 rounded" style="background:var(--bg-tertiary);border:1px dashed var(--border-color);color:var(--text-muted);font-size:.85rem;text-align:center;">
+                                        <i class="bi bi-clock-history me-1"></i>No time slots configured yet. Please contact the admin.
                                     </div>
-                                    <div class="col-6">
-                                        <label class="form-label-modern" style="font-size:.8rem;color:var(--text-muted);">Time-Out (End)</label>
-                                        <input type="time" id="timeOut" name="time_out"
-                                               class="form-control-modern" min="07:00" max="22:00">
-                                    </div>
-                                </div>
+                                    <!-- Hidden placeholders so JS references don't break -->
+                                    <input type="hidden" id="timeIn"  name="time_in">
+                                    <input type="hidden" id="timeOut" name="time_out">
+                                <?php else: ?>
+                                <select id="timeSlotSelect" class="form-control-modern form-select-modern"
+                                        style="appearance:auto;cursor:pointer;"
+                                        onchange="onTimeSlotChange(this)">
+                                    <option value="" data-in="" data-out="">— Select a time slot —</option>
+                                    <?php foreach ($timeSlots as $slot):
+                                        // Format labels: "08:00:00" → "8:00 AM"
+                                        $inFmt  = date('g:i A', strtotime($slot['start_time']));
+                                        $outFmt = date('g:i A', strtotime($slot['end_time']));
+                                        // HH:MM for JS (24-hr)
+                                        $inVal  = date('H:i', strtotime($slot['start_time']));
+                                        $outVal = date('H:i', strtotime($slot['end_time']));
+                                        $displayLabel = !empty($slot['label'])
+                                            ? htmlspecialchars($slot['label'])
+                                            : "{$inFmt} – {$outFmt}";
+                                    ?>
+                                    <option value="<?= $slot['id'] ?>"
+                                            data-in="<?= $inVal ?>"
+                                            data-out="<?= $outVal ?>">
+                                        <?= $displayLabel ?> &nbsp;(<?= $inFmt ?> – <?= $outFmt ?>)
+                                    </option>
+                                    <?php endforeach; ?>
+                                </select>
+                                <!-- Hidden fields consumed by the JS submit handler (keeps fd.append logic intact) -->
+                                <input type="hidden" id="timeIn"  name="time_in">
+                                <input type="hidden" id="timeOut" name="time_out">
+                                <?php endif; ?>
                                 <div class="mt-2 p-2 rounded" id="durationDisplay"
                                      style="background:var(--bg-tertiary);border:1px solid var(--border-color);font-size:.8rem;color:var(--text-muted);text-align:center;">
                                     Duration: —
@@ -1085,8 +1119,9 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('bookingForm').addEventListener('submit', handleBookingSubmit);
     document.getElementById('bookingDate').addEventListener('change', recalcPrice);
     document.getElementById('checkoutDate').addEventListener('change',  recalcPrice);
-    document.getElementById('timeIn').addEventListener('change',  () => { validateTime(); recalcPrice(); });
-    document.getElementById('timeOut').addEventListener('change', () => { validateTime(); recalcPrice(); });
+    // timeSlotSelect drives validation & recalc (timeIn/timeOut hidden fields are set by onTimeSlotChange)
+    const _tss = document.getElementById('timeSlotSelect');
+    if (_tss) _tss.addEventListener('change', () => { validateTime(); recalcPrice(); });
     const guestsInput = document.getElementById('numberOfGuests');
     if (guestsInput) guestsInput.addEventListener('input', recalcPrice);
 
@@ -1474,6 +1509,15 @@ function recalcPrice() {
     document.getElementById('basePriceVal').textContent   = '₱' + base.toFixed(2);
     document.getElementById('addonsTotal').textContent    = '₱' + addonsTotal.toFixed(2);
     document.getElementById('grandTotal').textContent     = '₱' + grand.toFixed(2);
+}
+
+// ── Time slot select handler ────────────────────────────────────────
+function onTimeSlotChange(sel) {
+    const opt = sel.options[sel.selectedIndex];
+    document.getElementById('timeIn').value  = opt.dataset.in  || '';
+    document.getElementById('timeOut').value = opt.dataset.out || '';
+    validateTime();
+    recalcPrice();
 }
 
 // ── Time validation ────────────────────────────────────────────────
