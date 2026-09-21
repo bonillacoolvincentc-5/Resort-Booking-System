@@ -147,7 +147,7 @@
                         </button>
 
                         <!-- Divider -->
-                        <div class="d-flex align-items-center my-3">
+                        <div class="d-flex   align-items-center my-3">
                             <hr class="flex-grow-1" style="border-color: var(--border-color);">
                             <span class="mx-2 text-muted">OR</span>
                             <hr class="flex-grow-1" style="border-color: var(--border-color);">
