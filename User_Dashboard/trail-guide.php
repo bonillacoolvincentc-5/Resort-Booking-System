@@ -874,6 +874,7 @@ $userId = $_SESSION['user_id'];
                         </div>
                     </div>
 
+                    
                     <div class="gear-section">
                         <div class="gear-title"><i class="bi bi-shield-check text-accent"></i> Recommended Gear Required:</div>
                         <div id="gearTags" class="gear-tags">
