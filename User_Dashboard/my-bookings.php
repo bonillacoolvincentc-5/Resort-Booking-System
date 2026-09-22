@@ -899,7 +899,48 @@ while ($row = $statsResult->fetch_assoc()) {
         </div>
     </div>
 
+    <!-- Unified Confirmation Modal -->
+    <div class="modal fade" id="confirmModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content modal-content-modern" style="border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; background: #0f172a;">
+                <div class="modal-header modal-header-modern" style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                    <h5 class="modal-title" id="confirmModalTitle">
+                        <i class="bi bi-question-circle me-2" style="color: #00d4ff;"></i>Confirmation
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body modal-body-modern text-center p-4">
+                    <p id="confirmModalMessage" style="font-size: 1.1rem; color: #f8fafc; margin-bottom: 0;">Are you sure?</p>
+                </div>
+                <div class="modal-footer modal-footer-modern d-flex justify-content-center" style="border-top: none; padding-bottom: 1.5rem;">
+                    <button type="button" class="btn-modern btn-secondary-modern px-4" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn-modern px-4" id="confirmModalActionBtn" style="background: linear-gradient(135deg, #00d4ff 0%, #0077ff 100%); color: white; border: none;">Confirm</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
+        function showConfirmModal(title, message, confirmBtnText, confirmBtnColor, callback) {
+            document.getElementById('confirmModalTitle').innerHTML = `<i class="bi bi-question-circle me-2" style="color: ${confirmBtnColor || '#00d4ff'};"></i>${title}`;
+            document.getElementById('confirmModalMessage').textContent = message;
+            
+            const actionBtn = document.getElementById('confirmModalActionBtn');
+            actionBtn.textContent = confirmBtnText;
+            actionBtn.style.background = confirmBtnColor || 'linear-gradient(135deg, #00d4ff 0%, #0077ff 100%)';
+            
+            // Remove previous event listeners by cloning
+            const newActionBtn = actionBtn.cloneNode(true);
+            actionBtn.parentNode.replaceChild(newActionBtn, actionBtn);
+            
+            newActionBtn.addEventListener('click', () => {
+                bootstrap.Modal.getInstance(document.getElementById('confirmModal')).hide();
+                callback();
+            });
+            
+            new bootstrap.Modal(document.getElementById('confirmModal')).show();
+        }
+
         // Booking Functions
         function viewBooking(bookingId) {
             const bookingData = {
@@ -1127,13 +1168,13 @@ while ($row = $statsResult->fetch_assoc()) {
         }
 
         function rescheduleBooking(bookingId) {
-            if (confirm(`Do you want to reschedule booking ${bookingId}?`)) {
+            showConfirmModal('Reschedule Booking', `Do you want to reschedule booking ${bookingId}?`, 'Reschedule', '#f59e0b', () => {
                 showSuccess(`Reschedule functionality would open a calendar for booking: ${bookingId}`);
-            }
+            });
         }
 
         function cancelBooking(bookingId) {
-            if (confirm(`Are you sure you want to cancel booking ${bookingId}?`)) {
+            showConfirmModal('Cancel Booking', `Are you sure you want to cancel booking ${bookingId}?`, 'Yes, Cancel', '#ef4444', () => {
                 // Remove the booking card
                 const bookingCard = document.querySelector(`[data-booking-id="${bookingId}"]`) || 
                                  document.querySelector(`.booking-card:has(.booking-id:contains("${bookingId}"))`);
@@ -1147,7 +1188,7 @@ while ($row = $statsResult->fetch_assoc()) {
                 } else {
                     showSuccess(`Booking ${bookingId} would be cancelled and refunded`);
                 }
-            }
+            });
         }
 
         function downloadTicket(bookingId) {
@@ -1164,9 +1205,9 @@ while ($row = $statsResult->fetch_assoc()) {
         }
 
         function rebookActivity(bookingId) {
-            if (confirm('Do you want to rebook this activity?')) {
+            showConfirmModal('Rebook Activity', 'Do you want to rebook this activity?', 'Rebook', '#10b981', () => {
                 window.location.href = '../index-new.html#booking';
-            }
+            });
         }
 
         // Filter Functions

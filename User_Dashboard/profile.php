@@ -983,8 +983,131 @@ if ($diff->y >= 1) {
             </div>
         </div>
     </div>
+    <!-- Unified Confirmation Modal -->
+    <div class="modal fade" id="confirmModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; background: #0f172a;">
+                <div class="modal-header" style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                    <h5 class="modal-title" id="confirmModalTitle">
+                        <i class="bi bi-question-circle me-2" style="color: #00d4ff;"></i>Confirmation
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center p-4">
+                    <p id="confirmModalMessage" style="font-size: 1.1rem; color: #f8fafc; margin-bottom: 0;">Are you sure?</p>
+                </div>
+                <div class="modal-footer d-flex justify-content-center" style="border-top: none; padding-bottom: 1.5rem;">
+                    <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal" style="background: rgba(255,255,255,0.1); color: white; border: none;">Cancel</button>
+                    <button type="button" class="btn px-4" id="confirmModalActionBtn" style="background: linear-gradient(135deg, #00d4ff 0%, #0077ff 100%); color: white; border: none;">Confirm</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Change Password Modal -->
+    <div class="modal fade" id="changePasswordModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; background: #0f172a; color: white;">
+                <div class="modal-header" style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                    <h5 class="modal-title">
+                        <i class="bi bi-shield-lock me-2" style="color: #00d4ff;"></i>Change Password
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form id="changePasswordForm">
+                        <div class="mb-3">
+                            <label class="form-label text-white-50">Current Password</label>
+                            <input type="password" class="form-control" id="cpCurrent" required style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white;">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-white-50">New Password (Min 6 characters)</label>
+                            <input type="password" class="form-control" id="cpNew" required minlength="6" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white;">
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label text-white-50">Confirm New Password</label>
+                            <input type="password" class="form-control" id="cpConfirm" required style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white;">
+                        </div>
+                        <button type="submit" class="btn w-100" id="cpSubmitBtn" style="background: linear-gradient(135deg, #00d4ff 0%, #0077ff 100%); color: white; border: none; padding: 10px;">
+                            Update Password
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script>
+        function showConfirmModal(title, message, confirmBtnText, confirmBtnColor, callback) {
+            document.getElementById('confirmModalTitle').innerHTML = `<i class="bi bi-question-circle me-2" style="color: ${confirmBtnColor || '#00d4ff'};"></i>${title}`;
+            document.getElementById('confirmModalMessage').textContent = message;
+            
+            const actionBtn = document.getElementById('confirmModalActionBtn');
+            actionBtn.textContent = confirmBtnText;
+            actionBtn.style.background = confirmBtnColor || 'linear-gradient(135deg, #00d4ff 0%, #0077ff 100%)';
+            
+            const newActionBtn = actionBtn.cloneNode(true);
+            actionBtn.parentNode.replaceChild(newActionBtn, actionBtn);
+            
+            newActionBtn.addEventListener('click', () => {
+                bootstrap.Modal.getInstance(document.getElementById('confirmModal')).hide();
+                callback();
+            });
+            
+            new bootstrap.Modal(document.getElementById('confirmModal')).show();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.getElementById('changePasswordForm');
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    const currentPassword = document.getElementById('cpCurrent').value;
+                    const newPassword = document.getElementById('cpNew').value;
+                    const confirmPassword = document.getElementById('cpConfirm').value;
+                    const btn = document.getElementById('cpSubmitBtn');
+
+                    if (newPassword.length < 6) {
+                        showError('New password must be at least 6 characters!');
+                        return;
+                    }
+                    if (newPassword !== confirmPassword) {
+                        showError('Passwords do not match!');
+                        return;
+                    }
+
+                    btn.disabled = true;
+                    btn.textContent = 'Updating...';
+
+                    const formData = new FormData();
+                    formData.append('current_password', currentPassword);
+                    formData.append('new_password', newPassword);
+
+                    fetch('../php/change_password.php', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        btn.disabled = false;
+                        btn.textContent = 'Update Password';
+                        if (data.success) {
+                            bootstrap.Modal.getInstance(document.getElementById('changePasswordModal')).hide();
+                            showSuccess('Password updated successfully!');
+                            form.reset();
+                        } else {
+                            showError(data.message || 'Failed to update password.');
+                        }
+                    })
+                    .catch(err => {
+                        btn.disabled = false;
+                        btn.textContent = 'Update Password';
+                        showError('Error connecting to server.');
+                    });
+                });
+            }
+        });
         // Tab Switching
         function switchTab(tabName) {
             // Hide all tabs
@@ -1051,44 +1174,14 @@ if ($diff->y >= 1) {
         }
 
         function resetProfile() {
-            if (confirm('Are you sure you want to reload and reset all changes?')) {
+            showConfirmModal('Reset Changes', 'Are you sure you want to reload and reset all changes?', 'Reset', '#ef4444', () => {
                 window.location.reload();
-            }
+            });
         }
 
         function changePassword() {
-            const currentPassword = prompt('Enter current password:');
-            if (!currentPassword) return;
-            const newPassword = prompt('Enter new password (min 6 characters):');
-            if (!newPassword || newPassword.length < 6) {
-                showError('New password must be at least 6 characters!');
-                return;
-            }
-            const confirmPassword = prompt('Confirm new password:');
-            if (newPassword !== confirmPassword) {
-                showError('Passwords do not match!');
-                return;
-            }
-
-            const formData = new FormData();
-            formData.append('current_password', currentPassword);
-            formData.append('new_password', newPassword);
-
-            fetch('../php/change_password.php', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    showSuccess('Password changed successfully!');
-                } else {
-                    showError(data.message || 'Failed to change password.');
-                }
-            })
-            .catch(err => {
-                showError('Error connecting to server.');
-            });
+            document.getElementById('changePasswordForm').reset();
+            new bootstrap.Modal(document.getElementById('changePasswordModal')).show();
         }
 
         function changeAvatar() {

@@ -653,6 +653,47 @@ while ($row = $bundlesRes->fetch_assoc()) {
     </div>
 
 
+    <!-- ═══ Approve Booking Modal ═════════════════════════════════════════ -->
+    <div id="approveBookingModal" class="rbm-overlay" role="dialog" aria-modal="true" aria-labelledby="abmTitle" style="display:none;">
+        <div class="rbm-dialog">
+            <!-- Header -->
+            <div class="rbm-header" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                <div class="rbm-header-icon" style="color: #10b981; background: rgba(255,255,255,0.9);">
+                    <i class="bi bi-check-circle-fill"></i>
+                </div>
+                <div>
+                    <h5 class="rbm-title" id="abmTitle">Approve Booking</h5>
+                    <p class="rbm-subtitle">This action will notify the guest of the approval.</p>
+                </div>
+                <button class="rbm-close" onclick="closeApproveModal()" aria-label="Close">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+
+            <!-- Body -->
+            <div class="rbm-body" style="text-align: center; padding: 30px 20px;">
+                <h5 style="color: #334155; margin-bottom: 10px;">Are you sure you want to approve this booking?</h5>
+                <p style="color: #64748b; font-size: 0.95rem; margin: 0;">An email notification will be sent automatically.</p>
+                <div id="abmError" class="rbm-error" style="display:none; justify-content: center; margin-top: 15px;">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                    <span id="abmErrorMsg">Failed to approve booking.</span>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="rbm-footer">
+                <button class="rbm-btn rbm-btn-cancel" onclick="closeApproveModal()" id="abmCancelBtn">
+                    Cancel
+                </button>
+                <button class="rbm-btn rbm-btn-confirm" style="background: #10b981; border: none; color: white;" onclick="confirmApproveBooking()" id="abmConfirmBtn">
+                    <i class="bi bi-check-circle me-1"></i>
+                    Confirm Approval
+                </button>
+            </div>
+        </div>
+    </div>
+
+
     <!-- ═══ Reject Booking Modal ═════════════════════════════════════════ -->
     <div id="rejectBookingModal" class="rbm-overlay" role="dialog" aria-modal="true" aria-labelledby="rbmTitle" style="display:none;">
         <div class="rbm-dialog">
@@ -1023,20 +1064,45 @@ while ($row = $bundlesRes->fetch_assoc()) {
         }
         // ── End Walk-In Modal Logic ───────────────────────────────────────────
 
-        // Approve booking
-        async function approveBooking(bookingId) {
-            if (!confirm('Are you sure you want to approve this booking?')) {
-                return;
-            }
+        // ── Approve Booking Modal Logic ────────────────────────────────────────
+        let _approveBookingId = null;
+
+        function approveBooking(bookingId) {
+            _approveBookingId = bookingId;
+            const errorEl  = document.getElementById('abmError');
+            const confirmBtn = document.getElementById('abmConfirmBtn');
+            const cancelBtn  = document.getElementById('abmCancelBtn');
+            
+            errorEl.style.display = 'none';
+            confirmBtn.disabled = false;
+            confirmBtn.innerHTML = '<i class="bi bi-check-circle me-1"></i>Confirm Approval';
+            cancelBtn.disabled = false;
+            
+            document.getElementById('approveBookingModal').style.display = 'flex';
+        }
+
+        function closeApproveModal() {
+            document.getElementById('approveBookingModal').style.display = 'none';
+            _approveBookingId = null;
+        }
+
+        async function confirmApproveBooking() {
+            const errorEl    = document.getElementById('abmError');
+            const errorMsg   = document.getElementById('abmErrorMsg');
+            const confirmBtn = document.getElementById('abmConfirmBtn');
+            const cancelBtn  = document.getElementById('abmCancelBtn');
+
+            // Lock UI
+            confirmBtn.disabled = true;
+            cancelBtn.disabled  = true;
+            confirmBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status"></span>Approving…';
 
             try {
                 const response = await fetch('../php/update_booking_status.php', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        booking_id: bookingId,
+                        booking_id: _approveBookingId,
                         status: 'approved',
                         notes: 'Booking approved by admin'
                     })
@@ -1045,14 +1111,25 @@ while ($row = $bundlesRes->fetch_assoc()) {
                 const result = await response.json();
 
                 if (result.success) {
-                    // Reload page to show updated data
-                    location.reload();
+                    confirmBtn.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i>Approved!';
+                    setTimeout(() => {
+                        closeApproveModal();
+                        location.reload();
+                    }, 900);
                 } else {
-                    showNotification(result.message || 'Failed to approve booking', 'danger');
+                    errorMsg.textContent = result.message || 'Failed to approve booking. Please try again.';
+                    errorEl.style.display = 'flex';
+                    confirmBtn.disabled = false;
+                    cancelBtn.disabled  = false;
+                    confirmBtn.innerHTML = '<i class="bi bi-check-circle me-1"></i>Confirm Approval';
                 }
             } catch (error) {
                 console.error('Error approving booking:', error);
-                showNotification('Failed to approve booking. Please try again.', 'danger');
+                errorMsg.textContent = 'Connection error. Please try again.';
+                errorEl.style.display = 'flex';
+                confirmBtn.disabled = false;
+                cancelBtn.disabled  = false;
+                confirmBtn.innerHTML = '<i class="bi bi-check-circle me-1"></i>Confirm Approval';
             }
         }
 
@@ -1092,10 +1169,19 @@ while ($row = $bundlesRes->fetch_assoc()) {
             document.getElementById('rejectBookingModal').addEventListener('click', function (e) {
                 if (e.target === this) closeRejectModal();
             });
+            document.getElementById('approveBookingModal').addEventListener('click', function (e) {
+                if (e.target === this) closeApproveModal();
+            });
+            
             // Close on Escape key
             document.addEventListener('keydown', function (e) {
-                if (e.key === 'Escape' && document.getElementById('rejectBookingModal').style.display !== 'none') {
-                    closeRejectModal();
+                if (e.key === 'Escape') {
+                    if (document.getElementById('rejectBookingModal').style.display !== 'none') {
+                        closeRejectModal();
+                    }
+                    if (document.getElementById('approveBookingModal').style.display !== 'none') {
+                        closeApproveModal();
+                    }
                 }
             });
         });
