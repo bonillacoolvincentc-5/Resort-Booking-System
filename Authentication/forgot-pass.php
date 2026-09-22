@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -181,72 +181,151 @@
         <p class="auth-text">Remember your password? <a href="login.php" class="auth-link">Sign In</a></p>
     </div>
 </div>
-
-<script>
+<script>
     let currentStep = 1;
+    let verifiedResetToken = null;
+    let userEmail = null;
 
     document.addEventListener('DOMContentLoaded', function() {
         const urlParams = new URLSearchParams(window.location.search);
-        const token = urlParams.get('token');
-        const email = urlParams.get('email');
-        if (token && email) {
-            localStorage.setItem('resetEmail', email);
-            localStorage.setItem('resetToken', token);
-            goToStep(3);
-            showInfo('Token received. Please create your new password.');
-        }
         if (urlParams.get('success')) showSuccess(decodeURIComponent(urlParams.get('success')));
-        if (urlParams.get('error')) showError(decodeURIComponent(urlParams.get('error')));
+        if (urlParams.get('error'))   showError(decodeURIComponent(urlParams.get('error')));
     });
 
-    document.getElementById('emailForm').addEventListener('submit', function(e) {
+    // ── Step 1: Send Code ──────────────────────────────────────────
+    document.getElementById('emailForm').addEventListener('submit', async function(e) {
         e.preventDefault();
-        const email = document.getElementById('email').value;
-        const btn = document.getElementById('sendCodeBtn');
+        const email = document.getElementById('email').value.trim();
+        const btn   = document.getElementById('sendCodeBtn');
         btn.disabled = true;
-        btn.querySelector('span').textContent = 'Sending...';
-        setTimeout(() => {
-            btn.disabled = false;
-            btn.querySelector('span').textContent = 'Send Reset Code';
-            localStorage.setItem('resetEmail', email);
-            goToStep(2);
-            showSuccess(`Reset code sent to ${email}. Check your inbox.`);
-        }, 2000);
+        btn.querySelector('span').textContent = 'Sending…';
+        hideAlerts();
+
+        try {
+            const fd = new FormData();
+            fd.append('action', 'send_code');
+            fd.append('email', email);
+
+            const res  = await fetch('../php/forgot_password.php', { method: 'POST', body: fd });
+            const data = await res.json();
+
+            if (data.success) {
+                userEmail = email;
+                goToStep(2);
+                showSuccess(data.message);
+            } else {
+                showError(data.message || 'Failed to send reset code.');
+            }
+        } catch (err) {
+            showError('Network error. Please check your connection and try again.');
+        }
+
+        btn.disabled = false;
+        btn.querySelector('span').textContent = 'Send Reset Code';
     });
 
-    document.getElementById('verifyForm').addEventListener('submit', function(e) {
+    // ── Step 2: Verify Code ────────────────────────────────────────
+    document.getElementById('verifyForm').addEventListener('submit', async function(e) {
         e.preventDefault();
-        const code = document.getElementById('verificationCode').value;
-        const btn = document.getElementById('verifyCodeBtn');
+        const code = document.getElementById('verificationCode').value.trim();
+        const btn  = document.getElementById('verifyCodeBtn');
         btn.disabled = true;
-        btn.querySelector('span').textContent = 'Verifying...';
-        setTimeout(() => {
+        btn.querySelector('span').textContent = 'Verifying…';
+        hideAlerts();
+
+        if (!userEmail) {
+            showError('Session lost. Please start over.');
+            goToStep(1);
             btn.disabled = false;
             btn.querySelector('span').textContent = 'Verify Code';
-            if (code.length === 6) { goToStep(3); showSuccess('Code verified. Create your new password.'); }
-            else showError('Invalid code. Please try again.');
-        }, 1500);
+            return;
+        }
+
+        try {
+            const fd = new FormData();
+            fd.append('action', 'verify_code');
+            fd.append('email', userEmail);
+            fd.append('otp',   code);
+
+            const res  = await fetch('../php/forgot_password.php', { method: 'POST', body: fd });
+            const data = await res.json();
+
+            if (data.success) {
+                verifiedResetToken = data.reset_token;
+                goToStep(3);
+                showSuccess('Code verified! Please create your new password.');
+            } else {
+                showError(data.message || 'Invalid code. Please try again.');
+            }
+        } catch (err) {
+            showError('Network error. Please try again.');
+        }
+
+        btn.disabled = false;
+        btn.querySelector('span').textContent = 'Verify Code';
     });
 
-    document.getElementById('resetForm').addEventListener('submit', function(e) {
+    // ── Step 3: Reset Password ─────────────────────────────────────
+    document.getElementById('resetForm').addEventListener('submit', async function(e) {
         e.preventDefault();
-        const pass = document.getElementById('newPassword').value;
+        const pass    = document.getElementById('newPassword').value;
         const confirm = document.getElementById('confirmNewPassword').value;
-        if (pass.length < 8) { showError('Password must be at least 8 characters.'); return; }
-        if (pass !== confirm) { showError('Passwords do not match.'); return; }
+
+        if (pass.length < 8)      { showError('Password must be at least 8 characters.'); return; }
+        if (pass !== confirm)     { showError('Passwords do not match.'); return; }
+        if (!verifiedResetToken)  { showError('Reset session lost. Please start over.'); goToStep(1); return; }
+
         const btn = document.getElementById('resetPasswordBtn');
         btn.disabled = true;
-        btn.querySelector('span').textContent = 'Resetting...';
-        setTimeout(() => {
-            btn.disabled = false;
-            btn.querySelector('span').textContent = 'Reset Password';
-            localStorage.removeItem('resetEmail');
-            localStorage.removeItem('resetToken');
-            showSuccess('Password reset! Redirecting to login...');
-            setTimeout(() => window.location.href = 'login.php?success=Password reset successfully', 2000);
-        }, 2000);
+        btn.querySelector('span').textContent = 'Resetting…';
+        hideAlerts();
+
+        try {
+            const fd = new FormData();
+            fd.append('action',           'reset_password');
+            fd.append('reset_token',      verifiedResetToken);
+            fd.append('new_password',     pass);
+            fd.append('confirm_password', confirm);
+
+            const res  = await fetch('../php/forgot_password.php', { method: 'POST', body: fd });
+            const data = await res.json();
+
+            if (data.success) {
+                verifiedResetToken = null;
+                userEmail = null;
+                showSuccess('Password reset! Redirecting to login…');
+                setTimeout(() => window.location.href = 'login.php?success=' + encodeURIComponent('Password reset successfully. Please log in.'), 2200);
+            } else {
+                showError(data.message || 'Failed to reset password. Please try again.');
+            }
+        } catch (err) {
+            showError('Network error. Please try again.');
+        }
+
+        btn.disabled = false;
+        btn.querySelector('span').textContent = 'Reset Password';
     });
 
+    // ── Resend code ────────────────────────────────────────────────
+    async function resendCode() {
+        if (!userEmail) { showError('Please enter your email first.'); goToStep(1); return; }
+        hideAlerts();
+        showInfo('Resending code…');
+
+        try {
+            const fd = new FormData();
+            fd.append('action', 'send_code');
+            fd.append('email', userEmail);
+            const res  = await fetch('../php/forgot_password.php', { method: 'POST', body: fd });
+            const data = await res.json();
+            if (data.success) showSuccess(data.message);
+            else showError(data.message || 'Could not resend. Please wait a moment and try again.');
+        } catch (err) {
+            showError('Network error. Please try again.');
+        }
+    }
+
+    // ── Helpers ────────────────────────────────────────────────────
     function goToStep(step) {
         document.querySelectorAll('.step-content').forEach(c => c.classList.remove('active'));
         document.getElementById(`step${step}`).classList.add('active');
@@ -259,22 +338,16 @@
         currentStep = step;
     }
 
-    function resendCode() {
-        const email = localStorage.getItem('resetEmail');
-        if (email) showInfo(`Reset code resent to ${email}.`);
-        else { showError('Please enter your email first.'); goToStep(1); }
-    }
-
     function togglePassword(fieldId, iconId) {
         const f = document.getElementById(fieldId);
         const e = document.getElementById(iconId);
-        if (f.type === 'password') { f.type = 'text'; e.classList.replace('bi-eye', 'bi-eye-slash'); }
-        else { f.type = 'password'; e.classList.replace('bi-eye-slash', 'bi-eye'); }
+        if (f.type === 'password') { f.type = 'text';     e.classList.replace('bi-eye',       'bi-eye-slash'); }
+        else                       { f.type = 'password'; e.classList.replace('bi-eye-slash', 'bi-eye');       }
     }
 
-    function showSuccess(msg) { hideAlerts(); document.getElementById('successMessage').textContent = msg; document.getElementById('successAlert').style.display = 'flex'; setTimeout(() => document.getElementById('successAlert').style.display = 'none', 5000); }
-    function showError(msg)   { hideAlerts(); document.getElementById('errorMessage').textContent = msg;   document.getElementById('errorAlert').style.display = 'flex';   setTimeout(() => document.getElementById('errorAlert').style.display = 'none', 5000); }
-    function showInfo(msg)    { hideAlerts(); document.getElementById('infoMessage').textContent = msg;    document.getElementById('infoAlert').style.display = 'flex';    setTimeout(() => document.getElementById('infoAlert').style.display = 'none', 5000); }
+    function showSuccess(msg) { hideAlerts(); document.getElementById('successMessage').textContent = msg; document.getElementById('successAlert').style.display = 'flex'; setTimeout(() => document.getElementById('successAlert').style.display = 'none', 6000); }
+    function showError(msg)   { hideAlerts(); document.getElementById('errorMessage').textContent   = msg; document.getElementById('errorAlert').style.display   = 'flex'; setTimeout(() => document.getElementById('errorAlert').style.display   = 'none', 6000); }
+    function showInfo(msg)    { hideAlerts(); document.getElementById('infoMessage').textContent    = msg; document.getElementById('infoAlert').style.display    = 'flex'; setTimeout(() => document.getElementById('infoAlert').style.display    = 'none', 6000); }
     function hideAlerts()     { ['successAlert','errorAlert','infoAlert'].forEach(id => document.getElementById(id).style.display = 'none'); }
 
     document.addEventListener('keydown', e => {
