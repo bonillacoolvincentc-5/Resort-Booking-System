@@ -714,6 +714,9 @@ if ($stmtSlots) {
                         <!-- Selected package preview -->
                         <div class="selected-pkg-header" id="selectedPkgPreview"></div>
 
+                        <!-- Activity & Room Availability Calendar -->
+                        <div id="activity-calendar"></div>
+
                         <form id="bookingForm" novalidate>
                             <!-- Check-in date -->
                             <div class="mb-4">
@@ -1433,6 +1436,9 @@ function selectPackage(id, type) {
 
     // Add-on activities (only show OTHER activities if current pkg is accommodation or different activity)
     renderAddons(pkg);
+    if (typeof fetchAndRenderActivityCalendar === 'function') {
+        fetchAndRenderActivityCalendar(pkg.id, pkg.package_type);
+    }
 
     recalcPrice();
     goToStep2();
@@ -2045,6 +2051,420 @@ function escHtml(s) {
     return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
                     .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
+
+// ── Interactive Availability Calendar (Activities & Rooms) ─────────
+let calYear = new Date().getFullYear();
+let calMonth = new Date().getMonth() + 1;
+let currentCalPkgId = null;
+let currentCalPkgType = null;
+
+async function fetchAndRenderActivityCalendar(pkgId, pkgType, year, month) {
+    currentCalPkgId = pkgId || currentCalPkgId;
+    currentCalPkgType = pkgType || currentCalPkgType || 'activity';
+    calYear = year || calYear;
+    calMonth = month || calMonth;
+
+    const container = document.getElementById('activity-calendar');
+    if (!container) return;
+
+    if (!currentCalPkgId) {
+        container.innerHTML = '';
+        return;
+    }
+
+    container.innerHTML = `
+        <div class="act-cal-box text-center py-3" style="color:var(--text-muted);font-size:0.85rem;">
+            <span class="spinner-border spinner-border-sm me-2 text-primary" role="status"></span>
+            Loading availability calendar...
+        </div>
+    `;
+
+    try {
+        const res = await fetch(`../php/fetch-calendar-data.php?package_id=${currentCalPkgId}&package_type=${currentCalPkgType}&year=${calYear}&month=${calMonth}`);
+        const data = await res.json();
+
+        if (!data.success) {
+            container.innerHTML = `<div class="act-cal-box text-danger p-2 small">${escHtml(data.message || 'Failed to load availability.')}</div>`;
+            return;
+        }
+
+        renderCalendarView(data, container);
+    } catch (err) {
+        console.error("Calendar fetch error:", err);
+        container.innerHTML = `<div class="act-cal-box text-muted p-2 small">Calendar preview currently unavailable.</div>`;
+    }
+}
+
+function renderCalendarView(data, container) {
+    const monthName = new Date(calYear, calMonth - 1, 1).toLocaleString('default', { month: 'long', year: 'numeric' });
+    const firstDay = new Date(calYear, calMonth - 1, 1).getDay();
+    const daysInMonth = new Date(calYear, calMonth, 0).getDate();
+    const today = new Date();
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+    const selectedDate = document.getElementById('bookingDate')?.value || '';
+
+    let html = `
+        <div class="act-cal-box">
+            <div class="act-cal-header">
+                <button type="button" class="act-cal-nav-btn" id="actCalPrev" title="Previous Month">
+                    <i class="bi bi-chevron-left"></i>
+                </button>
+                <div class="act-cal-title">
+                    <i class="bi bi-calendar3 me-1 text-primary"></i> ${escHtml(monthName)} — ${escHtml(data.item_name)}
+                </div>
+                <button type="button" class="act-cal-nav-btn" id="actCalNext" title="Next Month">
+                    <i class="bi bi-chevron-right"></i>
+                </button>
+            </div>
+            <div class="act-cal-grid">
+                <div class="act-cal-day-head">Sun</div>
+                <div class="act-cal-day-head">Mon</div>
+                <div class="act-cal-day-head">Tue</div>
+                <div class="act-cal-day-head">Wed</div>
+                <div class="act-cal-day-head">Thu</div>
+                <div class="act-cal-day-head">Fri</div>
+                <div class="act-cal-day-head">Sat</div>
+    `;
+
+    for (let i = 0; i < firstDay; i++) {
+        html += `<div class="act-cal-cell empty"></div>`;
+    }
+
+    for (let d = 1; d <= daysInMonth; d++) {
+        const dateStr = `${calYear}-${String(calMonth).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        const dayData = (data.days && data.days[dateStr]) || { booked: 0, capacity: data.capacity, status: 'available', available: true };
+
+        const isPast = dateStr < todayStr;
+        let statusClass = dayData.status;
+        let isClickable = dayData.available && !isPast && dayData.status !== 'blocked';
+        if (isPast) statusClass = 'blocked';
+
+        const isSelected = selectedDate === dateStr ? 'selected' : '';
+
+        html += `
+            <div class="act-cal-cell ${statusClass} ${isSelected}"
+                 ${isClickable ? `data-date="${dateStr}" role="button" tabindex="0"` : `aria-disabled="true"`}
+                 title="Date: ${dateStr} | Booked: ${dayData.booked} / Capacity: ${dayData.capacity}">
+                <span class="act-cal-day-num">${d}</span>
+                <span class="act-cal-meta">
+                    <span class="meta-full">Booked: ${dayData.booked} / Cap: ${dayData.capacity}</span>
+                    <span class="meta-short">${dayData.booked}/${dayData.capacity}</span>
+                </span>
+            </div>
+        `;
+    }
+
+    html += `
+            </div>
+            <div class="act-cal-legend">
+                <span class="act-cal-legend-item"><span class="act-cal-legend-dot available"></span> Available</span>
+                <span class="act-cal-legend-item"><span class="act-cal-legend-dot limited"></span> Limited</span>
+                <span class="act-cal-legend-item"><span class="act-cal-legend-dot full"></span> Full</span>
+                <span class="act-cal-legend-item"><span class="act-cal-legend-dot blocked"></span> Unavailable</span>
+            </div>
+        </div>
+    `;
+
+    container.innerHTML = html;
+
+    // Month Navigation
+    document.getElementById('actCalPrev')?.addEventListener('click', () => {
+        let m = calMonth - 1, y = calYear;
+        if (m < 1) { m = 12; y--; }
+        fetchAndRenderActivityCalendar(currentCalPkgId, currentCalPkgType, y, m);
+    });
+
+    document.getElementById('actCalNext')?.addEventListener('click', () => {
+        let m = calMonth + 1, y = calYear;
+        if (m > 12) { m = 1; y++; }
+        fetchAndRenderActivityCalendar(currentCalPkgId, currentCalPkgType, y, m);
+    });
+
+    // Date Selection Click
+    container.querySelectorAll('.act-cal-cell[data-date]').forEach(cell => {
+        cell.addEventListener('click', () => {
+            const pickedDate = cell.getAttribute('data-date');
+            const bookingDateInput = document.getElementById('bookingDate');
+            if (bookingDateInput) {
+                bookingDateInput.value = pickedDate;
+                bookingDateInput.dispatchEvent(new Event('change'));
+            }
+
+            if (currentCalPkgType === 'accommodation') {
+                const checkoutDateInput = document.getElementById('checkoutDate');
+                if (checkoutDateInput) {
+                    const nextDay = new Date(pickedDate + 'T00:00:00');
+                    nextDay.setDate(nextDay.getDate() + 1);
+                    const nextDayStr = `${nextDay.getFullYear()}-${String(nextDay.getMonth()+1).padStart(2,'0')}-${String(nextDay.getDate()).padStart(2,'0')}`;
+                    checkoutDateInput.min = nextDayStr;
+                    if (!checkoutDateInput.value || checkoutDateInput.value <= pickedDate) {
+                        checkoutDateInput.value = nextDayStr;
+                        checkoutDateInput.dispatchEvent(new Event('change'));
+                    }
+                }
+            }
+
+            container.querySelectorAll('.act-cal-cell').forEach(c => c.classList.remove('selected'));
+            cell.classList.add('selected');
+
+            if (typeof recalcPrice === 'function') recalcPrice();
+        });
+    });
+}
+
+window.fetchAndRenderActivityCalendar = fetchAndRenderActivityCalendar;
 </script>
+<style>
+#activity-calendar {
+    margin-bottom: 1.25rem;
+    width: 100%;
+}
+.act-cal-box {
+    background: var(--bg-card, rgba(30, 41, 59, 0.85));
+    border: 1px solid var(--border-color, rgba(51, 65, 85, 0.6));
+    border-radius: var(--radius-card, 0.75rem);
+    padding: 0.75rem;
+    color: var(--text-primary, #f1f5f9);
+    width: 100%;
+    box-sizing: border-box;
+}
+.act-cal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-bottom: 0.65rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border-color, rgba(51, 65, 85, 0.6));
+}
+.act-cal-title {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--text-primary, #f1f5f9);
+    text-align: center;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.act-cal-nav-btn {
+    background: var(--bg-tertiary, #334155);
+    border: 1px solid var(--border-color, rgba(51, 65, 85, 0.6));
+    color: var(--text-primary, #f1f5f9);
+    border-radius: 0.375rem;
+    padding: 0.25rem 0.55rem;
+    cursor: pointer;
+    font-size: 0.8rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 32px;
+    min-height: 32px;
+    touch-action: manipulation;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+.act-cal-nav-btn:hover, .act-cal-nav-btn:active {
+    background: var(--accent-primary, #3b82f6);
+    color: #fff;
+}
+.act-cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0.25rem;
+    text-align: center;
+    width: 100%;
+}
+.act-cal-day-head {
+    font-size: 0.62rem;
+    font-weight: 700;
+    color: var(--text-muted, #94a3b8);
+    text-transform: uppercase;
+    padding-bottom: 0.2rem;
+    user-select: none;
+}
+.act-cal-cell {
+    min-height: 44px;
+    border-radius: 0.375rem;
+    padding: 0.2rem 0.05rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: rgba(15, 23, 42, 0.4);
+    border: 1px solid rgba(51, 65, 85, 0.5);
+    touch-action: manipulation;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-sizing: border-box;
+    overflow: hidden;
+}
+.act-cal-cell.empty {
+    background: transparent;
+    border-color: transparent;
+    pointer-events: none;
+}
+.act-cal-cell.available {
+    background: rgba(16, 185, 129, 0.12);
+    border-color: rgba(16, 185, 129, 0.6);
+    color: #fff;
+    cursor: pointer;
+}
+.act-cal-cell.available:hover {
+    background: rgba(16, 185, 129, 0.25);
+    border-color: #10b981;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);
+}
+.act-cal-cell.available:active {
+    transform: scale(0.96);
+}
+.act-cal-cell.limited {
+    background: rgba(245, 158, 11, 0.12);
+    border-color: rgba(245, 158, 11, 0.6);
+    color: #fff;
+    cursor: pointer;
+}
+.act-cal-cell.limited:hover {
+    background: rgba(245, 158, 11, 0.25);
+    border-color: #f59e0b;
+    transform: translateY(-2px);
+}
+.act-cal-cell.limited:active {
+    transform: scale(0.96);
+}
+.act-cal-cell.full {
+    background: rgba(239, 68, 68, 0.15);
+    border-color: rgba(239, 68, 68, 0.6);
+    color: #f87171;
+    opacity: 0.65;
+    cursor: not-allowed;
+}
+.act-cal-cell.blocked {
+    background: rgba(51, 65, 85, 0.25);
+    border-color: rgba(51, 65, 85, 0.35);
+    color: #64748b;
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+.act-cal-cell.selected {
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+    background: rgba(59, 130, 246, 0.25) !important;
+    transform: scale(1.02);
+}
+.act-cal-day-num {
+    font-size: 0.76rem;
+    font-weight: 700;
+    line-height: 1;
+}
+.act-cal-meta {
+    font-size: 0.55rem;
+    color: var(--text-secondary, #cbd5e1);
+    line-height: 1.1;
+    margin-top: 0.12rem;
+    text-align: center;
+    width: 100%;
+}
+.act-cal-meta .meta-short {
+    display: none;
+}
+.act-cal-meta .meta-full {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding: 0 1px;
+}
+
+.act-cal-legend {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin-top: 0.65rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid rgba(51, 65, 85, 0.4);
+    font-size: 0.68rem;
+    color: var(--text-muted, #94a3b8);
+}
+.act-cal-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+.act-cal-legend-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+}
+.act-cal-legend-dot.available { background: #10b981; }
+.act-cal-legend-dot.limited   { background: #f59e0b; }
+.act-cal-legend-dot.full      { background: #ef4444; }
+.act-cal-legend-dot.blocked   { background: #64748b; }
+
+/* ── Tablet & Small Laptops (max-width: 992px) ── */
+@media (max-width: 992px) {
+    .act-cal-cell {
+        min-height: 48px;
+    }
+}
+
+/* ── Mobile Devices & Compact Screens (max-width: 640px) ── */
+@media (max-width: 640px) {
+    .act-cal-box {
+        padding: 0.6rem;
+    }
+    .act-cal-title {
+        font-size: 0.78rem;
+    }
+    .act-cal-grid {
+        gap: 0.2rem;
+    }
+    .act-cal-cell {
+        min-height: 40px;
+        padding: 0.15rem 0.05rem;
+    }
+    .act-cal-day-num {
+        font-size: 0.72rem;
+    }
+    /* Switch to compact X/Y count so text never clips or overflows on phones */
+    .act-cal-meta .meta-full {
+        display: none;
+    }
+    .act-cal-meta .meta-short {
+        display: block;
+        font-size: 0.52rem;
+        font-weight: 600;
+        letter-spacing: -0.2px;
+    }
+    .act-cal-legend {
+        gap: 0.5rem;
+        font-size: 0.62rem;
+    }
+}
+
+/* ── Ultra-narrow devices (max-width: 360px) ── */
+@media (max-width: 360px) {
+    .act-cal-grid {
+        gap: 0.15rem;
+    }
+    .act-cal-cell {
+        min-height: 38px;
+    }
+    .act-cal-day-head {
+        font-size: 0.58rem;
+    }
+    .act-cal-nav-btn {
+        min-width: 28px;
+        min-height: 28px;
+        padding: 0.15rem 0.35rem;
+    }
+}
+</style>
 </body>
 </html>
