@@ -482,8 +482,8 @@ while ($row = $accResult->fetch_assoc()) {
                                     <label class="form-label-modern">Type / Category</label>
                                     <select class="form-control-modern" id="accType" name="type" required>
                                         <option value="room">Overnight Room</option>
-                                        <option value="cottage">Cottage / Gazebo</option>
-                                        <option value="stay-in">Stay-in / Cabana</option>
+                                        <option value="cottage">Cottage</option>
+                                        <option value="stay-in">Stay-in</option>
                                     </select>
                                 </div>
                             </div>
