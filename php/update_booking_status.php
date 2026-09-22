@@ -39,8 +39,13 @@ try {
         throw new Exception('Invalid status');
     }
     
-    // Get current booking status
-    $stmt = $conn->prepare("SELECT status_id, user_id FROM bookings WHERE id = ?");
+    // Get current booking status and user details
+    $stmt = $conn->prepare("
+        SELECT b.status_id, b.user_id, b.booking_reference, u.email, u.first_name, u.last_name 
+        FROM bookings b
+        LEFT JOIN users u ON b.user_id = u.id
+        WHERE b.id = ?
+    ");
     $stmt->bind_param('i', $bookingId);
     $stmt->execute();
     $result = $stmt->get_result();
@@ -75,6 +80,19 @@ try {
     // If rejecting or cancelling, restore availability
     if (in_array($newStatus, ['rejected', 'cancelled'])) {
         restoreAvailability($conn, $bookingId);
+    }
+    
+    // Send email notification for approved/rejected bookings
+    if (in_array($newStatus, ['approved', 'rejected']) && !empty($booking['email'])) {
+        require_once '../phpAuthentication/email_helper.php';
+        $fullName = trim(($booking['first_name'] ?? '') . ' ' . ($booking['last_name'] ?? ''));
+        EmailHelper::sendBookingStatusEmail(
+            $booking['email'],
+            $fullName,
+            $booking['booking_reference'],
+            $newStatus,
+            $notes
+        );
     }
     
     echo json_encode([

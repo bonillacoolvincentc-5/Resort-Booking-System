@@ -156,6 +156,81 @@ class EmailHelper {
     }
     
     /**
+     * Send Booking Status Notification Email
+     */
+    public static function sendBookingStatusEmail($email, $firstName, $bookingReference, $status, $notes) {
+        try {
+            $mail = new PHPMailer\PHPMailer\PHPMailer(true);
+            
+            // Server settings
+            $mail->isSMTP();
+            $mail->Host       = self::$emailConfig['host'];
+            $mail->SMTPAuth   = true;
+            $mail->Username   = self::$emailConfig['username'];
+            $mail->Password   = self::$emailConfig['password'];
+            $mail->SMTPSecure = self::$emailConfig['encryption'] === 'ssl' ? 
+                               PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_SMTPS : 
+                               PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
+            $mail->Port       = self::$emailConfig['port'];
+            
+            // Recipients
+            $mail->setFrom(self::$emailConfig['from_email'], self::$emailConfig['from_name']);
+            $mail->addAddress($email);
+            
+            $statusText = $status === 'approved' ? 'Accepted' : ucfirst($status);
+            $color = $status === 'approved' ? '#10b981' : ($status === 'rejected' ? '#ef4444' : '#f59e0b');
+            
+            $subject = "Your Booking Request is " . $statusText . " - YP4K Resort";
+            $mail->Subject = $subject;
+            $mail->isHTML(true);
+            
+            $greeting = $firstName ? "Dear $firstName," : "Hello,";
+            
+            $mail->Body = "
+            <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #f8f9fa;'>
+                <div style='background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;'>
+                    <h1 style='margin: 0; font-size: 24px;'>YP4K Resort</h1>
+                    <p style='margin: 5px 0 0; opacity: 0.9;'>Booking Update</p>
+                </div>
+                
+                <div style='background: white; padding: 30px; border-radius: 0 0 10px 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);'>
+                    <p style='color: #333; margin-bottom: 20px; font-size: 16px;'>{$greeting}</p>
+                    <p style='color: #666; line-height: 1.6; font-size: 16px;'>Your booking with reference <strong>{$bookingReference}</strong> has been updated.</p>
+                    
+                    <div style='background: #f8f9fa; border: 2px solid {$color}; padding: 20px; text-align: center; margin: 20px 0; border-radius: 8px;'>
+                        <p style='margin: 0 0 10px; color: #666; font-size: 14px; text-transform: uppercase;'>STATUS</p>
+                        <h2 style='margin: 0; font-size: 28px; color: {$color};'>{$statusText}</h2>
+                    </div>";
+
+            if (!empty($notes) && $notes !== 'Booking approved by admin') {
+                $mail->Body .= "
+                    <div style='background: #f1f5f9; padding: 15px; margin: 20px 0; border-left: 4px solid #64748b; border-radius: 4px;'>
+                        <p style='margin: 0 0 5px; color: #475569; font-weight: bold; font-size: 14px;'>Admin Notes / Reason:</p>
+                        <p style='margin: 0; color: #334155; line-height: 1.5; font-size: 15px;'>" . nl2br(htmlspecialchars($notes)) . "</p>
+                    </div>";
+            }
+            
+            $mail->Body .= "
+                    <hr style='border: none; border-top: 1px solid #eee; margin: 30px 0;'>
+                    <p style='color: #999; font-size: 12px; text-align: center; margin: 0;'>
+                        This is an automated message from YP4K Resort. Please do not reply to this email.
+                    </p>
+                </div>
+            </div>";
+            
+            $mail->AltBody = "Your booking (Ref: $bookingReference) has been $statusText.\n" . 
+                             (!empty($notes) && $notes !== 'Booking approved by admin' ? "Admin Note: $notes" : "");
+            
+            $mail->send();
+            return ['success' => true, 'message' => 'Notification email sent successfully'];
+            
+        } catch (Exception $e) {
+            error_log("Booking status email failed: " . $e->getMessage());
+            return ['success' => false, 'message' => 'Failed to send notification email: ' . $e->getMessage()];
+        }
+    }
+    
+    /**
      * Generate OTP email template
      */
     private static function generateOTPEmailTemplate($otp, $userType, $firstName) {
