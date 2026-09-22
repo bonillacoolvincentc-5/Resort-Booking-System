@@ -137,6 +137,27 @@ try {
         $price = $item['price'];
     }
 
+    // ── Calculate Add-on Activities (if any) ────────────────────────
+    $addonsJson = $_POST['addons'] ?? '';
+    $addonItems = [];
+    if (!empty($addonsJson)) {
+        if (is_string($addonsJson)) {
+            $addonItems = json_decode($addonsJson, true) ?: [];
+        } elseif (is_array($addonsJson)) {
+            $addonItems = $addonsJson;
+        }
+    }
+    foreach ($addonItems as $ai) {
+        $aPrice = floatval($ai['price'] ?? 0);
+        $aQty = max(1, intval($ai['qty'] ?? 1));
+        $pType = $ai['price_type'] ?? 'flat_rate';
+        if ($pType === 'flat_rate') {
+            $price += $aPrice;
+        } else {
+            $price += ($aPrice * $aQty);
+        }
+    }
+
     // ── Handle payment proof upload ───────────────────────────────
     $proofPath = null;
     if (!empty($_FILES['payment_proof']) && $_FILES['payment_proof']['error'] === UPLOAD_ERR_OK) {
@@ -205,6 +226,14 @@ try {
     $email      = $_POST['email'];
     $phone      = $_POST['phone_number'];
     $userId     = $_SESSION['user_id'];
+    $specialReqs = $_POST['special_requests'] ?? '';
+    if (!empty($addonItems)) {
+        $addonDesc = "\n[Add-on Activities]: " . implode(', ', array_map(function($a) {
+            $qtyStr = ($a['price_type'] ?? '') !== 'flat_rate' ? " (Qty: {$a['qty']})" : "";
+            return $a['name'] . $qtyStr;
+        }, $addonItems));
+        $specialReqs = trim($specialReqs . $addonDesc);
+    }
 
     $ins = $conn->prepare("
         INSERT INTO bookings (

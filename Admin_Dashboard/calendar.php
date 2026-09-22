@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 session_start();
 
 // Include admin configuration
@@ -409,19 +409,23 @@ $adminEmail = $_SESSION['admin_email'];
                         return;
                     }
                     const b = data.booking;
+                    const phoneDisplay = (b.phone_number && b.phone_number !== 'N/A' && b.phone_number !== 'None') ? b.phone_number : 'No phone provided';
+                    const checkIn = formatDateTime12(b.check_in_date, b.check_in_time);
+                    const checkOut = formatDateTime12(b.check_out_date, b.check_out_time);
+
                     document.getElementById('bookingDetailBody').innerHTML = `
                         <div class="detail-row"><span class="detail-label">Reference</span><span class="detail-value">${escapeHtml(b.booking_reference)}</span></div>
                         <div class="detail-row"><span class="detail-label">Customer</span><span class="detail-value">${escapeHtml(b.full_name)}</span></div>
                         <div class="detail-row"><span class="detail-label">Email</span><span class="detail-value">${escapeHtml(b.email)}</span></div>
-                        <div class="detail-row"><span class="detail-label">Phone</span><span class="detail-value">${escapeHtml(b.phone_number)}</span></div>
+                        <div class="detail-row"><span class="detail-label">Phone</span><span class="detail-value">${escapeHtml(phoneDisplay)}</span></div>
                         <div class="detail-row"><span class="detail-label">Package / Activity</span><span class="detail-value">${escapeHtml(b.item_name || b.booking_type)}</span></div>
                         <div class="detail-row"><span class="detail-label">Booking Status</span><span class="detail-value">${escapeHtml(formatStatus(b.status_name))}</span></div>
                         <div class="detail-row"><span class="detail-label">Payment Status</span><span class="detail-value">${escapeHtml(capitalize(b.payment_status))}</span></div>
-                        <div class="detail-row"><span class="detail-label">Check-in</span><span class="detail-value">${escapeHtml(b.check_in_date)} ${b.check_in_time ? escapeHtml(b.check_in_time) : ''}</span></div>
-                        <div class="detail-row"><span class="detail-label">Check-out</span><span class="detail-value">${escapeHtml(b.check_out_date || '�')} ${b.check_out_time ? escapeHtml(b.check_out_time) : ''}</span></div>
+                        <div class="detail-row"><span class="detail-label">Check-in</span><span class="detail-value">${escapeHtml(checkIn)}</span></div>
+                        <div class="detail-row"><span class="detail-label">Check-out</span><span class="detail-value">${escapeHtml(checkOut)}</span></div>
                         <div class="detail-row"><span class="detail-label">Guests</span><span class="detail-value">${b.number_of_guests}</span></div>
-                        <div class="detail-row"><span class="detail-label">Total Amount</span><span class="detail-value">?${parseFloat(b.total_amount).toLocaleString('en-PH', {minimumFractionDigits: 2})}</span></div>
-                        <div class="detail-row"><span class="detail-label">Payment Method</span><span class="detail-value">${escapeHtml(capitalize(b.payment_method || '�'))}</span></div>
+                        <div class="detail-row"><span class="detail-label">Total Amount</span><span class="detail-value">&#8369;${parseFloat(b.total_amount).toLocaleString('en-PH', {minimumFractionDigits: 2})}</span></div>
+                        <div class="detail-row"><span class="detail-label">Payment Method</span><span class="detail-value">${escapeHtml(capitalize(b.payment_method || '—'))}</span></div>
                         ${b.special_requests ? `<div class="detail-row"><span class="detail-label">Special Requests</span><span class="detail-value">${escapeHtml(b.special_requests)}</span></div>` : ''}
                     `;
                 })
@@ -570,6 +574,47 @@ $adminEmail = $_SESSION['admin_email'];
                 .catch(() => alert('Failed to create bundle.'));
         }
 
+        function formatDateTime12(dateStr, timeStr) {
+            if (!dateStr) return '—';
+            if (!timeStr && dateStr.includes(' ')) {
+                const parts = dateStr.split(' ');
+                dateStr = parts[0];
+                timeStr = parts[1];
+            }
+
+            let formattedDate = dateStr;
+            try {
+                const parts = dateStr.split('-');
+                if (parts.length === 3) {
+                    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                    const year = parts[0];
+                    const monthIdx = parseInt(parts[1], 10) - 1;
+                    const day = parseInt(parts[2], 10);
+                    if (monthIdx >= 0 && monthIdx < 12) {
+                        formattedDate = `${months[monthIdx]} ${day}, ${year}`;
+                    }
+                }
+            } catch (e) {}
+
+            if (!timeStr || timeStr === '00:00:00' || timeStr === '00:00') {
+                return formattedDate;
+            }
+
+            try {
+                const tParts = timeStr.split(':');
+                let h = parseInt(tParts[0], 10);
+                const m = tParts[1] || '00';
+                if (isNaN(h)) return formattedDate;
+
+                const ampm = h >= 12 ? 'PM' : 'AM';
+                h = h % 12;
+                if (h === 0) h = 12;
+                return `${formattedDate} ${h}:${m} ${ampm}`;
+            } catch (e) {
+                return formattedDate;
+            }
+        }
+
         function formatDate(dateStr) {
             const date = new Date(dateStr + 'T00:00:00');
             return date.toLocaleDateString('en-US', {
@@ -578,12 +623,12 @@ $adminEmail = $_SESSION['admin_email'];
         }
 
         function formatStatus(status) {
-            if (!status) return '�';
+            if (!status) return '—';
             return status.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
         }
 
         function capitalize(str) {
-            if (!str) return '�';
+            if (!str) return '—';
             return str.charAt(0).toUpperCase() + str.slice(1);
         }
 

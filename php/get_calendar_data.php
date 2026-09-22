@@ -9,7 +9,10 @@ require_once '../phpAuthentication/db_config.php';
 
 header('Content-Type: application/json');
 
-if (!isset($_SESSION['admin_id']) && (!isset($_SESSION['is_admin']) || $_SESSION['is_admin'] !== true)) {
+$isAdmin = isset($_SESSION['admin_id']) || (isset($_SESSION['is_admin']) && $_SESSION['is_admin'] === true);
+$isStaff = isset($_SESSION['is_staff']) && $_SESSION['is_staff'] === true;
+
+if (!$isAdmin && !$isStaff) {
     echo json_encode(['success' => false, 'message' => 'Unauthorized']);
     exit();
 }
@@ -105,11 +108,21 @@ try {
         $checkIn  = $row['check_in_date'];
         $checkOut = $row['check_out_date'] ?: $checkIn;
 
+        // For accommodations and bundles that span multiple days, the check-out day is not occupied
+        if ($checkIn !== $checkOut && in_array($row['booking_type'], ['accommodation', 'bundle'])) {
+            $toObj = new DateTime($checkOut);
+            $toObj->modify('-1 day');
+            $adjustedCheckOut = $toObj->format('Y-m-d');
+        } else {
+            $adjustedCheckOut = $checkOut;
+        }
+
         $from = max($startDate, $checkIn);
-        $to   = min($endDate, $checkOut);
+        $to   = min($endDate, $adjustedCheckOut);
 
         $dayCursor = new DateTime($from);
         $dayEnd    = new DateTime($to);
+        
         while ($dayCursor <= $dayEnd) {
             $dateKey = $dayCursor->format('Y-m-d');
             if (!isset($days[$dateKey])) {

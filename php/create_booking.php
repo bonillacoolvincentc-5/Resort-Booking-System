@@ -37,7 +37,7 @@ try {
             $data['phone_number'] = $rowP['phone_number'] ?? '';
         }
         if (empty($data['phone_number'])) {
-            $data['phone_number'] = 'N/A';
+            $data['phone_number'] = '';
         }
     }
 

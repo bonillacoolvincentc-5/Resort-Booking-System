@@ -33,6 +33,7 @@ try {
     $query = "
         SELECT
             b.*,
+            COALESCE(NULLIF(NULLIF(b.phone_number, 'N/A'), ''), u.phone_number, '') as phone_number,
             bs.name        as status_name,
             bs.description as status_description,
             bs.color       as status_color,

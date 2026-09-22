@@ -22,10 +22,7 @@ if (empty($userPhone) && $userId) {
     $stmtP->bind_param("i", $userId);
     $stmtP->execute();
     $rowP = $stmtP->get_result()->fetch_assoc();
-    $userPhone = $rowP['phone_number'] ?? 'N/A';
-}
-if (empty($userPhone)) {
-    $userPhone = 'N/A';
+    $userPhone = $rowP['phone_number'] ?? '';
 }
 
 // ── Sidebar: fetch up to 4 random active activities for "Other Activities" panel
@@ -34,12 +31,6 @@ $stmtSide = $conn->prepare(
     "SELECT id, name, description, price_per_hour, price_type, image_url
      FROM activities
      WHERE is_active = 1
-       AND name NOT IN ('Billiards','Fitness Gym','Kids Playground','Videoke Rental','Videoke')
-       AND name NOT LIKE 'Pickleball%'
-       AND name NOT LIKE '%Basketball%'
-       AND name NOT LIKE '%Pool%'
-       AND name NOT LIKE '%Swimming%'
-       AND name NOT LIKE '%Videoke%'
      ORDER BY RAND()
      LIMIT 4"
 );
@@ -1188,9 +1179,10 @@ if ($stmtSlots) {
 'use strict';
 
 // ── State ──────────────────────────────────────────────────────────
-let allPackages   = [];
-let selectedPkg   = null;
-let addonsMap     = {};      // {id: {name, price, selected}}
+let allPackages     = [];
+let allActivities   = [];
+let selectedPkg     = null;
+let addonsMap       = {};      // {id: {name, price, price_type, selected, qty}}
 let currentTourType = 'daytour'; // 'daytour' or 'overnight'
 
 // ── Choose Initial Tour Type (Step 1 Top Section) ──────────────────
@@ -1386,30 +1378,35 @@ async function loadPackages() {
 
         if (!data.success) { renderEmptyState('Could not load packages.'); return; }
 
-        // Exclude bundles (dedicated page) and non-bookable / requested removed activities:
-        // Pool, Basketball, and Videoke are removed as requested, plus billiards, gym, playground, pickleball.
-        const EXCLUDED_KEYWORDS = ['pool', 'swimming', 'basketball', 'videoke', 'billiards', 'fitness gym', 'playground', 'pickleball'];
+        // Store all existing activities configured by admin in activities.php
+        allActivities = data.activities || [];
+
+        // In Step 1 (Main package selection grid), only ATV is offered as a standalone bookable activity package:
+        // Pool, Basketball, Videoke, and other resort amenities are reserved as add-on activities
+        const NON_STANDALONE_ACTIVITIES = ['pool', 'swimming', 'basketball', 'videoke', 'billiards', 'fitness gym', 'playground', 'pickleball'];
         allPackages = (data.packages || []).filter(p => {
             if (p.package_type === 'bundle') return false;
             if (p.package_type === 'activity') {
-                const lowerName = p.name.toLowerCase();
-                if (EXCLUDED_KEYWORDS.some(kw => lowerName.includes(kw))) {
+                const lowerName = (p.name || '').toLowerCase();
+                if (NON_STANDALONE_ACTIVITIES.some(kw => lowerName.includes(kw))) {
                     return false;
                 }
             }
             return true;
         });
 
-        // Load activities as potential add-ons (excluding removed activities)
-        (data.activities || []).filter(a => {
-            const lowerName = a.name.toLowerCase();
-            return !EXCLUDED_KEYWORDS.some(kw => lowerName.includes(kw));
-        }).forEach(a => {
+        // Initialize ALL admin activities as potential add-ons
+        addonsMap = {};
+        allActivities.forEach(a => {
+            const lowerName = (a.name || '').toLowerCase();
             addonsMap[a.id] = {
                 id: a.id,
                 name: a.name,
-                price: a.price,
+                price: parseFloat(a.price) || 0,
                 price_type: a.price_type || 'flat_rate',
+                starting_price: a.starting_price || ('₱' + Number(a.price).toLocaleString('en-PH', {minimumFractionDigits: 2})),
+                is_atv: lowerName.includes('atv'),
+                qty: 1,
                 selected: false
             };
         });
@@ -1764,48 +1761,75 @@ function renderAddons(currentPkg) {
     const secEl  = document.getElementById('addonsSection');
     const listEl = document.getElementById('addonsList');
 
-    // If overnight stay, ATV and activities are not available
-    if (currentTourType === 'overnight') {
-        if (secEl) secEl.classList.add('d-none');
-        if (listEl) listEl.innerHTML = '';
-        Object.keys(addonsMap).forEach(k => {
-            if (addonsMap[k]) addonsMap[k].selected = false;
-        });
-        return;
-    }
+    if (!secEl || !listEl) return;
 
-    if (secEl) secEl.classList.remove('d-none');
-
-    // Activities that are not the currently selected package (Day Tour only)
-    const available = allPackages.filter(p => p.package_type === 'activity' && !(p.package_type === currentPkg.package_type && p.id == currentPkg.id));
+    // Filter available activities from allActivities (configured by admin in activities.php):
+    // 1. Exclude the currently selected package if it's an activity (cannot add-on same activity)
+    // 2. ATV is Day Tour only; so exclude ATV if staying overnight. All other activities (videoke, swimming pool, basketball, gym, etc.) are available!
+    const available = allActivities.filter(a => {
+        if (currentPkg.package_type === 'activity' && a.id == currentPkg.id) {
+            return false;
+        }
+        const lowerName = (a.name || '').toLowerCase();
+        const isAtv = lowerName.includes('atv');
+        if (currentTourType === 'overnight' && isAtv) {
+            return false; // ATV only available in day tour
+        }
+        return true;
+    });
 
     if (!available.length) {
-        if (secEl) secEl.classList.add('d-none');
-        if (listEl) listEl.innerHTML = '<p style="font-size:.8rem;color:var(--text-muted);">No add-on activities available.</p>';
+        secEl.classList.add('d-none');
+        listEl.innerHTML = '<p style="font-size:.8rem;color:var(--text-muted);">No add-on activities available.</p>';
         return;
     }
 
-    if (listEl) {
-        listEl.innerHTML = available.map(a => {
-            const priceType = a.price_type || 'flat_rate';
-            const guestsEl = document.getElementById('numberOfGuests');
-            const maxQty = Math.max(1, parseInt(guestsEl ? guestsEl.value : 1, 10) || 1);
-            return `
-            <div class="addon-item" id="addon-${a.id}" data-type="${escHtml(priceType)}">
-                <div class="addon-check">
-                    <input type="checkbox" id="addonChk-${a.id}" value="${a.id}"
-                           onchange="toggleAddon(${a.id},${a.price},this)">
-                </div>
-                <div class="addon-name">${escHtml(a.name)}</div>
-                <input type="number" class="addon-qty" id="addonQty-${a.id}" min="1" max="${maxQty}" value="1" step="1"
-                       style="display:none;width:4.5rem;text-align:center;background:var(--bg-secondary);border:1px solid var(--border-color);color:var(--text-primary);border-radius:.5rem;padding:.25rem .35rem;"
-                       title="Quantity for this add-on"
-                       onclick="event.stopPropagation()"
-                       oninput="recalcPrice()">
-                <div class="addon-price">+${escHtml(a.starting_price)}</div>
-            </div>`;
-        }).join('');
+    secEl.classList.remove('d-none');
+
+    const guestsEl = document.getElementById('numberOfGuests');
+    const maxQty = Math.max(1, parseInt(guestsEl ? guestsEl.value : 1, 10) || 1);
+
+    listEl.innerHTML = available.map(a => {
+        const priceType = a.price_type || 'flat_rate';
+        const formattedPrice = a.starting_price || ('₱' + Number(a.price).toLocaleString('en-PH', {minimumFractionDigits: 2}));
+        const suffix = priceType === 'per_head' ? ' / person' : (priceType === 'per_hour' ? ' / hr' : '');
+        const isSelected = !!(addonsMap[a.id] && addonsMap[a.id].selected);
+        const qtyVal = (addonsMap[a.id] && addonsMap[a.id].qty) || 1;
+
+        return `
+        <div class="addon-item ${isSelected ? 'selected' : ''}" id="addon-${a.id}" data-type="${escHtml(priceType)}" onclick="clickAddonCard(event, ${a.id})">
+            <div class="addon-check">
+                <input type="checkbox" id="addonChk-${a.id}" value="${a.id}" ${isSelected ? 'checked' : ''}
+                       onchange="toggleAddon(${a.id},${a.price},this)">
+            </div>
+            <div class="addon-name">
+                ${escHtml(a.name)}
+                ${priceType === 'per_head' ? '<span class="badge bg-secondary ms-1" style="font-size:.68rem;">Per Person</span>' : ''}
+            </div>
+            <input type="number" class="addon-qty" id="addonQty-${a.id}" min="1" max="${maxQty}" value="${qtyVal}" step="1"
+                   style="display:${(isSelected && priceType !== 'flat_rate') ? 'inline-block' : 'none'};width:4.5rem;text-align:center;background:var(--bg-secondary);border:1px solid var(--border-color);color:var(--text-primary);border-radius:.5rem;padding:.25rem .35rem;"
+                   title="Quantity for this add-on"
+                   onclick="event.stopPropagation()"
+                   oninput="onAddonQtyChange(${a.id}, this)">
+            <div class="addon-price">+${escHtml(formattedPrice)}${escHtml(suffix)}</div>
+        </div>`;
+    }).join('');
+}
+
+function clickAddonCard(e, id) {
+    if (e.target.tagName === 'INPUT' || e.target.classList.contains('addon-qty')) return;
+    const chk = document.getElementById('addonChk-' + id);
+    if (chk) {
+        chk.checked = !chk.checked;
+        toggleAddon(id, (addonsMap[id] ? addonsMap[id].price : 0), chk);
     }
+}
+
+function onAddonQtyChange(id, input) {
+    if (addonsMap[id]) {
+        addonsMap[id].qty = Math.max(1, parseInt(input.value, 10) || 1);
+    }
+    recalcPrice();
 }
 
 function toggleAddon(id, price, chk) {
@@ -1813,11 +1837,12 @@ function toggleAddon(id, price, chk) {
     const qtyEl = document.getElementById('addonQty-' + id);
     const priceType = (item && item.dataset.type) || (addonsMap[id] && addonsMap[id].price_type) || 'flat_rate';
     if (chk.checked) {
-        item.classList.add('selected');
-        addonsMap[id] = { ...addonsMap[id], selected: true, price, price_type: priceType };
+        if (item) item.classList.add('selected');
+        const qtyVal = Math.max(1, parseInt(qtyEl ? qtyEl.value : 1, 10) || 1);
+        addonsMap[id] = { ...addonsMap[id], selected: true, price: parseFloat(price) || 0, price_type: priceType, qty: qtyVal };
         if (qtyEl) qtyEl.style.display = (priceType === 'flat_rate') ? 'none' : 'inline-block';
     } else {
-        item.classList.remove('selected');
+        if (item) item.classList.remove('selected');
         if (addonsMap[id]) addonsMap[id].selected = false;
         if (qtyEl) qtyEl.style.display = 'none';
     }
@@ -2249,7 +2274,7 @@ async function submitWithProof() {
     fd.append('tour_type',        currentTourType);
     fd.append('full_name',        '<?php echo addslashes($userName); ?>');
     fd.append('email',            '<?php echo addslashes($userEmail); ?>');
-    fd.append('phone_number',     '<?php echo addslashes($userPhone); ?>' || 'N/A');
+    fd.append('phone_number',     '<?php echo addslashes($userPhone); ?>');
     fd.append('check_in_date',    date);
     fd.append('check_out_date',   (currentTourType === 'daytour' ? '' : checkOut) || '');
     fd.append('check_in_time',    tIn || '');
@@ -2257,6 +2282,13 @@ async function submitWithProof() {
     fd.append('number_of_guests', guests);
     fd.append('special_requests', document.getElementById('specialRequests').value || '');
     fd.append('payment_proof',    proofFile, proofFile.name);
+
+    const selectedAddons = Object.values(addonsMap).filter(a => a.selected).map(a => {
+        const qtyEl = document.getElementById('addonQty-' + a.id);
+        const qty = (a.price_type === 'flat_rate') ? 1 : Math.max(1, parseInt(qtyEl ? qtyEl.value : (a.qty || 1), 10) || 1);
+        return { id: a.id, name: a.name, price: a.price, qty: qty, price_type: a.price_type };
+    });
+    fd.append('addons', JSON.stringify(selectedAddons));
 
     if (selectedPkg.package_type === 'activity') {
         fd.append('activity_id', selectedPkg.id);

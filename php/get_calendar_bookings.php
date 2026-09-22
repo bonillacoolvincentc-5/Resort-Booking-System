@@ -9,7 +9,10 @@ require_once '../phpAuthentication/db_config.php';
 
 header('Content-Type: application/json');
 
-if (!isset($_SESSION['admin_id']) && (!isset($_SESSION['is_admin']) || $_SESSION['is_admin'] !== true)) {
+$isAdmin = isset($_SESSION['admin_id']) || (isset($_SESSION['is_admin']) && $_SESSION['is_admin'] === true);
+$isStaff = isset($_SESSION['is_staff']) && $_SESSION['is_staff'] === true;
+
+if (!$isAdmin && !$isStaff) {
     echo json_encode(['success' => false, 'message' => 'Unauthorized']);
     exit();
 }
@@ -57,13 +60,16 @@ try {
               (b.booking_type = 'activity' AND b.check_in_date = ?)
               OR (
                   b.booking_type IN ('accommodation', 'bundle')
-                  AND b.check_in_date <= ?
-                  AND (b.check_out_date IS NULL OR b.check_out_date >= ?)
+                  AND (
+                      (b.check_in_date = b.check_out_date AND b.check_in_date = ?)
+                      OR (b.check_in_date < b.check_out_date AND b.check_in_date <= ? AND b.check_out_date > ?)
+                      OR (b.check_out_date IS NULL AND b.check_in_date <= ?)
+                  )
               )
           )
         ORDER BY b.check_in_time ASC, b.created_at ASC
     ");
-    $stmt->bind_param('sss', $date, $date, $date);
+    $stmt->bind_param('sssss', $date, $date, $date, $date, $date);
     $stmt->execute();
     $result = $stmt->get_result();
 

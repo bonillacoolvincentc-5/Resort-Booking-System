@@ -1114,22 +1114,60 @@ while ($row = $bundlesRes->fetch_assoc()) {
                         location.reload();
                     }, 900);
                 } else {
-                    errorMsg.textContent = result.message || 'Failed to reject booking. Please try again.';
-                    errorEl.style.display = 'flex';
-                    confirmBtn.disabled = false;
-                    cancelBtn.disabled  = false;
-                    confirmBtn.innerHTML = '<i class="bi bi-x-circle me-1"></i>Confirm Rejection';
+                    errorMsg.textContent = result        // ── End Reject Booking Modal Logic ───────────────────────────────────
+
+        // -- Helper: Format status without underscores and title-cased --
+        function formatStatusName(st) {
+            if (!st) return '';
+            return String(st).replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+        }
+
+        // -- Helper: Format date & time (12-hour format, omit 00:00:00) --
+        function formatDateTime12(dateStr, timeStr) {
+            if (!dateStr) return '—';
+
+            // If dateStr contains both date and time (like '2026-09-10 21:00:24')
+            if (!timeStr && dateStr.includes(' ')) {
+                const parts = dateStr.split(' ');
+                dateStr = parts[0];
+                timeStr = parts[1];
+            }
+
+            let formattedDate = dateStr;
+            try {
+                const parts = dateStr.split('-');
+                if (parts.length === 3) {
+                    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                    const year = parts[0];
+                    const monthIdx = parseInt(parts[1], 10) - 1;
+                    const day = parseInt(parts[2], 10);
+                    if (monthIdx >= 0 && monthIdx < 12) {
+                        formattedDate = `${months[monthIdx]} ${day}, ${year}`;
+                    }
                 }
-            } catch (error) {
-                console.error('Error rejecting booking:', error);
-                errorMsg.textContent = 'Connection error. Check your network and try again.';
-                errorEl.style.display = 'flex';
-                confirmBtn.disabled = false;
-                cancelBtn.disabled  = false;
-                confirmBtn.innerHTML = '<i class="bi bi-x-circle me-1"></i>Confirm Rejection';
+            } catch (e) {}
+
+            // Omit if time is empty or midnight placeholder 00:00:00 / 00:00
+            if (!timeStr || timeStr === '00:00:00' || timeStr === '00:00') {
+                return formattedDate;
+            }
+
+            // Convert to 12-hour format: '21:00:24' or '09:30:00' -> '9:00 PM'
+            try {
+                const tParts = timeStr.split(':');
+                let h = parseInt(tParts[0], 10);
+                const m = tParts[1] || '00';
+                if (isNaN(h)) return formattedDate;
+
+                const ampm = h >= 12 ? 'PM' : 'AM';
+                h = h % 12;
+                if (h === 0) h = 12;
+                const time12 = `${h}:${m} ${ampm}`;
+                return `${formattedDate} ${time12}`;
+            } catch (e) {
+                return formattedDate;
             }
         }
-        // ── End Reject Booking Modal Logic ───────────────────────────────────
 
         // -- View Booking Details (Issue #2 fix) -------------------------
         let viewBookingModalObj = null;
@@ -1142,7 +1180,7 @@ while ($row = $bundlesRes->fetch_assoc()) {
             document.getElementById('viewBookingBody').innerHTML = `
                 <div class="text-center py-4">
                     <div class="spinner-border text-primary" role="status"></div>
-                    <p class="mt-2" style="color:var(--text-secondary);">Loading booking details�</p>
+                    <p class="mt-2" style="color:var(--text-secondary);">Loading booking details…</p>
                 </div>`;
             viewBookingModalObj.show();
 
@@ -1163,15 +1201,21 @@ while ($row = $bundlesRes->fetch_assoc()) {
                     : (b.booking_type === 'bundle' ? 'success' : 'warning');
                 const typeBadge = `<span class="badge bg-${typeBadgeClass} me-1" style="font-size:.75rem;">${b.booking_type.charAt(0).toUpperCase() + b.booking_type.slice(1)}</span>`;
 
-                // Build status badge (reuse existing CSS classes)
-                const statusBadge = `<span class="status-badge status-${escHtml(b.status_name)}">${escHtml(b.status_name.replace('_', ' '))}</span>`;
+                // Build status badge (reuse existing CSS classes, formatted without underscores)
+                const statusBadge = `<span class="status-badge status-${escHtml(b.status_name)}">${escHtml(formatStatusName(b.status_name))}</span>`;
 
                 // Format currency
                 const amount = parseFloat(b.total_amount || 0).toLocaleString('en-PH', { style: 'currency', currency: 'PHP' });
 
-                // Dates
-                const checkIn  = b.check_in_date  ? (b.check_in_date  + (b.check_in_time  ? ' ' + b.check_in_time  : '')) : '';
-                const checkOut = b.check_out_date ? (b.check_out_date + (b.check_out_time ? ' ' + b.check_out_time : '')) : '';
+                // Dates with 12-hour time format (omitting 00:00:00)
+                const checkIn  = formatDateTime12(b.check_in_date, b.check_in_time);
+                const checkOut = formatDateTime12(b.check_out_date, b.check_out_time);
+
+                // Phone number formatting (avoid showing "N/A")
+                let phoneDisplay = b.phone_number || b.user_phone || '';
+                if (phoneDisplay === 'N/A' || phoneDisplay === 'None') {
+                    phoneDisplay = '';
+                }
 
                 // GCash Payment Proof / Receipt
                 const proofPath = b.payment_proof || b.receipt_file_path;
@@ -1183,7 +1227,7 @@ while ($row = $bundlesRes->fetch_assoc()) {
                                </span>
                                <a href="../${escHtml(proofPath)}" target="_blank" class="btn-modern btn-secondary" style="font-size:.75rem;padding:.3rem .75rem;">
                                    <i class="bi bi-box-arrow-up-right me-1"></i>Open Full Size
-                               </a>
+                                </a>
                            </div>
                            <div style="text-align:center;background:#0f172a;border-radius:0.5rem;padding:0.75rem;border:1px solid rgba(51,65,85,0.6);">
                                <a href="../${escHtml(proofPath)}" target="_blank" title="Click to view full image">
@@ -1196,18 +1240,28 @@ while ($row = $bundlesRes->fetch_assoc()) {
                            <span>No GCash payment proof image attached for this booking.</span>
                        </div>`;
 
-                // Change log
+                // Change log (format status names without underscores)
                 let logsHtml = '<p style="color:var(--text-muted);font-size:.8rem;">No history yet.</p>';
                 if (b.logs && b.logs.length) {
-                    logsHtml = b.logs.map(log => `
+                    logsHtml = b.logs.map(log => {
+                        const newStatus = formatStatusName(log.new_status_name);
+                        const notesClean = (log.notes || '')
+                            .replace(/pending_review/gi, 'Pending Review')
+                            .replace(/approved/gi, 'Approved')
+                            .replace(/rejected/gi, 'Rejected')
+                            .replace(/cancelled/gi, 'Cancelled')
+                            .replace(/_/g, ' ');
+
+                        return `
                         <div style="border-left:2px solid var(--border-color);padding:.5rem .75rem;margin-bottom:.5rem;">
                             <div style="font-size:.8rem;color:var(--text-secondary);">
                                 <strong style="color:var(--text-primary);">${escHtml(log.changed_by_name || log.changed_by)}</strong>
-                                changed status to <strong style="color:var(--accent-primary);">${escHtml(log.new_status_name || '')}</strong>
+                                changed status to <strong style="color:var(--accent-primary);">${escHtml(newStatus || '')}</strong>
                             </div>
-                            ${log.notes ? `<div style="font-size:.75rem;color:var(--text-muted);margin-top:.2rem;">${escHtml(log.notes)}</div>` : ''}
-                            <div style="font-size:.7rem;color:var(--text-muted);margin-top:.2rem;">${escHtml(log.created_at || '')}</div>
-                        </div>`).join('');
+                            ${notesClean ? `<div style="font-size:.75rem;color:var(--text-muted);margin-top:.2rem;">${escHtml(notesClean)}</div>` : ''}
+                            <div style="font-size:.7rem;color:var(--text-muted);margin-top:.2rem;">${escHtml(formatDateTime12(log.created_at || ''))}</div>
+                        </div>`;
+                    }).join('');
                 }
 
                 document.getElementById('viewBookingBody').innerHTML = `
@@ -1231,7 +1285,7 @@ while ($row = $bundlesRes->fetch_assoc()) {
                             <p class="mb-1" style="font-size:.75rem;color:var(--text-muted);">CUSTOMER</p>
                             <p class="mb-0" style="color:var(--text-primary);font-weight:600;">${escHtml(b.full_name)}</p>
                             <p class="mb-0" style="font-size:.85rem;color:var(--text-secondary);">${escHtml(b.email)}</p>
-                            <p class="mb-0" style="font-size:.85rem;color:var(--text-secondary);">${escHtml(b.phone_number || '')}</p>
+                            ${phoneDisplay ? `<p class="mb-0" style="font-size:.85rem;color:var(--text-secondary);"><i class="bi bi-telephone me-1" style="font-size:.75rem;"></i>${escHtml(phoneDisplay)}</p>` : `<p class="mb-0" style="font-size:.85rem;color:var(--text-muted);font-style:italic;">No phone provided</p>`}
                         </div>
                         <div class="col-md-6">
                             <p class="mb-1" style="font-size:.75rem;color:var(--text-muted);">ITEM BOOKED</p>
@@ -1239,11 +1293,11 @@ while ($row = $bundlesRes->fetch_assoc()) {
                         </div>
                         <div class="col-md-6">
                             <p class="mb-1" style="font-size:.75rem;color:var(--text-muted);">CHECK-IN</p>
-                            <p class="mb-0" style="color:var(--text-primary);">${escHtml(checkIn)}</p>
+                            <p class="mb-0" style="color:var(--text-primary);font-weight:500;">${escHtml(checkIn)}</p>
                         </div>
                         <div class="col-md-6">
                             <p class="mb-1" style="font-size:.75rem;color:var(--text-muted);">CHECK-OUT</p>
-                            <p class="mb-0" style="color:var(--text-primary);">${escHtml(checkOut)}</p>
+                            <p class="mb-0" style="color:var(--text-primary);font-weight:500;">${escHtml(checkOut)}</p>
                         </div>
                         <div class="col-md-6">
                             <p class="mb-1" style="font-size:.75rem;color:var(--text-muted);">GUESTS</p>
