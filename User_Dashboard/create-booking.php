@@ -45,10 +45,10 @@ if ($stmtSide) {
     $stmtSide->close();
 }
 
-// ── Fetch admin-defined time slots ────────────────────────────────
+// ── Fetch ALL active time slots (keyed by activity_id, used by JS) ────
 $timeSlots = [];
 $stmtSlots = $conn->query(
-    "SELECT id, label, start_time, end_time
+    "SELECT id, activity_id, label, start_time, end_time
      FROM time_slots
      WHERE is_active = 1
      ORDER BY start_time ASC"
@@ -728,40 +728,14 @@ if ($stmtSlots) {
                             <!-- Time range — shown only for activities -->
                             <div id="timeRangeSection" class="mb-4 d-none">
                                 <label class="form-label-modern"><i class="bi bi-clock me-1"></i>Time Slot</label>
-                                <?php if (empty($timeSlots)): ?>
-                                    <div class="p-3 rounded" style="background:var(--bg-tertiary);border:1px dashed var(--border-color);color:var(--text-muted);font-size:.85rem;text-align:center;">
-                                        <i class="bi bi-clock-history me-1"></i>No time slots configured yet. Please contact the admin.
-                                    </div>
-                                    <!-- Hidden placeholders so JS references don't break -->
-                                    <input type="hidden" id="timeIn"  name="time_in">
-                                    <input type="hidden" id="timeOut" name="time_out">
-                                <?php else: ?>
                                 <select id="timeSlotSelect" class="form-control-modern form-select-modern"
                                         style="appearance:auto;cursor:pointer;"
                                         onchange="onTimeSlotChange(this)">
-                                    <option value="" data-in="" data-out="">— Select a time slot —</option>
-                                    <?php foreach ($timeSlots as $slot):
-                                        // Format labels: "08:00:00" → "8:00 AM"
-                                        $inFmt  = date('g:i A', strtotime($slot['start_time']));
-                                        $outFmt = date('g:i A', strtotime($slot['end_time']));
-                                        // HH:MM for JS (24-hr)
-                                        $inVal  = date('H:i', strtotime($slot['start_time']));
-                                        $outVal = date('H:i', strtotime($slot['end_time']));
-                                        $displayLabel = !empty($slot['label'])
-                                            ? htmlspecialchars($slot['label'])
-                                            : "{$inFmt} – {$outFmt}";
-                                    ?>
-                                    <option value="<?= $slot['id'] ?>"
-                                            data-in="<?= $inVal ?>"
-                                            data-out="<?= $outVal ?>">
-                                        <?= $displayLabel ?> &nbsp;(<?= $inFmt ?> – <?= $outFmt ?>)
-                                    </option>
-                                    <?php endforeach; ?>
+                                    <option value="" data-in="" data-out="">— Select a package first —</option>
                                 </select>
                                 <!-- Hidden fields consumed by the JS submit handler (keeps fd.append logic intact) -->
                                 <input type="hidden" id="timeIn"  name="time_in">
                                 <input type="hidden" id="timeOut" name="time_out">
-                                <?php endif; ?>
                                 <div class="mt-2 p-2 rounded" id="durationDisplay"
                                      style="background:var(--bg-tertiary);border:1px solid var(--border-color);font-size:.8rem;color:var(--text-muted);text-align:center;">
                                     Duration: —
@@ -1106,6 +1080,77 @@ if ($stmtSlots) {
 let allPackages   = [];
 let selectedPkg   = null;
 let addonsMap     = {};      // {id: {name, price, selected}}
+
+// ── Time slot data (PHP → JS) — grouped by activity_id ────────────
+const allTimeSlots = (function() {
+    const raw = <?php
+        // Build a map: { activityId: [ {id, label, start_time, end_time}, ... ] }
+        $slotMap = [];
+        foreach ($timeSlots as $s) {
+            $aid = (int)$s['activity_id'];
+            $slotMap[$aid][] = [
+                'id'         => (int)$s['id'],
+                'label'      => $s['label'],
+                'start_time' => $s['start_time'],   // "HH:MM:SS"
+                'end_time'   => $s['end_time'],
+                'start_fmt'  => date('g:i A', strtotime($s['start_time'])),
+                'end_fmt'    => date('g:i A', strtotime($s['end_time'])),
+                'start_val'  => date('H:i',   strtotime($s['start_time'])),
+                'end_val'    => date('H:i',   strtotime($s['end_time'])),
+            ];
+        }
+        echo json_encode($slotMap, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT);
+    ?>;
+    return raw;
+})();
+
+// ── Populate time slot <select> for the given activity ID ──────────
+function populateTimeSlots(activityId) {
+    const sel    = document.getElementById('timeSlotSelect');
+    const timeIn  = document.getElementById('timeIn');
+    const timeOut = document.getElementById('timeOut');
+    const disp    = document.getElementById('durationDisplay');
+    if (!sel) return;
+
+    // Reset hidden fields & duration display
+    if (timeIn)  timeIn.value  = '';
+    if (timeOut) timeOut.value = '';
+    if (disp)    disp.textContent = 'Duration: —';
+    document.getElementById('timeValidation')?.classList.add('d-none');
+
+    const slots = allTimeSlots[activityId] || [];
+    sel.innerHTML = ''; // clear old options
+
+    if (!slots.length) {
+        const opt = document.createElement('option');
+        opt.value = '';
+        opt.dataset.in  = '';
+        opt.dataset.out = '';
+        opt.textContent = '— No time slots for this activity —';
+        sel.appendChild(opt);
+        return;
+    }
+
+    // Placeholder
+    const placeholder = document.createElement('option');
+    placeholder.value = '';
+    placeholder.dataset.in  = '';
+    placeholder.dataset.out = '';
+    placeholder.textContent = '— Select a time slot —';
+    sel.appendChild(placeholder);
+
+    slots.forEach(s => {
+        const label = s.label
+            ? `${s.label}\u00a0(${s.start_fmt} – ${s.end_fmt})`
+            : `${s.start_fmt} – ${s.end_fmt}`;
+        const opt = document.createElement('option');
+        opt.value        = s.id;
+        opt.dataset.in   = s.start_val;
+        opt.dataset.out  = s.end_val;
+        opt.textContent  = label;
+        sel.appendChild(opt);
+    });
+}
 let currentFilter = 'all';
 let proofFile     = null;
 
@@ -1370,6 +1415,8 @@ function selectPackage(id, type) {
     if (pkg.package_type === 'activity') {
         document.getElementById('timeRangeSection').classList.remove('d-none');
         document.getElementById('checkoutSection').classList.add('d-none');
+        // Populate time slots for THIS activity only
+        populateTimeSlots(pkg.id);
     } else {
         document.getElementById('timeRangeSection').classList.add('d-none');
         document.getElementById('checkoutSection').classList.remove('d-none');

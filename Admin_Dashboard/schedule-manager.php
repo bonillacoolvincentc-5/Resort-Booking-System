@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 session_start();
 
 require_once 'config.php';
@@ -18,16 +18,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
 
     if ($action === 'add') {
-        $label      = trim($_POST['label']      ?? '');
-        $start_time = trim($_POST['start_time'] ?? '');
-        $end_time   = trim($_POST['end_time']   ?? '');
-        if ($start_time && $end_time) {
-            $stmt = $conn->prepare("INSERT INTO time_slots (label, start_time, end_time, is_active) VALUES (?, ?, ?, 1)");
-            $stmt->bind_param('sss', $label, $start_time, $end_time);
+        $label       = trim($_POST['label']       ?? '');
+        $start_time  = trim($_POST['start_time']  ?? '');
+        $end_time    = trim($_POST['end_time']     ?? '');
+        $activity_id = (int)($_POST['activity_id'] ?? 0);
+        if ($start_time && $end_time && $activity_id > 0) {
+            $stmt = $conn->prepare(
+                "INSERT INTO time_slots (activity_id, label, start_time, end_time, is_active)
+                 VALUES (?, ?, ?, ?, 1)"
+            );
+            $stmt->bind_param('isss', $activity_id, $label, $start_time, $end_time);
             if ($stmt->execute()) { $msg = 'Time slot added successfully.'; }
             else { $msg = 'Error: ' . $conn->error; $msgType = 'danger'; }
             $stmt->close();
-        } else { $msg = 'Start time and End time are required.'; $msgType = 'danger'; }
+        } else { $msg = 'Activity, Start time, and End time are required.'; $msgType = 'danger'; }
     }
 
     if ($action === 'toggle') {
@@ -43,7 +47,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-$slots = $conn->query("SELECT id, label, start_time, end_time, is_active FROM time_slots ORDER BY start_time ASC")->fetch_all(MYSQLI_ASSOC);
+// ── Fetch activities for the dropdown ───────────────────────────
+$activities = $conn->query(
+    "SELECT id, name FROM activities WHERE is_active = 1 ORDER BY name ASC"
+)->fetch_all(MYSQLI_ASSOC);
+
+// ── Fetch all slots with joined activity name ──────────────────────
+$slots = $conn->query(
+    "SELECT ts.id, ts.label, ts.start_time, ts.end_time, ts.is_active,
+            a.name AS activity_name
+     FROM time_slots ts
+     LEFT JOIN activities a ON a.id = ts.activity_id
+     ORDER BY a.name ASC, ts.start_time ASC"
+)->fetch_all(MYSQLI_ASSOC);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -143,10 +159,20 @@ $slots = $conn->query("SELECT id, label, start_time, end_time, is_active FROM ti
             <div class="slot-card-body">
                 <form method="POST" action="">
                     <input type="hidden" name="action" value="add">
-                    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;align-items:end;">
+                    <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:1rem;align-items:end;">
+                        <div>
+                            <label class="form-label" for="slot_activity">Activity <span style="color:var(--accent-danger)">*</span></label>
+                            <select id="slot_activity" name="activity_id" class="form-control" required
+                                    style="appearance:auto;cursor:pointer;">
+                                <option value="">— Select activity —</option>
+                                <?php foreach ($activities as $act): ?>
+                                <option value="<?= (int)$act['id'] ?>"><?= htmlspecialchars($act['name']) ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
                         <div>
                             <label class="form-label" for="slot_label">Label <span style="color:var(--text-muted);font-weight:400;">(optional)</span></label>
-                            <input type="text" id="slot_label" name="label" class="form-control" placeholder="e.g. Morning Session" maxlength="80">
+                            <input type="text" id="slot_label" name="label" class="form-control" placeholder="e.g. Morning" maxlength="80">
                         </div>
                         <div>
                             <label class="form-label" for="slot_start">Start Time <span style="color:var(--accent-danger)">*</span></label>
@@ -182,6 +208,7 @@ $slots = $conn->query("SELECT id, label, start_time, end_time, is_active FROM ti
                 <table class="slot-table">
                     <thead>
                         <tr>
+                            <th>Activity</th>
                             <th>Label</th>
                             <th>Start</th>
                             <th>End</th>
@@ -200,6 +227,9 @@ $slots = $conn->query("SELECT id, label, start_time, end_time, is_active FROM ti
                             $durLabel = $durH > 0 ? "{$durH}h" . ($durM > 0 ? " {$durM}m" : '') : "{$durM}m";
                         ?>
                         <tr>
+                            <td style="color:var(--accent-primary);font-weight:500;font-size:.8rem;">
+                                <?= $s['activity_name'] ? htmlspecialchars($s['activity_name']) : '<em style="color:var(--text-muted);">Unlinked</em>' ?>
+                            </td>
                             <td style="font-weight:500;color:var(--text-primary);">
                                 <?= $s['label'] ? htmlspecialchars($s['label']) : '<em style="color:var(--text-muted);">—</em>' ?>
                             </td>

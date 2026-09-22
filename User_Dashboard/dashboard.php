@@ -640,7 +640,7 @@ function fmtBookingDate(string $d, ?string $ti): string {
                                             <div class="text-muted small"><?= htmlspecialchars($dateLabel) ?></div>
                                         </div>
                                     </div>
-                                    <span class="badge <?= $badgeClass ?>"><?= htmlspecialchars($statusName) ?></span>
+                                    <span class="badge <?= $badgeClass ?>"><?= htmlspecialchars(ucwords(str_replace('_', ' ', $statusName))) ?></span>
                                 </div>
                                 <?php endforeach; ?>
                             <?php endif; ?>

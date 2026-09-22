@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 session_start();
 
 // Check if user is logged in
@@ -107,26 +107,22 @@ $userId = $_SESSION['user_id'];
         .stats-badge-bar {
             display: flex;
             flex-wrap: wrap;
-            gap: 1rem;
+            align-items: center;
+            gap: 1.75rem;
         }
 
         .stat-pill {
-            background: rgba(15, 23, 42, 0.7);
-            border: 1px solid rgba(157, 255, 0, 0.25);
-            padding: 0.5rem 1.1rem;
-            border-radius: 50px;
             display: flex;
             align-items: center;
             gap: 0.5rem;
-            font-size: 0.85rem;
+            font-size: 0.95rem;
             font-weight: 600;
-            color: #ffffff;
-            backdrop-filter: blur(8px);
+            color: #e2e8f0;
         }
 
         .stat-pill i {
             color: var(--accent-neon);
-            font-size: 1.1rem;
+            font-size: 1.15rem;
         }
 
         /* Layout Grid */
@@ -553,10 +549,6 @@ $userId = $_SESSION['user_id'];
             background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);
             color: #1e293b;
         }
-        .thumb-dark {
-            background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
-            color: #9DFF00;
-        }
 
         /* Custom Leaflet Dark Popup */
         .leaflet-popup-content-wrapper {
@@ -797,9 +789,6 @@ $userId = $_SESSION['user_id'];
                 <div class="stat-pill">
                     <i class="bi bi-map-fill"></i> Fixed Resort Trail Route
                 </div>
-                <div class="stat-pill" style="border-color: #10b981; color: #10b981;">
-                    <i class="bi bi-check-circle-fill"></i> Trails Open & Dry Today
-                </div>
             </div>
         </div>
 
@@ -931,10 +920,6 @@ $userId = $_SESSION['user_id'];
                             <div class="layer-thumb thumb-topo"><i class="bi bi-compass"></i></div>
                             <span>Topo Map</span>
                         </button>
-                        <button class="gmaps-layer-card" onclick="switchBaseMap('darkMode', this)">
-                            <div class="layer-thumb thumb-dark"><i class="bi bi-moon-stars"></i></div>
-                            <span>Dark Mode</span>
-                        </button>
                     </div>
                 </div>
             </div>
@@ -1064,13 +1049,6 @@ $userId = $_SESSION['user_id'];
             baseTileLayers['esriTopo'] = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', {
                 maxZoom: 18,
                 attribution: 'Tiles &copy; Esri'
-            });
-
-            // CartoDB Dark Matter
-            baseTileLayers['darkMode'] = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-                maxZoom: 18,
-                subdomains: 'abcd',
-                attribution: '&copy; CARTO'
             });
 
             // Set Google Maps Terrain as default active basemap

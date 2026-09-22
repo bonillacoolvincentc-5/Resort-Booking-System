@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 session_start();
 
 // Include admin configuration
@@ -440,6 +440,15 @@ while ($row = $accResult->fetch_assoc()) {
                                 </div>
                             </div>
                         </div>
+                        <!-- Time Slot Fields -->
+                        <div id="activityTimeSlotWrapper" style="margin-top: 15px;">
+                            <h5>Manage Time Slots</h5>
+                            <div class="time-slot-group" style="display: flex; gap: 10px; margin-bottom: 10px;">
+                                <input type="text" name="slot_label[]" placeholder="Label (e.g. Morning)" class="form-control-modern">
+                                <input type="time" name="start_time[]" class="form-control-modern">
+                                <input type="time" name="end_time[]" class="form-control-modern">
+                            </div>
+                        </div>
                     </form>
                 </div>
                 <div class="modal-footer modal-footer-modern">
@@ -523,6 +532,16 @@ while ($row = $accResult->fetch_assoc()) {
                                     <input type="file" class="form-control-modern" id="accImage" name="image" accept="image/*">
                                     <small style="color:#5C6B63; font-size:0.78rem; margin-top:0.3rem; display:block;">Leave empty to keep existing image when editing</small>
                                 </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Time Slot Fields -->
+                        <div id="timeSlotWrapper" style="margin-top: 15px; display: none;">
+                            <h5>Manage Time Slots</h5>
+                            <div class="time-slot-group" style="display: flex; gap: 10px; margin-bottom: 10px;">
+                                <input type="text" name="slot_label[]" placeholder="Label (e.g. Morning)" class="form-control-modern">
+                                <input type="time" name="start_time[]" class="form-control-modern">
+                                <input type="time" name="end_time[]" class="form-control-modern">
                             </div>
                         </div>
                     </form>
@@ -690,6 +709,24 @@ while ($row = $accResult->fetch_assoc()) {
 
         // ── ACCOMMODATIONS & AMENITIES MANAGEMENT ────────────────────────
         let accommodationModal;
+
+        document.addEventListener("DOMContentLoaded", function() {
+            const typeSelect = document.getElementById('accType'); 
+            const timeSlotWrapper = document.getElementById('timeSlotWrapper');
+
+            if (typeSelect && timeSlotWrapper) {
+                const toggleTimeSlots = () => {
+                    if (typeSelect.value.toLowerCase() === 'cottage') {
+                        timeSlotWrapper.style.display = 'block';
+                    } else {
+                        timeSlotWrapper.style.display = 'none';
+                    }
+                };
+                
+                typeSelect.addEventListener('change', toggleTimeSlots);
+                // Initial check will be handled in openAddAccommodationModal or editAccommodation
+            }
+        });
 
         function openAddAccommodationModal() {
             document.getElementById('accommodationModalTitle').textContent = 'Add Amenity / Room';

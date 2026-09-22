@@ -72,6 +72,20 @@ if ($action === 'add' || $action === 'edit') {
             $stmt->bind_param('sssdsddisi', $name, $slug, $description, $pricePerHour, $priceType, $minDuration, $maxDuration, $capacity, $imagePath, $isActive);
             $stmt->execute();
             
+            $item_id = $conn->insert_id;
+            if (!empty($_POST['slot_label']) && !empty($_POST['start_time']) && !empty($_POST['end_time'])) {
+                $ts_stmt = $conn->prepare("INSERT INTO time_slots (activity_id, label, start_time, end_time, is_active) VALUES (?, ?, ?, ?, 1)");
+                foreach ($_POST['slot_label'] as $index => $label) {
+                    $start = $_POST['start_time'][$index];
+                    $end = $_POST['end_time'][$index];
+                    if (!empty($start) && !empty($end)) {
+                        $ts_stmt->bind_param("isss", $item_id, $label, $start, $end);
+                        $ts_stmt->execute();
+                    }
+                }
+                $ts_stmt->close();
+            }
+            
             echo json_encode(['success' => true, 'message' => 'Activity added successfully']);
         } elseif ($action === 'edit') {
             // Update existing activity
