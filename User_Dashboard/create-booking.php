@@ -34,8 +34,12 @@ $stmtSide = $conn->prepare(
     "SELECT id, name, description, price_per_hour, price_type, image_url
      FROM activities
      WHERE is_active = 1
-       AND name NOT IN ('Billiards','Fitness Gym','Kids Playground','Videoke Rental')
+       AND name NOT IN ('Billiards','Fitness Gym','Kids Playground','Videoke Rental','Videoke')
        AND name NOT LIKE 'Pickleball%'
+       AND name NOT LIKE '%Basketball%'
+       AND name NOT LIKE '%Pool%'
+       AND name NOT LIKE '%Swimming%'
+       AND name NOT LIKE '%Videoke%'
      ORDER BY RAND()
      LIMIT 4"
 );
@@ -465,6 +469,52 @@ if ($stmtSlots) {
             .step-bar      { flex-wrap:wrap; gap:.5rem; }
             .step-separator { display:none; }
         }
+
+        /* ── STAY / TOUR TYPE SELECTION (STEP 1) ─────────────────── */
+        .tour-type-card {
+            cursor: pointer;
+            background: var(--bg-card);
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-card, 0.75rem);
+            padding: 1.15rem 1.25rem;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            user-select: none;
+        }
+        .tour-type-card:hover {
+            border-color: rgba(59,130,246,0.6);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+        }
+        .tour-type-card.active-daytour {
+            border-color: #f59e0b !important;
+            background: linear-gradient(135deg, rgba(245,158,11,0.14) 0%, rgba(15,23,42,0.85) 100%) !important;
+            box-shadow: 0 4px 20px rgba(245,158,11,0.25);
+        }
+        .tour-type-card.active-overnight {
+            border-color: #3b82f6 !important;
+            background: linear-gradient(135deg, rgba(59,130,246,0.16) 0%, rgba(15,23,42,0.85) 100%) !important;
+            box-shadow: 0 4px 20px rgba(59,130,246,0.25);
+        }
+        .tour-card-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            flex-shrink: 0;
+        }
+        .daytour-icon {
+            background: rgba(245,158,11,0.2);
+            color: #f59e0b;
+        }
+        .overnight-icon {
+            background: rgba(59,130,246,0.2);
+            color: #3b82f6;
+        }
         /* ═══════════════════════════════════════
            GCASH MODAL & PAYMENT STYLES
         ═══════════════════════════════════════ */
@@ -673,6 +723,58 @@ if ($stmtSlots) {
     ═══════════════════════════════════════════════════════════════ -->
     <div id="step1Section">
 
+        <!-- Stay / Tour Type Selector (Day Tour vs Overnight) — First Step before looking for rooms/activities -->
+        <div class="mb-4" id="experienceSelectSection">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+                <div>
+                    <h5 class="mb-1" style="font-weight:700; color:var(--text-primary); font-size:1.15rem;">
+                        <i class="bi bi-compass me-2 text-primary"></i>Choose Your Experience
+                    </h5>
+                    <p class="text-muted mb-0" style="font-size:0.85rem;">
+                        Select whether you are visiting for a day tour or staying overnight before browsing rooms and activities
+                    </p>
+                </div>
+            </div>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="tour-type-card active-daytour" id="topTourDayTour" onclick="chooseInitialTourType('daytour')">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="tour-card-icon daytour-icon">
+                                <i class="bi bi-sun-fill"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="d-flex align-items-center justify-content-between mb-1">
+                                    <h6 class="mb-0 fw-bold" style="color:var(--text-primary); font-size:1.05rem;">Day Tour</h6>
+                                    <span class="badge rounded-pill bg-warning text-dark px-2 py-1" style="font-size:0.75rem;">Daytime Visit</span>
+                                </div>
+                                <p class="mb-0 text-muted" style="font-size:0.82rem; line-height:1.4;">
+                                    Cottages, pavilions, ATV rides, and daytime recreation (morning to dusk).
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="tour-type-card" id="topTourOvernight" onclick="chooseInitialTourType('overnight')">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="tour-card-icon overnight-icon">
+                                <i class="bi bi-moon-stars-fill"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="d-flex align-items-center justify-content-between mb-1">
+                                    <h6 class="mb-0 fw-bold" style="color:var(--text-primary); font-size:1.05rem;">Overnight</h6>
+                                    <span class="badge rounded-pill bg-primary px-2 py-1" style="font-size:0.75rem;">Overnight Stay</span>
+                                </div>
+                                <p class="mb-0 text-muted" style="font-size:0.82rem; line-height:1.4;">
+                                    Relax in air-conditioned rooms, villas, suites, and overnight accommodations.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Filter bar -->
         <div class="filter-bar d-flex align-items-center flex-wrap gap-2">
             <span class="text-muted me-1" style="font-size:.85rem;"><i class="bi bi-funnel me-1"></i>Filter:</span>
@@ -718,12 +820,18 @@ if ($stmtSlots) {
                         <div id="activity-calendar"></div>
 
                         <form id="bookingForm" novalidate>
-                            <!-- Check-in date -->
-                            <div class="mb-4">
-                                <label class="form-label-modern"><i class="bi bi-calendar3 me-1"></i>Booking Date</label>
+                            <!-- Hidden tour type from Step 1 selection -->
+                            <input type="hidden" id="selectedTourType" name="tour_type" value="daytour">
+
+                            <!-- Check-in / Visit date -->
+                            <div class="mb-4" id="checkinSection">
+                                <label class="form-label-modern" id="checkinLabel">
+                                    <i class="bi bi-calendar3 me-1"></i>
+                                    <span id="checkinLabelText">Check-in Date</span>
+                                </label>
                                 <input type="date" id="bookingDate" name="booking_date"
                                        class="form-control-modern" required>
-                                <div class="mt-1" style="font-size:.75rem;color:var(--text-muted);">
+                                <div class="mt-1" id="checkinHint" style="font-size:.75rem;color:var(--text-muted);">
                                     Select your preferred check-in date
                                 </div>
                             </div>
@@ -747,7 +855,7 @@ if ($stmtSlots) {
                                      style="padding:.5rem 1rem;font-size:.8rem;"></div>
                             </div>
 
-                            <!-- Check-out date — shown only for accommodations -->
+                            <!-- Check-out date — shown only for overnight accommodations -->
                             <div id="checkoutSection" class="mb-4 d-none">
                                 <label class="form-label-modern"><i class="bi bi-calendar3 me-1"></i>Check-out Date</label>
                                 <input type="date" id="checkoutDate" name="check_out_date"
@@ -1083,6 +1191,96 @@ if ($stmtSlots) {
 let allPackages   = [];
 let selectedPkg   = null;
 let addonsMap     = {};      // {id: {name, price, selected}}
+let currentTourType = 'daytour'; // 'daytour' or 'overnight'
+
+// ── Choose Initial Tour Type (Step 1 Top Section) ──────────────────
+function chooseInitialTourType(type) {
+    currentTourType = type;
+    const hiddenInp = document.getElementById('selectedTourType');
+    if (hiddenInp) hiddenInp.value = type;
+
+    const btnDay = document.getElementById('topTourDayTour');
+    const btnNight = document.getElementById('topTourOvernight');
+
+    if (type === 'daytour') {
+        if (btnDay) {
+            btnDay.classList.add('active-daytour');
+            btnDay.classList.remove('active-overnight');
+        }
+        if (btnNight) {
+            btnNight.classList.remove('active-overnight');
+            btnNight.classList.remove('active-daytour');
+        }
+    } else {
+        if (btnNight) {
+            btnNight.classList.add('active-overnight');
+            btnNight.classList.remove('active-daytour');
+        }
+        if (btnDay) {
+            btnDay.classList.remove('active-daytour');
+            btnDay.classList.remove('active-overnight');
+        }
+    }
+
+    applyPackageFilters();
+}
+
+// ── Filter Packages based on chosen experience & category pill ─────
+function applyPackageFilters() {
+    if (!allPackages || !allPackages.length) return;
+
+    const filterActivityBtn = document.getElementById('filterActivity');
+
+    if (currentTourType === 'overnight') {
+        // ATV / activities are ONLY available in Day Tour and NOT in Overnight
+        if (filterActivityBtn) {
+            filterActivityBtn.style.display = 'none';
+            if (currentFilter === 'activity') {
+                currentFilter = 'all';
+                document.querySelectorAll('.filter-pill').forEach(b => b.classList.remove('active'));
+                const allBtn = document.getElementById('filterAll');
+                if (allBtn) allBtn.classList.add('active');
+            }
+        }
+    } else {
+        if (filterActivityBtn) {
+            filterActivityBtn.style.display = '';
+        }
+    }
+
+    const filtered = allPackages.filter(pkg => {
+        // 1. Tour Type filtering based on admin configuration
+        if (pkg.package_type === 'accommodation') {
+            const tour = String(pkg.tour_type || '').toLowerCase();
+            const dayRate = parseFloat(pkg.price_per_day) || 0;
+            const nightRate = parseFloat(pkg.price_per_night) || 0;
+
+            if (currentTourType === 'daytour') {
+                const isDay = tour ? tour.includes('day') : (dayRate > 0);
+                if (!isDay) return false;
+            } else {
+                const isOvernight = tour ? tour.includes('overnight') : (nightRate > 0);
+                if (!isOvernight) return false;
+            }
+        } else if (pkg.package_type === 'activity') {
+            // ATV and activities are ONLY available in Day Tour and NOT in Overnight
+            if (currentTourType !== 'daytour') {
+                return false;
+            }
+        }
+
+        // 2. Category pill filter ('all', 'activity', 'accommodation')
+        if (currentFilter !== 'all' && pkg.package_type !== currentFilter) {
+            return false;
+        }
+
+        return true;
+    });
+
+    renderPackages(filtered);
+    const countEl = document.getElementById('packageCount');
+    if (countEl) countEl.textContent = `${filtered.length} package${filtered.length === 1 ? '' : 's'}`;
+}
 
 // ── Time slot data (PHP → JS) — grouped by activity_id ────────────
 const allTimeSlots = (function() {
@@ -1188,19 +1386,25 @@ async function loadPackages() {
 
         if (!data.success) { renderEmptyState('Could not load packages.'); return; }
 
-        // Exclude bundles from this page since they have a dedicated premium page.
-        // Also exclude add-on-only activities that should not appear as standalone bookings.
-        const ADDON_ONLY = ['Billiards', 'Fitness Gym', 'Kids Playground', 'Videoke'];
-        const ADDON_ONLY_PARTIAL = ['Pickleball']; // covers all "Pickleball Court" variants
+        // Exclude bundles (dedicated page) and non-bookable / requested removed activities:
+        // Pool, Basketball, and Videoke are removed as requested, plus billiards, gym, playground, pickleball.
+        const EXCLUDED_KEYWORDS = ['pool', 'swimming', 'basketball', 'videoke', 'billiards', 'fitness gym', 'playground', 'pickleball'];
         allPackages = (data.packages || []).filter(p => {
             if (p.package_type === 'bundle') return false;
-            if (ADDON_ONLY.includes(p.name)) return false;
-            if (ADDON_ONLY_PARTIAL.some(kw => p.name.includes(kw))) return false;
+            if (p.package_type === 'activity') {
+                const lowerName = p.name.toLowerCase();
+                if (EXCLUDED_KEYWORDS.some(kw => lowerName.includes(kw))) {
+                    return false;
+                }
+            }
             return true;
         });
 
-        // Load activities as potential add-ons
-        (data.activities || []).forEach(a => {
+        // Load activities as potential add-ons (excluding removed activities)
+        (data.activities || []).filter(a => {
+            const lowerName = a.name.toLowerCase();
+            return !EXCLUDED_KEYWORDS.some(kw => lowerName.includes(kw));
+        }).forEach(a => {
             addonsMap[a.id] = {
                 id: a.id,
                 name: a.name,
@@ -1212,13 +1416,30 @@ async function loadPackages() {
 
         if (!allPackages.length) { renderEmptyState('No packages available yet. Check back soon!'); return; }
 
-        renderPackages(allPackages);
-        document.getElementById('packageCount').textContent = allPackages.length + ' packages';
-
-        // ── Auto-select via ?id=&type= (e.g. from sidebar card links) ──
+        // Check URL params for direct selection or tour type
         const _p = new URLSearchParams(window.location.search);
+        const _tourParam = _p.get('tour_type');
         const _id   = _p.get('id');
         const _type = _p.get('type') || 'activity';
+
+        let initTour = 'daytour';
+        if (_tourParam === 'overnight') {
+            initTour = 'overnight';
+        } else if (_type === 'activity') {
+            // ATV and activities are Day Tour only
+            initTour = 'daytour';
+        } else if (_id && _type === 'accommodation') {
+            const matchPkg = allPackages.find(p => p.id == _id && p.package_type === _type);
+            if (matchPkg) {
+                const t = String(matchPkg.tour_type || '').toLowerCase();
+                if (t.includes('overnight') && !t.includes('day')) {
+                    initTour = 'overnight';
+                }
+            }
+        }
+
+        chooseInitialTourType(initTour);
+
         if (_id) {
             const _pkg = allPackages.find(p => p.id == _id && p.package_type === _type);
             if (_pkg) selectPackage(_pkg.id, _pkg.package_type);
@@ -1235,7 +1456,7 @@ function renderPackages(pkgs) {
     const grid = document.getElementById('packagesGrid');
     grid.innerHTML = '';
 
-    if (!pkgs.length) { grid.innerHTML = emptyStateHTML('No packages match the current filter.'); return; }
+    if (!pkgs.length) { grid.innerHTML = emptyStateHTML('No packages match the current selection.'); return; }
 
     const container = document.createElement('div');
     container.className = 'packages-grid section-transition';
@@ -1261,11 +1482,29 @@ function renderPackages(pkgs) {
                    <span style="color:rgba(255,255,255,.35);font-size:.75rem;">No image</span>
                </div>`;
 
+        // Appropriate price label for current tour type
+        let displayPrice = pkg.price_label;
+        if (pkg.package_type === 'accommodation') {
+            if (currentTourType === 'daytour') {
+                const dayRate = parseFloat(pkg.price_per_day) || parseFloat(pkg.price_per_night) || 0;
+                displayPrice = dayRate > 0 ? `₱${dayRate.toLocaleString('en-PH', {minimumFractionDigits:2})}/day` : pkg.price_label;
+            } else {
+                const nightRate = parseFloat(pkg.price_per_night) || parseFloat(pkg.price) || 0;
+                displayPrice = nightRate > 0 ? `₱${nightRate.toLocaleString('en-PH', {minimumFractionDigits:2})}/night` : pkg.price_label;
+            }
+        }
+
+        const badgeLabel = pkg.package_type === 'activity' 
+            ? 'Activity' 
+            : (pkg.package_type === 'bundle' 
+                ? 'Bundle' 
+                : (currentTourType === 'daytour' ? 'Day Tour' : 'Overnight Stay'));
+
         card.innerHTML = `
             <div class="card-img-wrap">
                 ${imgHtml}
                 <span class="card-type-badge badge-${escHtml(pkg.package_type)}">
-                    ${pkg.package_type === 'activity' ? 'Activity' : (pkg.package_type === 'bundle' ? 'Bundle' : ucfirst(pkg.type || 'Accommodation'))}
+                    ${badgeLabel}
                 </span>
             </div>
             <div class="card-content">
@@ -1273,7 +1512,7 @@ function renderPackages(pkgs) {
                 <div class="card-meta">
                     <div class="card-meta-item">
                         <i class="bi bi-tag"></i>
-                        <span>${escHtml(pkg.price_label)}</span>
+                        <span>${escHtml(displayPrice)}</span>
                     </div>
                 </div>
             </div>
@@ -1315,10 +1554,8 @@ function getPlaceholderHTML(icon, type) {
 function filterPackages(type, btn) {
     currentFilter = type;
     document.querySelectorAll('.filter-pill').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    const filtered = type === 'all' ? allPackages : allPackages.filter(p => p.package_type === type);
-    renderPackages(filtered);
-    document.getElementById('packageCount').textContent = filtered.length + ' packages';
+    if (btn) btn.classList.add('active');
+    applyPackageFilters();
 }
 
 // ── Open Detail Modal ──────────────────────────────────────────────
@@ -1350,6 +1587,24 @@ function openDetailModal(id, type) {
     const inclusionsHtml = (pkg.inclusions || [])
         .map(inc => `<li><i class="bi bi-check-circle-fill"></i>${escHtml(inc)}</li>`).join('');
 
+    let modalPrice = pkg.starting_price;
+    let modalSub = pkg.price_label;
+    if (pkg.package_type === 'accommodation') {
+        if (currentTourType === 'daytour') {
+            const dayRate = parseFloat(pkg.price_per_day) || parseFloat(pkg.price_per_night) || 0;
+            if (dayRate > 0) {
+                modalPrice = `₱${dayRate.toLocaleString('en-PH', {minimumFractionDigits:2})}`;
+                modalSub = '₱' + dayRate.toLocaleString('en-PH', {minimumFractionDigits:2}) + ' / day';
+            }
+        } else {
+            const nightRate = parseFloat(pkg.price_per_night) || parseFloat(pkg.price) || 0;
+            if (nightRate > 0) {
+                modalPrice = `₱${nightRate.toLocaleString('en-PH', {minimumFractionDigits:2})}`;
+                modalSub = '₱' + nightRate.toLocaleString('en-PH', {minimumFractionDigits:2}) + ' / night';
+            }
+        }
+    }
+
     body.innerHTML = `
         ${imgHtml}
         <div class="detail-section">
@@ -1362,13 +1617,13 @@ function openDetailModal(id, type) {
                 <div class="detail-stat-lbl">Max Guests</div>
             </div>
             <div class="detail-stat">
-                <div class="detail-stat-val">${escHtml(ucfirst(pkg.package_type === 'activity' ? 'Activity' : (pkg.type||'Room')))}</div>
+                <div class="detail-stat-val">${escHtml(ucfirst(pkg.package_type === 'activity' ? 'Activity' : (currentTourType === 'daytour' ? 'Day Tour' : 'Overnight Stay')))}</div>
                 <div class="detail-stat-lbl">Type</div>
             </div>
         </div>
         <div class="detail-price-tag mb-4">
-            <div class="price-main">${escHtml(pkg.starting_price)}</div>
-            <div class="price-sub">${escHtml(pkg.price_label)}</div>
+            <div class="price-main">${escHtml(modalPrice)}</div>
+            <div class="price-sub">${escHtml(modalSub)}</div>
         </div>
         <div class="detail-section">
             <div class="detail-section-title"><i class="bi bi-gift"></i> What's Included</div>
@@ -1396,33 +1651,93 @@ function selectPackage(id, type) {
     const pkg = allPackages.find(p => p.id == id && p.package_type === type);
     if (!pkg) return;
 
+    // ATV and activities are strictly Day Tour only
+    if (pkg.package_type === 'activity') {
+        currentTourType = 'daytour';
+        const topDay = document.getElementById('topTourDayTour');
+        const topNight = document.getElementById('topTourOvernight');
+        if (topDay) {
+            topDay.classList.add('active-daytour');
+            topDay.classList.remove('active-overnight');
+        }
+        if (topNight) {
+            topNight.classList.remove('active-overnight');
+            topNight.classList.remove('active-daytour');
+        }
+    }
+
     selectedPkg = pkg;
     document.getElementById('selectedPackageId').value   = pkg.id;
     document.getElementById('selectedPackageType').value = pkg.package_type;
+    const hiddenTourInp = document.getElementById('selectedTourType');
+    if (hiddenTourInp) hiddenTourInp.value = currentTourType;
 
-    // Update selected pkg header
+    // Appropriate price label for preview
+    let displayPrice = pkg.price_label;
+    if (pkg.package_type === 'accommodation') {
+        if (currentTourType === 'daytour') {
+            const dayRate = parseFloat(pkg.price_per_day) || parseFloat(pkg.price_per_night) || 0;
+            displayPrice = dayRate > 0 ? `₱${dayRate.toLocaleString('en-PH', {minimumFractionDigits:2})}/day` : pkg.price_label;
+        } else {
+            const nightRate = parseFloat(pkg.price_per_night) || parseFloat(pkg.price) || 0;
+            displayPrice = nightRate > 0 ? `₱${nightRate.toLocaleString('en-PH', {minimumFractionDigits:2})}/night` : pkg.price_label;
+        }
+    }
+
+    // Update selected pkg header with tour badge
     const imgEl = pkg.image_url
         ? `<img src="${escHtml(pkg.image_url)}" alt="${escHtml(pkg.name)}" class="selected-pkg-img"
                 onerror="this.style.display='none';">`
         : `<div class="selected-pkg-img-placeholder"><i class="bi ${escHtml(pkg.icon||'bi-star')}"></i></div>`;
 
+    const tourBadge = pkg.package_type === 'accommodation'
+        ? (currentTourType === 'daytour'
+            ? '<span class="badge rounded-pill bg-warning text-dark ms-2"><i class="bi bi-sun-fill me-1"></i>Day Tour</span>'
+            : '<span class="badge rounded-pill bg-primary ms-2"><i class="bi bi-moon-stars-fill me-1"></i>Overnight</span>')
+        : '<span class="badge rounded-pill bg-success ms-2"><i class="bi bi-activity me-1"></i>Day Tour Activity</span>';
+
     document.getElementById('selectedPkgPreview').innerHTML = `
         ${imgEl}
         <div>
-            <div class="selected-pkg-name">${escHtml(pkg.name)}</div>
-            <div class="selected-pkg-price">${escHtml(pkg.price_label)}</div>
+            <div class="selected-pkg-name">${escHtml(pkg.name)} ${tourBadge}</div>
+            <div class="selected-pkg-price">${escHtml(displayPrice)}</div>
         </div>
     `;
 
-    // Show/hide time vs checkout date
+    // Configure inputs based on package type & currentTourType
+    const labelText = document.getElementById('checkinLabelText');
+    const hintText = document.getElementById('checkinHint');
+    const checkoutSec = document.getElementById('checkoutSection');
+    const checkoutInp = document.getElementById('checkoutDate');
+
     if (pkg.package_type === 'activity') {
         document.getElementById('timeRangeSection').classList.remove('d-none');
-        document.getElementById('checkoutSection').classList.add('d-none');
-        // Populate time slots for THIS activity only
+        if (checkoutSec) checkoutSec.classList.add('d-none');
+        if (checkoutInp) checkoutInp.value = '';
+        if (labelText) labelText.textContent = 'Date of Visit';
+        if (hintText) hintText.textContent = 'Select your activity date';
         populateTimeSlots(pkg.id);
-    } else {
+    } else if (pkg.package_type === 'accommodation') {
         document.getElementById('timeRangeSection').classList.add('d-none');
-        document.getElementById('checkoutSection').classList.remove('d-none');
+
+        if (currentTourType === 'daytour') {
+            // Day tour: change the check in word to date of visit and remove the check out date
+            if (labelText) labelText.textContent = 'Date of Visit';
+            if (hintText) hintText.textContent = 'Select your preferred date of visit';
+            if (checkoutSec) checkoutSec.classList.add('d-none');
+            if (checkoutInp) checkoutInp.value = '';
+        } else {
+            // Overnight: show the check in and check out date and hide the date of visit word
+            if (labelText) labelText.textContent = 'Check-in Date';
+            if (hintText) hintText.textContent = 'Select your preferred check-in date';
+            if (checkoutSec) checkoutSec.classList.remove('d-none');
+        }
+    } else {
+        // Bundle
+        document.getElementById('timeRangeSection').classList.add('d-none');
+        if (checkoutSec) checkoutSec.classList.remove('d-none');
+        if (labelText) labelText.textContent = 'Check-in Date';
+        if (hintText) hintText.textContent = 'Select your check-in date';
     }
 
     // Capacity hint
@@ -1434,7 +1749,7 @@ function selectPackage(id, type) {
     const inclEl = document.getElementById('inclusionsList');
     if (inclEl) inclEl.innerHTML = inclHtml || '<li><i class="bi bi-dash"></i>No inclusions listed</li>';
 
-    // Add-on activities (only show OTHER activities if current pkg is accommodation or different activity)
+    // Add-on activities (only available in Day Tour; strictly excluded for overnight stays)
     renderAddons(pkg);
     if (typeof fetchAndRenderActivityCalendar === 'function') {
         fetchAndRenderActivityCalendar(pkg.id, pkg.package_type);
@@ -1446,34 +1761,51 @@ function selectPackage(id, type) {
 
 // ── Add-ons ────────────────────────────────────────────────────────
 function renderAddons(currentPkg) {
+    const secEl  = document.getElementById('addonsSection');
     const listEl = document.getElementById('addonsList');
-    // Activities that are not the currently selected package
-    const available = allPackages.filter(p => p.package_type === 'activity' && !(p.package_type === currentPkg.package_type && p.id == currentPkg.id));
 
-    if (!available.length) {
-        listEl.innerHTML = '<p style="font-size:.8rem;color:var(--text-muted);">No add-on activities available.</p>';
+    // If overnight stay, ATV and activities are not available
+    if (currentTourType === 'overnight') {
+        if (secEl) secEl.classList.add('d-none');
+        if (listEl) listEl.innerHTML = '';
+        Object.keys(addonsMap).forEach(k => {
+            if (addonsMap[k]) addonsMap[k].selected = false;
+        });
         return;
     }
 
-    listEl.innerHTML = available.map(a => {
-        const priceType = a.price_type || 'flat_rate';
-        const guestsEl = document.getElementById('numberOfGuests');
-        const maxQty = Math.max(1, parseInt(guestsEl ? guestsEl.value : 1, 10) || 1);
-        return `
-        <div class="addon-item" id="addon-${a.id}" data-type="${escHtml(priceType)}">
-            <div class="addon-check">
-                <input type="checkbox" id="addonChk-${a.id}" value="${a.id}"
-                       onchange="toggleAddon(${a.id},${a.price},this)">
-            </div>
-            <div class="addon-name">${escHtml(a.name)}</div>
-            <input type="number" class="addon-qty" id="addonQty-${a.id}" min="1" max="${maxQty}" value="1" step="1"
-                   style="display:none;width:4.5rem;text-align:center;background:var(--bg-secondary);border:1px solid var(--border-color);color:var(--text-primary);border-radius:.5rem;padding:.25rem .35rem;"
-                   title="Quantity for this add-on"
-                   onclick="event.stopPropagation()"
-                   oninput="recalcPrice()">
-            <div class="addon-price">+${escHtml(a.starting_price)}</div>
-        </div>`;
-    }).join('');
+    if (secEl) secEl.classList.remove('d-none');
+
+    // Activities that are not the currently selected package (Day Tour only)
+    const available = allPackages.filter(p => p.package_type === 'activity' && !(p.package_type === currentPkg.package_type && p.id == currentPkg.id));
+
+    if (!available.length) {
+        if (secEl) secEl.classList.add('d-none');
+        if (listEl) listEl.innerHTML = '<p style="font-size:.8rem;color:var(--text-muted);">No add-on activities available.</p>';
+        return;
+    }
+
+    if (listEl) {
+        listEl.innerHTML = available.map(a => {
+            const priceType = a.price_type || 'flat_rate';
+            const guestsEl = document.getElementById('numberOfGuests');
+            const maxQty = Math.max(1, parseInt(guestsEl ? guestsEl.value : 1, 10) || 1);
+            return `
+            <div class="addon-item" id="addon-${a.id}" data-type="${escHtml(priceType)}">
+                <div class="addon-check">
+                    <input type="checkbox" id="addonChk-${a.id}" value="${a.id}"
+                           onchange="toggleAddon(${a.id},${a.price},this)">
+                </div>
+                <div class="addon-name">${escHtml(a.name)}</div>
+                <input type="number" class="addon-qty" id="addonQty-${a.id}" min="1" max="${maxQty}" value="1" step="1"
+                       style="display:none;width:4.5rem;text-align:center;background:var(--bg-secondary);border:1px solid var(--border-color);color:var(--text-primary);border-radius:.5rem;padding:.25rem .35rem;"
+                       title="Quantity for this add-on"
+                       onclick="event.stopPropagation()"
+                       oninput="recalcPrice()">
+                <div class="addon-price">+${escHtml(a.starting_price)}</div>
+            </div>`;
+        }).join('');
+    }
 }
 
 function toggleAddon(id, price, chk) {
@@ -1509,36 +1841,67 @@ function recalcPrice() {
     let baseLabel = 'Base price';
 
     if (selectedPkg.package_type === 'activity') {
-        // Calculate from time range
         const tIn  = document.getElementById('timeIn').value;
         const tOut = document.getElementById('timeOut').value;
+        let hrs = 1;
         if (tIn && tOut) {
             const mins = toMinutes(tOut) - toMinutes(tIn);
-            if (mins > 0) {
-                const hrs = mins / 60;
-                base = selectedPkg.price * hrs * guests;
-                baseLabel = `${selectedPkg.price_label} × ${hrs.toFixed(2)}h × ${guests} guest${guests > 1 ? 's' : ''}`;
-            }
+            if (mins > 0) hrs = mins / 60;
+        }
+
+        const pType = selectedPkg.price_type || 'flat_rate';
+        if (pType === 'per_head') {
+            base = selectedPkg.price * guests;
+            baseLabel = `₱${selectedPkg.price.toLocaleString('en-PH', {minimumFractionDigits:2})} × ${guests} guest${guests > 1 ? 's' : ''}`;
+        } else if (pType === 'per_hour') {
+            base = selectedPkg.price * hrs;
+            baseLabel = `₱${selectedPkg.price.toLocaleString('en-PH', {minimumFractionDigits:2})}/hr × ${hrs.toFixed(1)}h`;
         } else {
-            base = selectedPkg.price * guests; // show per-hour rate with guests
-            baseLabel = `${selectedPkg.price_label} × ${guests} guest${guests > 1 ? 's' : ''} (per hour)`;
+            // flat_rate
+            base = selectedPkg.price;
+            baseLabel = `₱${selectedPkg.price.toLocaleString('en-PH', {minimumFractionDigits:2})} (Session Rate)`;
         }
     } else if (selectedPkg.package_type === 'bundle') {
         base = selectedPkg.price * guests;
         baseLabel = `${selectedPkg.price_label} × ${guests} guest${guests > 1 ? 's' : ''}`;
     } else {
-        // Accommodation — nights
+        // Accommodation — Day Tour vs Overnight
         const ci = document.getElementById('bookingDate').value;
         const co = document.getElementById('checkoutDate').value;
-        if (ci && co) {
-            const nights = Math.round((new Date(co) - new Date(ci)) / 86400000);
-            if (nights > 0) {
-                base = selectedPkg.price * nights * guests;
-                baseLabel = `${selectedPkg.price_label} × ${nights} night${nights>1?'s':''} × ${guests} guest${guests > 1 ? 's' : ''}`;
+        const baseCap = parseInt(selectedPkg.base_capacity) || parseInt(selectedPkg.capacity) || 1;
+        const extraFeePerPerson = parseFloat(selectedPkg.extra_person_fee) || 0;
+
+        if (currentTourType === 'daytour') {
+            const dayRate = parseFloat(selectedPkg.price_per_day) > 0 
+                ? parseFloat(selectedPkg.price_per_day) 
+                : parseFloat(selectedPkg.price);
+            base = dayRate;
+            baseLabel = `₱${dayRate.toLocaleString('en-PH', {minimumFractionDigits:2})} (Day Tour)`;
+
+            if (guests > baseCap && extraFeePerPerson > 0) {
+                const extraCount = guests - baseCap;
+                const totalExtra = extraCount * extraFeePerPerson;
+                base += totalExtra;
+                baseLabel += ` + ₱${totalExtra.toFixed(2)} (${extraCount} extra guest${extraCount > 1 ? 's' : ''})`;
             }
         } else {
-            base = selectedPkg.price * guests;
-            baseLabel = `${selectedPkg.price_label} × ${guests} guest${guests > 1 ? 's' : ''}`;
+            // Overnight
+            const nightRate = parseFloat(selectedPkg.price_per_night) > 0 
+                ? parseFloat(selectedPkg.price_per_night) 
+                : parseFloat(selectedPkg.price);
+            let nights = 1;
+            if (ci && co) {
+                nights = Math.max(1, Math.round((new Date(co) - new Date(ci)) / 86400000));
+            }
+            base = nightRate * nights;
+            baseLabel = `₱${nightRate.toLocaleString('en-PH', {minimumFractionDigits:2})}/night × ${nights} night${nights > 1 ? 's' : ''}`;
+
+            if (guests > baseCap && extraFeePerPerson > 0) {
+                const extraCount = guests - baseCap;
+                const totalExtra = extraCount * extraFeePerPerson * nights;
+                base += totalExtra;
+                baseLabel += ` + ₱${totalExtra.toFixed(2)} (${extraCount} extra guest${extraCount > 1 ? 's' : ''})`;
+            }
         }
     }
 
@@ -1674,8 +2037,14 @@ async function handleBookingSubmit(e) {
         showError('Please select both Time-In and Time-Out.'); return;
     }
     if (selectedPkg.package_type === 'activity' && !validateTime()) return;
-    if ((selectedPkg.package_type === 'accommodation' || selectedPkg.package_type === 'bundle') && !checkOut) {
-        showError('Please select a check-out date.'); return;
+    if (selectedPkg.package_type === 'accommodation') {
+        if (currentTourType === 'overnight' && !checkOut) {
+            showError('Please select a check-out date for overnight stay.');
+            return;
+        }
+    } else if (selectedPkg.package_type === 'bundle' && !checkOut) {
+        showError('Please select a check-out date.');
+        return;
     }
     if (guests < 1) { showError('At least 1 guest is required.'); return; }
 
@@ -1877,11 +2246,12 @@ async function submitWithProof() {
 
     const fd = new FormData();
     fd.append('booking_type',     selectedPkg.package_type);
+    fd.append('tour_type',        currentTourType);
     fd.append('full_name',        '<?php echo addslashes($userName); ?>');
     fd.append('email',            '<?php echo addslashes($userEmail); ?>');
     fd.append('phone_number',     '<?php echo addslashes($userPhone); ?>' || 'N/A');
     fd.append('check_in_date',    date);
-    fd.append('check_out_date',   checkOut || '');
+    fd.append('check_out_date',   (currentTourType === 'daytour' ? '' : checkOut) || '');
     fd.append('check_in_time',    tIn || '');
     fd.append('check_out_time',   tOut || '');
     fd.append('number_of_guests', guests);
@@ -2018,7 +2388,15 @@ function initDateInputs() {
     document.getElementById('checkoutDate').min  = minDate;
 
     document.getElementById('bookingDate').addEventListener('change', function() {
-        document.getElementById('checkoutDate').min = this.value;
+        if (this.value) {
+            const nextDay = new Date(this.value);
+            nextDay.setDate(nextDay.getDate() + 1);
+            const nextDayStr = nextDay.toISOString().split('T')[0];
+            document.getElementById('checkoutDate').min = nextDayStr;
+            if (document.getElementById('checkoutDate').value && document.getElementById('checkoutDate').value <= this.value) {
+                document.getElementById('checkoutDate').value = nextDayStr;
+            }
+        }
         recalcPrice();
     });
 }

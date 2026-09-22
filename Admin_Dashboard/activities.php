@@ -322,14 +322,40 @@ while ($row = $accResult->fetch_assoc()) {
                                     <div class="activity-header">
                                         <div>
                                             <h3 class="activity-title"><?php echo htmlspecialchars($acc['name']); ?></h3>
+                                            <div class="d-flex align-items-center flex-wrap gap-1 mt-1">
+                                                <span class="badge" style="font-size:0.7rem; background:rgba(59,130,246,0.15); color:#60a5fa; border:1px solid rgba(59,130,246,0.3);">
+                                                    <i class="bi <?php echo $icon; ?> me-1"></i><?php echo ucfirst($typeVal); ?>
+                                                </span>
+                                                <?php
+                                                    $tourVal = strtolower($acc['tour_type'] ?? '');
+                                                    if (strpos($tourVal, 'overnight') !== false):
+                                                ?>
+                                                    <span class="badge" style="font-size:0.7rem; background:rgba(139,92,246,0.15); color:#c084fc; border:1px solid rgba(139,92,246,0.3);">
+                                                        <i class="bi bi-moon-stars me-1"></i>Overnight
+                                                    </span>
+                                                <?php endif; ?>
+                                                <?php if (strpos($tourVal, 'day') !== false): ?>
+                                                    <span class="badge" style="font-size:0.7rem; background:rgba(245,158,11,0.15); color:#fbbf24; border:1px solid rgba(245,158,11,0.3);">
+                                                        <i class="bi bi-sun me-1"></i>Day Tour
+                                                    </span>
+                                                <?php endif; ?>
+                                            </div>
                                         </div>
                                         <span class="activity-status <?php echo $statusClass; ?>"><?php echo $statusText; ?></span>
                                     </div>
                                     <div class="activity-stats" style="flex-wrap: wrap;">
+                                        <?php if (strpos($tourVal, 'overnight') !== false): ?>
                                         <div class="stat-item" style="min-width: 90px;">
-                                            <div class="stat-value">&#8369;<?php echo $price; ?></div>
+                                            <div class="stat-value">&#8369;<?php echo number_format($acc['price_per_night'], 2); ?></div>
                                             <div class="stat-label">Per Night</div>
                                         </div>
+                                        <?php endif; ?>
+                                        <?php if (strpos($tourVal, 'day') !== false): ?>
+                                        <div class="stat-item" style="min-width: 90px;">
+                                            <div class="stat-value">&#8369;<?php echo number_format($acc['price_per_day'], 2); ?></div>
+                                            <div class="stat-label">Per Day</div>
+                                        </div>
+                                        <?php endif; ?>
                                         <div class="stat-item" style="min-width: 90px;">
                                             <div class="stat-value"><i class="bi bi-people me-1"></i><?php echo ($baseCap == $maxCap) ? $maxCap : ($baseCap . '-' . $maxCap); ?></div>
                                             <div class="stat-label">Base/Max Guests</div>

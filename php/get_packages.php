@@ -46,12 +46,25 @@ try {
 
     $activities = [];
     while ($row = $actResult->fetch_assoc()) {
-        // Parse amenities if stored as JSON or comma-separated
-        $amenities = [];
-        if (!empty($row['description'])) {
-            // Extract keywords as pseudo-amenities from description
-            $amenities = [];
+        $pType = $row['price_type'] ?? 'flat_rate';
+        if ($pType === 'per_head') {
+            $priceLabel = '₱' . number_format($row['price_per_hour'], 2) . ' / person';
+        } elseif ($pType === 'per_hour') {
+            $priceLabel = '₱' . number_format($row['price_per_hour'], 2) . ' / hr';
+        } else {
+            $priceLabel = '₱' . number_format($row['price_per_hour'], 2) . ' / session';
         }
+
+        $actInclusions = [
+            'Capacity: up to ' . $row['capacity'] . ' person(s)',
+        ];
+        if (!empty($row['min_duration_hours']) || !empty($row['max_duration_hours'])) {
+            $minH = (float)$row['min_duration_hours'];
+            $maxH = (float)$row['max_duration_hours'];
+            $actInclusions[] = ($minH == $maxH) ? "Duration: {$minH} hour(s)" : "Duration: {$minH}h – {$maxH}h";
+        }
+        $actInclusions[] = 'Pricing: ' . $priceLabel;
+
         $activities[] = [
             'id'                 => $row['id'],
             'package_type'       => 'activity',
@@ -60,8 +73,8 @@ try {
             'description'        => $row['description'],
             'short_description'  => mb_strimwidth($row['description'] ?? '', 0, 120, '...'),
             'price'              => (float) $row['price_per_hour'],
-            'price_type'         => $row['price_type'] ?? 'flat_rate',
-            'price_label'        => '₱' . number_format($row['price_per_hour'], 2) . '/hr',
+            'price_type'         => $pType,
+            'price_label'        => $priceLabel,
             'starting_price'     => '₱' . number_format($row['price_per_hour'], 2),
             'capacity'           => $row['capacity'],
             'icon'               => 'bi-activity',
@@ -69,12 +82,7 @@ try {
             'min_duration_hours' => (float) $row['min_duration_hours'],
             'max_duration_hours' => (float) $row['max_duration_hours'],
             'amenities'          => [],
-            'inclusions'         => [
-                'Activity access for ' . $row['capacity'] . ' person(s)',
-                'Min ' . $row['min_duration_hours'] . 'h – Max ' . $row['max_duration_hours'] . 'h',
-                'Equipment provided (if applicable)',
-                'Safety briefing included',
-            ],
+            'inclusions'         => $actInclusions,
         ];
     }
     $actStmt->close();
@@ -85,8 +93,11 @@ try {
             id,
             name,
             type,
+            tour_type,
             description,
+            base_capacity,
             capacity,
+            extra_person_fee,
             price_per_night,
             price_per_day,
             amenities,
@@ -101,15 +112,32 @@ try {
 
     $accommodations = [];
     while ($row = $accResult->fetch_assoc()) {
-        // Amenities may be stored as JSON array or comma-separated string
+        // Amenities parsed from admin-stored comma or newline-separated string / JSON
         $amenitiesList = [];
         if (!empty($row['amenities'])) {
             $decoded = json_decode($row['amenities'], true);
             if (is_array($decoded)) {
-                $amenitiesList = $decoded;
+                $amenitiesList = array_values(array_filter(array_map('trim', $decoded)));
             } else {
-                $amenitiesList = array_map('trim', explode(',', $row['amenities']));
+                $rawItems = preg_split('/[,\r\n]+/', $row['amenities']);
+                $amenitiesList = array_values(array_filter(array_map('trim', $rawItems)));
             }
+        }
+
+        $accInclusions = [
+            ucfirst($row['type']) . ' for up to ' . $row['capacity'] . ' guest(s)',
+        ];
+        if (!empty($row['base_capacity'])) {
+            $accInclusions[] = 'Base capacity: ' . $row['base_capacity'] . ' guests';
+        }
+        if (!empty($row['extra_person_fee']) && floatval($row['extra_person_fee']) > 0) {
+            $accInclusions[] = 'Extra person fee: ₱' . number_format($row['extra_person_fee'], 2) . ' / person';
+        }
+        if (!empty($row['price_per_night']) && floatval($row['price_per_night']) > 0) {
+            $accInclusions[] = 'Overnight rate: ₱' . number_format($row['price_per_night'], 2) . ' / night';
+        }
+        if (!empty($row['price_per_day']) && floatval($row['price_per_day']) > 0) {
+            $accInclusions[] = 'Day tour rate: ₱' . number_format($row['price_per_day'], 2) . ' / day';
         }
 
         $accommodations[] = [
@@ -118,21 +146,22 @@ try {
             'name'             => $row['name'],
             'slug'             => strtolower(str_replace(' ', '-', $row['name'])),
             'type'             => $row['type'],
+            'tour_type'        => $row['tour_type'] ?? 'overnight,day_tour',
             'description'      => $row['description'],
             'short_description'=> mb_strimwidth($row['description'] ?? '', 0, 120, '...'),
             'price'            => (float) $row['price_per_night'],
+            'price_per_night'  => (float) $row['price_per_night'],
+            'price_per_day'    => (float) $row['price_per_day'],
+            'base_capacity'    => (int) ($row['base_capacity'] ?? 1),
+            'capacity'         => $row['capacity'],
+            'extra_person_fee' => (float) ($row['extra_person_fee'] ?? 0),
             'price_label'      => '₱' . number_format($row['price_per_night'], 2) . '/night',
             'starting_price'   => '₱' . number_format($row['price_per_night'], 2),
-            'capacity'         => $row['capacity'],
             'icon'             => $row['type'] === 'room' ? 'bi-door-open' :
                                   ($row['type'] === 'cottage' ? 'bi-house' : 'bi-building'),
             'image_url'        => normalizeImageUrl($row['image_url']),
             'amenities'        => $amenitiesList,
-            'inclusions'       => [
-                ucfirst($row['type']) . ' for up to ' . $row['capacity'] . ' guest(s)',
-                'Price: ₱' . number_format($row['price_per_night'], 2) . '/night',
-                'Day rate: ₱' . number_format($row['price_per_day'], 2) . '/day',
-            ],
+            'inclusions'       => $accInclusions,
         ];
     }
     $accStmt->close();

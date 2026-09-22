@@ -83,8 +83,8 @@ try {
         }
         $item_id = $data['activity_id'];
         
-        // Get activity price
-        $stmt = $conn->prepare("SELECT price_per_hour, min_duration_hours, max_duration_hours FROM activities WHERE id = ? AND is_active = 1");
+        // Get activity price & details
+        $stmt = $conn->prepare("SELECT price_per_hour, price_type, min_duration_hours, max_duration_hours FROM activities WHERE id = ? AND is_active = 1");
         $stmt->bind_param('i', $item_id);
         $stmt->execute();
         $result = $stmt->get_result();
@@ -107,7 +107,14 @@ try {
             throw new Exception("Duration must be between {$activity['min_duration_hours']} and {$activity['max_duration_hours']} hours");
         }
         
-        $price = $activity['price_per_hour'] * $durationHours;
+        $pType = $activity['price_type'] ?? 'flat_rate';
+        if ($pType === 'per_head') {
+            $price = floatval($activity['price_per_hour']) * intval($data['number_of_guests']);
+        } elseif ($pType === 'per_hour') {
+            $price = floatval($activity['price_per_hour']) * $durationHours;
+        } else {
+            $price = floatval($activity['price_per_hour']);
+        }
         
     } else if ($data['booking_type'] === 'accommodation') {
         if (empty($data['accommodation_id'])) {
@@ -115,8 +122,8 @@ try {
         }
         $item_id = $data['accommodation_id'];
         
-        // Get accommodation price
-        $stmt = $conn->prepare("SELECT price_per_night, capacity FROM accommodations WHERE id = ? AND is_active = 1");
+        // Get accommodation price & capacities
+        $stmt = $conn->prepare("SELECT price_per_night, price_per_day, capacity, base_capacity, extra_person_fee FROM accommodations WHERE id = ? AND is_active = 1");
         $stmt->bind_param('i', $item_id);
         $stmt->execute();
         $result = $stmt->get_result();
@@ -131,21 +138,39 @@ try {
             throw new Exception("Accommodation capacity is {$accommodation['capacity']} guests");
         }
         
-        // Calculate number of days and price
-        if (empty($data['check_out_date'])) {
-            throw new Exception('Check-out date is required for accommodation bookings');
+        $tourType = strtolower(trim($data['tour_type'] ?? ''));
+        $checkOutVal = !empty($data['check_out_date']) ? $data['check_out_date'] : null;
+        $isDayTour = ($tourType === 'daytour' || empty($checkOutVal) || $checkOutVal === $data['check_in_date']);
+
+        $baseCap = !empty($accommodation['base_capacity']) ? intval($accommodation['base_capacity']) : intval($accommodation['capacity']);
+        $extraFee = floatval($accommodation['extra_person_fee'] ?? 0);
+        $numGuests = intval($data['number_of_guests']);
+
+        if ($isDayTour) {
+            $numberOfDays = 1;
+            $dayRate = (!empty($accommodation['price_per_day']) && floatval($accommodation['price_per_day']) > 0)
+                ? floatval($accommodation['price_per_day'])
+                : floatval($accommodation['price_per_night']);
+            $price = $dayRate;
+            if ($numGuests > $baseCap && $extraFee > 0) {
+                $price += ($numGuests - $baseCap) * $extraFee;
+            }
+        } else {
+            // Overnight
+            if (empty($checkOutVal)) {
+                throw new Exception('Check-out date is required for overnight accommodation bookings');
+            }
+            $checkIn = new DateTime($data['check_in_date']);
+            $checkOut = new DateTime($checkOutVal);
+            $interval = $checkIn->diff($checkOut);
+            $numberOfDays = max(1, $interval->days);
+            
+            $nightRate = floatval($accommodation['price_per_night']);
+            $price = $nightRate * $numberOfDays;
+            if ($numGuests > $baseCap && $extraFee > 0) {
+                $price += ($numGuests - $baseCap) * $extraFee * $numberOfDays;
+            }
         }
-        
-        $checkIn = new DateTime($data['check_in_date']);
-        $checkOut = new DateTime($data['check_out_date']);
-        $interval = $checkIn->diff($checkOut);
-        $numberOfDays = $interval->days;
-        
-        if ($numberOfDays < 1) {
-            throw new Exception('Minimum stay is 1 day');
-        }
-        
-        $price = $accommodation['price_per_night'] * $numberOfDays;
     } else {
         // bundle
         if (empty($data['bundle_id'])) {

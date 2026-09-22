@@ -62,7 +62,7 @@ try {
     $numberOfDays = 1;
 
     if ($bookingType === 'activity') {
-        $s = $conn->prepare("SELECT price_per_hour, capacity FROM activities WHERE id = ? AND is_active = 1");
+        $s = $conn->prepare("SELECT price_per_hour, price_type, capacity FROM activities WHERE id = ? AND is_active = 1");
         $s->bind_param('i', $itemId);
         $s->execute();
         $item = $s->get_result()->fetch_assoc();
@@ -71,20 +71,49 @@ try {
         $tIn = strtotime($checkInTime);
         $tOut = strtotime($checkOutTime);
         $hours = max(1, ($tOut - $tIn) / 3600);
-        $price = $item['price_per_hour'] * $hours;
+        $pType = $item['price_type'] ?? 'flat_rate';
+        if ($pType === 'per_head') {
+            $price = floatval($item['price_per_hour']) * $numberOfGuests;
+        } elseif ($pType === 'per_hour') {
+            $price = floatval($item['price_per_hour']) * $hours;
+        } else {
+            $price = floatval($item['price_per_hour']);
+        }
     } elseif ($bookingType === 'accommodation') {
-        $s = $conn->prepare("SELECT price_per_night, capacity FROM accommodations WHERE id = ? AND is_active = 1");
+        $s = $conn->prepare("SELECT price_per_night, price_per_day, base_capacity, capacity, extra_person_fee FROM accommodations WHERE id = ? AND is_active = 1");
         $s->bind_param('i', $itemId);
         $s->execute();
         $item = $s->get_result()->fetch_assoc();
         if (!$item) throw new Exception('Accommodation not found or inactive.');
         if ($numberOfGuests > $item['capacity']) throw new Exception("Accommodation capacity is {$item['capacity']} guests.");
-        if ($checkOutDate) {
-            $d1 = new DateTime($checkInDate);
-            $d2 = new DateTime($checkOutDate);
-            $numberOfDays = max(1, $d1->diff($d2)->days);
+
+        $tourType = strtolower(trim($_POST['tour_type'] ?? ''));
+        $isDayTour = ($tourType === 'daytour' || empty($checkOutDate) || $checkOutDate === $checkInDate);
+
+        $baseCap = !empty($item['base_capacity']) ? intval($item['base_capacity']) : intval($item['capacity']);
+        $extraFee = floatval($item['extra_person_fee'] ?? 0);
+
+        if ($isDayTour) {
+            $numberOfDays = 1;
+            $dayRate = (!empty($item['price_per_day']) && floatval($item['price_per_day']) > 0)
+                ? floatval($item['price_per_day'])
+                : floatval($item['price_per_night']);
+            $price = $dayRate;
+            if ($numberOfGuests > $baseCap && $extraFee > 0) {
+                $price += ($numberOfGuests - $baseCap) * $extraFee;
+            }
+        } else {
+            if ($checkOutDate) {
+                $d1 = new DateTime($checkInDate);
+                $d2 = new DateTime($checkOutDate);
+                $numberOfDays = max(1, $d1->diff($d2)->days);
+            }
+            $nightRate = floatval($item['price_per_night']);
+            $price = $nightRate * $numberOfDays;
+            if ($numberOfGuests > $baseCap && $extraFee > 0) {
+                $price += ($numberOfGuests - $baseCap) * $extraFee * $numberOfDays;
+            }
         }
-        $price = $item['price_per_night'] * $numberOfDays;
     } else {
         $s = $conn->prepare("SELECT price, capacity, start_time, duration_hours FROM bundles WHERE id = ? AND is_active = 1");
         $s->bind_param('i', $itemId);
