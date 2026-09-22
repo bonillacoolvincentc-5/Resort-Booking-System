@@ -868,13 +868,9 @@ $userId = $_SESSION['user_id'];
                             <div class="metric-lbl">Elevation Gain</div>
                             <div id="estElev" class="metric-num">-- m</div>
                         </div>
-                        <div class="metric-box">
+                        <div class="metric-box" style="grid-column: span 2;">
                             <div class="metric-lbl">Trail Route Type</div>
                             <div id="estDiff" class="metric-num"><span class="badge bg-success">Fixed Resort Route</span></div>
-                        </div>
-                        <div class="metric-box">
-                            <div class="metric-lbl">Trail Condition</div>
-                            <div class="metric-num" style="color:#10b981; font-size:0.85rem;">🟢 Open & Dry</div>
                         </div>
                     </div>
 
