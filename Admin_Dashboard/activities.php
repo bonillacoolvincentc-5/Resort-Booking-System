@@ -90,8 +90,11 @@ $accQuery = "
         a.id,
         a.name,
         a.type,
+        a.tour_type,
         a.description,
+        a.base_capacity,
         a.capacity,
+        a.extra_person_fee,
         a.price_per_night,
         a.price_per_day,
         a.amenities,
@@ -301,11 +304,15 @@ while ($row = $accResult->fetch_assoc()) {
                             <?php
                                 $statusClass = $acc['is_active'] ? 'status-active' : 'status-inactive';
                                 $statusText = $acc['is_active'] ? 'Active' : 'Inactive';
-                                $icon = 'bi-house-door';
-                                if ($acc['type'] === 'cottage') $icon = 'bi-shop';
-                                elseif ($acc['type'] === 'stay-in') $icon = 'bi-building';
-                                
+
+                                $typeVal = strtolower($acc['type'] ?? 'room');
+                                $isCottage = ($typeVal === 'cottage');
+                                $icon = $isCottage ? 'bi-shop' : 'bi-house-door';
+
                                 $price = number_format($acc['price_per_night'], 2);
+                                $baseCap = !empty($acc['base_capacity']) ? $acc['base_capacity'] : 1;
+                                $maxCap = !empty($acc['capacity']) ? $acc['capacity'] : $baseCap;
+                                $extraFee = floatval($acc['extra_person_fee'] ?? 0);
                             ?>
                             <div class="activity-card">
                                 <div class="activity-image position-relative">
@@ -314,9 +321,6 @@ while ($row = $accResult->fetch_assoc()) {
                                     <?php else: ?>
                                         <i class="bi <?php echo $icon; ?>"></i>
                                     <?php endif; ?>
-                                    <span class="badge bg-primary position-absolute" style="top: 10px; left: 10px; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; background: rgba(16,185,129,0.85) !important; backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.15);">
-                                        <?php echo ucfirst($acc['type']); ?>
-                                    </span>
                                 </div>
                                 <div class="activity-content">
                                     <div class="activity-header">
@@ -326,16 +330,20 @@ while ($row = $accResult->fetch_assoc()) {
                                         </div>
                                         <span class="activity-status <?php echo $statusClass; ?>"><?php echo $statusText; ?></span>
                                     </div>
-                                    <div class="activity-stats">
-                                        <div class="stat-item">
+                                    <div class="activity-stats" style="flex-wrap: wrap;">
+                                        <div class="stat-item" style="min-width: 90px;">
                                             <div class="stat-value">&#8369;<?php echo $price; ?></div>
                                             <div class="stat-label">Per Night</div>
                                         </div>
-                                        <div class="stat-item">
-                                            <div class="stat-value"><i class="bi bi-people me-1"></i><?php echo $acc['capacity']; ?></div>
-                                            <div class="stat-label">Max Guests</div>
+                                        <div class="stat-item" style="min-width: 90px;">
+                                            <div class="stat-value"><i class="bi bi-people me-1"></i><?php echo ($baseCap == $maxCap) ? $maxCap : ($baseCap . '-' . $maxCap); ?></div>
+                                            <div class="stat-label">Base/Max Guests</div>
                                         </div>
-                                        <div class="stat-item">
+                                        <div class="stat-item" style="min-width: 90px;">
+                                            <div class="stat-value">&#8369;<?php echo number_format($extraFee, 2); ?></div>
+                                            <div class="stat-label">Extra Person</div>
+                                        </div>
+                                        <div class="stat-item" style="min-width: 90px;">
                                             <div class="stat-value"><?php echo $acc['total_bookings']; ?></div>
                                             <div class="stat-label">Bookings</div>
                                         </div>
@@ -479,32 +487,66 @@ while ($row = $accResult->fetch_assoc()) {
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group-modern">
-                                    <label class="form-label-modern">Type / Category</label>
+                                    <label class="form-label-modern">Category</label>
                                     <select class="form-control-modern" id="accType" name="type" required>
-                                        <option value="room">Overnight Room</option>
+                                        <option value="room">Room</option>
                                         <option value="cottage">Cottage</option>
-                                        <option value="stay-in">Stay-in</option>
                                     </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group-modern">
+                                    <label class="form-label-modern">Stay / Tour Option <small style="color: var(--text-muted); font-size: 0.75rem;">(Check one or both)</small></label>
+                                    <div class="d-flex align-items-center gap-4 mt-2" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 0.55rem 0.9rem; min-height: 48px;">
+                                        <div class="form-check mb-0">
+                                            <input class="form-check-input" type="checkbox" name="tour_types[]" id="accTourOvernight" value="overnight" style="cursor: pointer;">
+                                            <label class="form-check-label text-white" for="accTourOvernight" style="cursor: pointer; user-select: none;">
+                                                <i class="bi bi-moon-stars me-1 text-info"></i> Overnight
+                                            </label>
+                                        </div>
+                                        <div class="form-check mb-0">
+                                            <input class="form-check-input" type="checkbox" name="tour_types[]" id="accTourDay" value="day_tour" style="cursor: pointer;" onchange="toggleDayTourSlots()">
+                                            <label class="form-check-label text-white" for="accTourDay" style="cursor: pointer; user-select: none;">
+                                                <i class="bi bi-sun me-1 text-warning"></i> Day Tour
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group-modern">
+                                    <label class="form-label-modern">Price per Night (₱)</label>
+                                    <input type="number" step="0.01" class="form-control-modern" id="accPriceNight" name="price_per_night" required value="0.00">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group-modern">
+                                    <label class="form-label-modern">Price per Day (₱)</label>
+                                    <input type="number" step="0.01" class="form-control-modern" id="accPriceDay" name="price_per_day" required value="0.00">
                                 </div>
                             </div>
                         </div>
                         <div class="row">
                             <div class="col-md-4">
                                 <div class="form-group-modern">
-                                    <label class="form-label-modern">Price per Night (₱)</label>
-                                    <input type="number" step="0.01" class="form-control-modern" id="accPriceNight" name="price_per_night" required value="0.00">
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="form-group-modern">
-                                    <label class="form-label-modern">Price per Day (₱)</label>
-                                    <input type="number" step="0.01" class="form-control-modern" id="accPriceDay" name="price_per_day" required value="0.00">
+                                    <label class="form-label-modern">Base Capacity (Guests)</label>
+                                    <input type="number" min="1" class="form-control-modern" id="accBaseCapacity" name="base_capacity" required value="2">
                                 </div>
                             </div>
                             <div class="col-md-4">
                                 <div class="form-group-modern">
                                     <label class="form-label-modern">Max Capacity (Guests)</label>
-                                    <input type="number" class="form-control-modern" id="accCapacity" name="capacity" required value="4">
+                                    <input type="number" min="1" class="form-control-modern" id="accCapacity" name="capacity" required value="4">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group-modern">
+                                    <label class="form-label-modern">Extra Person Fee (₱)</label>
+                                    <input type="number" step="0.01" min="0" class="form-control-modern" id="accExtraPersonFee" name="extra_person_fee" required value="0.00">
                                 </div>
                             </div>
                         </div>
@@ -710,21 +752,18 @@ while ($row = $accResult->fetch_assoc()) {
         // ── ACCOMMODATIONS & AMENITIES MANAGEMENT ────────────────────────
         let accommodationModal;
 
-        document.addEventListener("DOMContentLoaded", function() {
-            const typeSelect = document.getElementById('accType'); 
+        function toggleDayTourSlots() {
+            const dayBox = document.getElementById('accTourDay');
             const timeSlotWrapper = document.getElementById('timeSlotWrapper');
+            if (dayBox && timeSlotWrapper) {
+                timeSlotWrapper.style.display = dayBox.checked ? 'block' : 'none';
+            }
+        }
 
-            if (typeSelect && timeSlotWrapper) {
-                const toggleTimeSlots = () => {
-                    if (typeSelect.value.toLowerCase() === 'cottage') {
-                        timeSlotWrapper.style.display = 'block';
-                    } else {
-                        timeSlotWrapper.style.display = 'none';
-                    }
-                };
-                
-                typeSelect.addEventListener('change', toggleTimeSlots);
-                // Initial check will be handled in openAddAccommodationModal or editAccommodation
+        document.addEventListener("DOMContentLoaded", function() {
+            const dayBox = document.getElementById('accTourDay');
+            if (dayBox) {
+                dayBox.addEventListener('change', toggleDayTourSlots);
             }
         });
 
@@ -734,6 +773,14 @@ while ($row = $accResult->fetch_assoc()) {
             document.getElementById('accommodationId').value = '';
             document.getElementById('accStatus').value = '1';
             document.getElementById('accType').value = 'room';
+            document.getElementById('accTourOvernight').checked = true;
+            document.getElementById('accTourDay').checked = false;
+            document.getElementById('accBaseCapacity').value = '2';
+            document.getElementById('accCapacity').value = '4';
+            document.getElementById('accExtraPersonFee').value = '0.00';
+            document.getElementById('accPriceNight').value = '0.00';
+            document.getElementById('accPriceDay').value = '0.00';
+            toggleDayTourSlots();
             
             if (!accommodationModal) {
                 accommodationModal = new bootstrap.Modal(document.getElementById('accommodationModal'));
@@ -752,14 +799,33 @@ while ($row = $accResult->fetch_assoc()) {
                     document.getElementById('accommodationModalTitle').textContent = 'Edit Amenity / Room';
                     document.getElementById('accommodationId').value = acc.id;
                     document.getElementById('accName').value = acc.name;
-                    document.getElementById('accType').value = acc.type;
+                    
+                    // Dropdown: Room or Cottage
+                    const typeVal = String(acc.type || 'room').toLowerCase();
+                    document.getElementById('accType').value = (typeVal === 'cottage') ? 'cottage' : 'room';
+                    
+                    // Checkboxes: Overnight and/or Day Tour
+                    const tourVal = String(acc.tour_type || '').toLowerCase();
+                    if (tourVal) {
+                        document.getElementById('accTourOvernight').checked = tourVal.includes('overnight');
+                        document.getElementById('accTourDay').checked = tourVal.includes('day');
+                    } else {
+                        // fallback
+                        document.getElementById('accTourOvernight').checked = (typeVal !== 'cottage' || parseFloat(acc.price_per_night) > 0);
+                        document.getElementById('accTourDay').checked = (typeVal === 'cottage' || parseFloat(acc.price_per_day) > 0);
+                    }
+                    
                     document.getElementById('accPriceNight').value = acc.price_per_night;
                     document.getElementById('accPriceDay').value = acc.price_per_day;
+                    document.getElementById('accBaseCapacity').value = acc.base_capacity !== undefined ? acc.base_capacity : 1;
                     document.getElementById('accCapacity').value = acc.capacity;
+                    document.getElementById('accExtraPersonFee').value = acc.extra_person_fee !== undefined ? acc.extra_person_fee : '0.00';
                     document.getElementById('accDescription').value = acc.description || '';
                     document.getElementById('accAmenities').value = acc.amenities || '';
                     document.getElementById('accStatus').value = acc.is_active;
                     
+                    toggleDayTourSlots();
+
                     if (!accommodationModal) {
                         accommodationModal = new bootstrap.Modal(document.getElementById('accommodationModal'));
                     }
@@ -775,16 +841,30 @@ while ($row = $accResult->fetch_assoc()) {
 
         async function saveAccommodation() {
             const form = document.getElementById('accommodationForm');
-            const formData = new FormData(form);
+            const overnightChecked = document.getElementById('accTourOvernight').checked;
+            const dayChecked = document.getElementById('accTourDay').checked;
             
-            const accId = document.getElementById('accommodationId').value;
-            formData.append('action', accId ? 'edit' : 'add');
-            
+            if (!overnightChecked && !dayChecked) {
+                alert('Please select at least one Stay / Tour option (Overnight and/or Day Tour).');
+                return;
+            }
+
             const name = document.getElementById('accName').value.trim();
             if (!name) {
                 alert('Please enter an amenity or room name');
                 return;
             }
+
+            const baseCap = parseInt(document.getElementById('accBaseCapacity').value) || 1;
+            const maxCap = parseInt(document.getElementById('accCapacity').value) || 1;
+            if (baseCap > maxCap) {
+                alert('Base capacity cannot exceed maximum capacity.');
+                return;
+            }
+
+            const formData = new FormData(form);
+            const accId = document.getElementById('accommodationId').value;
+            formData.append('action', accId ? 'edit' : 'add');
 
             try {
                 const response = await fetch('../php/add_edit_accommodation.php', {

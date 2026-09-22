@@ -851,11 +851,13 @@ while ($r = $res->fetch_assoc()) $bundles[] = $r;
 
     // ── Type badges / icons ───────────────────────────────────────────────────
     const TYPE_META = {
-        room:          { badge:'badge-room',     label:'Room',      icon:'bi-house-door' },
-        cottage:       { badge:'badge-cottage',  label:'Cottage',   icon:'bi-tree' },
-        'stay-in':     { badge:'badge-stay-in',  label:'Stay-In',   icon:'bi-moon-stars' },
-        activity:      { badge:'badge-activity', label:'Activity',  icon:'bi-lightning-charge' },
-        bundle:        { badge:'badge-bundle',   label:'Bundle',    icon:'bi-box-seam' },
+        room:            { badge:'badge-room',     label:'Room',           icon:'bi-house-door' },
+        cottage:         { badge:'badge-cottage',  label:'Cottage',        icon:'bi-tree' },
+        'room,cottage':  { badge:'badge-room',     label:'Room & Cottage', icon:'bi-buildings' },
+        'cottage,room':  { badge:'badge-room',     label:'Room & Cottage', icon:'bi-buildings' },
+        'stay-in':       { badge:'badge-stay-in',  label:'Stay-In',        icon:'bi-moon-stars' },
+        activity:        { badge:'badge-activity', label:'Activity',       icon:'bi-lightning-charge' },
+        bundle:          { badge:'badge-bundle',   label:'Bundle',         icon:'bi-box-seam' },
     };
 
     // ── Render catalog grid ───────────────────────────────────────────────────
@@ -864,9 +866,10 @@ while ($r = $res->fetch_assoc()) $bundles[] = $r;
         const term = currentSearch.toLowerCase();
 
         const filtered = CATALOG.filter(item => {
+            const types = (item.type || '').split(',').map(s => s.trim());
             const catMatch = currentCat === 'all'
-                || item.type === currentCat
-                || (currentCat === 'room' && item.type === 'stay-in'); // treat stay-in as room tab
+                || types.includes(currentCat)
+                || (currentCat === 'room' && types.includes('stay-in'));
             const nameMatch = item.name.toLowerCase().includes(term)
                 || (item.description || '').toLowerCase().includes(term);
             return catMatch && nameMatch;

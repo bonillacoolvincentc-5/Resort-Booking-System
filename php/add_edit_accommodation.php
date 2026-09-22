@@ -20,18 +20,30 @@ $action = $_POST['action'] ?? $_GET['action'] ?? '';
 if ($action === 'add' || $action === 'edit') {
     $accId = $_POST['accommodation_id'] ?? '';
     $name = trim($_POST['name'] ?? '');
-    $type = trim($_POST['type'] ?? 'room');
+    
+    // Type handling (dropdown: 'room' or 'cottage')
+    $rawType = strtolower(trim($_POST['type'] ?? 'room'));
+    $type = in_array($rawType, ['room', 'cottage']) ? $rawType : 'room';
+
+    // Tour / Stay Type handling (checkboxes: 'overnight', 'day_tour', or both)
+    $tourTypes = $_POST['tour_types'] ?? $_POST['tour_type'] ?? [];
+    if (!is_array($tourTypes)) {
+        $tourTypes = array_filter(array_map('trim', explode(',', (string)$tourTypes)));
+    }
+    $validTourTypes = array_values(array_intersect($tourTypes, ['overnight', 'day_tour']));
+    if (empty($validTourTypes)) {
+        $validTourTypes = ['overnight'];
+    }
+    $tourType = implode(',', $validTourTypes);
+
     $description = trim($_POST['description'] ?? '');
+    $baseCapacity = max(1, intval($_POST['base_capacity'] ?? 1));
+    $capacity = max($baseCapacity, intval($_POST['capacity'] ?? 2));
+    $extraPersonFee = max(0, floatval($_POST['extra_person_fee'] ?? 0));
     $pricePerNight = floatval($_POST['price_per_night'] ?? 0);
     $pricePerDay = floatval($_POST['price_per_day'] ?? 0);
-    $capacity = intval($_POST['capacity'] ?? 2);
     $amenities = trim($_POST['amenities'] ?? '');
     $isActive = intval($_POST['is_active'] ?? 1);
-    
-    // Ensure valid enum type
-    if (!in_array($type, ['room', 'cottage', 'stay-in'])) {
-        $type = 'room';
-    }
     
     // Handle image upload
     $imagePath = null;
@@ -53,15 +65,14 @@ if ($action === 'add' || $action === 'edit') {
     
     try {
         if ($action === 'add') {
-            $query = "INSERT INTO accommodations (name, type, description, capacity, price_per_night, price_per_day, amenities, image_url, is_active) 
-                      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            $query = "INSERT INTO accommodations (name, type, tour_type, description, base_capacity, capacity, extra_person_fee, price_per_night, price_per_day, amenities, image_url, is_active) 
+                      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             $stmt = $conn->prepare($query);
-            // s = name, s = type, s = desc, i = cap, d = night, d = day, s = amen, s = img, i = active
-            $stmt->bind_param('sssiddssi', $name, $type, $description, $capacity, $pricePerNight, $pricePerDay, $amenities, $imagePath, $isActive);
+            $stmt->bind_param('ssssiidddssi', $name, $type, $tourType, $description, $baseCapacity, $capacity, $extraPersonFee, $pricePerNight, $pricePerDay, $amenities, $imagePath, $isActive);
             $stmt->execute();
             
             $item_id = $conn->insert_id;
-            if ($type === 'cottage' && !empty($_POST['slot_label']) && !empty($_POST['start_time']) && !empty($_POST['end_time'])) {
+            if ((in_array('day_tour', $validTourTypes) || $type === 'cottage') && !empty($_POST['slot_label']) && !empty($_POST['start_time']) && !empty($_POST['end_time'])) {
                 $ts_stmt = $conn->prepare("INSERT INTO time_slots (accommodation_id, label, start_time, end_time, is_active) VALUES (?, ?, ?, ?, 1)");
                 foreach ($_POST['slot_label'] as $index => $label) {
                     $start = $_POST['start_time'][$index];
@@ -82,13 +93,13 @@ if ($action === 'add' || $action === 'edit') {
             }
             
             if ($imagePath) {
-                $query = "UPDATE accommodations SET name = ?, type = ?, description = ?, capacity = ?, price_per_night = ?, price_per_day = ?, amenities = ?, image_url = ?, is_active = ? WHERE id = ?";
+                $query = "UPDATE accommodations SET name = ?, type = ?, tour_type = ?, description = ?, base_capacity = ?, capacity = ?, extra_person_fee = ?, price_per_night = ?, price_per_day = ?, amenities = ?, image_url = ?, is_active = ? WHERE id = ?";
                 $stmt = $conn->prepare($query);
-                $stmt->bind_param('sssiddssii', $name, $type, $description, $capacity, $pricePerNight, $pricePerDay, $amenities, $imagePath, $isActive, $accId);
+                $stmt->bind_param('ssssiidddssii', $name, $type, $tourType, $description, $baseCapacity, $capacity, $extraPersonFee, $pricePerNight, $pricePerDay, $amenities, $imagePath, $isActive, $accId);
             } else {
-                $query = "UPDATE accommodations SET name = ?, type = ?, description = ?, capacity = ?, price_per_night = ?, price_per_day = ?, amenities = ?, is_active = ? WHERE id = ?";
+                $query = "UPDATE accommodations SET name = ?, type = ?, tour_type = ?, description = ?, base_capacity = ?, capacity = ?, extra_person_fee = ?, price_per_night = ?, price_per_day = ?, amenities = ?, is_active = ? WHERE id = ?";
                 $stmt = $conn->prepare($query);
-                $stmt->bind_param('sssiddsii', $name, $type, $description, $capacity, $pricePerNight, $pricePerDay, $amenities, $isActive, $accId);
+                $stmt->bind_param('ssssiidddsii', $name, $type, $tourType, $description, $baseCapacity, $capacity, $extraPersonFee, $pricePerNight, $pricePerDay, $amenities, $isActive, $accId);
             }
             $stmt->execute();
             
