@@ -246,15 +246,11 @@ while ($row = $accResult->fetch_assoc()) {
                                     <?php else: ?>
                                         <i class="bi <?php echo $icon; ?>"></i>
                                     <?php endif; ?>
-                                    <span class="badge bg-primary position-absolute" style="top: 10px; left: 10px; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; background: rgba(15,23,42,0.85) !important; backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.15);">
-                                        Activity
-                                    </span>
                                 </div>
                                 <div class="activity-content">
                                     <div class="activity-header">
                                         <div>
                                             <h3 class="activity-title"><?php echo htmlspecialchars($activity['name']); ?></h3>
-                                            <p class="activity-description"><?php echo htmlspecialchars($activity['description'] ?: 'No description available.'); ?></p>
                                         </div>
                                         <span class="activity-status <?php echo $statusClass; ?>"><?php echo $statusText; ?></span>
                                     </div>
@@ -326,7 +322,6 @@ while ($row = $accResult->fetch_assoc()) {
                                     <div class="activity-header">
                                         <div>
                                             <h3 class="activity-title"><?php echo htmlspecialchars($acc['name']); ?></h3>
-                                            <p class="activity-description"><?php echo htmlspecialchars($acc['description'] ?: 'No description available.'); ?></p>
                                         </div>
                                         <span class="activity-status <?php echo $statusClass; ?>"><?php echo $statusText; ?></span>
                                     </div>
@@ -348,11 +343,6 @@ while ($row = $accResult->fetch_assoc()) {
                                             <div class="stat-label">Bookings</div>
                                         </div>
                                     </div>
-                                    <?php if (!empty($acc['amenities'])): ?>
-                                        <div style="font-size: 0.78rem; color: var(--text-secondary); margin-bottom: 0.75rem; background: rgba(255,255,255,0.03); padding: 0.5rem 0.75rem; border-radius: 0.35rem;">
-                                            <i class="bi bi-stars text-warning me-1"></i> <strong>Features:</strong> <?php echo htmlspecialchars(mb_strimwidth($acc['amenities'], 0, 65, '...')); ?>
-                                        </div>
-                                    <?php endif; ?>
                                     <div class="activity-actions">
                                         <button class="btn-modern btn-primary" onclick="editAccommodation(<?php echo $acc['id']; ?>)">
                                             <i class="bi bi-pencil"></i> Edit
