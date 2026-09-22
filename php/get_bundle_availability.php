@@ -1,22 +1,27 @@
 <?php
 /**
- * Bundle Availability API
- * Returns the availability status of a bundle for a specific month and year.
+ * Bundle & Package Availability API
+ * Returns the availability status of a bundle, accommodation, or activity for a specific month and year.
  * Statuses: available (Green), limited (Yellow), full (Red), blocked (Gray)
  */
 
-session_start();
-require_once '../phpAuthentication/db_config.php';
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+require_once __DIR__ . '/../phpAuthentication/db_config.php';
 
-header('Content-Type: application/json');
+if (!headers_sent()) {
+    header('Content-Type: application/json');
+}
 
 // Get parameters
-$bundleId = isset($_GET['bundle_id']) ? intval($_GET['bundle_id']) : null;
-$year = isset($_GET['year']) ? intval($_GET['year']) : date('Y');
-$month = isset($_GET['month']) ? intval($_GET['month']) : date('n');
+$itemId = isset($_GET['item_id']) ? intval($_GET['item_id']) : (isset($_GET['bundle_id']) ? intval($_GET['bundle_id']) : 0);
+$type = isset($_GET['type']) ? trim($_GET['type']) : (isset($_GET['package_type']) ? trim($_GET['package_type']) : '');
+$year = isset($_GET['year']) ? intval($_GET['year']) : (int)date('Y');
+$month = isset($_GET['month']) ? intval($_GET['month']) : (int)date('n');
 
-if (!$bundleId) {
-    echo json_encode(['success' => false, 'message' => 'Bundle ID is required']);
+if (!$itemId) {
+    echo json_encode(['success' => false, 'message' => 'Item/Bundle ID is required']);
     exit();
 }
 
@@ -26,18 +31,79 @@ if ($month < 1 || $month > 12) {
 }
 
 try {
-    // 1. Get Bundle Capacity
-    $stmt = $conn->prepare("SELECT capacity FROM bundles WHERE id = ? AND is_active = 1");
-    $stmt->bind_param('i', $bundleId);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    $bundle = $result->fetch_assoc();
+    // Determine package type if not explicitly provided or if provided type not found
+    $item = null;
+    $packageType = $type;
 
-    if (!$bundle) {
-        throw new Exception("Bundle not found or inactive.");
+    if ($packageType === 'accommodation') {
+        $stmt = $conn->prepare("SELECT id, name, capacity FROM accommodations WHERE id = ? AND is_active = 1");
+        $stmt->bind_param('i', $itemId);
+        $stmt->execute();
+        $item = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+    } elseif ($packageType === 'activity') {
+        $stmt = $conn->prepare("SELECT id, name, capacity FROM activities WHERE id = ? AND is_active = 1");
+        $stmt->bind_param('i', $itemId);
+        $stmt->execute();
+        $item = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+    } elseif ($packageType === 'bundle') {
+        $stmt = $conn->prepare("SELECT id, name, capacity FROM bundles WHERE id = ? AND is_active = 1");
+        $stmt->bind_param('i', $itemId);
+        $stmt->execute();
+        $item = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
     }
-    
-    $totalCapacity = $bundle['capacity'];
+
+    // Auto-detection fallback if type was not supplied or item not found in specified type
+    if (!$item) {
+        // Try bundles first
+        $stmt = $conn->prepare("SELECT id, name, capacity FROM bundles WHERE id = ? AND is_active = 1");
+        $stmt->bind_param('i', $itemId);
+        $stmt->execute();
+        $item = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+        if ($item) {
+            $packageType = 'bundle';
+        } else {
+            // Try accommodations
+            $stmt = $conn->prepare("SELECT id, name, capacity FROM accommodations WHERE id = ? AND is_active = 1");
+            $stmt->bind_param('i', $itemId);
+            $stmt->execute();
+            $item = $stmt->get_result()->fetch_assoc();
+            $stmt->close();
+            if ($item) {
+                $packageType = 'accommodation';
+            } else {
+                // Try activities
+                $stmt = $conn->prepare("SELECT id, name, capacity FROM activities WHERE id = ? AND is_active = 1");
+                $stmt->bind_param('i', $itemId);
+                $stmt->execute();
+                $item = $stmt->get_result()->fetch_assoc();
+                $stmt->close();
+                if ($item) {
+                    $packageType = 'activity';
+                }
+            }
+        }
+    }
+
+    if (!$item) {
+        throw new Exception("Package item not found or inactive.");
+    }
+
+    // Capacity logic
+    if ($packageType === 'accommodation') {
+        // For a specific accommodation unit/villa/room, 1 booking occupies the unit
+        $totalCapacity = 1;
+        $itemColumn = 'accommodation_id';
+    } elseif ($packageType === 'activity') {
+        $totalCapacity = max(1, intval($item['capacity']));
+        $itemColumn = 'activity_id';
+    } else {
+        $totalCapacity = max(1, intval($item['capacity']));
+        $itemColumn = 'bundle_id';
+    }
 
     // Define dates
     $startDate = sprintf('%04d-%02d-01', $year, $month);
@@ -47,7 +113,7 @@ try {
     $days = [];
     $cursor = new DateTime($startDate);
     $end = new DateTime($endDate);
-    
+
     while ($cursor <= $end) {
         $days[$cursor->format('Y-m-d')] = [
             'booked_count' => 0,
@@ -57,6 +123,17 @@ try {
     }
 
     // 2. Fetch Blocked Dates
+    $conn->query("
+        CREATE TABLE IF NOT EXISTS `blocked_dates` (
+            `id` int(11) NOT NULL AUTO_INCREMENT,
+            `blocked_date` date NOT NULL,
+            `reason` text DEFAULT NULL,
+            `blocked_by` int(11) DEFAULT NULL,
+            `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+            PRIMARY KEY (`id`),
+            UNIQUE KEY `unique_blocked_date` (`blocked_date`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    ");
     $blockedStmt = $conn->prepare("
         SELECT blocked_date 
         FROM blocked_dates 
@@ -71,18 +148,19 @@ try {
             $days[$row['blocked_date']]['status'] = 'blocked';
         }
     }
+    $blockedStmt->close();
 
-    // 3. Fetch Bookings overlapping this month for this bundle
+    // 3. Fetch Bookings overlapping this month for this item
     $bookingStmt = $conn->prepare("
         SELECT check_in_date, check_out_date 
         FROM bookings 
-        WHERE booking_type = 'bundle' 
-          AND bundle_id = ? 
-          AND status_id IN (SELECT id FROM booking_status WHERE name IN ('pending_review', 'approved'))
+        WHERE booking_type = ? 
+          AND $itemColumn = ? 
+          AND status_id IN (SELECT id FROM booking_status WHERE name IN ('pending_review', 'approved', 'checked_in'))
           AND check_in_date <= ? 
           AND (check_out_date IS NULL OR check_out_date >= ?)
     ");
-    $bookingStmt->bind_param('iss', $bundleId, $endDate, $startDate);
+    $bookingStmt->bind_param('siss', $packageType, $itemId, $endDate, $startDate);
     $bookingStmt->execute();
     $bookingRes = $bookingStmt->get_result();
 
@@ -95,7 +173,12 @@ try {
 
         $dayCursor = new DateTime($from);
         $dayEnd = new DateTime($to);
-        
+
+        // If multi-day stay and checking out on or after this date, departure day morning check-out frees up the date
+        if ($checkOut > $checkIn && $to === $checkOut) {
+            $dayEnd->modify('-1 day');
+        }
+
         while ($dayCursor <= $dayEnd) {
             $dateKey = $dayCursor->format('Y-m-d');
             if (isset($days[$dateKey]) && $days[$dateKey]['status'] !== 'blocked') {
@@ -104,6 +187,7 @@ try {
             $dayCursor->modify('+1 day');
         }
     }
+    $bookingStmt->close();
 
     // 4. Determine status based on capacity
     foreach ($days as $dateKey => &$day) {
@@ -114,27 +198,29 @@ try {
         $count = $day['booked_count'];
         if ($count >= $totalCapacity) {
             $day['status'] = 'full';
-        } else if ($count > 0 && ($totalCapacity - $count) <= 2) { 
+        } else if ($packageType !== 'accommodation' && $count > 0 && ($totalCapacity - $count) <= 2) {
             // If only 1 or 2 slots left, mark as limited
             $day['status'] = 'limited';
-        } else if ($count > 0 && $count >= ($totalCapacity / 2)) {
+        } else if ($packageType !== 'accommodation' && $count > 0 && $count >= ($totalCapacity / 2)) {
             // Also mark as limited if half full
             $day['status'] = 'limited';
         } else {
             $day['status'] = 'available';
         }
-        
-        // Remove count to prevent admin info leakage
+
         unset($day['booked_count']);
     }
     unset($day);
 
     echo json_encode([
-        'success' => true,
-        'year' => $year,
-        'month' => $month,
+        'success'        => true,
+        'package_type'   => $packageType,
+        'item_id'        => $itemId,
+        'item_name'      => $item['name'],
+        'year'           => $year,
+        'month'          => $month,
         'total_capacity' => $totalCapacity,
-        'days' => $days
+        'days'           => $days
     ]);
 
 } catch (Exception $e) {
@@ -143,4 +229,3 @@ try {
         'message' => $e->getMessage()
     ]);
 }
-?>

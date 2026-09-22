@@ -1219,10 +1219,14 @@ $userPhone = $_SESSION['user_phone'] ?? '';
             if (!selectedBundle) return;
             DOM.calGrid.style.opacity = '0.5';
             try {
-                const res = await fetch(`../php/get_bundle_availability.php?bundle_id=${selectedBundle.id}&year=${currentYear}&month=${currentMonth}`);
+                const pkgType = selectedBundle.package_type || 'bundle';
+                const res = await fetch(`../php/get_bundle_availability.php?bundle_id=${selectedBundle.id}&item_id=${selectedBundle.id}&package_type=${pkgType}&type=${pkgType}&year=${currentYear}&month=${currentMonth}`);
                 const data = await res.json();
                 availData = data.success ? data.days : {};
-            } catch(e) { availData = {}; }
+            } catch(e) {
+                console.error("fetchAvailability error:", e);
+                availData = {};
+            }
             DOM.calGrid.style.opacity = '1';
             renderCalendarGrid();
         }
@@ -1256,13 +1260,19 @@ $userPhone = $_SESSION['user_phone'] ?? '';
             for (let d = 1; d <= daysInMonth; d++) {
                 const dateStr = `${currentYear}-${String(currentMonth).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
                 let statusClass = '', isSelectable = false;
-                if (selectedBundle && availData[dateStr]) {
-                    const status = availData[dateStr].status;
+                if (selectedBundle) {
+                    const dayInfo = availData[dateStr];
+                    const status = dayInfo ? dayInfo.status : 'available';
                     statusClass = `status-${status}`;
                     // Disallow today (<=) — only dates strictly after today are bookable
-                    if (dateStr > todayStr && (status === 'available' || status === 'limited')) isSelectable = true;
-                    else if (dateStr <= todayStr) statusClass = 'status-blocked';
-                } else if (dateStr <= todayStr) statusClass = 'status-blocked';
+                    if (dateStr > todayStr && (status === 'available' || status === 'limited')) {
+                        isSelectable = true;
+                    } else if (dateStr <= todayStr) {
+                        statusClass = 'status-blocked';
+                    }
+                } else if (dateStr <= todayStr) {
+                    statusClass = 'status-blocked';
+                }
 
                 let classes = `cal-cell ${statusClass}`;
                 if (selectedDate === dateStr) classes += ' selected';
@@ -1483,13 +1493,19 @@ $userPhone = $_SESSION['user_phone'] ?? '';
         function pad2(n) { return String(n).padStart(2, '0'); }
 
         function computeBundleStay(bundle, dateStr) {
-            let startTime = (bundle && bundle.start_time ? String(bundle.start_time) : '00:00:00');
+            let startTime = (bundle && bundle.start_time ? String(bundle.start_time) : '');
+            if (!startTime) {
+                startTime = (bundle && bundle.package_type === 'activity') ? '09:00:00' : '14:00:00';
+            }
             if (/^\d{2}:\d{2}$/.test(startTime)) startTime += ':00';
-            if (!/^\d{2}:\d{2}:\d{2}/.test(startTime)) startTime = '00:00:00';
+            if (!/^\d{2}:\d{2}:\d{2}/.test(startTime)) startTime = '14:00:00';
             startTime = startTime.substring(0, 8);
 
-            const parsedHours = parseInt(bundle && bundle.duration_hours, 10);
-            const durationHours = Number.isFinite(parsedHours) && parsedHours > 0 ? parsedHours : 24;
+            const parsedHours = parseInt(bundle && (bundle.duration_hours || bundle.min_duration_hours), 10);
+            let durationHours = Number.isFinite(parsedHours) && parsedHours > 0 ? parsedHours : 24;
+            if (bundle && bundle.package_type === 'accommodation' && !bundle.duration_hours) {
+                durationHours = 22; // 14:00 check-in to 12:00 check-out next day (1 night)
+            }
 
             const checkIn = new Date(`${dateStr}T${startTime}`);
             const checkOut = new Date(checkIn.getTime() + durationHours * 60 * 60 * 1000);
@@ -1514,7 +1530,8 @@ $userPhone = $_SESSION['user_phone'] ?? '';
             }
 
             console.log("Starting submitWithProof...", {
-                bundle_id: selectedBundle.id,
+                item_id: selectedBundle.id,
+                package_type: selectedBundle.package_type,
                 selectedDate: selectedDate,
                 file: proofFile.name,
                 fileSize: proofFile.size
@@ -1527,10 +1544,18 @@ $userPhone = $_SESSION['user_phone'] ?? '';
             showLoader();
 
             const stay = computeBundleStay(selectedBundle, selectedDate);
+            const pkgType = selectedBundle.package_type || 'bundle';
 
             const fd = new FormData();
-            fd.append('booking_type',    'bundle');
-            fd.append('bundle_id',       selectedBundle.id);
+            fd.append('booking_type',    pkgType);
+            if (pkgType === 'accommodation') {
+                fd.append('accommodation_id', selectedBundle.id);
+            } else if (pkgType === 'activity') {
+                fd.append('activity_id', selectedBundle.id);
+            } else {
+                fd.append('bundle_id', selectedBundle.id);
+            }
+            fd.append('item_id',         selectedBundle.id);
             fd.append('full_name',       '<?= htmlspecialchars(addslashes($userName), ENT_QUOTES, "UTF-8") ?>');
             fd.append('email',           '<?= htmlspecialchars(addslashes($userEmail), ENT_QUOTES, "UTF-8") ?>');
             fd.append('phone_number',    '<?= htmlspecialchars(addslashes($userPhone), ENT_QUOTES, "UTF-8") ?>' || 'N/A');
