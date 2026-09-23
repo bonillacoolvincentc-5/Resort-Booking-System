@@ -6,7 +6,6 @@ $currentPage = basename($_SERVER['PHP_SELF']);
 $pageAliases = [
     'dashboard'     => ['dashboard.php'],
     'book'          => ['create-booking.php', 'book.php', 'packages.php'],
-    'bundle'        => ['bundle-booking.php', 'bundle.php', 'bundles.php'],
     'bookings'      => ['my-bookings.php', 'bookings.php', 'my_bookings.php'],
     'trail'         => ['trail-guide.php', 'trail.php', 'activities.php'],
     'profile'       => ['profile.php'],
@@ -413,11 +412,6 @@ if (isset($_SESSION['user_id'])) {
                     </a>
                 </li>
                 <li class="nav-item mobile-hide-in-hamburger">
-                    <a class="nav-link <?php echo navActive('bundle'); ?>" href="bundle-booking.php">
-                        <i class="bi bi-box-seam"></i> Bundle Booking
-                    </a>
-                </li>
-                <li class="nav-item mobile-hide-in-hamburger">
                     <a class="nav-link <?php echo navActive('trail'); ?>" href="trail-guide.php">
                         <i class="bi bi-compass"></i> Trail Guide
                     </a>
@@ -454,10 +448,6 @@ if (isset($_SESSION['user_id'])) {
     <a class="mbn-item <?php echo navActive('book'); ?>" href="create-booking.php" id="mbn-create-booking">
         <span class="mbn-icon"><i class="bi bi-plus-circle"></i></span>
         <span>Book</span>
-    </a>
-    <a class="mbn-item <?php echo navActive('bundle'); ?>" href="bundle-booking.php" id="mbn-bundle">
-        <span class="mbn-icon"><i class="bi bi-box-seam"></i></span>
-        <span>Bundle</span>
     </a>
     <a class="mbn-item <?php echo navActive('bookings'); ?>" href="my-bookings.php" id="mbn-my-bookings">
         <span class="mbn-icon"><i class="bi bi-calendar-check"></i><?php if ($_navPendingCount > 0): ?><span class="mbn-booking-badge" data-count="<?php echo $_navPendingCount; ?>"><?php echo $_navPendingCount; ?></span><?php endif; ?></span>

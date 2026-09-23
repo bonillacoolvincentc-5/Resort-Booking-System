@@ -778,6 +778,9 @@ if ($stmtSlots) {
             <button class="filter-pill" onclick="filterPackages('accommodation',this)" id="filterAccommodation">
                 <i class="bi bi-house-door"></i> Accommodations
             </button>
+            <button class="filter-pill" onclick="filterPackages('bundle',this)" id="filterBundle">
+                <i class="bi bi-box-seam"></i> Bundles
+            </button>
             <div class="ms-auto">
                 <span id="packageCount" class="text-muted" style="font-size:.8rem;"></span>
             </div>
@@ -1270,8 +1273,9 @@ function applyPackageFilters() {
                 return false;
             }
         }
+        // Bundles are always shown regardless of tour type
 
-        // 2. Category pill filter ('all', 'activity', 'accommodation')
+        // 2. Category pill filter ('all', 'activity', 'accommodation', 'bundle')
         if (currentFilter !== 'all' && pkg.package_type !== currentFilter) {
             return false;
         }
@@ -1395,7 +1399,7 @@ async function loadPackages() {
         // Pool, Basketball, Videoke, and other resort amenities are reserved as add-on activities
         const NON_STANDALONE_ACTIVITIES = ['pool', 'swimming', 'basketball', 'videoke', 'billiards', 'fitness gym', 'playground', 'pickleball'];
         allPackages = (data.packages || []).filter(p => {
-            if (p.package_type === 'bundle') return false;
+            // Bundles are now shown in the grid (no longer excluded)
             if (p.package_type === 'activity') {
                 const lowerName = (p.name || '').toLowerCase();
                 if (NON_STANDALONE_ACTIVITIES.some(kw => lowerName.includes(kw))) {
@@ -1528,12 +1532,21 @@ function renderPackages(pkgs) {
                         onclick="openDetailModal(${pkg.id},'${escHtml(pkg.package_type)}')">
                     <i class="bi bi-eye"></i> View Details
                 </button>
-                <button class="btn-modern btn-primary-modern" style="flex:1;"
-                        onclick="selectPackage(${pkg.id},'${escHtml(pkg.package_type)}')">
+                <button class="btn-modern btn-primary-modern btn-book-now" style="flex:1;">
                     <i class="bi bi-calendar-plus"></i> Book Now
                 </button>
             </div>
         `;
+        // Wire up card buttons — bundles use selectBundle, others use selectPackage
+        const bookBtn = card.querySelector('.btn-book-now');
+        if (bookBtn) {
+            if (pkg.package_type === 'bundle') {
+                bookBtn.onclick = () => selectBundle(pkg.id);
+            } else {
+                bookBtn.onclick = () => selectPackage(pkg.id, pkg.package_type);
+            }
+        }
+
         container.appendChild(card);
     });
 
@@ -1563,6 +1576,36 @@ function filterPackages(type, btn) {
     document.querySelectorAll('.filter-pill').forEach(b => b.classList.remove('active'));
     if (btn) btn.classList.add('active');
     applyPackageFilters();
+}
+
+// ── Select Bundle — auto-checks included add-on activities ──────────
+/**
+ * Advances to Step 2, selects the bundle as the current package, then
+ * automatically ticks every add-on checkbox that corresponds to an activity
+ * the bundle already includes, so the user doesn't have to select them manually.
+ *
+ * @param {number} bundleId  - The id of the bundle being booked.
+ */
+function selectBundle(bundleId) {
+    const pkg = allPackages.find(p => p.id == bundleId && p.package_type === 'bundle');
+    if (!pkg) { console.warn('selectBundle: bundle not found', bundleId); return; }
+
+    // 1. Run the standard selectPackage flow (sets step 2, renders addons, etc.)
+    selectPackage(pkg.id, 'bundle');
+
+    // 2. After the DOM is updated, auto-check the included activity add-ons.
+    //    renderAddons() is synchronous so the checkboxes already exist.
+    const includedIds = Array.isArray(pkg.included_activity_ids) ? pkg.included_activity_ids : [];
+    if (!includedIds.length) return;
+
+    includedIds.forEach(actId => {
+        const chk = document.getElementById('addonChk-' + actId);
+        if (chk && !chk.checked) {
+            chk.checked = true;
+            // Reuse existing toggleAddon to update addonsMap + price + UI
+            toggleAddon(actId, (addonsMap[actId] ? addonsMap[actId].price : 0), chk);
+        }
+    });
 }
 
 // ── Open Detail Modal ──────────────────────────────────────────────

@@ -198,7 +198,7 @@ try {
         // Fetch linked activities names
         $linkedActs = [];
         $actLinkStmt = $conn->prepare("
-            SELECT a.name 
+            SELECT a.id, a.name 
             FROM activities a
             JOIN bundle_activities ba ON a.id = ba.activity_id
             WHERE ba.bundle_id = ?
@@ -206,8 +206,10 @@ try {
         $actLinkStmt->bind_param('i', $row['id']);
         $actLinkStmt->execute();
         $actLinkRes = $actLinkStmt->get_result();
+        $includedActivityIds = [];
         while ($actRow = $actLinkRes->fetch_assoc()) {
             $linkedActs[] = $actRow['name'];
+            $includedActivityIds[] = (int)$actRow['id'];
         }
         $actLinkStmt->close();
 
@@ -238,22 +240,23 @@ try {
         $inclusions[] = 'Capacity: for ' . $row['capacity'] . ' person(s)';
 
         $bundles[] = [
-            'id'                => $row['id'],
-            'package_type'      => 'bundle',
-            'name'              => $row['name'],
-            'slug'              => $row['slug'],
-            'description'       => $row['description'],
-            'short_description' => mb_strimwidth($row['description'] ?? '', 0, 120, '...'),
-            'price'             => (float) $row['price'],
-            'price_label'       => '₱' . number_format($row['price'], 2) . ' flat package price',
-            'starting_price'    => '₱' . number_format($row['price'], 2),
-            'capacity'          => $row['capacity'],
-            'start_time'        => $row['start_time'],
-            'duration_hours'    => $row['duration_hours'] !== null ? (int) $row['duration_hours'] : null,
-            'icon'              => 'bi-box-seam',
-            'image_url'         => normalizeImageUrl($row['image_url']),
-            'amenities'         => $amenitiesList,
-            'inclusions'        => $inclusions
+            'id'                    => $row['id'],
+            'package_type'          => 'bundle',
+            'name'                  => $row['name'],
+            'slug'                  => $row['slug'],
+            'description'           => $row['description'],
+            'short_description'     => mb_strimwidth($row['description'] ?? '', 0, 120, '...'),
+            'price'                 => (float) $row['price'],
+            'price_label'           => '₱' . number_format($row['price'], 2) . ' flat package price',
+            'starting_price'        => '₱' . number_format($row['price'], 2),
+            'capacity'              => $row['capacity'],
+            'start_time'            => $row['start_time'],
+            'duration_hours'        => $row['duration_hours'] !== null ? (int) $row['duration_hours'] : null,
+            'icon'                  => 'bi-box-seam',
+            'image_url'             => normalizeImageUrl($row['image_url']),
+            'amenities'             => $amenitiesList,
+            'inclusions'            => $inclusions,
+            'included_activity_ids' => $includedActivityIds,
         ];
     }
     $bundleStmt->close();
