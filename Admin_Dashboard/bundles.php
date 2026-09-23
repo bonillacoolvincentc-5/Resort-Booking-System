@@ -233,13 +233,17 @@ while ($r = $accResult->fetch_assoc()) $allAccommodations[] = $r;
                                 </div>
 
                                 <div class="row g-3 mb-3">
-                                    <div class="col-6">
+                                    <div class="col-4">
                                         <label class="form-label-custom">Price (&#8369;) <span style="color:var(--accent-danger)">*</span></label>
                                         <input type="number" step="0.01" min="0" class="form-ctrl" id="bundlePrice" name="price" placeholder="0.00" required>
                                     </div>
-                                    <div class="col-6">
+                                    <div class="col-4">
                                         <label class="form-label-custom">Capacity (guests)</label>
                                         <input type="number" min="1" class="form-ctrl" id="bundleCapacity" name="capacity" value="1">
+                                    </div>
+                                    <div class="col-4">
+                                        <label class="form-label-custom">Daily Booking Limit</label>
+                                        <input type="number" min="1" class="form-ctrl" id="bundleDailyLimit" name="daily_booking_limit" value="10">
                                     </div>
                                 </div>
 
@@ -419,6 +423,7 @@ while ($r = $accResult->fetch_assoc()) $allAccommodations[] = $r;
         document.getElementById('bundleForm').reset();
         document.getElementById('bundleId').value = '';
         document.getElementById('bundleStatus').value = '1';
+        document.getElementById('bundleDailyLimit').value = '10';
         document.getElementById('imgPreviewWrap').classList.add('d-none');
         clearAllCheckboxes();
         // Default: Overnight checked
@@ -442,6 +447,7 @@ while ($r = $accResult->fetch_assoc()) $allAccommodations[] = $r;
             document.getElementById('bundleDescription').value = b.description || '';
             document.getElementById('bundlePrice').value       = b.price;
             document.getElementById('bundleCapacity').value    = b.capacity;
+            document.getElementById('bundleDailyLimit').value  = b.daily_booking_limit || 10;
             document.getElementById('bundleStartTime').value   = (b.start_time || '').toString().substring(0, 8);
             document.getElementById('bundleDurationHours').value = b.duration_hours || '';
             document.getElementById('bundleAmenities').value   = b.amenities || '';

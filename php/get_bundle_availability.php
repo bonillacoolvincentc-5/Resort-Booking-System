@@ -48,7 +48,7 @@ try {
         $item = $stmt->get_result()->fetch_assoc();
         $stmt->close();
     } elseif ($packageType === 'bundle') {
-        $stmt = $conn->prepare("SELECT id, name, capacity FROM bundles WHERE id = ? AND is_active = 1");
+        $stmt = $conn->prepare("SELECT id, name, capacity, daily_booking_limit FROM bundles WHERE id = ? AND is_active = 1");
         $stmt->bind_param('i', $itemId);
         $stmt->execute();
         $item = $stmt->get_result()->fetch_assoc();
@@ -58,7 +58,7 @@ try {
     // Auto-detection fallback if type was not supplied or item not found in specified type
     if (!$item) {
         // Try bundles first
-        $stmt = $conn->prepare("SELECT id, name, capacity FROM bundles WHERE id = ? AND is_active = 1");
+        $stmt = $conn->prepare("SELECT id, name, capacity, daily_booking_limit FROM bundles WHERE id = ? AND is_active = 1");
         $stmt->bind_param('i', $itemId);
         $stmt->execute();
         $item = $stmt->get_result()->fetch_assoc();
@@ -101,7 +101,8 @@ try {
         $totalCapacity = max(1, intval($item['capacity']));
         $itemColumn = 'activity_id';
     } else {
-        $totalCapacity = max(1, intval($item['capacity']));
+        // Bundles use the daily booking limit
+        $totalCapacity = max(1, intval($item['daily_booking_limit']));
         $itemColumn = 'bundle_id';
     }
 

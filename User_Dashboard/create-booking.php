@@ -1525,6 +1525,10 @@ function renderPackages(pkgs) {
                         <i class="bi bi-tag"></i>
                         <span>${escHtml(displayPrice)}</span>
                     </div>
+                    <div class="card-meta-item" style="color:var(--text-secondary); margin-top:4px;">
+                        <i class="bi bi-bar-chart-fill" style="color:var(--accent-primary);"></i>
+                        <span style="font-size:0.8rem;">Today: <strong>${pkg.booked_today_count || 0}</strong> / ${pkg.booking_limit || 1} booked</span>
+                    </div>
                 </div>
             </div>
             <div class="card-actions">
