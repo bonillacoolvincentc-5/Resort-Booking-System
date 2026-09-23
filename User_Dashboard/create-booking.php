@@ -814,22 +814,39 @@ if ($stmtSlots) {
                             <!-- Hidden tour type from Step 1 selection -->
                             <input type="hidden" id="selectedTourType" name="tour_type" value="daytour">
 
-                            <!-- Check-in / Visit date -->
-                            <!-- NOTE: type="hidden" — the calendar sets these values; the native date picker UI is
-                                 intentionally suppressed to avoid duplicate/confusing calendar widgets. -->
-                            <div class="mb-4" id="checkinSection">
-                                <label class="form-label-modern" id="checkinLabel">
-                                    <i class="bi bi-calendar3 me-1"></i>
-                                    <span id="checkinLabelText">Check-in Date</span>
-                                </label>
-                                <input type="hidden" id="bookingDate" name="booking_date" required>
-                                <!-- Visual read-only display of the calendar-selected date -->
-                                <div id="checkinDisplay" class="form-control-modern" style="cursor:default;display:flex;align-items:center;gap:.5rem;min-height:46px;">
-                                    <i class="bi bi-calendar-event" style="color:var(--accent-primary);"></i>
-                                    <span id="checkinDisplayText" style="color:var(--text-muted);">Click a date on the calendar above</span>
+                            <div class="row g-3 mb-4">
+                                <!-- Check-in / Visit date -->
+                                <!-- NOTE: type="hidden" — the calendar sets these values; the native date picker UI is
+                                     intentionally suppressed to avoid duplicate/confusing calendar widgets. -->
+                                <div class="col-md-6" id="checkinSection">
+                                    <label class="form-label-modern" id="checkinLabel">
+                                        <i class="bi bi-calendar3 me-1"></i>
+                                        <span id="checkinLabelText">Check-in Date</span>
+                                    </label>
+                                    <input type="hidden" id="bookingDate" name="booking_date" required>
+                                    <!-- Visual read-only display of the calendar-selected date -->
+                                    <div id="checkinDisplay" class="form-control-modern" style="cursor:default;display:flex;align-items:center;gap:.5rem;min-height:46px;font-size:0.85rem;">
+                                        <i class="bi bi-calendar-event" style="color:var(--accent-primary);"></i>
+                                        <span id="checkinDisplayText" style="color:var(--text-muted);">Click date on calendar</span>
+                                    </div>
+                                    <div class="mt-1" id="checkinHint" style="font-size:.7rem;color:var(--text-muted);">
+                                        Select your preferred check-in date
+                                    </div>
                                 </div>
-                                <div class="mt-1" id="checkinHint" style="font-size:.75rem;color:var(--text-muted);">
-                                    Select your preferred check-in date
+
+                                <!-- Check-out date — shown only for overnight accommodations -->
+                                <!-- type="hidden": set by the 2-click calendar range logic below -->
+                                <div class="col-md-6 d-none" id="checkoutSection">
+                                    <label class="form-label-modern"><i class="bi bi-calendar3 me-1"></i>Check-out Date</label>
+                                    <input type="hidden" id="checkoutDate" name="check_out_date">
+                                    <!-- Visual read-only display of the calendar-selected checkout date -->
+                                    <div id="checkoutDisplay" class="form-control-modern" style="cursor:default;display:flex;align-items:center;gap:.5rem;min-height:46px;font-size:0.85rem;">
+                                        <i class="bi bi-calendar-check" style="color:var(--accent-success);"></i>
+                                        <span id="checkoutDisplayText" style="color:var(--text-muted);">Click 2nd date (check-out)</span>
+                                    </div>
+                                    <div class="mt-1" style="font-size:.7rem;color:var(--text-muted);">
+                                        Select your check-out date (minimum 1 night)
+                                    </div>
                                 </div>
                             </div>
 
@@ -850,21 +867,6 @@ if ($stmtSlots) {
                                 </div>
                                 <div class="alert-modern alert-danger-modern mt-2 d-none" id="timeValidation"
                                      style="padding:.5rem 1rem;font-size:.8rem;"></div>
-                            </div>
-
-                            <!-- Check-out date — shown only for overnight accommodations -->
-                            <!-- type="hidden": set by the 2-click calendar range logic below -->
-                            <div id="checkoutSection" class="mb-4 d-none">
-                                <label class="form-label-modern"><i class="bi bi-calendar3 me-1"></i>Check-out Date</label>
-                                <input type="hidden" id="checkoutDate" name="check_out_date">
-                                <!-- Visual read-only display of the calendar-selected checkout date -->
-                                <div id="checkoutDisplay" class="form-control-modern" style="cursor:default;display:flex;align-items:center;gap:.5rem;min-height:46px;">
-                                    <i class="bi bi-calendar-check" style="color:var(--accent-success);"></i>
-                                    <span id="checkoutDisplayText" style="color:var(--text-muted);">Click a 2nd date on the calendar (check-out)</span>
-                                </div>
-                                <div class="mt-1" style="font-size:.75rem;color:var(--text-muted);">
-                                    Select your check-out date (minimum 1 night)
-                                </div>
                             </div>
 
                             <!-- Number of guests -->
@@ -2849,9 +2851,9 @@ window.fetchAndRenderActivityCalendar = fetchAndRenderActivityCalendar;
     user-select: none;
 }
 .act-cal-cell {
-    min-height: 44px;
+    min-height: 56px;
     border-radius: 0.375rem;
-    padding: 0.2rem 0.05rem;
+    padding: 0.25rem 0.1rem;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -2935,12 +2937,12 @@ window.fetchAndRenderActivityCalendar = fetchAndRenderActivityCalendar;
     color: #bfdbfe;
 }
 .act-cal-day-num {
-    font-size: 0.76rem;
+    font-size: 0.85rem;
     font-weight: 700;
     line-height: 1;
 }
 .act-cal-meta {
-    font-size: 0.55rem;
+    font-size: 0.6rem;
     color: var(--text-secondary, #cbd5e1);
     line-height: 1.1;
     margin-top: 0.12rem;
@@ -2989,7 +2991,7 @@ window.fetchAndRenderActivityCalendar = fetchAndRenderActivityCalendar;
 /* ── Tablet & Small Laptops (max-width: 992px) ── */
 @media (max-width: 992px) {
     .act-cal-cell {
-        min-height: 48px;
+        min-height: 60px;
     }
 }
 
@@ -3005,11 +3007,11 @@ window.fetchAndRenderActivityCalendar = fetchAndRenderActivityCalendar;
         gap: 0.2rem;
     }
     .act-cal-cell {
-        min-height: 40px;
+        min-height: 48px;
         padding: 0.15rem 0.05rem;
     }
     .act-cal-day-num {
-        font-size: 0.72rem;
+        font-size: 0.78rem;
     }
     /* Switch to compact X/Y count so text never clips or overflows on phones */
     .act-cal-meta .meta-full {
@@ -3033,10 +3035,10 @@ window.fetchAndRenderActivityCalendar = fetchAndRenderActivityCalendar;
         gap: 0.15rem;
     }
     .act-cal-cell {
-        min-height: 38px;
+        min-height: 44px;
     }
     .act-cal-day-head {
-        font-size: 0.58rem;
+        font-size: 0.65rem;
     }
     .act-cal-nav-btn {
         min-width: 28px;
