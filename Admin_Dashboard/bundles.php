@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 session_start();
 
 require_once 'config.php';
@@ -526,7 +526,7 @@ while ($r = $accResult->fetch_assoc()) $allAccommodations[] = $r;
     function toast(msg, type = 'success') {
         const wrap = document.getElementById('toastWrap');
         const el   = document.createElement('div');
-        el.className = `toast-msg toast-${type}`;
+        el.className = `toast-item ${type === 'error' ? 'error' : 'success'}`;
         el.innerHTML = `<i class="bi bi-${type === 'success' ? 'check-circle-fill' : 'exclamation-triangle-fill'}"></i>${msg}`;
         wrap.appendChild(el);
         setTimeout(() => el.remove(), 4000);

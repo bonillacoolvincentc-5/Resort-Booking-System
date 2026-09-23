@@ -245,7 +245,6 @@ if ($action === 'toggle_status') {
     if (!$bundleId) { echo json_encode(['success' => false, 'message' => 'Bundle ID required']); exit(); }
 
     try {
-        $conn->prepare("UPDATE bundles SET is_active = NOT is_active WHERE id = ?")->execute() ;
         $stmt = $conn->prepare("UPDATE bundles SET is_active = NOT is_active WHERE id = ?");
         $stmt->bind_param('i', $bundleId);
         $stmt->execute();

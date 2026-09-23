@@ -132,8 +132,22 @@ while ($row = $accResult->fetch_assoc()) {
     
     <link rel="stylesheet" href="../css/admin-theme.css">
     <style>
+        .tab-content, .tab-pane, .activities-grid {
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+        }
+        .activity-card {
+            background: #0b1310 !important; /* very dark grey/black, no green tint */
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            border-radius: 18px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
         .nav-pills .nav-link {
-            background: var(--bg-card);
+            background: #08120E !important;
             color: var(--text-secondary);
             border: 1px solid var(--border-color);
             transition: all 0.3s ease;
@@ -202,7 +216,7 @@ while ($row = $accResult->fetch_assoc()) {
         </div>
 
         <!-- Navigation Tabs -->
-        <ul class="nav nav-pills mb-4 gap-2" id="managementTabs" role="tablist" style="border-bottom: 1px solid var(--border-color); padding-bottom: 1rem;">
+        <ul class="nav nav-pills mb-4 gap-2" id="managementTabs" role="tablist" style="padding-bottom: 1rem;">
             <li class="nav-item" role="presentation">
                 <button class="nav-link active d-flex align-items-center gap-2" id="activities-tab" data-bs-toggle="pill" data-bs-target="#activities-section" type="button" role="tab" style="border-radius: 0.5rem; padding: 0.6rem 1.25rem; font-weight: 600;">
                     <i class="bi bi-activity"></i> Activities (<?php echo count($activities); ?>)

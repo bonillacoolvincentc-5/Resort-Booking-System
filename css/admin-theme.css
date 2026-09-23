@@ -11,6 +11,11 @@
 }
 
 /* ── 1. Main Content Layout ───────────────────────────────────────── */
+body {
+    background: #08120E !important;
+    background-image: none !important;
+}
+
 .main-content {
     margin-left: var(--sidebar-width, 255px);
     margin-top: var(--navbar-height, 68px);
