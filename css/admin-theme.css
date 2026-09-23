@@ -15,6 +15,10 @@ body {
     background: #08120E !important;
     background-image: none !important;
 }
+body::before, body::after {
+    display: none !important;
+    content: none !important;
+}
 
 .main-content {
     margin-left: var(--sidebar-width, 255px);

@@ -138,9 +138,17 @@ if ($diff->y >= 1) {
             box-sizing: border-box;
         }
 
+        :root {
+            --bg-card: #0a0a0a !important; /* Pure neutral dark, absolute zero green tint */
+        }
+        body::before, body::after {
+            display: none !important;
+            content: none !important;
+        }
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 50%, var(--bg-tertiary) 100%);
+            background: #000000 !important; /* Pure black */
+            background-image: none !important;
             color: var(--text-primary);
             min-height: 100vh;
             line-height: 1.6;
@@ -375,7 +383,7 @@ if ($diff->y >= 1) {
 
         /* Main Content */
         .profile-main {
-            background: var(--bg-card);
+            background: #0a0a0a !important;
             backdrop-filter: blur(10px);
             border: 1px solid var(--border-color);
             border-radius: 1rem;
@@ -385,8 +393,8 @@ if ($diff->y >= 1) {
         /* Tabs */
         .profile-tabs {
             display: flex;
-            background: rgba(16, 27, 23, 0.65);
-            border-bottom: 1px solid rgba(157, 255, 0, 0.15);
+            background: rgba(0, 0, 0, 0.2);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             padding: 0 1.25rem;
             gap: 0.5rem;
         }
@@ -436,10 +444,16 @@ if ($diff->y >= 1) {
         /* Tab Content */
         .tab-content {
             padding: 2rem;
+            background: transparent !important;
         }
 
         .tab-pane {
             display: none;
+            background: transparent !important;
+        }
+        
+        .tab-pane form, .tab-pane .row, .tab-pane div {
+            background-color: transparent !important;
         }
 
         .tab-pane.active {
@@ -475,8 +489,8 @@ if ($diff->y >= 1) {
         .form-control-modern {
             width: 100%;
             display: block;
-            background: rgba(16, 27, 23, 0.85);
-            border: 1px solid rgba(157, 255, 0, 0.2);
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             color: var(--text-primary);
             padding: 0.75rem 1rem;
             border-radius: 0.5rem;
@@ -485,7 +499,7 @@ if ($diff->y >= 1) {
         }
 
         .form-control-modern:focus {
-            background: rgba(16, 27, 23, 0.95);
+            background: rgba(255, 255, 255, 0.08);
             border-color: #9DFF00;
             color: var(--text-primary);
             box-shadow: 0 0 0 3px rgba(157, 255, 0, 0.15);
@@ -517,8 +531,8 @@ if ($diff->y >= 1) {
         .form-select-modern {
             width: 100%;
             display: block;
-            background: rgba(16, 27, 23, 0.85);
-            border: 1px solid rgba(157, 255, 0, 0.2);
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             color: var(--text-primary);
             padding: 0.75rem 1rem;
             border-radius: 0.5rem;
@@ -527,7 +541,7 @@ if ($diff->y >= 1) {
         }
 
         .form-select-modern:focus {
-            background: rgba(16, 27, 23, 0.95);
+            background: rgba(255, 255, 255, 0.08);
             border-color: #9DFF00;
             color: var(--text-primary);
             box-shadow: 0 0 0 3px rgba(157, 255, 0, 0.15);
@@ -644,8 +658,8 @@ if ($diff->y >= 1) {
 
         /* Security Cards */
         .security-card {
-            background: rgba(157, 255, 0, 0.04);
-            border: 1px solid rgba(157, 255, 0, 0.15);
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
             border-radius: 0.75rem;
             padding: 1.5rem;
             margin-bottom: 1rem;
