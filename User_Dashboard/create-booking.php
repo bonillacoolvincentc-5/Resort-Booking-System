@@ -815,13 +815,19 @@ if ($stmtSlots) {
                             <input type="hidden" id="selectedTourType" name="tour_type" value="daytour">
 
                             <!-- Check-in / Visit date -->
+                            <!-- NOTE: type="hidden" — the calendar sets these values; the native date picker UI is
+                                 intentionally suppressed to avoid duplicate/confusing calendar widgets. -->
                             <div class="mb-4" id="checkinSection">
                                 <label class="form-label-modern" id="checkinLabel">
                                     <i class="bi bi-calendar3 me-1"></i>
                                     <span id="checkinLabelText">Check-in Date</span>
                                 </label>
-                                <input type="date" id="bookingDate" name="booking_date"
-                                       class="form-control-modern" required>
+                                <input type="hidden" id="bookingDate" name="booking_date" required>
+                                <!-- Visual read-only display of the calendar-selected date -->
+                                <div id="checkinDisplay" class="form-control-modern" style="cursor:default;display:flex;align-items:center;gap:.5rem;min-height:46px;">
+                                    <i class="bi bi-calendar-event" style="color:var(--accent-primary);"></i>
+                                    <span id="checkinDisplayText" style="color:var(--text-muted);">Click a date on the calendar above</span>
+                                </div>
                                 <div class="mt-1" id="checkinHint" style="font-size:.75rem;color:var(--text-muted);">
                                     Select your preferred check-in date
                                 </div>
@@ -847,10 +853,15 @@ if ($stmtSlots) {
                             </div>
 
                             <!-- Check-out date — shown only for overnight accommodations -->
+                            <!-- type="hidden": set by the 2-click calendar range logic below -->
                             <div id="checkoutSection" class="mb-4 d-none">
                                 <label class="form-label-modern"><i class="bi bi-calendar3 me-1"></i>Check-out Date</label>
-                                <input type="date" id="checkoutDate" name="check_out_date"
-                                       class="form-control-modern">
+                                <input type="hidden" id="checkoutDate" name="check_out_date">
+                                <!-- Visual read-only display of the calendar-selected checkout date -->
+                                <div id="checkoutDisplay" class="form-control-modern" style="cursor:default;display:flex;align-items:center;gap:.5rem;min-height:46px;">
+                                    <i class="bi bi-calendar-check" style="color:var(--accent-success);"></i>
+                                    <span id="checkoutDisplayText" style="color:var(--text-muted);">Click a 2nd date on the calendar (check-out)</span>
+                                </div>
                                 <div class="mt-1" style="font-size:.75rem;color:var(--text-muted);">
                                     Select your check-out date (minimum 1 night)
                                 </div>
@@ -2654,32 +2665,111 @@ function renderCalendarView(data, container) {
         fetchAndRenderActivityCalendar(currentCalPkgId, currentCalPkgType, y, m);
     });
 
-    // Date Selection Click
+    // ── 2-Click Date Range Selection ────────────────────────────────
+    // State: null = awaiting click 1 (check-in), non-null = awaiting click 2 (check-out)
+    let pendingCheckIn = null; // dateStr of the first click
+
+    /** Helper: formats a YYYY-MM-DD string into a human-friendly label */
+    function fmtDate(d) {
+        if (!d) return '';
+        const [y, m, day] = d.split('-');
+        return new Date(+y, +m - 1, +day).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+
+    /** Re-applies selected / range highlight classes to all cells */
+    function applyRangeHighlight(checkIn, checkOut) {
+        container.querySelectorAll('.act-cal-cell[data-date]').forEach(c => {
+            const d = c.getAttribute('data-date');
+            c.classList.remove('selected', 'in-range', 'range-start', 'range-end');
+            if (checkIn && checkOut) {
+                if (d === checkIn)  { c.classList.add('selected', 'range-start'); }
+                else if (d === checkOut) { c.classList.add('selected', 'range-end'); }
+                else if (d > checkIn && d < checkOut) { c.classList.add('in-range'); }
+            } else if (checkIn && d === checkIn) {
+                c.classList.add('selected', 'range-start');
+            }
+        });
+    }
+
     container.querySelectorAll('.act-cal-cell[data-date]').forEach(cell => {
         cell.addEventListener('click', () => {
             const pickedDate = cell.getAttribute('data-date');
-            const bookingDateInput = document.getElementById('bookingDate');
-            if (bookingDateInput) {
-                bookingDateInput.value = pickedDate;
-                bookingDateInput.dispatchEvent(new Event('change'));
-            }
+            const isOvernightAccommodation = currentCalPkgType === 'accommodation' && currentTourType === 'overnight';
 
-            if (currentCalPkgType === 'accommodation') {
-                const checkoutDateInput = document.getElementById('checkoutDate');
-                if (checkoutDateInput) {
-                    const nextDay = new Date(pickedDate + 'T00:00:00');
-                    nextDay.setDate(nextDay.getDate() + 1);
-                    const nextDayStr = `${nextDay.getFullYear()}-${String(nextDay.getMonth()+1).padStart(2,'0')}-${String(nextDay.getDate()).padStart(2,'0')}`;
-                    checkoutDateInput.min = nextDayStr;
-                    if (!checkoutDateInput.value || checkoutDateInput.value <= pickedDate) {
-                        checkoutDateInput.value = nextDayStr;
-                        checkoutDateInput.dispatchEvent(new Event('change'));
-                    }
+            if (!isOvernightAccommodation) {
+                // ── Single-date mode (activities, day-tour) ────────────
+                const bookingDateInput = document.getElementById('bookingDate');
+                if (bookingDateInput) {
+                    bookingDateInput.value = pickedDate;
+                    bookingDateInput.dispatchEvent(new Event('change'));
                 }
-            }
+                // Update visible display
+                const dispText = document.getElementById('checkinDisplayText');
+                if (dispText) {
+                    dispText.textContent = fmtDate(pickedDate);
+                    dispText.style.color = 'var(--text-primary)';
+                }
+                container.querySelectorAll('.act-cal-cell').forEach(c => c.classList.remove('selected', 'in-range', 'range-start', 'range-end'));
+                cell.classList.add('selected');
+                pendingCheckIn = null;
 
-            container.querySelectorAll('.act-cal-cell').forEach(c => c.classList.remove('selected'));
-            cell.classList.add('selected');
+            } else if (pendingCheckIn === null) {
+                // ── Click 1: set Check-in ──────────────────────────────
+                pendingCheckIn = pickedDate;
+
+                const bookingDateInput = document.getElementById('bookingDate');
+                if (bookingDateInput) {
+                    bookingDateInput.value = pickedDate;
+                    bookingDateInput.dispatchEvent(new Event('change'));
+                }
+                // Clear checkout so a stale value doesn't linger
+                const checkoutInput = document.getElementById('checkoutDate');
+                if (checkoutInput) { checkoutInput.value = ''; checkoutInput.dispatchEvent(new Event('change')); }
+
+                // Update visible displays
+                const ciText = document.getElementById('checkinDisplayText');
+                if (ciText) { ciText.textContent = fmtDate(pickedDate); ciText.style.color = 'var(--text-primary)'; }
+                const coText = document.getElementById('checkoutDisplayText');
+                if (coText) { coText.textContent = 'Now click your check-out date ↑'; coText.style.color = 'var(--accent-warning)'; }
+
+                applyRangeHighlight(pickedDate, null);
+
+            } else if (pickedDate > pendingCheckIn) {
+                // ── Click 2 (valid): set Check-out ────────────────────
+                const checkIn  = pendingCheckIn;
+                const checkOut = pickedDate;
+                pendingCheckIn = null; // reset state
+
+                const bookingDateInput = document.getElementById('bookingDate');
+                if (bookingDateInput) { bookingDateInput.value = checkIn; bookingDateInput.dispatchEvent(new Event('change')); }
+
+                const checkoutInput = document.getElementById('checkoutDate');
+                if (checkoutInput) { checkoutInput.value = checkOut; checkoutInput.dispatchEvent(new Event('change')); }
+
+                // Update visible displays
+                const ciText = document.getElementById('checkinDisplayText');
+                if (ciText) { ciText.textContent = fmtDate(checkIn); ciText.style.color = 'var(--text-primary)'; }
+                const coText = document.getElementById('checkoutDisplayText');
+                if (coText) { coText.textContent = fmtDate(checkOut); coText.style.color = 'var(--text-primary)'; }
+
+                applyRangeHighlight(checkIn, checkOut);
+
+            } else {
+                // ── Click 2 (invalid — earlier/same date): treat as new Click 1 ──
+                pendingCheckIn = pickedDate;
+
+                const bookingDateInput = document.getElementById('bookingDate');
+                if (bookingDateInput) { bookingDateInput.value = pickedDate; bookingDateInput.dispatchEvent(new Event('change')); }
+                const checkoutInput = document.getElementById('checkoutDate');
+                if (checkoutInput) { checkoutInput.value = ''; checkoutInput.dispatchEvent(new Event('change')); }
+
+                const ciText = document.getElementById('checkinDisplayText');
+                if (ciText) { ciText.textContent = fmtDate(pickedDate); ciText.style.color = 'var(--text-primary)'; }
+                const coText = document.getElementById('checkoutDisplayText');
+                if (coText) { coText.textContent = 'Now click your check-out date ↑'; coText.style.color = 'var(--accent-warning)'; }
+
+                applyRangeHighlight(pickedDate, null);
+            }
 
             if (typeof recalcPrice === 'function') recalcPrice();
         });
@@ -2828,6 +2918,21 @@ window.fetchAndRenderActivityCalendar = fetchAndRenderActivityCalendar;
     box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
     background: rgba(59, 130, 246, 0.25) !important;
     transform: scale(1.02);
+}
+/* Range-start and range-end endpoints get a stronger blue accent */
+.act-cal-cell.range-start,
+.act-cal-cell.range-end {
+    background: rgba(59, 130, 246, 0.45) !important;
+    border-color: #60a5fa !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.55);
+    transform: scale(1.04);
+    z-index: 1;
+}
+/* Cells inside the selected range get a subtle mid-tone highlight */
+.act-cal-cell.in-range {
+    background: rgba(59, 130, 246, 0.13) !important;
+    border-color: rgba(59, 130, 246, 0.35) !important;
+    color: #bfdbfe;
 }
 .act-cal-day-num {
     font-size: 0.76rem;
