@@ -268,6 +268,26 @@ while ($r = $accResult->fetch_assoc()) $allAccommodations[] = $r;
                                     </div>
                                 </div>
 
+                                <div class="row g-3 mb-3">
+                                    <div class="col-12">
+                                        <label class="form-label-custom">Bundle Type <small style="color:var(--text-muted);font-weight:400;">(Select one or both)</small></label>
+                                        <div class="d-flex align-items-center gap-4 mt-1" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 0.55rem 0.9rem; min-height: 48px;">
+                                            <div class="form-check mb-0">
+                                                <input class="form-check-input" type="checkbox" name="tour_types[]" id="bundleTourOvernight" value="overnight" style="cursor: pointer;" checked>
+                                                <label class="form-check-label text-white" for="bundleTourOvernight" style="cursor: pointer; user-select: none;">
+                                                    <i class="bi bi-moon-stars me-1 text-info"></i> Overnight
+                                                </label>
+                                            </div>
+                                            <div class="form-check mb-0">
+                                                <input class="form-check-input" type="checkbox" name="tour_types[]" id="bundleTourDay" value="day_tour" style="cursor: pointer;">
+                                                <label class="form-check-label text-white" for="bundleTourDay" style="cursor: pointer; user-select: none;">
+                                                    <i class="bi bi-sun me-1 text-warning"></i> Day Tour
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <div class="mb-3">
                                     <label class="form-label-custom">Amenities <span style="color:var(--text-muted);font-weight:400;">(comma-separated)</span></label>
                                     <input type="text" class="form-ctrl" id="bundleAmenities" name="amenities"
@@ -401,6 +421,9 @@ while ($r = $accResult->fetch_assoc()) $allAccommodations[] = $r;
         document.getElementById('bundleStatus').value = '1';
         document.getElementById('imgPreviewWrap').classList.add('d-none');
         clearAllCheckboxes();
+        // Default: Overnight checked
+        document.getElementById('bundleTourOvernight').checked = true;
+        document.getElementById('bundleTourDay').checked = false;
         bundleModal.show();
     }
 
@@ -423,6 +446,10 @@ while ($r = $accResult->fetch_assoc()) $allAccommodations[] = $r;
             document.getElementById('bundleDurationHours').value = b.duration_hours || '';
             document.getElementById('bundleAmenities').value   = b.amenities || '';
             document.getElementById('bundleStatus').value      = b.is_active;
+            // Pre-check tour type checkboxes
+            const bType = (b.bundle_type || 'overnight').toLowerCase();
+            document.getElementById('bundleTourOvernight').checked = bType === 'overnight' || bType === 'both';
+            document.getElementById('bundleTourDay').checked       = bType === 'day_tour'  || bType === 'both';
             document.getElementById('imgPreviewWrap').classList.add('d-none');
 
             // Pre-check linked activities
