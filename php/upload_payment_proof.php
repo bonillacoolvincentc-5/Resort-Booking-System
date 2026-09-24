@@ -194,19 +194,124 @@ try {
         throw new Exception('Payment proof image is required.');
     }
 
-    // ── Check availability ────────────────────────────────────────
-    $itemColumn = $bookingType === 'activity' ? 'activity_id' : ($bookingType === 'accommodation' ? 'accommodation_id' : 'bundle_id');
-    $avCheck = $conn->prepare("
-        SELECT COUNT(*) as cnt FROM bookings
-        WHERE booking_type = ? AND $itemColumn = ? AND check_in_date = ?
-        AND status_id IN (SELECT id FROM booking_status WHERE name IN ('pending_review','approved'))
-    ");
-    $avCheck->bind_param('sis', $bookingType, $itemId, $checkInDate);
-    $avCheck->execute();
-    $avRow = $avCheck->get_result()->fetch_assoc();
-    if ($avRow['cnt'] >= $item['capacity']) {
-        throw new Exception('This slot is fully booked. Please choose another date.');
+    // ── Availability / overlap check ──────────────────────────────
+    $activeStatuses = "(SELECT id FROM booking_status WHERE name IN ('pending_review','approved'))";
+
+    if ($bookingType === 'accommodation') {
+        // Each accommodation row = 1 physical unit.
+        // Block if ANY active booking for this accommodation overlaps the requested date range.
+        // Overlap condition: existing.check_in < requested.check_out
+        //                AND existing.check_out > requested.check_in
+        // For day-tour (no check-out), treat the stay as a single day (check_out = check_in + 1 day).
+        $reqCheckIn  = $checkInDate;
+        $reqCheckOut = (!empty($checkOutDate) && $checkOutDate !== $checkInDate)
+            ? $checkOutDate
+            : date('Y-m-d', strtotime($checkInDate . ' +1 day'));
+
+        $avCheck = $conn->prepare("
+            SELECT COUNT(*) AS cnt
+            FROM bookings
+            WHERE booking_type = 'accommodation'
+              AND accommodation_id = ?
+              AND status_id IN $activeStatuses
+              AND check_in_date  < ?
+              AND COALESCE(
+                    NULLIF(check_out_date, ''),
+                    DATE_ADD(check_in_date, INTERVAL 1 DAY)
+                  ) > ?
+        ");
+        $avCheck->bind_param('iss', $itemId, $reqCheckOut, $reqCheckIn);
+        $avCheck->execute();
+        $avRow = $avCheck->get_result()->fetch_assoc();
+
+        if ($avRow['cnt'] >= 1) {
+            throw new Exception(
+                'This room/cottage is already fully booked for the selected dates. ' .
+                'Please choose different dates or another accommodation.'
+            );
+        }
+    } else {
+        // Activities and bundles: simple same-day slot count vs. capacity.
+        $itemColumn = $bookingType === 'activity' ? 'activity_id' : 'bundle_id';
+        $avCheck = $conn->prepare("
+            SELECT COUNT(*) AS cnt
+            FROM bookings
+            WHERE booking_type = ? AND $itemColumn = ? AND check_in_date = ?
+              AND status_id IN $activeStatuses
+        ");
+        $avCheck->bind_param('sis', $bookingType, $itemId, $checkInDate);
+        $avCheck->execute();
+        $avRow = $avCheck->get_result()->fetch_assoc();
+
+        if ($avRow['cnt'] >= $item['capacity']) {
+            throw new Exception('This slot is fully booked for the selected date. Please choose another date.');
+        }
     }
+
+    // ── Validate extra rooms (duplicate + overlap per room) ───────────
+    $extraRoomsRaw  = !empty($_POST['extra_rooms']) ? json_decode($_POST['extra_rooms'], true) : [];
+    $extraRoomsData = is_array($extraRoomsRaw) ? $extraRoomsRaw : [];
+
+    // Build a map: accommodation_id => [windows] — include primary booking if accommodation.
+    $accommodationWindows = [];
+    if ($bookingType === 'accommodation') {
+        $primaryOut = (!empty($checkOutDate) && $checkOutDate !== $checkInDate)
+            ? $checkOutDate
+            : date('Y-m-d', strtotime($checkInDate . ' +1 day'));
+        $accommodationWindows[$itemId][] = ['in' => $checkInDate, 'out' => $primaryOut];
+    }
+    foreach ($extraRoomsData as $er) {
+        $erType = $er['package_type'] ?? '';
+        $erId   = intval($er['package_id'] ?? 0);
+        $erIn   = $er['check_in_date']  ?? '';
+        $erOut  = $er['check_out_date'] ?? '';
+        if ($erType !== 'accommodation' || !$erId || !$erIn) continue;
+        $erOutNorm = (!empty($erOut) && $erOut !== $erIn)
+            ? $erOut
+            : date('Y-m-d', strtotime($erIn . ' +1 day'));
+        $accommodationWindows[$erId][] = ['in' => $erIn, 'out' => $erOutNorm];
+    }
+
+    foreach ($accommodationWindows as $accId => $windows) {
+        $accNameStmt = $conn->prepare("SELECT name FROM accommodations WHERE id = ? LIMIT 1");
+        $accNameStmt->bind_param('i', $accId);
+        $accNameStmt->execute();
+        $accLabel = $accNameStmt->get_result()->fetch_assoc()['name'] ?? "Accommodation #$accId";
+
+        // Single-unit rule: same room cannot appear twice in one submission.
+        if (count($windows) > 1) {
+            throw new Exception(
+                "\"$accLabel\" is a single unit and appears more than once in your booking. " .
+                "Please remove the duplicate before submitting."
+            );
+        }
+
+        // Overlap check for extra rooms (primary was already checked above).
+        if ($bookingType !== 'accommodation' || $accId !== $itemId) {
+            $w = $windows[0];
+            $erAvCheck = $conn->prepare("
+                SELECT COUNT(*) AS cnt
+                FROM bookings
+                WHERE booking_type = 'accommodation'
+                  AND accommodation_id = ?
+                  AND status_id IN $activeStatuses
+                  AND check_in_date < ?
+                  AND COALESCE(
+                        NULLIF(check_out_date, ''),
+                        DATE_ADD(check_in_date, INTERVAL 1 DAY)
+                      ) > ?
+            ");
+            $erAvCheck->bind_param('iss', $accId, $w['out'], $w['in']);
+            $erAvCheck->execute();
+            if ($erAvCheck->get_result()->fetch_assoc()['cnt'] >= 1) {
+                throw new Exception(
+                    "\"$accLabel\" is already fully booked for the selected dates. " .
+                    "Please choose different dates or another accommodation."
+                );
+            }
+        }
+    }
+    // ─────────────────────────────────────────────────────────────────
 
     // ── Generate booking reference ────────────────────────────────
     $bookingRef = 'BK' . date('Ymd') . str_pad(rand(0, 9999), 4, '0', STR_PAD_LEFT);

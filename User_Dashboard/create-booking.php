@@ -1886,6 +1886,26 @@ function selectPackage(id, type) {
             date: primaryDate,
             checkOut: primaryCheckOut
         };
+        // ── Duplicate-room guard ──────────────────────────────────────
+        // Count how many times this pkg is already in the cart
+        // (primary room counts as 1 if it matches; each extraRooms entry counts as 1).
+        const cartCount = extraRooms.filter(r => r.pkg.id === pkg.id).length
+                        + (selectedPkg && selectedPkg.id === pkg.id ? 1 : 0);
+        // booking_limit === 1 for single-unit accommodations (from get_packages.php).
+        const unitLimit = pkg.booking_limit || 1;
+        if (cartCount >= unitLimit) {
+            alert(
+                `"${pkg.name}" is a single unit and is already in your cart.\n` +
+                `You cannot add the same room more than ${unitLimit} time(s).`
+            );
+            isAddingExtraRoom = false;
+            const bundleBtn = document.getElementById('filterBundle');
+            if (bundleBtn) bundleBtn.style.display = '';
+            goToStep2();
+            return;
+        }
+        // ─────────────────────────────────────────────────────────────
+
         extraRooms.push(roomEntry);
 
         // Render the extra room card in the form
