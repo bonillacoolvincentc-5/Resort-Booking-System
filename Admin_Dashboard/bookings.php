@@ -314,7 +314,7 @@ while ($row = $bundlesRes->fetch_assoc()) {
                                 <td>
                                     <div class="action-buttons">
                                         <?php if ($booking['status_name'] === 'pending_review'): ?>
-                                            <button class="btn-action btn-approve" onclick="approveBooking(<?php echo $booking['id']; ?>)">
+                                            <button class="btn-action btn-approve" onclick="approveBooking(this, <?php echo $booking['id']; ?>)">
                                                 <i class="bi bi-check-circle"></i>
                                                 Approve
                                             </button>
@@ -1067,70 +1067,23 @@ while ($row = $bundlesRes->fetch_assoc()) {
         // ── Approve Booking Modal Logic ────────────────────────────────────────
         let _approveBookingId = null;
 
-        function approveBooking(bookingId) {
-            _approveBookingId = bookingId;
-            const errorEl  = document.getElementById('abmError');
-            const confirmBtn = document.getElementById('abmConfirmBtn');
-            const cancelBtn  = document.getElementById('abmCancelBtn');
-            
-            errorEl.style.display = 'none';
-            confirmBtn.disabled = false;
-            confirmBtn.innerHTML = '<i class="bi bi-check-circle me-1"></i>Confirm Approval';
-            cancelBtn.disabled = false;
-            
-            document.getElementById('approveBookingModal').style.display = 'flex';
-        }
-
-        function closeApproveModal() {
-            document.getElementById('approveBookingModal').style.display = 'none';
-            _approveBookingId = null;
-        }
-
-        async function confirmApproveBooking() {
-            const errorEl    = document.getElementById('abmError');
-            const errorMsg   = document.getElementById('abmErrorMsg');
-            const confirmBtn = document.getElementById('abmConfirmBtn');
-            const cancelBtn  = document.getElementById('abmCancelBtn');
-
-            // Lock UI
-            confirmBtn.disabled = true;
-            cancelBtn.disabled  = true;
-            confirmBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status"></span>Approving…';
-
-            try {
+        function approveBooking(btn, bookingId) {
+            animateBtn(btn, async () => {
                 const response = await fetch('../php/update_booking_status.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        booking_id: _approveBookingId,
+                        booking_id: bookingId,
                         status: 'approved',
                         notes: 'Booking approved by admin'
                     })
                 });
-
                 const result = await response.json();
-
-                if (result.success) {
-                    confirmBtn.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i>Approved!';
-                    setTimeout(() => {
-                        closeApproveModal();
-                        location.reload();
-                    }, 900);
-                } else {
-                    errorMsg.textContent = result.message || 'Failed to approve booking. Please try again.';
-                    errorEl.style.display = 'flex';
-                    confirmBtn.disabled = false;
-                    cancelBtn.disabled  = false;
-                    confirmBtn.innerHTML = '<i class="bi bi-check-circle me-1"></i>Confirm Approval';
+                if (!result.success) {
+                    showAlert(result.message || 'Failed to approve booking', 'danger');
                 }
-            } catch (error) {
-                console.error('Error approving booking:', error);
-                errorMsg.textContent = 'Connection error. Please try again.';
-                errorEl.style.display = 'flex';
-                confirmBtn.disabled = false;
-                cancelBtn.disabled  = false;
-                confirmBtn.innerHTML = '<i class="bi bi-check-circle me-1"></i>Confirm Approval';
-            }
+                return result;
+            });
         }
 
         // ── Reject Booking Modal Logic ────────────────────────────────────────
@@ -1194,7 +1147,6 @@ while ($row = $bundlesRes->fetch_assoc()) {
             const cancelBtn  = document.getElementById('rbmCancelBtn');
             const reason     = textarea.value.trim();
 
-            // Validate
             if (!reason) {
                 textarea.classList.add('rbm-invalid');
                 errorMsg.textContent = 'Please enter a rejection reason before confirming.';
@@ -1205,12 +1157,9 @@ while ($row = $bundlesRes->fetch_assoc()) {
             textarea.classList.remove('rbm-invalid');
             errorEl.style.display = 'none';
 
-            // Lock UI
-            confirmBtn.disabled = true;
-            cancelBtn.disabled  = true;
-            confirmBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status"></span>Rejecting…';
+            cancelBtn.disabled = true;
 
-            try {
+            await animateBtn(confirmBtn, async () => {
                 const response = await fetch('../php/update_booking_status.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -1222,27 +1171,13 @@ while ($row = $bundlesRes->fetch_assoc()) {
                 });
 
                 const result = await response.json();
-
-                if (result.success) {
-                    confirmBtn.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i>Rejected!';
-                    setTimeout(() => {
-                        closeRejectModal();
-                        location.reload();
-                    }, 900);
-                } else {
+                if (!result.success) {
                     errorMsg.textContent = result.message || 'Failed to reject booking. Please try again.';
                     errorEl.style.display = 'flex';
-                    confirmBtn.disabled = false;
-                    cancelBtn.disabled  = false;
-                    confirmBtn.innerHTML = '<i class="bi bi-x-circle me-1"></i>Reject Booking';
+                    cancelBtn.disabled = false;
                 }
-            } catch (err) {
-                errorMsg.textContent = 'Network error. Please try again.';
-                errorEl.style.display = 'flex';
-                confirmBtn.disabled = false;
-                cancelBtn.disabled  = false;
-                confirmBtn.innerHTML = '<i class="bi bi-x-circle me-1"></i>Reject Booking';
-            }
+                return result;
+            });
         }
 
         // -- Helper: Format status without underscores and title-cased --

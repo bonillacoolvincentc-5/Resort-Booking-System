@@ -35,13 +35,13 @@ try {
     $packageType = $type;
 
     if ($packageType === 'accommodation') {
-        $stmt = $conn->prepare("SELECT id, name, capacity FROM accommodations WHERE id = ? AND is_active = 1");
+        $stmt = $conn->prepare("SELECT id, name, capacity, daily_booking_limit FROM accommodations WHERE id = ? AND is_active = 1");
         $stmt->bind_param('i', $itemId);
         $stmt->execute();
         $item = $stmt->get_result()->fetch_assoc();
         $stmt->close();
     } elseif ($packageType === 'activity') {
-        $stmt = $conn->prepare("SELECT id, name, capacity FROM activities WHERE id = ? AND is_active = 1");
+        $stmt = $conn->prepare("SELECT id, name, capacity, daily_booking_limit FROM activities WHERE id = ? AND is_active = 1");
         $stmt->bind_param('i', $itemId);
         $stmt->execute();
         $item = $stmt->get_result()->fetch_assoc();
@@ -50,7 +50,7 @@ try {
 
     // Auto-detection fallback if type not supplied or not matched
     if (!$item) {
-        $stmt = $conn->prepare("SELECT id, name, capacity FROM activities WHERE id = ? AND is_active = 1");
+        $stmt = $conn->prepare("SELECT id, name, capacity, daily_booking_limit FROM activities WHERE id = ? AND is_active = 1");
         $stmt->bind_param('i', $itemId);
         $stmt->execute();
         $item = $stmt->get_result()->fetch_assoc();
@@ -58,7 +58,7 @@ try {
         if ($item) {
             $packageType = 'activity';
         } else {
-            $stmt = $conn->prepare("SELECT id, name, capacity FROM accommodations WHERE id = ? AND is_active = 1");
+            $stmt = $conn->prepare("SELECT id, name, capacity, daily_booking_limit FROM accommodations WHERE id = ? AND is_active = 1");
             $stmt->bind_param('i', $itemId);
             $stmt->execute();
             $item = $stmt->get_result()->fetch_assoc();
@@ -74,7 +74,13 @@ try {
     }
 
     // Capacity logic
-    $capacity = ($packageType === 'accommodation') ? 1 : max(1, (int)$item['capacity']);
+    if ($packageType === 'accommodation') {
+        // Accommodations track how many TIMES they can be booked per day (units)
+        $capacity = isset($item['daily_booking_limit']) ? max(1, (int)$item['daily_booking_limit']) : 1;
+    } else {
+        // Activities track how many GUESTS can book per day
+        $capacity = max(1, (int)$item['capacity']);
+    }
     $startDate = sprintf('%04d-%02d-01', $year, $month);
     $endDate   = date('Y-m-t', strtotime($startDate));
 
@@ -84,9 +90,11 @@ try {
     $end = new DateTime($endDate);
 
     while ($cursor <= $end) {
-        $days[$cursor->format('Y-m-d')] = [
+        $dKey = $cursor->format('Y-m-d');
+        $days[$dKey] = [
             'booked'    => 0,
             'capacity'  => $capacity,
+            'global_cap'=> null,
             'available' => true,
             'status'    => 'available'
         ];
@@ -116,6 +124,50 @@ try {
         }
     }
     $blkStmt->close();
+
+    // ── Global Daily Resort Capacity Check ────────────────────────
+    $capStmt = $conn->prepare("SELECT target_date, max_guests FROM daily_resort_capacity WHERE target_date BETWEEN ? AND ?");
+    $capStmt->bind_param('ss', $startDate, $endDate);
+    $capStmt->execute();
+    $capRes = $capStmt->get_result();
+    $customCaps = [];
+    while ($row = $capRes->fetch_assoc()) {
+        $customCaps[$row['target_date']] = (int)$row['max_guests'];
+    }
+    $capStmt->close();
+
+    if (!empty($customCaps)) {
+        // Set global cap on each day
+        foreach ($customCaps as $date => $cap) {
+            if (isset($days[$date])) {
+                $days[$date]['global_cap'] = $cap;
+            }
+        }
+        
+        // Find total guests per day
+        $globalBookStmt = $conn->prepare("
+            SELECT check_in_date, SUM(number_of_guests) AS total_guests
+            FROM bookings
+            WHERE status_id IN (SELECT id FROM booking_status WHERE name IN ('pending_review', 'approved', 'checked_in'))
+              AND check_in_date BETWEEN ? AND ?
+            GROUP BY check_in_date
+        ");
+        $globalBookStmt->bind_param('ss', $startDate, $endDate);
+        $globalBookStmt->execute();
+        $globalBookRes = $globalBookStmt->get_result();
+        while ($row = $globalBookRes->fetch_assoc()) {
+            $d = $row['check_in_date'];
+            $totalG = (int)$row['total_guests'];
+            if (isset($customCaps[$d]) && $totalG >= $customCaps[$d]) {
+                if (isset($days[$d]) && $days[$d]['status'] !== 'blocked') {
+                    $days[$d]['status'] = 'full';
+                    $days[$d]['available'] = false;
+                    $days[$d]['global_full'] = true;
+                }
+            }
+        }
+        $globalBookStmt->close();
+    }
 
     // Query Bookings
     if ($packageType === 'accommodation') {
@@ -176,7 +228,7 @@ try {
             if (isset($days[$d])) {
                 $bookedGuests = (int)$row['total_booked'];
                 $days[$d]['booked'] = $bookedGuests;
-                if ($days[$d]['status'] !== 'blocked') {
+                if ($days[$d]['status'] !== 'blocked' && empty($days[$d]['global_full'])) {
                     if ($bookedGuests >= $capacity) {
                         $days[$d]['status'] = 'full';
                         $days[$d]['available'] = false;

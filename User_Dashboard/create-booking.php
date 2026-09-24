@@ -2883,15 +2883,16 @@ function renderCalendarView(data, container) {
         if (isPast) statusClass = 'blocked';
 
         const isSelected = selectedDate === dateStr ? 'selected' : '';
+        const capToShow = dayData.global_cap ? dayData.global_cap : dayData.capacity;
 
         html += `
             <div class="act-cal-cell ${statusClass} ${isSelected}"
                  ${isClickable ? `data-date="${dateStr}" role="button" tabindex="0"` : `aria-disabled="true"`}
-                 title="Date: ${dateStr} | Booked: ${dayData.booked} / Capacity: ${dayData.capacity}">
+                 title="Date: ${dateStr} | Booked: ${dayData.booked} / Cap: ${capToShow}">
                 <span class="act-cal-day-num">${d}</span>
                 <span class="act-cal-meta">
-                    <span class="meta-full">Booked: ${dayData.booked} / Cap: ${dayData.capacity}</span>
-                    <span class="meta-short">${dayData.booked}/${dayData.capacity}</span>
+                    <span class="meta-full">Booked: ${dayData.booked} / Cap: ${capToShow}</span>
+                    <span class="meta-short">${dayData.booked}/${capToShow}</span>
                 </span>
             </div>
         `;

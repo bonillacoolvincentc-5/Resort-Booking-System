@@ -94,8 +94,8 @@ try {
 
     // Capacity logic
     if ($packageType === 'accommodation') {
-        // For a specific accommodation unit/villa/room, 1 booking occupies the unit
-        $totalCapacity = 1;
+        // Accommodations use daily_booking_limit as their capacity (number of units available)
+        $totalCapacity = isset($item['daily_booking_limit']) ? max(1, intval($item['daily_booking_limit'])) : 1;
         $itemColumn = 'accommodation_id';
     } elseif ($packageType === 'activity') {
         $totalCapacity = max(1, intval($item['capacity']));
@@ -151,6 +151,41 @@ try {
     }
     $blockedStmt->close();
 
+    // 2.5 Fetch Global Daily Capacities
+    $capStmt = $conn->prepare("SELECT target_date, max_guests FROM daily_resort_capacity WHERE target_date BETWEEN ? AND ?");
+    $capStmt->bind_param('ss', $startDate, $endDate);
+    $capStmt->execute();
+    $capRes = $capStmt->get_result();
+    $customCaps = [];
+    while ($row = $capRes->fetch_assoc()) {
+        $customCaps[$row['target_date']] = (int)$row['max_guests'];
+    }
+    $capStmt->close();
+
+    if (!empty($customCaps)) {
+        $globalBookStmt = $conn->prepare("
+            SELECT check_in_date, SUM(number_of_guests) AS total_guests
+            FROM bookings
+            WHERE status_id IN (SELECT id FROM booking_status WHERE name IN ('pending_review', 'approved', 'checked_in'))
+              AND check_in_date BETWEEN ? AND ?
+            GROUP BY check_in_date
+        ");
+        $globalBookStmt->bind_param('ss', $startDate, $endDate);
+        $globalBookStmt->execute();
+        $globalBookRes = $globalBookStmt->get_result();
+        while ($row = $globalBookRes->fetch_assoc()) {
+            $d = $row['check_in_date'];
+            $totalG = (int)$row['total_guests'];
+            if (isset($customCaps[$d]) && $totalG >= $customCaps[$d]) {
+                if (isset($days[$d]) && $days[$d]['status'] !== 'blocked') {
+                    $days[$d]['status'] = 'full';
+                    $days[$d]['global_full'] = true;
+                }
+            }
+        }
+        $globalBookStmt->close();
+    }
+
     // 3. Fetch Bookings overlapping this month for this item
     $bookingStmt = $conn->prepare("
         SELECT check_in_date, check_out_date 
@@ -193,6 +228,10 @@ try {
     // 4. Determine status based on capacity
     foreach ($days as $dateKey => &$day) {
         if ($day['status'] === 'blocked') {
+            continue;
+        }
+        if (!empty($day['global_full'])) {
+            $day['status'] = 'full';
             continue;
         }
 

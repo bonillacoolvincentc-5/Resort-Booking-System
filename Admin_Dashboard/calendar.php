@@ -99,7 +99,7 @@ $adminEmail = $_SESSION['admin_email'];
                         <span class="detail-label">Max Guest Limit</span>
                         <div class="d-flex gap-2">
                             <input type="number" id="detailDailyCap" class="form-ctrl form-control-sm" style="width: 80px;" min="0" title="Set to 0 to remove override">
-                            <button type="button" class="btn-modal btn-modal-primary btn-sm" onclick="saveDailyLimit()">Save</button>
+                            <button type="button" id="btnSaveDailyLimit" class="btn-modal btn-modal-primary btn-sm" onclick="saveDailyLimit()" style="min-width: 70px; transition: all 0.3s;">Save</button>
                         </div>
                     </div>
                 </div>
@@ -438,6 +438,11 @@ $adminEmail = $_SESSION['admin_email'];
             const cap = document.getElementById('detailDailyCap').value;
             if (cap === '') return;
 
+            const btn = document.getElementById('btnSaveDailyLimit');
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>';
+
             try {
                 const fd = new FormData();
                 fd.append('date', selectedDate);
@@ -450,13 +455,29 @@ $adminEmail = $_SESSION['admin_email'];
                 const data = await res.json();
                 
                 if (data.success) {
-                    showAdminAlert('Success', 'Daily guest limit updated successfully.', true);
+                    btn.innerHTML = '<i class="bi bi-check2"></i> Saved';
+                    btn.style.backgroundColor = '#10b981';
+                    btn.style.borderColor = '#10b981';
+                    btn.style.color = '#fff';
+                    
                     loadCalendarData().then(() => renderCalendar());
+                    
+                    setTimeout(() => {
+                        btn.innerHTML = originalText;
+                        btn.disabled = false;
+                        btn.style.backgroundColor = '';
+                        btn.style.borderColor = '';
+                        btn.style.color = '';
+                    }, 2000);
                 } else {
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
                     showAdminAlert('Error', data.message || 'Error updating daily limit');
                 }
             } catch (err) {
                 console.error(err);
+                btn.disabled = false;
+                btn.innerHTML = originalText;
                 showAdminAlert('Error', 'Failed to save daily limit.');
             }
         }

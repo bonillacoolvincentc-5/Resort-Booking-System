@@ -24,6 +24,52 @@ function loadHTML(url, containerId, afterLoad) {
         .catch(err => console.error('[admin-components] Failed to load ' + url, err));
 }
 
+/* ── animateBtn helper ──────────────────────────────────────────── */
+window.animateBtn = async function(btn, fetchPromiseCallback) {
+    if (!btn) {
+        const res = await fetchPromiseCallback();
+        if (res && res.success) location.reload();
+        return res;
+    }
+
+    const originalText = btn.innerHTML;
+    const originalWidth = btn.offsetWidth;
+    const originalHeight = btn.offsetHeight;
+    
+    if (originalWidth) btn.style.width = originalWidth + 'px';
+    if (originalHeight) btn.style.height = originalHeight + 'px';
+    
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>';
+
+    try {
+        const result = await fetchPromiseCallback();
+        
+        if (result && result.success) {
+            btn.innerHTML = '<i class="bi bi-check2"></i>';
+            btn.style.backgroundColor = '#10b981';
+            btn.style.borderColor = '#10b981';
+            btn.style.color = '#fff';
+            
+            setTimeout(() => {
+                location.reload();
+            }, 1000);
+        } else {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+            btn.style.width = '';
+            btn.style.height = '';
+        }
+        return result;
+    } catch (err) {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+        btn.style.width = '';
+        btn.style.height = '';
+        throw err;
+    }
+};
+
 /* ── setActiveNavigation ────────────────────────────────────────── */
 function setActiveNavigation() {
     const currentPage = window.location.pathname.split('/').pop().replace('.php', '');
