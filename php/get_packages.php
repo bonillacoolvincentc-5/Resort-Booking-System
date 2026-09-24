@@ -23,6 +23,16 @@ function normalizeImageUrl($url) {
 }
 
 try {
+    // Ensure columns exist
+    $chkAct = $conn->query("SHOW COLUMNS FROM `activities` LIKE 'daily_booking_limit'");
+    if ($chkAct && $chkAct->num_rows === 0) {
+        $conn->query("ALTER TABLE `activities` ADD COLUMN `daily_booking_limit` INT(11) NOT NULL DEFAULT 10 AFTER `capacity`");
+    }
+    $chkAcc = $conn->query("SHOW COLUMNS FROM `accommodations` LIKE 'daily_booking_limit'");
+    if ($chkAcc && $chkAcc->num_rows === 0) {
+        $conn->query("ALTER TABLE `accommodations` ADD COLUMN `daily_booking_limit` INT(11) NOT NULL DEFAULT 1 AFTER `capacity`");
+    }
+
     // ── Activities ──────────────────────────────────────────────────────────
     $actStmt = $conn->prepare("
         SELECT 
@@ -35,6 +45,7 @@ try {
             min_duration_hours,
             max_duration_hours,
             capacity,
+            daily_booking_limit,
             image_url,
             is_active,
             (SELECT COUNT(*) FROM bookings WHERE booking_type = 'activity' AND activity_id = activities.id AND check_in_date <= CURDATE() AND (check_out_date >= CURDATE() OR check_out_date IS NULL) AND status_id IN (SELECT id FROM booking_status WHERE name IN ('pending_review', 'approved', 'checked_in'))) AS booked_today_count
@@ -82,7 +93,7 @@ try {
             'image_url'          => normalizeImageUrl($row['image_url']),
             'max_duration_hours' => (float) $row['max_duration_hours'],
             'booked_today_count' => (int) $row['booked_today_count'],
-            'booking_limit'      => (int) $row['capacity'],
+            'booking_limit'      => (int) ($row['daily_booking_limit'] ?? $row['capacity']),
             'amenities'          => [],
             'inclusions'         => $actInclusions,
         ];
@@ -99,6 +110,7 @@ try {
             description,
             base_capacity,
             capacity,
+            daily_booking_limit,
             extra_person_fee,
             price_per_night,
             price_per_day,
@@ -163,7 +175,7 @@ try {
             'icon'             => $row['type'] === 'room' ? 'bi-door-open' :
                                   ($row['type'] === 'cottage' ? 'bi-house' : 'bi-building'),
             'booked_today_count'=> (int) $row['booked_today_count'],
-            'booking_limit'    => 1, // Single unit logic, though capacity can be used if it's multiple identical rooms
+            'booking_limit'    => (int) ($row['daily_booking_limit'] ?? 1), // Daily unit logic
             'image_url'        => normalizeImageUrl($row['image_url']),
             'amenities'        => $amenitiesList,
             'inclusions'       => $accInclusions,

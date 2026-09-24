@@ -1225,6 +1225,7 @@ if ($stmtSlots) {
 // ── "Add Another Room" state ──────────────────────────────
 let isAddingExtraRoom = false;   // true while user is picking an additional room
 let extraRooms        = [];      // [{pkg, guests, date, checkOut}]
+let cartCounts        = {};      // {roomId: quantity}
 
 document.getElementById('add-room-btn').addEventListener('click', function (e) {
     e.preventDefault();
@@ -1566,6 +1567,12 @@ function renderPackages(pkgs) {
                 ? 'Bundle' 
                 : (currentTourType === 'daytour' ? 'Day Tour' : 'Overnight Stay'));
 
+        // Check if limit reached for UI
+        const cartCount = typeof extraRooms !== 'undefined' ? 
+            (extraRooms.filter(r => r.pkg.id === pkg.id).length + (typeof selectedPkg !== 'undefined' && selectedPkg && selectedPkg.id === pkg.id ? 1 : 0)) : 0;
+        const unitLimit = pkg.booking_limit || 1;
+        const isLimitReached = cartCount >= unitLimit;
+
         card.innerHTML = `
             <div class="card-img-wrap">
                 ${imgHtml}
@@ -1591,14 +1598,14 @@ function renderPackages(pkgs) {
                         onclick="openDetailModal(${pkg.id},'${escHtml(pkg.package_type)}')">
                     <i class="bi bi-eye"></i> View Details
                 </button>
-                <button class="btn-modern btn-primary-modern btn-book-now" style="flex:1;">
-                    <i class="bi bi-calendar-plus"></i> Book Now
+                <button class="btn-modern btn-primary-modern btn-book-now" style="flex:1;" ${isLimitReached ? 'disabled' : ''}>
+                    <i class="bi ${isLimitReached ? 'bi-check-circle' : 'bi-calendar-plus'}"></i> ${isLimitReached ? 'Selected' : 'Book Now'}
                 </button>
             </div>
         `;
         // Wire up card buttons — bundles use selectBundle, others use selectPackage
         const bookBtn = card.querySelector('.btn-book-now');
-        if (bookBtn) {
+        if (bookBtn && !isLimitReached) {
             if (pkg.package_type === 'bundle') {
                 bookBtn.onclick = () => selectBundle(pkg.id);
             } else {
@@ -1760,6 +1767,55 @@ function selectPackage(id, type) {
     const pkg = allPackages.find(p => p.id == id && p.package_type === type);
     if (!pkg) return;
 
+    if (isAddingExtraRoom) {
+        // ── Validation using live capacity tracker ──
+        const currentCount = cartCounts[pkg.id] || 0;
+        const unitLimit = pkg.booking_limit || 1;
+        
+        if (unitLimit - currentCount <= 0) {
+            alert(`"${pkg.name}" is fully booked or already added to its maximum capacity.`);
+            isAddingExtraRoom = false;
+            const bundleBtn = document.getElementById('filterBundle');
+            if (bundleBtn) bundleBtn.style.display = '';
+            goToStep2();
+            return;
+        }
+
+        // Increment tracker
+        cartCounts[pkg.id] = currentCount + 1;
+
+        // ── Append Extra Room ──
+        isAddingExtraRoom = false;
+        const bundleBtn = document.getElementById('filterBundle');
+        if (bundleBtn) bundleBtn.style.display = '';
+
+        const primaryDate    = document.getElementById('bookingDate').value;
+        const primaryCheckOut = document.getElementById('checkoutDate').value;
+        const primaryGuests  = parseInt(document.getElementById('numberOfGuests').value) || 1;
+
+        const roomIndex = extraRooms.length + 2; 
+        const roomEntry = {
+            index: roomIndex,
+            pkg: pkg,
+            guests: primaryGuests,
+            date: primaryDate,
+            checkOut: primaryCheckOut
+        };
+
+        extraRooms.push(roomEntry);
+        renderExtraRoomCard(roomEntry);
+        recalcPrice();
+        goToStep2();
+        return;
+    }
+
+    // ── Normal (first) room selection ──
+    cartCounts = {};
+    cartCounts[pkg.id] = 1;
+    extraRooms = [];
+    const container = document.getElementById('extraRoomsContainer');
+    if (container) container.innerHTML = '';
+
     // ATV and activities are strictly Day Tour only
     if (pkg.package_type === 'activity') {
         currentTourType = 'daytour';
@@ -1864,61 +1920,6 @@ function selectPackage(id, type) {
         fetchAndRenderActivityCalendar(pkg.id, pkg.package_type);
     }
 
-    if (isAddingExtraRoom) {
-        // ── Extra room mode: append a room slot, don't replace Step 2 ──
-        isAddingExtraRoom = false;
-
-        // Restore bundle filter pill
-        const bundleBtn = document.getElementById('filterBundle');
-        if (bundleBtn) bundleBtn.style.display = '';
-
-        // Snapshot date/guests from the primary room form
-        const primaryDate    = document.getElementById('bookingDate').value;
-        const primaryCheckOut = document.getElementById('checkoutDate').value;
-        const primaryGuests  = parseInt(document.getElementById('numberOfGuests').value) || 1;
-
-        // Store extra room data
-        const roomIndex = extraRooms.length + 2; // Room 2, 3, …
-        const roomEntry = {
-            index: roomIndex,
-            pkg: pkg,
-            guests: primaryGuests,
-            date: primaryDate,
-            checkOut: primaryCheckOut
-        };
-        // ── Duplicate-room guard ──────────────────────────────────────
-        // Count how many times this pkg is already in the cart
-        // (primary room counts as 1 if it matches; each extraRooms entry counts as 1).
-        const cartCount = extraRooms.filter(r => r.pkg.id === pkg.id).length
-                        + (selectedPkg && selectedPkg.id === pkg.id ? 1 : 0);
-        // booking_limit === 1 for single-unit accommodations (from get_packages.php).
-        const unitLimit = pkg.booking_limit || 1;
-        if (cartCount >= unitLimit) {
-            alert(
-                `"${pkg.name}" is a single unit and is already in your cart.\n` +
-                `You cannot add the same room more than ${unitLimit} time(s).`
-            );
-            isAddingExtraRoom = false;
-            const bundleBtn = document.getElementById('filterBundle');
-            if (bundleBtn) bundleBtn.style.display = '';
-            goToStep2();
-            return;
-        }
-        // ─────────────────────────────────────────────────────────────
-
-        extraRooms.push(roomEntry);
-
-        // Render the extra room card in the form
-        renderExtraRoomCard(roomEntry);
-        recalcPrice();
-        goToStep2();
-        return;
-    }
-
-    // ── Normal (first) room selection ──
-    // Clear any previously added extra rooms when a fresh first room is chosen
-    extraRooms = [];
-    document.getElementById('extraRoomsContainer').innerHTML = '';
     recalcPrice();
     goToStep2();
 }
@@ -2693,6 +2694,10 @@ function renderExtraRoomCard(room) {
 }
 
 function removeExtraRoom(index) {
+    const rm = extraRooms.find(r => r.index === index);
+    if (rm && rm.pkg) {
+        cartCounts[rm.pkg.id] = Math.max(0, (cartCounts[rm.pkg.id] || 0) - 1);
+    }
     extraRooms = extraRooms.filter(r => r.index !== index);
     const card = document.getElementById('extraRoomCard-' + index);
     if (card) card.remove();

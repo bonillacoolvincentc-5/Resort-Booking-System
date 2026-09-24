@@ -20,6 +20,11 @@ if ($colCheck && $colCheck->num_rows === 0) {
     $conn->query("ALTER TABLE `activities` ADD COLUMN `price_type` ENUM('per_head','per_hour','flat_rate') NOT NULL DEFAULT 'flat_rate' AFTER `price_per_hour`");
 }
 
+$limitCheck = $conn->query("SHOW COLUMNS FROM `activities` LIKE 'daily_booking_limit'");
+if ($limitCheck && $limitCheck->num_rows === 0) {
+    $conn->query("ALTER TABLE `activities` ADD COLUMN `daily_booking_limit` INT(11) NOT NULL DEFAULT 10 AFTER `capacity`");
+}
+
 $action = $_POST['action'] ?? $_GET['action'] ?? '';
 
 if ($action === 'add' || $action === 'edit') {
@@ -32,6 +37,7 @@ if ($action === 'add' || $action === 'edit') {
     $minDuration = floatval($_POST['min_duration_hours'] ?? 1.0);
     $maxDuration = floatval($_POST['max_duration_hours'] ?? 4.0);
     $capacity = intval($_POST['capacity'] ?? 10);
+    $dailyLimit = intval($_POST['daily_booking_limit'] ?? 10);
 
     $allowedPriceTypes = ['per_head', 'per_hour', 'flat_rate'];
     if (!in_array($priceType, $allowedPriceTypes, true)) {
@@ -66,10 +72,10 @@ if ($action === 'add' || $action === 'edit') {
     try {
         if ($action === 'add') {
             // Insert new activity
-            $query = "INSERT INTO activities (name, slug, description, price_per_hour, price_type, min_duration_hours, max_duration_hours, capacity, image_url, is_active) 
-                      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            $query = "INSERT INTO activities (name, slug, description, price_per_hour, price_type, min_duration_hours, max_duration_hours, capacity, daily_booking_limit, image_url, is_active) 
+                      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             $stmt = $conn->prepare($query);
-            $stmt->bind_param('sssdsddisi', $name, $slug, $description, $pricePerHour, $priceType, $minDuration, $maxDuration, $capacity, $imagePath, $isActive);
+            $stmt->bind_param('sssdsddiisi', $name, $slug, $description, $pricePerHour, $priceType, $minDuration, $maxDuration, $capacity, $dailyLimit, $imagePath, $isActive);
             $stmt->execute();
             
             $item_id = $conn->insert_id;
@@ -96,14 +102,14 @@ if ($action === 'add' || $action === 'edit') {
             
             if ($imagePath) {
                 // Update with new image
-                $query = "UPDATE activities SET name = ?, slug = ?, description = ?, price_per_hour = ?, price_type = ?, min_duration_hours = ?, max_duration_hours = ?, capacity = ?, image_url = ?, is_active = ? WHERE id = ?";
+                $query = "UPDATE activities SET name = ?, slug = ?, description = ?, price_per_hour = ?, price_type = ?, min_duration_hours = ?, max_duration_hours = ?, capacity = ?, daily_booking_limit = ?, image_url = ?, is_active = ? WHERE id = ?";
                 $stmt = $conn->prepare($query);
-                $stmt->bind_param('sssdsddisii', $name, $slug, $description, $pricePerHour, $priceType, $minDuration, $maxDuration, $capacity, $imagePath, $isActive, $activityId);
+                $stmt->bind_param('sssdsddiisii', $name, $slug, $description, $pricePerHour, $priceType, $minDuration, $maxDuration, $capacity, $dailyLimit, $imagePath, $isActive, $activityId);
             } else {
                 // Update without changing image
-                $query = "UPDATE activities SET name = ?, slug = ?, description = ?, price_per_hour = ?, price_type = ?, min_duration_hours = ?, max_duration_hours = ?, capacity = ?, is_active = ? WHERE id = ?";
+                $query = "UPDATE activities SET name = ?, slug = ?, description = ?, price_per_hour = ?, price_type = ?, min_duration_hours = ?, max_duration_hours = ?, capacity = ?, daily_booking_limit = ?, is_active = ? WHERE id = ?";
                 $stmt = $conn->prepare($query);
-                $stmt->bind_param('sssdsddiii', $name, $slug, $description, $pricePerHour, $priceType, $minDuration, $maxDuration, $capacity, $isActive, $activityId);
+                $stmt->bind_param('sssdsddiiii', $name, $slug, $description, $pricePerHour, $priceType, $minDuration, $maxDuration, $capacity, $dailyLimit, $isActive, $activityId);
             }
             $stmt->execute();
             

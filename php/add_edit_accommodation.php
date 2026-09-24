@@ -15,6 +15,11 @@ header('Content-Type: application/json');
 
 global $conn;
 
+$limitCheck = $conn->query("SHOW COLUMNS FROM `accommodations` LIKE 'daily_booking_limit'");
+if ($limitCheck && $limitCheck->num_rows === 0) {
+    $conn->query("ALTER TABLE `accommodations` ADD COLUMN `daily_booking_limit` INT(11) NOT NULL DEFAULT 1 AFTER `capacity`");
+}
+
 $action = $_POST['action'] ?? $_GET['action'] ?? '';
 
 if ($action === 'add' || $action === 'edit') {
@@ -44,6 +49,7 @@ if ($action === 'add' || $action === 'edit') {
     $pricePerDay = floatval($_POST['price_per_day'] ?? 0);
     $amenities = trim($_POST['amenities'] ?? '');
     $isActive = intval($_POST['is_active'] ?? 1);
+    $dailyLimit = max(1, intval($_POST['daily_booking_limit'] ?? 1));
     
     // Handle image upload
     $imagePath = null;
@@ -65,10 +71,10 @@ if ($action === 'add' || $action === 'edit') {
     
     try {
         if ($action === 'add') {
-            $query = "INSERT INTO accommodations (name, type, tour_type, description, base_capacity, capacity, extra_person_fee, price_per_night, price_per_day, amenities, image_url, is_active) 
-                      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            $query = "INSERT INTO accommodations (name, type, tour_type, description, base_capacity, capacity, daily_booking_limit, extra_person_fee, price_per_night, price_per_day, amenities, image_url, is_active) 
+                      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             $stmt = $conn->prepare($query);
-            $stmt->bind_param('ssssiidddssi', $name, $type, $tourType, $description, $baseCapacity, $capacity, $extraPersonFee, $pricePerNight, $pricePerDay, $amenities, $imagePath, $isActive);
+            $stmt->bind_param('ssssiiidddssi', $name, $type, $tourType, $description, $baseCapacity, $capacity, $dailyLimit, $extraPersonFee, $pricePerNight, $pricePerDay, $amenities, $imagePath, $isActive);
             $stmt->execute();
             
             $item_id = $conn->insert_id;
@@ -93,13 +99,13 @@ if ($action === 'add' || $action === 'edit') {
             }
             
             if ($imagePath) {
-                $query = "UPDATE accommodations SET name = ?, type = ?, tour_type = ?, description = ?, base_capacity = ?, capacity = ?, extra_person_fee = ?, price_per_night = ?, price_per_day = ?, amenities = ?, image_url = ?, is_active = ? WHERE id = ?";
+                $query = "UPDATE accommodations SET name = ?, type = ?, tour_type = ?, description = ?, base_capacity = ?, capacity = ?, daily_booking_limit = ?, extra_person_fee = ?, price_per_night = ?, price_per_day = ?, amenities = ?, image_url = ?, is_active = ? WHERE id = ?";
                 $stmt = $conn->prepare($query);
-                $stmt->bind_param('ssssiidddssii', $name, $type, $tourType, $description, $baseCapacity, $capacity, $extraPersonFee, $pricePerNight, $pricePerDay, $amenities, $imagePath, $isActive, $accId);
+                $stmt->bind_param('ssssiiidddssii', $name, $type, $tourType, $description, $baseCapacity, $capacity, $dailyLimit, $extraPersonFee, $pricePerNight, $pricePerDay, $amenities, $imagePath, $isActive, $accId);
             } else {
-                $query = "UPDATE accommodations SET name = ?, type = ?, tour_type = ?, description = ?, base_capacity = ?, capacity = ?, extra_person_fee = ?, price_per_night = ?, price_per_day = ?, amenities = ?, is_active = ? WHERE id = ?";
+                $query = "UPDATE accommodations SET name = ?, type = ?, tour_type = ?, description = ?, base_capacity = ?, capacity = ?, daily_booking_limit = ?, extra_person_fee = ?, price_per_night = ?, price_per_day = ?, amenities = ?, is_active = ? WHERE id = ?";
                 $stmt = $conn->prepare($query);
-                $stmt->bind_param('ssssiidddsii', $name, $type, $tourType, $description, $baseCapacity, $capacity, $extraPersonFee, $pricePerNight, $pricePerDay, $amenities, $isActive, $accId);
+                $stmt->bind_param('ssssiiidddsii', $name, $type, $tourType, $description, $baseCapacity, $capacity, $dailyLimit, $extraPersonFee, $pricePerNight, $pricePerDay, $amenities, $isActive, $accId);
             }
             $stmt->execute();
             

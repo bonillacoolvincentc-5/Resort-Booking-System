@@ -62,7 +62,7 @@ try {
     $numberOfDays = 1;
 
     if ($bookingType === 'activity') {
-        $s = $conn->prepare("SELECT price_per_hour, price_type, capacity FROM activities WHERE id = ? AND is_active = 1");
+        $s = $conn->prepare("SELECT price_per_hour, price_type, capacity, daily_booking_limit FROM activities WHERE id = ? AND is_active = 1");
         $s->bind_param('i', $itemId);
         $s->execute();
         $item = $s->get_result()->fetch_assoc();
@@ -80,7 +80,7 @@ try {
             $price = floatval($item['price_per_hour']);
         }
     } elseif ($bookingType === 'accommodation') {
-        $s = $conn->prepare("SELECT price_per_night, price_per_day, base_capacity, capacity, extra_person_fee FROM accommodations WHERE id = ? AND is_active = 1");
+        $s = $conn->prepare("SELECT price_per_night, price_per_day, base_capacity, capacity, daily_booking_limit, extra_person_fee FROM accommodations WHERE id = ? AND is_active = 1");
         $s->bind_param('i', $itemId);
         $s->execute();
         $item = $s->get_result()->fetch_assoc();
@@ -224,7 +224,8 @@ try {
         $avCheck->execute();
         $avRow = $avCheck->get_result()->fetch_assoc();
 
-        if ($avRow['cnt'] >= 1) {
+        $dailyLimit = max(1, (int)($item['daily_booking_limit'] ?? 1));
+        if ($avRow['cnt'] >= $dailyLimit) {
             throw new Exception(
                 'This room/cottage is already fully booked for the selected dates. ' .
                 'Please choose different dates or another accommodation.'
@@ -243,7 +244,8 @@ try {
         $avCheck->execute();
         $avRow = $avCheck->get_result()->fetch_assoc();
 
-        if ($avRow['cnt'] >= $item['capacity']) {
+        $dailyLimit = $item['daily_booking_limit'] ?? $item['capacity'];
+        if ($avRow['cnt'] >= $dailyLimit) {
             throw new Exception('This slot is fully booked for the selected date. Please choose another date.');
         }
     }
@@ -273,16 +275,18 @@ try {
     }
 
     foreach ($accommodationWindows as $accId => $windows) {
-        $accNameStmt = $conn->prepare("SELECT name FROM accommodations WHERE id = ? LIMIT 1");
+        $accNameStmt = $conn->prepare("SELECT name, daily_booking_limit FROM accommodations WHERE id = ? LIMIT 1");
         $accNameStmt->bind_param('i', $accId);
         $accNameStmt->execute();
-        $accLabel = $accNameStmt->get_result()->fetch_assoc()['name'] ?? "Accommodation #$accId";
+        $accRow = $accNameStmt->get_result()->fetch_assoc();
+        $accLabel = $accRow['name'] ?? "Accommodation #$accId";
+        $dailyLimit = max(1, (int)($accRow['daily_booking_limit'] ?? 1));
 
-        // Single-unit rule: same room cannot appear twice in one submission.
-        if (count($windows) > 1) {
+        // Single-unit rule: check against daily_booking_limit
+        if (count($windows) > $dailyLimit) {
             throw new Exception(
-                "\"$accLabel\" is a single unit and appears more than once in your booking. " .
-                "Please remove the duplicate before submitting."
+                "\"$accLabel\" has a limit of $dailyLimit unit(s) and appears more times in your booking. " .
+                "Please remove the duplicates before submitting."
             );
         }
 
@@ -303,7 +307,7 @@ try {
             ");
             $erAvCheck->bind_param('iss', $accId, $w['out'], $w['in']);
             $erAvCheck->execute();
-            if ($erAvCheck->get_result()->fetch_assoc()['cnt'] >= 1) {
+            if ($erAvCheck->get_result()->fetch_assoc()['cnt'] >= $dailyLimit) {
                 throw new Exception(
                     "\"$accLabel\" is already fully booked for the selected dates. " .
                     "Please choose different dates or another accommodation."

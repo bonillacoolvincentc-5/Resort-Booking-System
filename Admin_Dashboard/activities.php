@@ -473,8 +473,14 @@ while ($row = $accResult->fetch_assoc()) {
                             </div>
                             <div class="col-md-4">
                                 <div class="form-group-modern">
-                                    <label class="form-label-modern">Capacity</label>
+                                    <label class="form-label-modern">Capacity (per slot)</label>
                                     <input type="number" class="form-control-modern" id="activityCapacity" name="capacity" value="10">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group-modern">
+                                    <label class="form-label-modern">Daily Booking Limit</label>
+                                    <input type="number" class="form-control-modern" id="activityDailyLimit" name="daily_booking_limit" value="10">
                                 </div>
                             </div>
                         </div>
@@ -567,15 +573,21 @@ while ($row = $accResult->fetch_assoc()) {
                                     <input type="number" min="1" class="form-control-modern" id="accBaseCapacity" name="base_capacity" required value="2">
                                 </div>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <div class="form-group-modern">
-                                    <label class="form-label-modern">Max Capacity (Guests)</label>
+                                    <label class="form-label-modern">Max Capacity</label>
                                     <input type="number" min="1" class="form-control-modern" id="accCapacity" name="capacity" required value="4">
                                 </div>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <div class="form-group-modern">
-                                    <label class="form-label-modern">Extra Person Fee (₱)</label>
+                                    <label class="form-label-modern">Daily Limit</label>
+                                    <input type="number" min="1" class="form-control-modern" id="accDailyLimit" name="daily_booking_limit" required value="1">
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group-modern">
+                                    <label class="form-label-modern">Extra Person (₱)</label>
                                     <input type="number" step="0.01" min="0" class="form-control-modern" id="accExtraPersonFee" name="extra_person_fee" required value="0.00">
                                 </div>
                             </div>
@@ -637,6 +649,7 @@ while ($row = $accResult->fetch_assoc()) {
             document.getElementById('activityForm').reset();
             document.getElementById('activityId').value = '';
             document.getElementById('activityStatus').value = '1';
+            document.getElementById('activityDailyLimit').value = '10';
             
             if (!activityModal) {
                 activityModal = new bootstrap.Modal(document.getElementById('activityModal'));
@@ -671,6 +684,7 @@ while ($row = $accResult->fetch_assoc()) {
                     document.getElementById('minDuration').value = activity.min_duration_hours;
                     document.getElementById('maxDuration').value = activity.max_duration_hours;
                     document.getElementById('activityCapacity').value = activity.capacity;
+                    document.getElementById('activityDailyLimit').value = activity.daily_booking_limit || 10;
                     
                     if (!activityModal) {
                         activityModal = new bootstrap.Modal(document.getElementById('activityModal'));
@@ -807,6 +821,7 @@ while ($row = $accResult->fetch_assoc()) {
             document.getElementById('accTourDay').checked = false;
             document.getElementById('accBaseCapacity').value = '2';
             document.getElementById('accCapacity').value = '4';
+            document.getElementById('accDailyLimit').value = '1';
             document.getElementById('accExtraPersonFee').value = '0.00';
             document.getElementById('accPriceNight').value = '0.00';
             document.getElementById('accPriceDay').value = '0.00';
@@ -849,6 +864,7 @@ while ($row = $accResult->fetch_assoc()) {
                     document.getElementById('accPriceDay').value = acc.price_per_day;
                     document.getElementById('accBaseCapacity').value = acc.base_capacity !== undefined ? acc.base_capacity : 1;
                     document.getElementById('accCapacity').value = acc.capacity;
+                    document.getElementById('accDailyLimit').value = acc.daily_booking_limit || 1;
                     document.getElementById('accExtraPersonFee').value = acc.extra_person_fee !== undefined ? acc.extra_person_fee : '0.00';
                     document.getElementById('accDescription').value = acc.description || '';
                     document.getElementById('accAmenities').value = acc.amenities || '';
