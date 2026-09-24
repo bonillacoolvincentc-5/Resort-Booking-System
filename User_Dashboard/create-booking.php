@@ -666,6 +666,29 @@ if ($stmtSlots) {
             padding: 0.8rem 2.5rem; background: linear-gradient(135deg, #3b82f6, #8b5cf6);
             color: #fff; border: none; border-radius: 0.75rem; font-weight: 700; cursor: pointer;
         }
+
+        /* ── Add Another Room button ───────────────────────────────── */
+        #add-room-btn {
+            background: transparent;
+            border: 1px solid var(--accent-success);
+            color: var(--accent-success);
+            padding: .6rem 1.25rem;
+            border-radius: var(--radius-btn);
+            font-size: .875rem;
+            font-weight: 500;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+            transition: background .25s ease, color .25s ease, transform .2s ease;
+            text-decoration: none;
+        }
+        #add-room-btn:hover {
+            background: rgba(16,185,129,.1);
+            color: #34d399;
+            border-color: #34d399;
+            transform: translateY(-1px);
+        }
     </style>
 </head>
 <body>
@@ -712,7 +735,7 @@ if ($stmtSlots) {
     <!-- ══════════════════════════════════════════════════════════════
          STEP 1 — PACKAGE SELECTION
     ═══════════════════════════════════════════════════════════════ -->
-    <div id="step1Section">
+    <div id="step1Section" id="selection-container">
 
         <!-- Stay / Tour Type Selector (Day Tour vs Overnight) — First Step before looking for rooms/activities -->
         <div class="mb-4" id="experienceSelectSection">
@@ -917,6 +940,9 @@ if ($stmtSlots) {
                                           placeholder="Any dietary needs, accessibility requirements, celebrations…"></textarea>
                             </div>
 
+                            <!-- Extra rooms added via "Add Another Room" -->
+                            <div id="extraRoomsContainer"></div>
+
                             <!-- Hidden fields -->
                             <input type="hidden" id="selectedPackageId"   name="package_id">
                             <input type="hidden" id="selectedPackageType" name="package_type">
@@ -951,13 +977,18 @@ if ($stmtSlots) {
                 </div>
 
                 <!-- Action buttons — below Price Summary, right-aligned -->
-                <div class="d-flex gap-3 flex-wrap justify-content-end mt-3">
-                    <button type="button" class="btn-modern btn-secondary-modern" onclick="goToStep1()">
-                        <i class="bi bi-arrow-left"></i> Back to Packages
+                <div class="d-flex gap-3 flex-wrap align-items-center mt-3">
+                    <button type="button" id="add-room-btn">
+                        <i class="bi bi-plus-circle"></i> Add Another Room
                     </button>
-                    <button type="submit" form="bookingForm" class="btn-modern btn-primary-modern" id="submitBtn">
-                        <i class="bi bi-check-circle"></i> Confirm Booking
-                    </button>
+                    <div class="ms-auto d-flex gap-3 flex-wrap">
+                        <button type="button" class="btn-modern btn-secondary-modern" onclick="goToStep1()">
+                            <i class="bi bi-arrow-left"></i> Back to Packages
+                        </button>
+                        <button type="submit" form="bookingForm" class="btn-modern btn-primary-modern" id="submitBtn">
+                            <i class="bi bi-check-circle"></i> Confirm Booking
+                        </button>
+                    </div>
                 </div>
 
             </div>
@@ -1191,6 +1222,27 @@ if ($stmtSlots) {
 ══════════════════════════════════════════════════════════════════ */
 'use strict';
 
+// ── "Add Another Room" state ──────────────────────────────
+let isAddingExtraRoom = false;   // true while user is picking an additional room
+let extraRooms        = [];      // [{pkg, guests, date, checkOut}]
+
+document.getElementById('add-room-btn').addEventListener('click', function (e) {
+    e.preventDefault();
+    isAddingExtraRoom = true;
+    // Hide bundle filter pill and re-render without bundles
+    const bundleBtn = document.getElementById('filterBundle');
+    if (bundleBtn) bundleBtn.style.display = 'none';
+    // If current filter is bundle, reset to all
+    if (currentFilter === 'bundle') {
+        currentFilter = 'all';
+        document.querySelectorAll('.filter-pill').forEach(b => b.classList.remove('active'));
+        const allBtn = document.getElementById('filterAll');
+        if (allBtn) allBtn.classList.add('active');
+    }
+    applyPackageFilters();
+    goToStep1();
+});
+
 // ── State ──────────────────────────────────────────────────────────
 let allPackages     = [];
 let allActivities   = [];
@@ -1254,6 +1306,9 @@ function applyPackageFilters() {
     }
 
     const filtered = allPackages.filter(pkg => {
+        // When adding an extra room, bundles are never shown
+        if (isAddingExtraRoom && pkg.package_type === 'bundle') return false;
+
         // 1. Tour Type filtering based on admin configuration
         if (pkg.package_type === 'accommodation') {
             const tour = String(pkg.tour_type || '').toLowerCase();
@@ -1273,7 +1328,7 @@ function applyPackageFilters() {
                 return false;
             }
         }
-        // Bundles are always shown regardless of tour type
+        // Bundles are always shown regardless of tour type (unless isAddingExtraRoom)
 
         // 2. Category pill filter ('all', 'activity', 'accommodation', 'bundle')
         if (currentFilter !== 'all' && pkg.package_type !== currentFilter) {
@@ -1809,6 +1864,41 @@ function selectPackage(id, type) {
         fetchAndRenderActivityCalendar(pkg.id, pkg.package_type);
     }
 
+    if (isAddingExtraRoom) {
+        // ── Extra room mode: append a room slot, don't replace Step 2 ──
+        isAddingExtraRoom = false;
+
+        // Restore bundle filter pill
+        const bundleBtn = document.getElementById('filterBundle');
+        if (bundleBtn) bundleBtn.style.display = '';
+
+        // Snapshot date/guests from the primary room form
+        const primaryDate    = document.getElementById('bookingDate').value;
+        const primaryCheckOut = document.getElementById('checkoutDate').value;
+        const primaryGuests  = parseInt(document.getElementById('numberOfGuests').value) || 1;
+
+        // Store extra room data
+        const roomIndex = extraRooms.length + 2; // Room 2, 3, …
+        const roomEntry = {
+            index: roomIndex,
+            pkg: pkg,
+            guests: primaryGuests,
+            date: primaryDate,
+            checkOut: primaryCheckOut
+        };
+        extraRooms.push(roomEntry);
+
+        // Render the extra room card in the form
+        renderExtraRoomCard(roomEntry);
+        recalcPrice();
+        goToStep2();
+        return;
+    }
+
+    // ── Normal (first) room selection ──
+    // Clear any previously added extra rooms when a fresh first room is chosen
+    extraRooms = [];
+    document.getElementById('extraRoomsContainer').innerHTML = '';
     recalcPrice();
     goToStep2();
 }
@@ -2062,11 +2152,38 @@ function recalcPrice() {
         grandTotal += cost;
     });
 
+    // 4. Extra rooms
+    extraRooms.forEach(room => {
+        const r = room.pkg;
+        let roomCost = 0;
+        let roomLabel = `Room ${room.index}: ${r.name}`;
+        if (r.package_type === 'accommodation') {
+            if (currentTourType === 'daytour') {
+                roomCost = parseFloat(r.price_per_day) || parseFloat(r.price) || 0;
+            } else {
+                const nightRate = parseFloat(r.price_per_night) || parseFloat(r.price) || 0;
+                let nights = 1;
+                if (room.date && room.checkOut) {
+                    nights = Math.max(1, Math.round((new Date(room.checkOut) - new Date(room.date)) / 86400000));
+                }
+                roomCost = nightRate * nights;
+            }
+        } else {
+            roomCost = parseFloat(r.price) || 0;
+        }
+        summaryHtml += `
+            <div class="price-row" style="color:var(--text-secondary);font-size:0.9rem;">
+                <span class="price-label" style="padding-left:.5rem;border-left:2px solid var(--accent-success);"><i class="bi bi-door-open me-1"></i>${escHtml(roomLabel)}</span>
+                <span class="price-val">₱${roomCost.toFixed(2)}</span>
+            </div>`;
+        grandTotal += roomCost;
+    });
+
     // Total
     summaryHtml += `
         <div class="price-row total">
             <span class="price-label" style="font-weight:700;color:var(--text-primary);">Total</span>
-            <span class="price-val">₱${grandTotal.toFixed(2)}</span>
+            <span class="price-val" id="grandTotal">₱${grandTotal.toFixed(2)}</span>
         </div>
     `;
 
@@ -2414,6 +2531,18 @@ async function submitWithProof() {
     });
     fd.append('addons', JSON.stringify(selectedAddons));
 
+    // Extra rooms
+    if (extraRooms.length) {
+        const extraRoomsPayload = extraRooms.map(room => ({
+            package_id:   room.pkg.id,
+            package_type: room.pkg.package_type,
+            guests:       parseInt(document.getElementById('extraRoomGuests-' + room.index)?.value) || room.guests,
+            check_in_date:  document.getElementById('extraRoomDate-' + room.index)?.value || room.date,
+            check_out_date: document.getElementById('extraRoomCheckOut-' + room.index)?.value || room.checkOut || ''
+        }));
+        fd.append('extra_rooms', JSON.stringify(extraRoomsPayload));
+    }
+
     if (selectedPkg.package_type === 'activity') {
         fd.append('activity_id', selectedPkg.id);
     } else if (selectedPkg.package_type === 'bundle') {
@@ -2492,6 +2621,61 @@ function setGuestsMax() {
     const input = document.getElementById('numberOfGuests');
     const max   = parseInt(input.max) || 100;
     input.value = max;
+    recalcPrice();
+}
+
+// ── Extra room card helpers ────────────────────────────────────────
+function renderExtraRoomCard(room) {
+    const container = document.getElementById('extraRoomsContainer');
+    if (!container) return;
+    const r = room.pkg;
+    const isOvernight = (r.package_type === 'accommodation' && currentTourType === 'overnight');
+    const imgHtml = r.image_url
+        ? `<img src="${escHtml(r.image_url)}" alt="${escHtml(r.name)}" class="selected-pkg-img" onerror="this.style.display='none'">`
+        : `<div class="selected-pkg-img-placeholder"><i class="bi ${escHtml(r.icon||'bi-door-open')}"></i></div>`;
+    const primaryDate     = document.getElementById('bookingDate').value;
+    const primaryCheckOut = document.getElementById('checkoutDate').value;
+    const primaryGuests   = document.getElementById('numberOfGuests').value;
+    const card = document.createElement('div');
+    card.id = `extraRoomCard-${room.index}`;
+    card.style.cssText = 'background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.25);border-radius:.75rem;padding:1.25rem;margin-top:1.25rem;';
+    card.innerHTML = `
+        <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1rem;">
+            ${imgHtml}
+            <div style="flex:1;">
+                <div style="font-weight:700;color:var(--text-primary);font-size:.95rem;">
+                    <span style="color:var(--accent-success);margin-right:.4rem;"><i class="bi bi-door-open"></i> Room ${room.index}:</span>
+                    ${escHtml(r.name)}
+                </div>
+                <div style="color:var(--accent-success);font-size:.8rem;margin-top:.2rem;">${escHtml(r.price_label||'')}</div>
+            </div>
+            <button type="button" onclick="removeExtraRoom(${room.index})" title="Remove"
+                style="background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);color:#ef4444;border-radius:.5rem;padding:.3rem .6rem;cursor:pointer;font-size:.8rem;">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+        <div class="row g-2">
+            <div class="col-md-6">
+                <label class="form-label-modern" style="font-size:.8rem;"><i class="bi bi-calendar3 me-1"></i>Date of Visit</label>
+                <input type="date" id="extraRoomDate-${room.index}" class="form-control-modern" value="${primaryDate}" style="font-size:.85rem;" oninput="recalcPrice()">
+            </div>
+            ${isOvernight ? `
+            <div class="col-md-6">
+                <label class="form-label-modern" style="font-size:.8rem;"><i class="bi bi-calendar-check me-1"></i>Check-out Date</label>
+                <input type="date" id="extraRoomCheckOut-${room.index}" class="form-control-modern" value="${primaryCheckOut}" style="font-size:.85rem;" oninput="recalcPrice()">
+            </div>` : '<div class="col-md-6"></div>'}
+            <div class="col-md-6">
+                <label class="form-label-modern" style="font-size:.8rem;"><i class="bi bi-people me-1"></i>Guests for this Room</label>
+                <input type="number" id="extraRoomGuests-${room.index}" class="form-control-modern" value="${primaryGuests}" min="1" max="${r.capacity||100}" style="font-size:.85rem;" oninput="recalcPrice()">
+            </div>
+        </div>`;
+    container.appendChild(card);
+}
+
+function removeExtraRoom(index) {
+    extraRooms = extraRooms.filter(r => r.index !== index);
+    const card = document.getElementById('extraRoomCard-' + index);
+    if (card) card.remove();
     recalcPrice();
 }
 
