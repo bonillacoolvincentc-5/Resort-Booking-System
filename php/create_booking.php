@@ -279,6 +279,10 @@ try {
     // Update availability
     updateAvailability($conn, $data['booking_type'], $item_id, $data['check_in_date'], $data['check_in_time'] ?? null, $data['check_out_time'] ?? null);
     
+    if ($data['booking_type'] === 'accommodation' && !empty($checkOutDate)) {
+        incrementRoomBookingCounts($conn, $item_id, $data['check_in_date'], $checkOutDate);
+    }
+    
     echo json_encode([
         'success' => true,
         'message' => 'Booking created successfully',
@@ -407,5 +411,27 @@ function logBookingChange($conn, $bookingId, $oldStatusId, $newStatusId, $change
     ");
     $stmt->bind_param('iiisis', $bookingId, $oldStatusId, $newStatusId, $changedBy, $changedById, $notes);
     $stmt->execute();
+}
+
+function incrementRoomBookingCounts($conn, $room_id, $check_in_date, $check_out_date) {
+    $begin = new DateTime($check_in_date);
+    $end = new DateTime($check_out_date);
+    $interval = new DateInterval('P1D');
+    
+    $datePeriod = new DatePeriod($begin, $interval, $end);
+    
+    $stmt = $conn->prepare("
+        INSERT INTO room_inventory (date, room_id, booked_count) 
+        VALUES (?, ?, 1) 
+        ON DUPLICATE KEY UPDATE booked_count = booked_count + 1
+    ");
+    
+    foreach ($datePeriod as $date) {
+        $formattedDate = $date->format('Y-m-d');
+        $stmt->bind_param("si", $formattedDate, $room_id);
+        $stmt->execute();
+    }
+    
+    $stmt->close();
 }
 ?>

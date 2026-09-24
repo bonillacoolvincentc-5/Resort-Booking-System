@@ -1244,6 +1244,18 @@ document.getElementById('add-room-btn').addEventListener('click', function (e) {
         const allBtn = document.getElementById('filterAll');
         if (allBtn) allBtn.classList.add('active');
     }
+
+    // Hide the opposite tour type navigation so the user cannot switch
+    const btnDay = document.getElementById('topTourDayTour');
+    const btnNight = document.getElementById('topTourOvernight');
+    if (currentTourType === 'daytour') {
+        if (btnNight) btnNight.closest('.col-md-6').style.display = 'none';
+        if (btnDay) btnDay.closest('.col-md-6').classList.replace('col-md-6', 'col-12');
+    } else {
+        if (btnDay) btnDay.closest('.col-md-6').style.display = 'none';
+        if (btnNight) btnNight.closest('.col-md-6').classList.replace('col-md-6', 'col-12');
+    }
+
     applyPackageFilters();
     goToStep1();
 });
@@ -1257,6 +1269,10 @@ let currentTourType = 'daytour'; // 'daytour' or 'overnight'
 
 // ── Choose Initial Tour Type (Step 1 Top Section) ──────────────────
 function chooseInitialTourType(type) {
+    if (extraRooms.length > 0) {
+        return; // Lock the tour type once they have committed to adding extra rooms
+    }
+
     currentTourType = type;
     const hiddenInp = document.getElementById('selectedTourType');
     if (hiddenInp) hiddenInp.value = type;
