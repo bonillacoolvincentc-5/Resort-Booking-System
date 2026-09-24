@@ -1230,11 +1230,15 @@ let cartCounts        = {};      // {roomId: quantity}
 document.getElementById('add-room-btn').addEventListener('click', function (e) {
     e.preventDefault();
     isAddingExtraRoom = true;
-    // Hide bundle filter pill and re-render without bundles
+    
+    // Hide bundle and activity filter pills
     const bundleBtn = document.getElementById('filterBundle');
     if (bundleBtn) bundleBtn.style.display = 'none';
-    // If current filter is bundle, reset to all
-    if (currentFilter === 'bundle') {
+    const filterActivityBtn = document.getElementById('filterActivity');
+    if (filterActivityBtn) filterActivityBtn.style.display = 'none';
+    
+    // If current filter is bundle or activity, reset to all
+    if (currentFilter === 'bundle' || currentFilter === 'activity') {
         currentFilter = 'all';
         document.querySelectorAll('.filter-pill').forEach(b => b.classList.remove('active'));
         const allBtn = document.getElementById('filterAll');
@@ -1301,14 +1305,17 @@ function applyPackageFilters() {
             }
         }
     } else {
-        if (filterActivityBtn) {
+        if (filterActivityBtn && !isAddingExtraRoom) {
             filterActivityBtn.style.display = '';
         }
     }
 
     const filtered = allPackages.filter(pkg => {
-        // When adding an extra room, bundles are never shown
-        if (isAddingExtraRoom && pkg.package_type === 'bundle') return false;
+        // Hide ATV Adventure rides from main packages list as they are handled via Add-ons
+        if (pkg.name && pkg.name.toLowerCase().includes('atv')) return false;
+
+        // When adding an extra room, bundles and activities are never shown
+        if (isAddingExtraRoom && (pkg.package_type === 'bundle' || pkg.package_type === 'activity')) return false;
 
         // 1. Tour Type filtering based on admin configuration
         if (pkg.package_type === 'accommodation') {
@@ -1328,8 +1335,14 @@ function applyPackageFilters() {
             if (currentTourType !== 'daytour') {
                 return false;
             }
+        } else if (pkg.package_type === 'bundle') {
+            const tour = String(pkg.tour_type || 'both').toLowerCase();
+            if (currentTourType === 'daytour') {
+                if (tour !== 'both' && tour !== 'day_tour') return false;
+            } else {
+                if (tour !== 'both' && tour !== 'overnight') return false;
+            }
         }
-        // Bundles are always shown regardless of tour type (unless isAddingExtraRoom)
 
         // 2. Category pill filter ('all', 'activity', 'accommodation', 'bundle')
         if (currentFilter !== 'all' && pkg.package_type !== currentFilter) {

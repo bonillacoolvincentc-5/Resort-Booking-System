@@ -197,6 +197,7 @@ try {
             amenities,
             image_url,
             is_active,
+            bundle_type,
             daily_booking_limit,
             (SELECT COUNT(*) FROM bookings WHERE booking_type = 'bundle' AND bundle_id = bundles.id AND check_in_date <= CURDATE() AND (check_out_date >= CURDATE() OR check_out_date IS NULL) AND status_id IN (SELECT id FROM booking_status WHERE name IN ('pending_review', 'approved', 'checked_in'))) AS booked_today_count
         FROM bundles
@@ -261,6 +262,7 @@ try {
         $bundles[] = [
             'id'                    => $row['id'],
             'package_type'          => 'bundle',
+            'tour_type'             => $row['bundle_type'] ?? 'both',
             'name'                  => $row['name'],
             'slug'                  => $row['slug'],
             'description'           => $row['description'],
