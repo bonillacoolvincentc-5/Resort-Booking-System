@@ -63,6 +63,24 @@ try {
         ];
     }
 
+    // Custom capacities in range
+    $capStmt = $conn->prepare("
+        SELECT target_date, max_guests
+        FROM daily_resort_capacity
+        WHERE target_date BETWEEN ? AND ?
+    ");
+    if ($capStmt) {
+        $capStmt->bind_param('ss', $startDate, $endDate);
+        $capStmt->execute();
+        $capResult = $capStmt->get_result();
+        $customCaps = [];
+        while ($row = $capResult->fetch_assoc()) {
+            $customCaps[$row['target_date']] = intval($row['max_guests']);
+        }
+    } else {
+        $customCaps = [];
+    }
+
     // Bookings overlapping each day in the month
     $bookingStmt = $conn->prepare("
         SELECT
@@ -92,11 +110,13 @@ try {
     $cursor = new DateTime($startDate);
     $end    = new DateTime($endDate);
     while ($cursor <= $end) {
-        $days[$cursor->format('Y-m-d')] = [
+        $dateKey = $cursor->format('Y-m-d');
+        $days[$dateKey] = [
             'total_bookings' => 0,
             'rooms' => 0,
             'cottages' => 0,
             'activities' => 0,
+            'daily_capacity' => $customCaps[$dateKey] ?? $maxDailyCapacity,
             'occupancy_level' => 'none',
             'is_blocked' => false,
             'block_reason' => null
@@ -158,11 +178,13 @@ try {
         }
 
         $count = $day['total_bookings'];
+        $dailyCap = $day['daily_capacity'];
+
         if ($count === 0) {
             $day['occupancy_level'] = 'none';
-        } elseif ($count / $maxDailyCapacity < 0.4) {
+        } elseif ($dailyCap > 0 && $count / $dailyCap < 0.4) {
             $day['occupancy_level'] = 'low';
-        } elseif ($count / $maxDailyCapacity < 0.7) {
+        } elseif ($dailyCap > 0 && $count / $dailyCap < 0.7) {
             $day['occupancy_level'] = 'moderate';
         } else {
             $day['occupancy_level'] = 'high';

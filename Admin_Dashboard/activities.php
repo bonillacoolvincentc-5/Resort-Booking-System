@@ -575,7 +575,7 @@ while ($row = $accResult->fetch_assoc()) {
                             </div>
                             <div class="col-md-3">
                                 <div class="form-group-modern">
-                                    <label class="form-label-modern">Max Capacity</label>
+                                    <label class="form-label-modern">Max Capacity (Guests)</label>
                                     <input type="number" min="1" class="form-control-modern" id="accCapacity" name="capacity" required value="4">
                                 </div>
                             </div>

@@ -94,6 +94,15 @@ $adminEmail = $_SESSION['admin_email'];
                     <div class="detail-row"><span class="detail-label">Activities Reserved</span><span class="detail-value" id="detailActivities">0</span></div>
                     <div id="blockedReasonRow" class="detail-row d-none"><span class="detail-label">Block Reason</span><span class="detail-value" id="detailBlockReason">�</span></div>
                 </div>
+                <div class="modal-body" id="dailyLimitContainer" style="padding-top: 0; border-top: 1px solid rgba(255,255,255,0.1); margin-top: -0.5rem;">
+                    <div class="detail-row align-items-center mt-3">
+                        <span class="detail-label">Max Guest Limit</span>
+                        <div class="d-flex gap-2">
+                            <input type="number" id="detailDailyCap" class="form-ctrl form-control-sm" style="width: 80px;" min="0" title="Set to 0 to remove override">
+                            <button type="button" class="btn-modal btn-modal-primary btn-sm" onclick="saveDailyLimit()">Save</button>
+                        </div>
+                    </div>
+                </div>
                 <div class="modal-footer modal-footer-admin d-flex flex-wrap gap-2">
                     <button type="button" class="btn-modal btn-modal-primary" onclick="openBookingsListModal()"><i class="bi bi-list-ul me-1"></i>View Bookings</button>
                     <button type="button" class="btn-modal btn-modal-secondary" id="blockDateBtn" onclick="openBlockDateModal()"><i class="bi bi-slash-circle me-1"></i>Block Date</button>
@@ -158,6 +167,20 @@ $adminEmail = $_SESSION['admin_email'];
         </div>
     </div>
 
+    <!-- Alert Modal -->
+    <div class="modal fade" id="adminAlertModal" tabindex="-1" aria-hidden="true" style="z-index: 1060;">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content text-center" style="background: #0f172a; border-radius: 1.25rem; border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 20px 40px rgba(0,0,0,0.4);">
+                <div class="modal-body p-4 p-md-5">
+                    <div id="adminAlertIcon" class="mb-3 d-flex justify-content-center align-items-center mx-auto" style="width: 72px; height: 72px; border-radius: 50%;"></div>
+                    <h5 class="modal-title mb-2" id="adminAlertTitle" style="color: #f8fafc; font-weight: 600; font-size: 1.25rem; letter-spacing: -0.01em;"></h5>
+                    <p id="adminAlertMessage" style="color: #94a3b8; font-size: 0.9rem; line-height: 1.5; margin-bottom: 1.5rem;"></p>
+                    <button type="button" class="btn w-100" id="adminAlertBtn" data-bs-dismiss="modal" style="border-radius: 0.75rem; font-weight: 500; letter-spacing: 0.02em; padding: 0.6rem; transition: all 0.2s;"></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Create Bundle Modal -->
     <div class="modal fade" id="createBundleModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-scrollable">
@@ -217,10 +240,48 @@ $adminEmail = $_SESSION['admin_email'];
         let calendarServices = { activities: [], accommodations: [] };
         let selectedDate = null;
 
-        let dateDetailsModal, bookingsListModal, bookingDetailModal, blockDateModal, createBundleModal;
+        let dateDetailsModal, bookingsListModal, bookingDetailModal, blockDateModal, createBundleModal, adminAlertModal;
 
         const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
             'July', 'August', 'September', 'October', 'November', 'December'];
+
+        // Alert Helper
+        function showAdminAlert(title, message, isSuccess = false) {
+            document.getElementById('adminAlertTitle').textContent = title;
+            document.getElementById('adminAlertMessage').textContent = message;
+            
+            const iconWrap = document.getElementById('adminAlertIcon');
+            const btn = document.getElementById('adminAlertBtn');
+            if (isSuccess) {
+                iconWrap.innerHTML = '<i class="bi bi-check2" style="font-size: 2.5rem; color: #10b981;"></i>';
+                iconWrap.style.background = 'rgba(16, 185, 129, 0.1)';
+                iconWrap.style.border = '1px solid rgba(16, 185, 129, 0.2)';
+                
+                btn.textContent = 'Continue';
+                btn.style.background = 'rgba(16, 185, 129, 0.1)';
+                btn.style.color = '#10b981';
+                btn.style.border = '1px solid rgba(16, 185, 129, 0.2)';
+            } else {
+                iconWrap.innerHTML = '<i class="bi bi-exclamation-lg" style="font-size: 2.5rem; color: #ef4444;"></i>';
+                iconWrap.style.background = 'rgba(239, 68, 68, 0.1)';
+                iconWrap.style.border = '1px solid rgba(239, 68, 68, 0.2)';
+                
+                btn.textContent = 'Dismiss';
+                btn.style.background = 'rgba(239, 68, 68, 0.1)';
+                btn.style.color = '#ef4444';
+                btn.style.border = '1px solid rgba(239, 68, 68, 0.2)';
+            }
+            
+            // Add slight hover effect manually since we are using inline styles
+            btn.onmouseover = function() {
+                this.style.background = isSuccess ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)';
+            };
+            btn.onmouseout = function() {
+                this.style.background = isSuccess ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)';
+            };
+
+            adminAlertModal.show();
+        }
 
         document.addEventListener('DOMContentLoaded', function() {
             dateDetailsModal = new bootstrap.Modal(document.getElementById('dateDetailsModal'));
@@ -228,6 +289,7 @@ $adminEmail = $_SESSION['admin_email'];
             bookingDetailModal = new bootstrap.Modal(document.getElementById('bookingDetailModal'));
             blockDateModal = new bootstrap.Modal(document.getElementById('blockDateModal'));
             createBundleModal = new bootstrap.Modal(document.getElementById('createBundleModal'));
+            adminAlertModal = new bootstrap.Modal(document.getElementById('adminAlertModal'));
 
             initCalendar();
             setupEventListeners();
@@ -344,6 +406,7 @@ $adminEmail = $_SESSION['admin_email'];
             document.getElementById('detailRooms').textContent = dayData.rooms || 0;
             document.getElementById('detailCottages').textContent = dayData.cottages || 0;
             document.getElementById('detailActivities').textContent = dayData.activities || 0;
+            document.getElementById('detailDailyCap').value = dayData.daily_capacity || '';
 
             const blockedRow = document.getElementById('blockedReasonRow');
             if (dayData.is_blocked) {
@@ -355,7 +418,47 @@ $adminEmail = $_SESSION['admin_email'];
                 document.getElementById('blockDateBtn').innerHTML = '<i class="bi bi-slash-circle me-1"></i>Block Date';
             }
 
+            // Hide limit modification for today and past dates
+            const todayStr = new Date().toISOString().split('T')[0];
+            const isNotTomorrow = dateStr <= todayStr;
+            const container = document.getElementById('dailyLimitContainer');
+            
+            if (isNotTomorrow) {
+                container.style.display = 'none';
+            } else {
+                container.style.display = 'block';
+                document.getElementById('detailDailyCap').title = "Set to 0 to remove override";
+            }
+
             dateDetailsModal.show();
+        }
+
+        async function saveDailyLimit() {
+            if (!selectedDate) return;
+            const cap = document.getElementById('detailDailyCap').value;
+            if (cap === '') return;
+
+            try {
+                const fd = new FormData();
+                fd.append('date', selectedDate);
+                fd.append('capacity', cap);
+                
+                const res = await fetch('../php/set_daily_capacity.php', {
+                    method: 'POST',
+                    body: fd
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    showAdminAlert('Success', 'Daily guest limit updated successfully.', true);
+                    loadCalendarData().then(() => renderCalendar());
+                } else {
+                    showAdminAlert('Error', data.message || 'Error updating daily limit');
+                }
+            } catch (err) {
+                console.error(err);
+                showAdminAlert('Error', 'Failed to save daily limit.');
+            }
         }
 
         function openBookingsListModal() {
@@ -451,7 +554,7 @@ $adminEmail = $_SESSION['admin_email'];
         function saveBlockedDate() {
             const reason = document.getElementById('blockReasonInput').value.trim();
             if (!reason) {
-                alert('Please enter a reason for blocking this date.');
+                showAdminAlert('Warning', 'Please enter a reason for blocking this date.');
                 return;
             }
 
@@ -467,10 +570,10 @@ $adminEmail = $_SESSION['admin_email'];
                         blockDateModal.hide();
                         loadCalendarData().then(() => renderCalendar());
                     } else {
-                        alert(data.message || 'Failed to block date.');
+                        showAdminAlert('Error', data.message || 'Failed to block date.');
                     }
                 })
-                .catch(() => alert('Failed to block date.'));
+                .catch(() => showAdminAlert('Error', 'Failed to block date.'));
         }
 
         function unblockSelectedDate() {
@@ -485,10 +588,10 @@ $adminEmail = $_SESSION['admin_email'];
                         blockDateModal.hide();
                         loadCalendarData().then(() => renderCalendar());
                     } else {
-                        alert(data.message || 'Failed to unblock date.');
+                        showAdminAlert('Error', data.message || 'Failed to unblock date.');
                     }
                 })
-                .catch(() => alert('Failed to unblock date.'));
+                .catch(() => showAdminAlert('Error', 'Failed to unblock date.'));
         }
 
         function openCreateBundleModal() {
@@ -536,8 +639,8 @@ $adminEmail = $_SESSION['admin_email'];
         function saveCalendarBundle() {
             const name = document.getElementById('bundleName').value.trim();
             const finalPrice = parseFloat(document.getElementById('bundleFinalPrice').value) || 0;
-            if (!name) { alert('Bundle name is required.'); return; }
-            if (finalPrice <= 0) { alert('Final price must be greater than zero.'); return; }
+            if (!name) { showAdminAlert('Warning', 'Bundle name is required.'); return; }
+            if (finalPrice <= 0) { showAdminAlert('Warning', 'Final price must be greater than zero.'); return; }
 
             const activityIds = [...document.querySelectorAll('.bundle-act-chk:checked')].map(el => el.value);
             const accommodationIds = [...document.querySelectorAll('.bundle-acc-chk:checked')].map(el => el.value);
@@ -566,12 +669,12 @@ $adminEmail = $_SESSION['admin_email'];
                 .then(data => {
                     if (data.success) {
                         createBundleModal.hide();
-                        alert('Bundle created successfully!');
+                        showAdminAlert('Success', 'Bundle created successfully!', true);
                     } else {
-                        alert(data.message || 'Failed to create bundle.');
+                        showAdminAlert('Error', data.message || 'Failed to create bundle.');
                     }
                 })
-                .catch(() => alert('Failed to create bundle.'));
+                .catch(() => showAdminAlert('Error', 'Failed to create bundle.'));
         }
 
         function formatDateTime12(dateStr, timeStr) {

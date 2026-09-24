@@ -194,6 +194,30 @@ try {
         throw new Exception('Payment proof image is required.');
     }
 
+    // ── Global Daily Resort Capacity Check ────────────────────────
+    $globalCapStmt = $conn->prepare("SELECT max_guests FROM daily_resort_capacity WHERE target_date = ?");
+    $globalCapStmt->bind_param('s', $checkInDate);
+    $globalCapStmt->execute();
+    $globalCapResult = $globalCapStmt->get_result();
+    if ($globalCapRow = $globalCapResult->fetch_assoc()) {
+        $dailyResortCap = intval($globalCapRow['max_guests']);
+        
+        $activeStatuses = "(SELECT id FROM booking_status WHERE name IN ('pending_review','approved'))";
+        $totalGuestsStmt = $conn->prepare("
+            SELECT SUM(number_of_guests) as total_guests 
+            FROM bookings 
+            WHERE check_in_date = ? AND status_id IN $activeStatuses
+        ");
+        $totalGuestsStmt->bind_param('s', $checkInDate);
+        $totalGuestsStmt->execute();
+        $totalGuestsRow = $totalGuestsStmt->get_result()->fetch_assoc();
+        $currentTotalGuests = intval($totalGuestsRow['total_guests'] ?? 0);
+        
+        if (($currentTotalGuests + $numberOfGuests) > $dailyResortCap) {
+            throw new Exception("The resort has reached its maximum global guest limit for {$checkInDate}. Only " . max(0, $dailyResortCap - $currentTotalGuests) . " spots remaining.");
+        }
+    }
+
     // ── Availability / overlap check ──────────────────────────────
     $activeStatuses = "(SELECT id FROM booking_status WHERE name IN ('pending_review','approved'))";
 
