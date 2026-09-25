@@ -31,10 +31,21 @@ try {
         throw new Exception('Booking ID is required');
     }
     
-    // Validate file type using server-side MIME detection (never trust $_FILES['type'])
-    $finfo = new finfo(FILEINFO_MIME_TYPE);
-    $detectedMime = $finfo->file($file['tmp_name']);
-    $allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    // Validate file type using server-side MIME detection (safer for free hosts)
+    $detectedMime = '';
+    if (function_exists('finfo_open')) {
+        $finfo = new finfo(FILEINFO_MIME_TYPE);
+        $detectedMime = $finfo->file($file['tmp_name']);
+    } elseif (function_exists('mime_content_type')) {
+        $detectedMime = mime_content_type($file['tmp_name']);
+    } else {
+        $imgInfo = getimagesize($file['tmp_name']);
+        if ($imgInfo !== false) {
+            $detectedMime = $imgInfo['mime'];
+        }
+    }
+    
+    $allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
     if (!in_array($detectedMime, $allowedTypes, true)) {
         throw new Exception('Invalid file type. Only JPG, PNG, and WEBP images are allowed.');
     }

@@ -166,10 +166,21 @@ try {
             mkdir($uploadDir, 0755, true);
         }
 
-        // Server-side MIME detection (never trust client-supplied type)
-        $finfo = new finfo(FILEINFO_MIME_TYPE);
-        $detectedMime = $finfo->file($_FILES['payment_proof']['tmp_name']);
-        $allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+        // Server-side MIME detection (safer for free hosts)
+        $detectedMime = '';
+        if (function_exists('finfo_open')) {
+            $finfo = new finfo(FILEINFO_MIME_TYPE);
+            $detectedMime = $finfo->file($_FILES['payment_proof']['tmp_name']);
+        } elseif (function_exists('mime_content_type')) {
+            $detectedMime = mime_content_type($_FILES['payment_proof']['tmp_name']);
+        } else {
+            $imgInfo = getimagesize($_FILES['payment_proof']['tmp_name']);
+            if ($imgInfo !== false) {
+                $detectedMime = $imgInfo['mime'];
+            }
+        }
+
+        $allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
         if (!in_array($detectedMime, $allowedTypes, true)) {
             throw new Exception('Invalid file type. Only JPG, PNG, and WEBP images are accepted.');
         }

@@ -4,10 +4,7 @@
  * YP4K Resort - Booking & Trail Guide System
  */
 
-// TEMPORARY: Enable error display to catch the 500 Error reason!
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
+// Error reporting is removed as ini_set can be disabled on free hosts
 
 // Safe .env parsing for free hosts that disable parse_ini_file
 function safe_parse_env($path) {
