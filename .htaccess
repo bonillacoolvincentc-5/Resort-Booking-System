@@ -1,26 +1,80 @@
-# ----------------------------------------------------------------------
-# 1. Disable Directory Browsing
-# ----------------------------------------------------------------------
+# ─────────────────────────────────────────────────────────────────────────────
+# YP4K Resort — Apache Configuration
+# Optimised for InfinityFree free hosting + PWA support + Security Hardening
+# ─────────────────────────────────────────────────────────────────────────────
+
+# ── 1. PHP Version & Default Index ───────────────────────────────────────────
+AddHandler application/x-httpd-php81 .php
+DirectoryIndex index.html index.php
 Options -Indexes
 
-# ----------------------------------------------------------------------
-# 2. Rewrite Rules (HTTPS and extension cleanup)
-# ----------------------------------------------------------------------
-RewriteEngine On
+# ── 2. MIME Types (required for PWA assets) ──────────────────────────────────
+<IfModule mod_mime.c>
+    AddType application/manifest+json           .webmanifest
+    AddType application/manifest+json           .json
+    AddType text/javascript                     .js
+    AddType image/png                           .png
+    AddType image/svg+xml                       .svg
+    AddType image/x-icon                        .ico
+</IfModule>
 
-# Force HTTPS
-RewriteCond %{HTTPS} off
-RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+# ── 3. CORS for Service Worker, CDN Fonts, & Security Headers ───────────────
+<IfModule mod_headers.c>
+    # Allow service worker to fetch same-origin resources
+    <FilesMatch "\.(js|css|json|webmanifest|png|jpg|jpeg|gif|svg|woff|woff2|ttf|eot)$">
+        Header set Access-Control-Allow-Origin "*"
+    </FilesMatch>
 
-# Hide .php extensions
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME}.php -f
-RewriteRule ^(.*)$ $1.php [L]
+    # Required for service worker scope
+    <Files "sw.js">
+        Header set Service-Worker-Allowed "/"
+        Header set Cache-Control "no-cache, no-store, must-revalidate"
+    </Files>
 
-# ----------------------------------------------------------------------
-# 3. Block Sensitive and Configuration Files
-# ----------------------------------------------------------------------
+    # Manifest must not be cached aggressively
+    <Files "manifest.json">
+        Header set Cache-Control "no-cache"
+    </Files>
+
+    # Security headers
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    Header always set X-XSS-Protection "1; mode=block"
+    Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+    Header always set Permissions-Policy "geolocation=(), microphone=(), camera=()"
+</IfModule>
+
+# ── 4. URL Rewriting & Access Control ────────────────────────────────────────
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Force HTTPS
+    RewriteCond %{HTTPS} off
+    RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+    # Block Direct Access to Internal/Backup Directories
+    RewriteRule ^archive/.* - [F,L,NC]
+    RewriteRule ^notes/.* - [F,L,NC]
+    RewriteRule ^docs/.* - [F,L,NC]
+
+    # If sw.js or manifest.json are requested directly, serve them as-is
+    RewriteRule ^sw\.js$        sw.js        [L]
+    RewriteRule ^manifest\.json$ manifest.json [L]
+
+    # Hide .php extensions
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME}.php -f
+    RewriteRule ^(.*)$ $1.php [L]
+
+    # Serve index.html for root requests (universal entrypoint)
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^$ index.html [L]
+</IfModule>
+
+# ── 5. Block Sensitive and Configuration Files ───────────────────────────────
 # Block dotfiles (.env, .git, etc.) and sensitive extensions
 <FilesMatch "^\.|\.(env|ini|log|sh|inc|bak|sql|md)$">
     Require all denied
@@ -31,29 +85,19 @@ RewriteRule ^(.*)$ $1.php [L]
     Require all denied
 </FilesMatch>
 
-# ----------------------------------------------------------------------
-# 4. Block Direct Access to Internal/Backup Directories
-# ----------------------------------------------------------------------
-RewriteRule ^archive/.* - [F,L,NC]
-RewriteRule ^notes/.* - [F,L,NC]
-RewriteRule ^docs/.* - [F,L,NC]
-
-# ----------------------------------------------------------------------
-# 5. Security HTTP Headers
-# ----------------------------------------------------------------------
-<IfModule mod_headers.c>
-    # Prevent clickjacking
-    Header always set X-Frame-Options "SAMEORIGIN"
-    
-    # Enable cross-site scripting (XSS) filter
-    Header always set X-XSS-Protection "1; mode=block"
-    
-    # Prevent MIME-sniffing
-    Header always set X-Content-Type-Options "nosniff"
-    
-    # Force HTTPS strict transport security (HSTS)
-    Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
-    
-    # Prevent leaking referrer info to external sites
-    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+# ── 6. Cache Control ─────────────────────────────────────────────────────────
+<IfModule mod_expires.c>
+    ExpiresActive On
+    # HTML / PHP — never cache (fresh every request)
+    ExpiresByType text/html                    "access plus 0 seconds"
+    ExpiresByType application/x-httpd-php      "access plus 0 seconds"
+    # Assets — cache for a week
+    ExpiresByType text/css                     "access plus 1 week"
+    ExpiresByType text/javascript              "access plus 1 week"
+    ExpiresByType image/png                    "access plus 1 month"
+    ExpiresByType image/jpeg                   "access plus 1 month"
+    ExpiresByType image/svg+xml                "access plus 1 month"
+    ExpiresByType application/font-woff2       "access plus 1 month"
+    # Manifest — short cache so updates propagate quickly
+    ExpiresByType application/manifest+json    "access plus 1 hour"
 </IfModule>
