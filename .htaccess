@@ -1,5 +1,59 @@
+# ----------------------------------------------------------------------
+# 1. Disable Directory Browsing
+# ----------------------------------------------------------------------
+Options -Indexes
+
+# ----------------------------------------------------------------------
+# 2. Rewrite Rules (HTTPS and extension cleanup)
+# ----------------------------------------------------------------------
 RewriteEngine On
+
+# Force HTTPS
+RewriteCond %{HTTPS} off
+RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# Hide .php extensions
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME}.php -f
 RewriteRule ^(.*)$ $1.php [L]
+
+# ----------------------------------------------------------------------
+# 3. Block Sensitive and Configuration Files
+# ----------------------------------------------------------------------
+# Block dotfiles (.env, .git, etc.) and sensitive extensions
+<FilesMatch "^\.|\.(env|ini|log|sh|inc|bak|sql|md)$">
+    Require all denied
+</FilesMatch>
+
+# Block backend config files from direct web access
+<FilesMatch "^(db_config\.php|config\.php|session_helper\.php|email_helper\.php)$">
+    Require all denied
+</FilesMatch>
+
+# ----------------------------------------------------------------------
+# 4. Block Direct Access to Internal/Backup Directories
+# ----------------------------------------------------------------------
+RewriteRule ^archive/.* - [F,L,NC]
+RewriteRule ^notes/.* - [F,L,NC]
+RewriteRule ^docs/.* - [F,L,NC]
+
+# ----------------------------------------------------------------------
+# 5. Security HTTP Headers
+# ----------------------------------------------------------------------
+<IfModule mod_headers.c>
+    # Prevent clickjacking
+    Header always set X-Frame-Options "SAMEORIGIN"
+    
+    # Enable cross-site scripting (XSS) filter
+    Header always set X-XSS-Protection "1; mode=block"
+    
+    # Prevent MIME-sniffing
+    Header always set X-Content-Type-Options "nosniff"
+    
+    # Force HTTPS strict transport security (HSTS)
+    Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+    
+    # Prevent leaking referrer info to external sites
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
