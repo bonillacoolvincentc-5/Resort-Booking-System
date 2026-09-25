@@ -306,11 +306,11 @@ while ($row = $bundlesRes->fetch_assoc()) {
                 <tbody id="bookingsTableBody">
                     <?php if (count($bookings) > 0): ?>
                         <?php foreach ($bookings as $booking): ?>
-                            <tr data-booking-id="<?php echo $booking['id']; ?>" data-status="<?php echo htmlspecialchars($booking['status_name']); ?>">
-                                <td class="customer-name"><?php echo htmlspecialchars($booking['full_name']); ?></td>
-                                <td><?php echo date('M j, Y', strtotime($booking['check_in_date'])); ?></td>
-                                <td><?php echo htmlspecialchars($booking['item_name']); ?></td>
-                                <td><span class="status-badge status-<?php echo $booking['status_name']; ?>"><?php echo ucwords(str_replace('_', ' ', $booking['status_name'])); ?></span></td>
+                            <tr data-booking-id="<?php echo $booking['id']; ?>" data-status="<?php echo htmlspecialchars($booking['status_name'] ?? ''); ?>">
+                                <td class="customer-name"><?php echo htmlspecialchars($booking['full_name'] ?? ''); ?></td>
+                                <td data-raw-date="<?php echo htmlspecialchars($booking['check_in_date'] ?? ''); ?>"><?php echo date('M j, Y', strtotime($booking['check_in_date'] ?? 'now')); ?></td>
+                                <td><?php echo htmlspecialchars($booking['item_name'] ?? ''); ?></td>
+                                <td><span class="status-badge status-<?php echo htmlspecialchars($booking['status_name'] ?? 'unknown'); ?>"><?php echo ucwords(str_replace('_', ' ', $booking['status_name'] ?? 'unknown')); ?></span></td>
                                 <td>
                                     <div class="action-buttons">
                                         <?php if ($booking['status_name'] === 'pending_review'): ?>
@@ -1558,7 +1558,7 @@ while ($row = $bundlesRes->fetch_assoc()) {
                     const rowStatus    = row.dataset.status || '';
                     const customerName = (row.querySelector('.customer-name')?.textContent || '').toLowerCase();
                     const statusText   = (row.querySelector('.status-badge')?.textContent  || '').toLowerCase();
-                    const dateText     = (row.cells[1]?.textContent || '').toLowerCase();
+                    const dateText     = (row.cells[1]?.getAttribute('data-raw-date') || row.cells[1]?.textContent || '').toLowerCase();
 
                     const tabOk = (() => {
                         if (activeBstFilter === 'booking_records') {
