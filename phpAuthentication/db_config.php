@@ -4,9 +4,29 @@
  * YP4K Resort - Booking & Trail Guide System
  */
 
-// Read from .env
+// TEMPORARY: Enable error display to catch the 500 Error reason!
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
+// Safe .env parsing for free hosts that disable parse_ini_file
+function safe_parse_env($path) {
+    if (!file_exists($path)) return [];
+    $env = [];
+    $lines = file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    foreach ($lines as $line) {
+        if (strpos(trim($line), '#') === 0) continue;
+        if (strpos($line, '=') !== false) {
+            list($name, $value) = explode('=', $line, 2);
+            $env[trim($name)] = trim($value, " \t\n\r\0\x0B\"'");
+        }
+    }
+    return $env;
+}
+
 $env_path = dirname(__DIR__) . '/.env';
-$env = file_exists($env_path) ? parse_ini_file($env_path) : [];
+$env = function_exists('parse_ini_file') ? @parse_ini_file($env_path) : safe_parse_env($env_path);
+if ($env === false) $env = safe_parse_env($env_path);
 
 // Database connection parameters
 define('DB_HOST', $env['DB_HOST'] ?? 'localhost');

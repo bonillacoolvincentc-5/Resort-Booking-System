@@ -3014,6 +3014,10 @@ function renderCalendarView(data, container) {
                 const checkoutInput = document.getElementById('checkoutDate');
                 if (checkoutInput) { checkoutInput.value = ''; checkoutInput.dispatchEvent(new Event('change')); }
 
+                // Sync extra room dates automatically
+                document.querySelectorAll('[id^="extraRoomDate-"]').forEach(el => { el.value = pickedDate; });
+                document.querySelectorAll('[id^="extraRoomCheckOut-"]').forEach(el => { el.value = ''; });
+
                 // Update visible displays
                 const ciText = document.getElementById('checkinDisplayText');
                 if (ciText) { ciText.textContent = fmtDate(pickedDate); ciText.style.color = 'var(--text-primary)'; }
@@ -3034,6 +3038,10 @@ function renderCalendarView(data, container) {
                 const checkoutInput = document.getElementById('checkoutDate');
                 if (checkoutInput) { checkoutInput.value = checkOut; checkoutInput.dispatchEvent(new Event('change')); }
 
+                // Sync extra room dates automatically
+                document.querySelectorAll('[id^="extraRoomDate-"]').forEach(el => { el.value = checkIn; });
+                document.querySelectorAll('[id^="extraRoomCheckOut-"]').forEach(el => { el.value = checkOut; });
+
                 // Update visible displays
                 const ciText = document.getElementById('checkinDisplayText');
                 if (ciText) { ciText.textContent = fmtDate(checkIn); ciText.style.color = 'var(--text-primary)'; }
@@ -3050,6 +3058,10 @@ function renderCalendarView(data, container) {
                 if (bookingDateInput) { bookingDateInput.value = pickedDate; bookingDateInput.dispatchEvent(new Event('change')); }
                 const checkoutInput = document.getElementById('checkoutDate');
                 if (checkoutInput) { checkoutInput.value = ''; checkoutInput.dispatchEvent(new Event('change')); }
+
+                // Sync extra room dates automatically
+                document.querySelectorAll('[id^="extraRoomDate-"]').forEach(el => { el.value = pickedDate; });
+                document.querySelectorAll('[id^="extraRoomCheckOut-"]').forEach(el => { el.value = ''; });
 
                 const ciText = document.getElementById('checkinDisplayText');
                 if (ciText) { ciText.textContent = fmtDate(pickedDate); ciText.style.color = 'var(--text-primary)'; }
