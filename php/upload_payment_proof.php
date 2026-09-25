@@ -355,6 +355,10 @@ try {
     // ── Generate booking reference ────────────────────────────────
     $bookingRef = 'BK' . date('Ymd') . str_pad(rand(0, 9999), 4, '0', STR_PAD_LEFT);
 
+    $itemColumn = 'accommodation_id';
+    if ($bookingType === 'activity') $itemColumn = 'activity_id';
+    if ($bookingType === 'bundle') $itemColumn = 'bundle_id';
+
     // ── Get pending_review status ID ──────────────────────────────
     $stSt = $conn->prepare("SELECT id FROM booking_status WHERE name = 'pending_review'");
     $stSt->execute();
@@ -424,6 +428,55 @@ try {
     ");
     $log->bind_param('iii', $bookingId, $statusId, $userId);
     $log->execute();
+
+    // ── Insert Extra Rooms ─────────────────────────────────────────
+    $extraRoomIndex = 1;
+    foreach ($extraRoomsData as $er) {
+        $erType = $er['package_type'] ?? '';
+        $erId   = intval($er['package_id'] ?? 0);
+        $erGuests = intval($er['guests'] ?? 1);
+        $erIn   = $er['check_in_date']  ?? '';
+        $erOut  = $er['check_out_date'] ?? '';
+        
+        if ($erType !== 'accommodation' || !$erId || !$erIn) continue;
+        
+        $erOutNorm = (!empty($erOut) && $erOut !== $erIn)
+            ? $erOut
+            : date('Y-m-d', strtotime($erIn . ' +1 day'));
+        $erDays = max(1, round((strtotime($erOutNorm) - strtotime($erIn)) / 86400000));
+        
+        $erIns = $conn->prepare("
+            INSERT INTO bookings (
+                booking_reference, user_id, booking_type, accommodation_id,
+                status_id, full_name, email, phone_number,
+                check_in_date, check_out_date,
+                number_of_days, number_of_guests, special_requests,
+                total_amount, payment_status, payment_method, payment_proof
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 'pending', 'gcash', ?)
+        ");
+        $erTypeStr = 'accommodation';
+        $erReqs = "Extra Room (Part of Booking $bookingRef)";
+        $erBookingRef = $bookingRef . '-EXT' . $extraRoomIndex;
+        $erIns->bind_param(
+            'sisiisssssiiss',
+            $erBookingRef,
+            $userId,
+            $erTypeStr,
+            $erId,
+            $statusId,
+            $fullName,
+            $email,
+            $phone,
+            $erIn,
+            $erOutNorm,
+            $erDays,
+            $erGuests,
+            $erReqs,
+            $proofPath
+        );
+        $erIns->execute();
+        $extraRoomIndex++;
+    }
 
     // ── Update availability ───────────────────────────────────────
     $avRec = $conn->prepare("SELECT id, available_slots FROM availability WHERE item_type = ? AND item_id = ? AND date = ?");
