@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -71,7 +71,7 @@
         </p>
 
         <div class="text-center mt-3">
-            <a href="../index-new.html" class="auth-back">
+            <a href="../index.html" class="auth-back">
                 <i class="bi bi-arrow-left"></i> Back to Home
             </a>
         </div>

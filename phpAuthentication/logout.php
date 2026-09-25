@@ -15,6 +15,6 @@ if (isset($_COOKIE['remember_token'])) {
 }
 
 // Redirect to home page
-header("Location: ../index-new.html?message=" . urlencode("You have been logged out successfully."));
+header("Location: ../index.html?message=" . urlencode("You have been logged out successfully."));
 exit();
 ?>

@@ -661,19 +661,19 @@ function fmtBookingDate(string $d, ?string $ti): string {
                     <div class="card-body-modern">
                         <div class="row g-3">
                             <div class="col-md-4">
-                                <div class="action-item" onclick="window.location.href='../index-new.html#booking'">
+                                <div class="action-item" onclick="window.location.href='../index.html#booking'">
                                     <i class="bi bi-plus-circle"></i>
                                     <div class="action-label">New Booking</div>
                                 </div>
                             </div>
                             <div class="col-md-4">
-                                <div class="action-item" onclick="window.location.href='../index-new.html#activities'">
+                                <div class="action-item" onclick="window.location.href='../index.html#activities'">
                                     <i class="bi bi-compass"></i>
                                     <div class="action-label">Explore Activities</div>
                                 </div>
                             </div>
                             <div class="col-md-4">
-                                <div class="action-item" onclick="window.location.href='../index-new.html#contact'">
+                                <div class="action-item" onclick="window.location.href='../index.html#contact'">
                                     <i class="bi bi-headset"></i>
                                     <div class="action-label">Get Support</div>
                                 </div>

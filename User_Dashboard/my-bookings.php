@@ -843,7 +843,7 @@ while ($row = $statsResult->fetch_assoc()) {
             <button class="btn-modern btn-primary-modern" onclick="resetFilters()">
                 <i class="bi bi-arrow-clockwise"></i>Reset Filters
             </button>
-            <button class="btn-modern btn-secondary-modern" onclick="window.location.href='../index-new.html#booking'">
+            <button class="btn-modern btn-secondary-modern" onclick="window.location.href='../index.html#booking'">
                 <i class="bi bi-plus-circle"></i>Make a Booking
             </button>
         </div>
@@ -1206,7 +1206,7 @@ while ($row = $statsResult->fetch_assoc()) {
 
         function rebookActivity(bookingId) {
             showConfirmModal('Rebook Activity', 'Do you want to rebook this activity?', 'Rebook', '#10b981', () => {
-                window.location.href = '../index-new.html#booking';
+                window.location.href = '../index.html#booking';
             });
         }
 

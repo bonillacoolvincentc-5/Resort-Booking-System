@@ -75,7 +75,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 echo json_encode([
                     'success' => true,
                     'message' => 'Login successful!',
-                    'redirect' => '../index-new.html',
+                    'redirect' => '../index.html',
                     'user' => [
                         'id' => $user['id'],
                         'name' => $user['first_name'] . ' ' . $user['last_name'],

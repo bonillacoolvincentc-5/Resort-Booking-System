@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -177,7 +177,7 @@
         <div class="auth-divider"><span>OR</span></div>
         <p class="auth-text">Already have an account? <a href="login.php" class="auth-link">Sign in here</a></p>
         <div class="text-center mt-3">
-            <a href="../index-new.html" class="auth-back"><i class="bi bi-arrow-left"></i> Back to Home</a>
+            <a href="../index.html" class="auth-back"><i class="bi bi-arrow-left"></i> Back to Home</a>
         </div>
     </div>
 </div>

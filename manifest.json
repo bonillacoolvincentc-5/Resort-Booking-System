@@ -2,7 +2,7 @@
   "name": "YP4K Resort",
   "short_name": "YP4K Resort",
   "description": "Experience world-class luxury accommodations, thrilling activities, and unforgettable moments at YP4K Private Resort.",
-  "start_url": "./index-new.html",
+  "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "any",

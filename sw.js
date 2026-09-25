@@ -3,7 +3,7 @@ const CACHE_NAME = 'yp4k-resort-v2';
 
 // Core assets to cache for offline use
 const PRECACHE_ASSETS = [
-  './index-new.html',
+  './index.html',
   './manifest.json',
   './assets/icon-192.png',
   './assets/icon-512.png',
@@ -61,7 +61,7 @@ self.addEventListener('fetch', event => {
           if (cached) return cached;
           // Fallback to index page for navigation requests
           if (event.request.mode === 'navigate') {
-            return caches.match('./index-new.html');
+            return caches.match('./index.html');
           }
           return new Response('Offline — please reconnect.', { status: 503 });
         });
