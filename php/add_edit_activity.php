@@ -139,44 +139,7 @@ if ($action === 'add' || $action === 'edit') {
         $result = $stmt->get_result();
         $row = $result->fetch_assoc();
 
-        // #region agent log
-        try {
-            $dbgStmt = $conn->prepare("
-                SELECT bs.name AS status_name, COUNT(*) AS cnt
-                FROM bookings b
-                LEFT JOIN booking_status bs ON b.status_id = bs.id
-                WHERE b.activity_id = ?
-                GROUP BY bs.name
-            ");
-            $dbgStmt->bind_param('i', $activityId);
-            $dbgStmt->execute();
-            $dbgRes = $dbgStmt->get_result();
-            $dbgByStatus = [];
-            while ($dbgR = $dbgRes->fetch_assoc()) { $dbgByStatus[] = $dbgR; }
-            $dbgActive = 0;
-            foreach ($dbgByStatus as $s) {
-                if (in_array($s['status_name'], ['pending_review', 'approved'], true)) {
-                    $dbgActive += (int)$s['cnt'];
-                }
-            }
-            $dbgPayload = json_encode([
-                'sessionId' => '1b1b88',
-                'runId' => 'post-fix',
-                'hypothesisId' => 'B',
-                'location' => 'php/add_edit_activity.php:delete-check',
-                'message' => 'Delete-guard booking counts by status',
-                'data' => [
-                    'activity_id' => (int)$activityId,
-                    'unfiltered_count' => (int)$row['count'],
-                    'active_pending_approved' => $dbgActive,
-                    'by_status' => $dbgByStatus,
-                    'would_block' => ((int)$row['count'] > 0)
-                ],
-                'timestamp' => round(microtime(true) * 1000)
-            ]) . "\n";
-            file_put_contents(dirname(__DIR__) . '/debug-1b1b88.log', $dbgPayload, FILE_APPEND);
-        } catch (Throwable $e) {}
-        // #endregion
+
         
         if ($row['count'] > 0) {
             echo json_encode(['success' => false, 'message' => 'Cannot delete activity with existing bookings']);

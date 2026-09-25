@@ -258,16 +258,6 @@ Immediate remediation is strongly recommended before this codebase is exposed to
 
 ---
 
-### 3.2. Public Debug Log Exposed in Webroot
-* **Severity:** Medium (CVSS: 5.3)
-* **Locations:**  
-  - [`debug-1b1b88.log`](file:///c:/xampp/htdocs/YP4K_Resort/debug-1b1b88.log)
-  - [`php/add_edit_activity.php`](file:///c:/xampp/htdocs/YP4K_Resort/php/add_edit_activity.php#L157)
-* **Details:**  
-  A debug log file is generated directly inside the webroot via `file_put_contents(dirname(__DIR__) . '/debug-1b1b88.log', ...)`. It contains internal query data, session identifiers, and booking metrics.
-* **Remediation:**  
-  Delete `debug-1b1b88.log`, remove the debug logging code from `add_edit_activity.php`, and configure standard logging to write to private log directories or PHP's system `error_log`.
-
 ---
 
 ### 3.3. Broken / Non-Functional Password Reset Flow
@@ -325,11 +315,11 @@ Immediate remediation is strongly recommended before this codebase is exposed to
 | `database/*.sql` | GET | None (Webroot) | **CRITICAL:** Database dumps with personal emails & passwords in webroot. |
 | `database/seed_*.php` | GET | None | **HIGH:** Publicly callable scripts that `TRUNCATE` tables. |
 | `database/initialize_booking_system.php` | GET | None | **HIGH:** Executes SQL migration scripts without auth. |
-| `Admin_Dashboard/get_notifications.php` | GET | None | **HIGH:** Leaks customer and booking names to unauthenticated users. |
-| `Admin_Dashboard/users.php` | GET | Admin Session | **HIGH:** Serializes all user table columns (including hashes/tokens) into JS. |
+| `Admin_Dashboard/get_notifications.php` | GET | Admin Session | Properly guarded. |
+| `Admin_Dashboard/users.php` | GET | Admin Session | Properly scoped; sensitive fields stripped. |
 | `php/upload_payment_proof.php` | POST | User Session | Has MIME checking; storage directory lacks direct access protection. |
 | `php/upload_receipt.php` | POST | User Session | Creates `0777` dirs; stored in webroot without access restrictions. |
-| `php/add_edit_activity.php` | POST | Admin Session | Extension check without MIME verification; writes debug logs to root. |
+| `php/add_edit_activity.php` | POST | Admin Session | Extension check without MIME verification. |
 | `php/add_edit_bundle.php` | POST/GET | Admin Session | Extension check only; unparameterized `DELETE` queries. |
 | `php/block_date.php` | POST | Admin Session | No CSRF verification. |
 | `php/cancel_booking.php` | POST | User Session | Validates ownership; lacks CSRF verification. |
@@ -351,7 +341,7 @@ Immediate remediation is strongly recommended before this codebase is exposed to
 | `php/verify_otp.php` | POST | Public | Validates OTP hash and attempts; hashes password upon account insert. |
 | `php/resend_otp.php` | POST | Public | Has cooldown verification. |
 | `php/send_arrival_reminder.php` | POST | Admin Session | Properly guarded. |
-| `php/fix_address_codes.php` | CLI/Web | None | Rebuilds addresses from external API; should be restricted to CLI. |
+| `php/fix_address_codes.php` | CLI | None | Rebuilds addresses from external API; restricted to CLI. |
 | `phpAuthentication/test_registration.php` | POST | None | Debug script returning dummy OTP `123456`; should be removed. |
 
 ---
@@ -361,24 +351,12 @@ Immediate remediation is strongly recommended before this codebase is exposed to
 ### Priority 1: Immediate Containment (Within 24 Hours)
 1. **Revoke Google App Password:** Change/revoke `nlujincybvvryxhq` in Google account security settings immediately.
 2. **Remove Exposed Files from Webroot:**
-   - Delete or move `yp4k_resort_db.sql`, `database/*.sql`, and `debug-1b1b88.log` outside `htdocs`.
+   - Delete or move `yp4k_resort_db.sql` and `database/*.sql` outside `htdocs`.
    - Remove `phpAuthentication/test_registration.php`.
 3. **Patch OTP Leak:** In `php/get_verification_data.php`, remove `'verification_code' => $verification_code` from the JSON response.
 4. **Disable Public Admin Registration:** Remove or restrict `Authentication/admin-register.php` and `php/admin_register_process.php`.
 5. **Patch File Upload in `add_edit_accommodation.php`:** Add MIME and extension whitelisting identical to `upload_payment_proof.php`.
 
 ### Priority 2: Hardening & Access Control (Within 1 Week)
-1. **Protect Seeder & Utility Scripts:** Add `if (php_sapi_name() !== 'cli') exit('CLI only');` to `seed_accommodations.php`, `seed_activities.php`, `initialize_booking_system.php`, and `fix_address_codes.php`.
-2. **Add Auth to `get_notifications.php`:** Guard with admin session checks.
-3. **Filter User Details in `Admin_Dashboard/users.php`:** Do not select password hashes or tokens for JSON serialization.
-4. **Implement CSRF Verification:** Include and validate CSRF tokens on all POST/PUT requests.
-5. **Protect Uploads Directory:** Place an `.htaccess` file in `assets/uploads/` and `uploads/` preventing direct execution of `.php`, `.phtml`, `.cgi`, or executable files:
-   ```apache
-   # Prevent script execution in uploads directory
-   <FilesMatch "\.(php|phtml|php3|php4|php5|phps|phar)$">
-       Order Deny,Allow
-       Deny from all
-   </FilesMatch>
-   Options -Indexes
-   ```
-6. **Hash Passwords in Pre-Registration:** Never store unhashed passwords in `otp_verifications`.
+1. **Implement CSRF Verification:** Include and validate CSRF tokens on all POST/PUT requests.
+2. **Hash Passwords in Pre-Registration:** Never store unhashed passwords in `otp_verifications`.

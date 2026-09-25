@@ -1,4 +1,5 @@
 <?php
+if (php_sapi_name() !== 'cli') exit('CLI only');
 require_once __DIR__ . '/../phpAuthentication/db_config.php';
 
 $res = $conn->query("SELECT id, address, region, province, city_municipality, barangay FROM users");

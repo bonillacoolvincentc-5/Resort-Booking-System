@@ -1388,6 +1388,11 @@
             }, 4500);
         }
     </script>
+    <script>
+        if (window.history.replaceState && window.location.search) {
+            window.history.replaceState(null, null, window.location.pathname);
+        }
+    </script>
 </body>
 
 </html>

@@ -37,6 +37,8 @@ $result = $stmt->get_result();
 
 $users = [];
 while ($row = $result->fetch_assoc()) {
+    unset($row['password']);
+    unset($row['reset_token']);
     $users[] = $row;
 }
 ?>

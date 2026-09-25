@@ -1,4 +1,9 @@
 <?php
+session_start();
+if (!isset($_SESSION['is_admin']) || $_SESSION['is_admin'] !== true) {
+    http_response_code(401);
+    exit(json_encode(['error' => 'Unauthorized']));
+}
 require_once __DIR__ . '/config.php';
 admin_include('db_config.php');
 global $conn;
