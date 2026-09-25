@@ -191,10 +191,10 @@ if ($action === 'add' || $action === 'edit') {
         if ($action === 'add') {
             if ($imagePath) {
                 $stmt = $conn->prepare("INSERT INTO bundles (name, slug, description, price, capacity, daily_booking_limit, start_time, duration_hours, bundle_type, amenities, image_url, is_active) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)");
-                $stmt->bind_param('sssdiissssi', $name, $slug, $description, $price, $capacity, $dailyLimit, $startTime, $durationHours, $bundleType, $amenities, $imagePath, $isActive);
+                $stmt->bind_param('sssdiisisssi', $name, $slug, $description, $price, $capacity, $dailyLimit, $startTime, $durationHours, $bundleType, $amenities, $imagePath, $isActive);
             } else {
                 $stmt = $conn->prepare("INSERT INTO bundles (name, slug, description, price, capacity, daily_booking_limit, start_time, duration_hours, bundle_type, amenities, is_active) VALUES (?,?,?,?,?,?,?,?,?,?,?)");
-                $stmt->bind_param('sssdiisssi', $name, $slug, $description, $price, $capacity, $dailyLimit, $startTime, $durationHours, $bundleType, $amenities, $isActive);
+                $stmt->bind_param('sssdiisissi', $name, $slug, $description, $price, $capacity, $dailyLimit, $startTime, $durationHours, $bundleType, $amenities, $isActive);
             }
             $stmt->execute();
             $bundleId = $conn->insert_id;
@@ -202,10 +202,10 @@ if ($action === 'add' || $action === 'edit') {
             if (!$bundleId) { throw new Exception('Bundle ID required for editing'); }
             if ($imagePath) {
                 $stmt = $conn->prepare("UPDATE bundles SET name=?, slug=?, description=?, price=?, capacity=?, daily_booking_limit=?, start_time=?, duration_hours=?, bundle_type=?, amenities=?, image_url=?, is_active=? WHERE id=?");
-                $stmt->bind_param('sssdiissssii', $name, $slug, $description, $price, $capacity, $dailyLimit, $startTime, $durationHours, $bundleType, $amenities, $imagePath, $isActive, $bundleId);
+                $stmt->bind_param('sssdiisisssii', $name, $slug, $description, $price, $capacity, $dailyLimit, $startTime, $durationHours, $bundleType, $amenities, $imagePath, $isActive, $bundleId);
             } else {
                 $stmt = $conn->prepare("UPDATE bundles SET name=?, slug=?, description=?, price=?, capacity=?, daily_booking_limit=?, start_time=?, duration_hours=?, bundle_type=?, amenities=?, is_active=? WHERE id=?");
-                $stmt->bind_param('sssdiissssii', $name, $slug, $description, $price, $capacity, $dailyLimit, $startTime, $durationHours, $bundleType, $amenities, $isActive, $bundleId);
+                $stmt->bind_param('sssdiisissii', $name, $slug, $description, $price, $capacity, $dailyLimit, $startTime, $durationHours, $bundleType, $amenities, $isActive, $bundleId);
             }
             $stmt->execute();
 
