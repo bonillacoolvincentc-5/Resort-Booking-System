@@ -4,11 +4,15 @@
  * YP4K Resort - Booking & Trail Guide System
  */
 
+// Read from .env
+$env_path = dirname(__DIR__) . '/.env';
+$env = file_exists($env_path) ? parse_ini_file($env_path) : [];
+
 // Database connection parameters
-define('DB_HOST', 'localhost');
-define('DB_USER', 'root');
-define('DB_PASS', '');
-define('DB_NAME', 'yp4k_resort_db');
+define('DB_HOST', $env['DB_HOST'] ?? 'localhost');
+define('DB_USER', $env['DB_USER'] ?? 'root');
+define('DB_PASS', $env['DB_PASS'] ?? '');
+define('DB_NAME', $env['DB_NAME'] ?? 'yp4k_resort_db');
 
 // Create connection
 global $conn;

@@ -13,16 +13,19 @@ require_once __DIR__ . '/../phpAuthentication/PHPMailer/srs/Exception.php';
 
 class EmailHelper {
     
-    // Email configuration - UPDATE THESE VALUES
-    private static $emailConfig = [
-        'host' => 'smtp.gmail.com',           // Your SMTP server
-        'username' => 'yp4kvillaberderesort@gmail.com', // Your email address
-        'password' => 'nlujincybvvryxhq',    // Your app password (not regular password)
-        'from_email' => 'yp4kvillaberderesort@gmail.com', // From email address
-        'from_name' => 'YP4K Resort',         // From name
-        'port' => 587,                        // SMTP port
-        'encryption' => 'tls'                 // 'tls' or 'ssl'
-    ];
+    private static function getEmailConfig() {
+        $env_path = dirname(__DIR__) . '/.env';
+        $env = file_exists($env_path) ? parse_ini_file($env_path) : [];
+        return [
+            'host' => $env['SMTP_HOST'] ?? 'smtp.gmail.com',
+            'username' => $env['SMTP_USER'] ?? 'yp4kvillaberderesort@gmail.com',
+            'password' => $env['SMTP_PASS'] ?? '', // Removed hardcoded password
+            'from_email' => $env['SMTP_USER'] ?? 'yp4kvillaberderesort@gmail.com',
+            'from_name' => 'YP4K Resort',
+            'port' => (int)($env['SMTP_PORT'] ?? 587),
+            'encryption' => 'tls'
+        ];
+    }
     
     /**
      * Send OTP verification email
@@ -33,17 +36,17 @@ class EmailHelper {
             
             // Server settings
             $mail->isSMTP();
-            $mail->Host = self::$emailConfig['host'];
+            $mail->Host = self::getEmailConfig()['host'];
             $mail->SMTPAuth = true;
-            $mail->Username = self::$emailConfig['username'];
-            $mail->Password = self::$emailConfig['password'];
-            $mail->SMTPSecure = self::$emailConfig['encryption'] === 'ssl' ? 
+            $mail->Username = self::getEmailConfig()['username'];
+            $mail->Password = self::getEmailConfig()['password'];
+            $mail->SMTPSecure = self::getEmailConfig()['encryption'] === 'ssl' ? 
                                PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_SMTPS : 
                                PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
-            $mail->Port = self::$emailConfig['port'];
+            $mail->Port = self::getEmailConfig()['port'];
             
             // Recipients
-            $mail->setFrom(self::$emailConfig['from_email'], self::$emailConfig['from_name']);
+            $mail->setFrom(self::getEmailConfig()['from_email'], self::getEmailConfig()['from_name']);
             $mail->addAddress($email);
             
             // Content
@@ -70,16 +73,16 @@ class EmailHelper {
         try {
             $mail = new PHPMailer\PHPMailer\PHPMailer(true);
             $mail->isSMTP();
-            $mail->Host       = self::$emailConfig['host'];
+            $mail->Host       = self::getEmailConfig()['host'];
             $mail->SMTPAuth   = true;
-            $mail->Username   = self::$emailConfig['username'];
-            $mail->Password   = self::$emailConfig['password'];
-            $mail->SMTPSecure = self::$emailConfig['encryption'] === 'ssl'
+            $mail->Username   = self::getEmailConfig()['username'];
+            $mail->Password   = self::getEmailConfig()['password'];
+            $mail->SMTPSecure = self::getEmailConfig()['encryption'] === 'ssl'
                 ? PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_SMTPS
                 : PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
-            $mail->Port = self::$emailConfig['port'];
+            $mail->Port = self::getEmailConfig()['port'];
 
-            $mail->setFrom(self::$emailConfig['from_email'], self::$emailConfig['from_name']);
+            $mail->setFrom(self::getEmailConfig()['from_email'], self::getEmailConfig()['from_name']);
             $mail->addAddress($email);
 
             $nameGreet = $firstName ? ", {$firstName}" : '';
@@ -125,17 +128,17 @@ class EmailHelper {
             
             // Server settings
             $mail->isSMTP();
-            $mail->Host = self::$emailConfig['host'];
+            $mail->Host = self::getEmailConfig()['host'];
             $mail->SMTPAuth = true;
-            $mail->Username = self::$emailConfig['username'];
-            $mail->Password = self::$emailConfig['password'];
-            $mail->SMTPSecure = self::$emailConfig['encryption'] === 'ssl' ? 
+            $mail->Username = self::getEmailConfig()['username'];
+            $mail->Password = self::getEmailConfig()['password'];
+            $mail->SMTPSecure = self::getEmailConfig()['encryption'] === 'ssl' ? 
                                PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_SMTPS : 
                                PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
-            $mail->Port = self::$emailConfig['port'];
+            $mail->Port = self::getEmailConfig()['port'];
             
             // Recipients
-            $mail->setFrom(self::$emailConfig['from_email'], self::$emailConfig['from_name']);
+            $mail->setFrom(self::getEmailConfig()['from_email'], self::getEmailConfig()['from_name']);
             $mail->addAddress($email);
             
             // Content
@@ -164,17 +167,17 @@ class EmailHelper {
             
             // Server settings
             $mail->isSMTP();
-            $mail->Host       = self::$emailConfig['host'];
+            $mail->Host       = self::getEmailConfig()['host'];
             $mail->SMTPAuth   = true;
-            $mail->Username   = self::$emailConfig['username'];
-            $mail->Password   = self::$emailConfig['password'];
-            $mail->SMTPSecure = self::$emailConfig['encryption'] === 'ssl' ? 
+            $mail->Username   = self::getEmailConfig()['username'];
+            $mail->Password   = self::getEmailConfig()['password'];
+            $mail->SMTPSecure = self::getEmailConfig()['encryption'] === 'ssl' ? 
                                PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_SMTPS : 
                                PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
-            $mail->Port       = self::$emailConfig['port'];
+            $mail->Port       = self::getEmailConfig()['port'];
             
             // Recipients
-            $mail->setFrom(self::$emailConfig['from_email'], self::$emailConfig['from_name']);
+            $mail->setFrom(self::getEmailConfig()['from_email'], self::getEmailConfig()['from_name']);
             $mail->addAddress($email);
             
             $statusText = $status === 'approved' ? 'Accepted' : ucfirst($status);
@@ -323,17 +326,17 @@ class EmailHelper {
             
             // Server settings
             $mail->isSMTP();
-            $mail->Host = self::$emailConfig['host'];
+            $mail->Host = self::getEmailConfig()['host'];
             $mail->SMTPAuth = true;
-            $mail->Username = self::$emailConfig['username'];
-            $mail->Password = self::$emailConfig['password'];
-            $mail->SMTPSecure = self::$emailConfig['encryption'] === 'ssl' ? 
+            $mail->Username = self::getEmailConfig()['username'];
+            $mail->Password = self::getEmailConfig()['password'];
+            $mail->SMTPSecure = self::getEmailConfig()['encryption'] === 'ssl' ? 
                                PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_SMTPS : 
                                PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
-            $mail->Port = self::$emailConfig['port'];
+            $mail->Port = self::getEmailConfig()['port'];
             
             // Recipients
-            $mail->setFrom(self::$emailConfig['from_email'], self::$emailConfig['from_name']);
+            $mail->setFrom(self::getEmailConfig()['from_email'], self::getEmailConfig()['from_name']);
             $mail->addAddress($email);
             
             // Content
@@ -414,14 +417,14 @@ class EmailHelper {
             
             // Server settings
             $mail->isSMTP();
-            $mail->Host = self::$emailConfig['host'];
+            $mail->Host = self::getEmailConfig()['host'];
             $mail->SMTPAuth = true;
-            $mail->Username = self::$emailConfig['username'];
-            $mail->Password = self::$emailConfig['password'];
-            $mail->SMTPSecure = self::$emailConfig['encryption'] === 'ssl' ? 
+            $mail->Username = self::getEmailConfig()['username'];
+            $mail->Password = self::getEmailConfig()['password'];
+            $mail->SMTPSecure = self::getEmailConfig()['encryption'] === 'ssl' ? 
                                PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_SMTPS : 
                                PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
-            $mail->Port = self::$emailConfig['port'];
+            $mail->Port = self::getEmailConfig()['port'];
             
             return ['success' => true, 'message' => 'Email configuration is valid'];
             
