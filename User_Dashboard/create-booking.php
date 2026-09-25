@@ -1248,12 +1248,22 @@ document.getElementById('add-room-btn').addEventListener('click', function (e) {
     // Hide the opposite tour type navigation so the user cannot switch
     const btnDay = document.getElementById('topTourDayTour');
     const btnNight = document.getElementById('topTourOvernight');
-    if (currentTourType === 'daytour') {
-        if (btnNight) btnNight.closest('.col-md-6').style.display = 'none';
-        if (btnDay) btnDay.closest('.col-md-6').classList.replace('col-md-6', 'col-12');
-    } else {
-        if (btnDay) btnDay.closest('.col-md-6').style.display = 'none';
-        if (btnNight) btnNight.closest('.col-md-6').classList.replace('col-md-6', 'col-12');
+    
+    if (btnDay && btnNight) {
+        const wrapDay = btnDay.closest('.col-md-6') || btnDay.closest('.col-12');
+        const wrapNight = btnNight.closest('.col-md-6') || btnNight.closest('.col-12');
+        
+        if (currentTourType === 'daytour') {
+            if (wrapNight) wrapNight.style.display = 'none';
+            if (wrapDay && wrapDay.classList.contains('col-md-6')) {
+                wrapDay.classList.replace('col-md-6', 'col-12');
+            }
+        } else {
+            if (wrapDay) wrapDay.style.display = 'none';
+            if (wrapNight && wrapNight.classList.contains('col-md-6')) {
+                wrapNight.classList.replace('col-md-6', 'col-12');
+            }
+        }
     }
 
     applyPackageFilters();
