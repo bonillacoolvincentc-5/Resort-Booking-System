@@ -441,6 +441,17 @@ if ($stmtSlots) {
         .stat-icon.primary { background:rgba(59,130,246,.2); color:var(--accent-primary); }
         .stat-icon.success { background:rgba(16,185,129,.2); color:var(--accent-success); }
 
+        /* ── ACTION BUTTONS ──────────────────────────────────────── */
+        .step-actions-wrapper { display: flex; align-items: center; justify-content: space-between; gap: 1rem; width: 100%; margin-top: 2rem; }
+        .step-actions-main { display: flex; gap: 1rem; align-items: center; }
+        .btn-add-room {
+            background: transparent; border: 1px dashed var(--accent-success); color: var(--accent-success);
+            padding: 0.75rem 1.25rem; border-radius: 0.75rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease;
+            display: flex; align-items: center; gap: 0.4rem;
+        }
+        .btn-add-room:hover { background: rgba(16,185,129,0.1); }
+        .hide-mobile { display: inline; }
+
         /* ── LOADING SPINNER ────────────────────────────────────── */
         .spinner-wrap { display:flex; justify-content:center; padding:4rem 0; }
         .spinner-ring {
@@ -563,6 +574,13 @@ if ($stmtSlots) {
             .detail-list li { font-size: 0.7rem; margin-bottom: 0.2rem; }
             .modal-footer-modern { padding: 0.75rem 1rem; border-radius: 0 0 1rem 1rem; gap: 0.5rem; }
             #modalBookNowBtn, .modal-footer-modern .btn-secondary-modern { padding: 0.5rem 1rem !important; font-size: 0.75rem !important; }
+            
+            /* Premium action buttons layout on mobile */
+            .step-actions-wrapper { flex-direction: column; gap: 1rem; margin-top: 1.5rem; }
+            .btn-add-room { width: 100%; justify-content: center; padding: 0.8rem; border-style: solid; border-color: rgba(16,185,129,0.3); background: rgba(16,185,129,0.05); }
+            .step-actions-main { width: 100%; display: grid; grid-template-columns: 1fr 2fr; gap: 0.75rem; }
+            .step-actions-main .btn-modern { width: 100%; display: flex; align-items: center; justify-content: center; padding: 0.8rem 0; font-size: 0.85rem; }
+            .hide-mobile { display: none !important; }
         }
 
         /* ── STAY / TOUR TYPE SELECTION (STEP 1) ─────────────────── */
@@ -1080,16 +1098,16 @@ if ($stmtSlots) {
                     </div>
                 </div>
 
-                <!-- Action buttons — below Price Summary, right-aligned -->
-                <div class="d-flex gap-3 flex-wrap align-items-center mt-3">
-                    <button type="button" id="add-room-btn">
+                <!-- Action buttons -->
+                <div class="step-actions-wrapper">
+                    <button type="button" id="add-room-btn" class="btn-add-room">
                         <i class="bi bi-plus-circle"></i> Add Another Room
                     </button>
-                    <div class="ms-auto d-flex gap-3 flex-wrap">
-                        <button type="button" class="btn-modern btn-secondary-modern" onclick="goToStep1()">
-                            <i class="bi bi-arrow-left"></i> Back to Packages
+                    <div class="step-actions-main">
+                        <button type="button" class="btn-modern btn-secondary-modern btn-back-pkg" onclick="goToStep1()">
+                            <i class="bi bi-arrow-left"></i> Back <span class="hide-mobile">to Packages</span>
                         </button>
-                        <button type="submit" form="bookingForm" class="btn-modern btn-primary-modern" id="submitBtn">
+                        <button type="submit" form="bookingForm" class="btn-modern btn-primary-modern btn-confirm-booking" id="submitBtn">
                             <i class="bi bi-check-circle"></i> Confirm Booking
                         </button>
                     </div>
