@@ -461,6 +461,31 @@ if ($stmtSlots) {
             .step-dot      { width: 24px; height: 24px; font-size: 0.7rem; }
             .step-item:not(.active) span { display: none; }
             .step-separator { display: block; }
+            
+            /* Tour type cards on mobile */
+            .tour-type-card { padding: 0.75rem 0.5rem; height: 100%; display: flex; align-items: center; justify-content: center; }
+            .tour-type-card > .d-flex { flex-direction: column !important; align-items: center !important; gap: 0.35rem !important; text-align: center; }
+            .tour-card-icon { width: 38px; height: 38px; font-size: 1.15rem; }
+            .tour-type-card h6 { font-size: 0.9rem !important; text-align: center; width: 100%; margin-bottom: 0 !important; }
+            .tour-type-card p, .tour-type-card .badge { display: none !important; }
+            
+            /* Filter bar on mobile */
+            .filter-bar {
+                display: flex;
+                flex-wrap: wrap !important;
+                padding: 0.75rem;
+                gap: 0.4rem;
+                justify-content: center;
+            }
+            .filter-bar::-webkit-scrollbar { display: none; /* Chrome/Safari */ }
+            .filter-bar > span.text-muted, .filter-bar .ms-auto { display: none !important; } /* Hide text and count */
+            .filter-pill { 
+                flex: 1 1 calc(50% - 0.5rem); 
+                justify-content: center;
+                font-size: 0.75rem; 
+                padding: 0.5rem 0.25rem; 
+                text-align: center;
+            }
         }
 
         /* ── STAY / TOUR TYPE SELECTION (STEP 1) ─────────────────── */
@@ -751,8 +776,8 @@ if ($stmtSlots) {
                     </p>
                 </div>
             </div>
-            <div class="row g-3">
-                <div class="col-md-6">
+            <div class="row g-2 g-md-3">
+                <div class="col-6 col-md-6">
                     <div class="tour-type-card active-daytour" id="topTourDayTour" onclick="chooseInitialTourType('daytour')">
                         <div class="d-flex align-items-center gap-3">
                             <div class="tour-card-icon daytour-icon">
@@ -770,7 +795,7 @@ if ($stmtSlots) {
                         </div>
                     </div>
                 </div>
-                <div class="col-md-6">
+                <div class="col-6 col-md-6">
                     <div class="tour-type-card" id="topTourOvernight" onclick="chooseInitialTourType('overnight')">
                         <div class="d-flex align-items-center gap-3">
                             <div class="tour-card-icon overnight-icon">
