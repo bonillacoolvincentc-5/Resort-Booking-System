@@ -1356,7 +1356,7 @@ $userId = $_SESSION['user_id'];
         function onLocationError(err) {
             console.warn('GPS error:', err);
             let msg = 'Could not retrieve your live location.';
-            if (err.code === 1) msg = 'Location permission denied. Please enable location services in your browser/device settings.';
+            if (err.code === 1) msg = 'Location Access Denied. Please enable GPS.';
             else if (err.code === 2) msg = 'Location unavailable. Please check your GPS signal.';
             else if (err.code === 3) msg = 'Location request timed out.';
             alert(msg);
