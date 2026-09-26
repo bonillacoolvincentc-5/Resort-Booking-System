@@ -452,11 +452,15 @@ if ($stmtSlots) {
 
         /* ── RESPONSIVE ─────────────────────────────────────────── */
         @media (max-width:768px) {
+            .page-wrap     { padding-top: 1rem; }
+            .page-header   { display: none; }
             .packages-grid { grid-template-columns:1fr; }
             .detail-grid   { grid-template-columns:1fr; }
-            .page-title    { font-size:1.5rem; }
-            .step-bar      { flex-wrap:wrap; gap:.5rem; }
-            .step-separator { display:none; }
+            .step-bar      { padding: 1rem; margin-bottom: 1.5rem; gap: 0.75rem; flex-wrap: nowrap; }
+            .step-item     { font-size: 0.8rem; }
+            .step-dot      { width: 24px; height: 24px; font-size: 0.7rem; }
+            .step-item:not(.active) span { display: none; }
+            .step-separator { display: block; }
         }
 
         /* ── STAY / TOUR TYPE SELECTION (STEP 1) ─────────────────── */
