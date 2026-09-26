@@ -11,8 +11,6 @@ $userId = $_SESSION['admin_id'];
 $columnsToAdd = [
     'address' => "VARCHAR(255) DEFAULT NULL",
     'birthdate' => "DATE DEFAULT NULL",
-    'gender' => "VARCHAR(50) DEFAULT NULL",
-    'bio' => "TEXT DEFAULT NULL",
     'avatar' => "VARCHAR(255) DEFAULT NULL"
 ];
 foreach ($columnsToAdd as $col => $def) {
@@ -89,8 +87,6 @@ if (empty($fullName)) {
 $userEmail = $user['email'] ?? ($_SESSION['user_email'] ?? '');
 $userPhone = $user['phone_number'] ?? '';
 $userBirthdate = $user['birthdate'] ?? '';
-$userGender = $user['gender'] ?? '';
-$userBio = $user['bio'] ?? '';
 
 $bookingsCount = 0; // Staff accounts don't have direct booking records
 
@@ -922,25 +918,12 @@ if ($diff->y >= 1) {
                                 </div>
 
                                 <div class="row">
-                                    <div class="col-md-6">
+                                    <div class="col-md-12">
                                         <div class="form-group-modern">
                                             <label class="form-label-modern">
                                                 <i class="bi bi-calendar"></i>Date of Birth
                                             </label>
                                             <input type="date" class="form-control-modern" id="birthdate" value="<?php echo htmlspecialchars($userBirthdate); ?>">
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="form-group-modern">
-                                            <label class="form-label-modern">
-                                                <i class="bi bi-gender-ambiguous"></i>Gender
-                                            </label>
-                                            <select class="form-select-modern" id="gender">
-                                                <option value="" <?php echo empty($userGender) ? 'selected' : ''; ?>>Select Gender</option>
-                                                <option value="male" <?php echo strtolower($userGender) === 'male' ? 'selected' : ''; ?>>Male</option>
-                                                <option value="female" <?php echo strtolower($userGender) === 'female' ? 'selected' : ''; ?>>Female</option>
-                                                <option value="other" <?php echo strtolower($userGender) === 'other' ? 'selected' : ''; ?>>Other</option>
-                                            </select>
                                         </div>
                                     </div>
                                 </div>
@@ -1006,8 +989,6 @@ if ($diff->y >= 1) {
             const phone = document.getElementById('phone').value;
             const address = document.getElementById('address').value;
             const birthdate = document.getElementById('birthdate').value;
-            const gender = document.getElementById('gender').value;
-            const bio = document.getElementById('bio').value;
 
             const btn = document.querySelector('button[onclick="saveProfile()"]');
             const originalText = btn.innerHTML;
@@ -1020,8 +1001,6 @@ if ($diff->y >= 1) {
             formData.append('phone_number', phone);
             formData.append('address', address);
             formData.append('birthdate', birthdate);
-            formData.append('gender', gender);
-            formData.append('bio', bio);
 
             fetch('../php/update_profile.php', {
                 method: 'POST',

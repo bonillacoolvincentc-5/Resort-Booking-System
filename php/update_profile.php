@@ -15,8 +15,6 @@ $lastName = trim($_POST['last_name'] ?? '');
 $phone = trim($_POST['phone_number'] ?? '');
 $address = trim($_POST['address'] ?? '');
 $birthdate = !empty($_POST['birthdate']) ? $_POST['birthdate'] : null;
-$gender = trim($_POST['gender'] ?? '');
-$bio = trim($_POST['bio'] ?? '');
 
 if (empty($firstName) || empty($lastName)) {
     echo json_encode(['success' => false, 'message' => 'First Name and Last Name are required.']);
@@ -24,13 +22,13 @@ if (empty($firstName) || empty($lastName)) {
 }
 
 // Update database
-$stmt = $conn->prepare("UPDATE users SET first_name = ?, last_name = ?, phone_number = ?, address = ?, birthdate = ?, gender = ?, bio = ? WHERE id = ?");
+$stmt = $conn->prepare("UPDATE users SET first_name = ?, last_name = ?, phone_number = ?, address = ?, birthdate = ? WHERE id = ?");
 if (!$stmt) {
     echo json_encode(['success' => false, 'message' => 'Database error: ' . $conn->error]);
     exit();
 }
 
-$stmt->bind_param("sssssssi", $firstName, $lastName, $phone, $address, $birthdate, $gender, $bio, $userId);
+$stmt->bind_param("sssssi", $firstName, $lastName, $phone, $address, $birthdate, $userId);
 
 if ($stmt->execute()) {
     $_SESSION['user_name'] = trim($firstName . ' ' . $lastName);

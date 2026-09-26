@@ -185,13 +185,9 @@ while ($row = $result->fetch_assoc()) {
                                     <label class="text-muted small d-block">Phone Number</label>
                                     <span id="modalPhone" class="fw-medium text-white">---</span>
                                 </div>
-                                <div class="col-sm-6">
+                                <div class="col-sm-12">
                                     <label class="text-muted small d-block">Birthdate</label>
                                     <span id="modalBirthdate" class="fw-medium text-white">---</span>
-                                </div>
-                                <div class="col-sm-6">
-                                    <label class="text-muted small d-block">Gender</label>
-                                    <span id="modalGender" class="fw-medium text-white">---</span>
                                 </div>
                                 <div class="col-12">
                                     <label class="text-muted small d-block">Complete Address</label>
@@ -369,7 +365,6 @@ while ($row = $result->fetch_assoc()) {
             document.getElementById('modalUserEmail').textContent = user.email || 'N/A';
             document.getElementById('modalPhone').textContent = user.phone_number || 'N/A';
             document.getElementById('modalBirthdate').textContent = user.birthdate || 'Not specified';
-            document.getElementById('modalGender').textContent = user.gender || 'Not specified';
             document.getElementById('modalAddress').textContent = address;
             document.getElementById('modalBookings').textContent = user.booking_count || '0';
 
