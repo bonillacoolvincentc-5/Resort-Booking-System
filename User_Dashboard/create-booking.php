@@ -581,6 +581,31 @@ if ($stmtSlots) {
             .step-actions-main { width: 100%; display: grid; grid-template-columns: 1fr 2fr; gap: 0.75rem; }
             .step-actions-main .btn-modern { width: 100%; display: flex; align-items: center; justify-content: center; padding: 0.8rem 0; font-size: 0.85rem; }
             .hide-mobile { display: none !important; }
+            
+            /* GCash Modal Mobile Sync */
+            .pay-modal {
+                border-radius: 1rem !important;
+                max-height: 55vh !important;
+                width: calc(100vw - 3rem) !important;
+                padding: 0.75rem 1rem !important;
+            }
+            .pay-modal-header { padding-bottom: 0.5rem; margin-bottom: 0.5rem; }
+            .pay-modal-title { font-size: 0.95rem; }
+            .qr-section { margin-bottom: 0.75rem; }
+            .qr-label { font-size: 0.65rem; margin-bottom: 0.4rem; }
+            .qr-frame { padding: 8px; border-radius: 0.5rem; }
+            .qr-frame img { width: 100px; height: 100px; }
+            .fee-section { padding: 0.5rem; margin-bottom: 0.75rem; border-radius: 0.5rem; }
+            .fee-label { font-size: 0.65rem; }
+            .fee-amount { font-size: 1rem; }
+            .upload-section { margin-bottom: 0.75rem; }
+            .upload-label { font-size: 0.65rem; margin-bottom: 0.4rem; }
+            .upload-drop-area { padding: 0.5rem; border-radius: 0.5rem; }
+            .upload-drop-area i { font-size: 1.2rem; margin-bottom: 0.2rem; }
+            .upload-drop-area p { font-size: 0.6rem; }
+            .upload-thumb { width: 50px; height: 50px; border-radius: 0.4rem; }
+            .upload-filename { font-size: 0.6rem; }
+            .pay-submit-btn { padding: 0.5rem 1rem; font-size: 0.75rem; border-radius: 0.5rem; }
         }
 
         /* ── STAY / TOUR TYPE SELECTION (STEP 1) ─────────────────── */
