@@ -473,9 +473,12 @@ if ($stmtSlots) {
             .filter-bar {
                 display: flex;
                 flex-wrap: wrap !important;
-                padding: 0.75rem;
+                padding: 0;
                 gap: 0.4rem;
                 justify-content: center;
+                border: none;
+                background: transparent;
+                margin-bottom: 1.25rem;
             }
             .filter-bar::-webkit-scrollbar { display: none; /* Chrome/Safari */ }
             .filter-bar > span.text-muted, .filter-bar .ms-auto { display: none !important; } /* Hide text and count */
@@ -485,6 +488,48 @@ if ($stmtSlots) {
                 font-size: 0.75rem; 
                 padding: 0.5rem 0.25rem; 
                 text-align: center;
+            }
+
+            /* Package Cards on mobile */
+            .packages-grid { gap: 1rem; }
+            .package-card {
+                display: grid;
+                grid-template-columns: 100px 1fr;
+                grid-template-rows: auto auto;
+                grid-template-areas: 
+                    "img content"
+                    "img actions";
+                gap: 0.25rem 0.6rem;
+                padding: 0.6rem;
+                height: auto; /* Let it breathe naturally */
+                align-items: start;
+            }
+            .card-img-wrap {
+                grid-area: img;
+                width: 100px; height: 100px; /* Square thumbnail */
+                border-radius: 0.5rem;
+            }
+            .card-type-badge { font-size: 0.55rem; padding: 0.15rem 0.4rem; top: 0.25rem; left: 0.25rem; }
+            .card-content { 
+                grid-area: content;
+                padding: 0; min-width: 0; 
+                display: flex; flex-direction: column; justify-content: flex-start;
+            }
+            .card-pkg-name { font-size: 0.95rem; margin-bottom: 0.2rem; white-space: normal; line-height: 1.25; }
+            .card-pkg-desc { display: none; }
+            .card-meta { gap: 0.2rem; flex-direction: column; margin-bottom: 0; }
+            .card-meta-item { font-size: 0.65rem; }
+            .card-meta-item:last-child { margin-top: 0 !important; }
+            .card-actions {
+                grid-area: actions;
+                position: static;
+                padding: 0; gap: 0.4rem; flex-direction: row; width: 100%; justify-content: flex-start;
+                margin-top: 0.25rem;
+            }
+            .card-actions .btn-modern { 
+                padding: 0.4rem 0.5rem; font-size: 0.65rem; border-radius: 0.4rem; 
+                flex: 1; /* Equal width buttons */
+                text-align: center; justify-content: center;
             }
         }
 
