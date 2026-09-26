@@ -516,16 +516,108 @@ function fmtBookingDate(string $d, ?string $ti): string {
 
         /* Responsive */
         @media (max-width: 768px) {
-            .welcome-title {
-                font-size: 1.5rem;
-            }
-            
-            .stat-number {
-                font-size: 2rem;
-            }
-            
             .navbar-brand {
-                font-size: 1.1rem;
+                font-size: 1rem;
+            }
+            .welcome-card {
+                padding: 1.25rem;
+            }
+            .welcome-title {
+                font-size: 1.25rem;
+                margin-bottom: 0.25rem;
+            }
+            .welcome-text {
+                font-size: 0.8rem;
+                line-height: 1.4;
+            }
+            
+            /* Stats Grid - Ultra Compact */
+            .stat-card {
+                padding: 0.75rem;
+                display: flex;
+                align-items: center;
+                text-align: left;
+                gap: 0.75rem;
+            }
+            .stat-icon {
+                width: 40px;
+                height: 40px;
+                font-size: 1.2rem;
+                margin: 0;
+                flex-shrink: 0;
+            }
+            .stat-info {
+                display: flex;
+                flex-direction: column;
+            }
+            .stat-number {
+                font-size: 1.4rem;
+                margin-bottom: 0;
+                line-height: 1;
+            }
+            .stat-label {
+                font-size: 0.65rem;
+            }
+
+            /* Main Cards */
+            .card-modern {
+                margin-bottom: 1rem;
+            }
+            .card-header-modern {
+                padding: 1rem;
+                font-size: 0.9rem;
+            }
+            .card-body-modern {
+                padding: 1rem;
+            }
+            
+            /* Profile Section */
+            .profile-avatar {
+                width: 50px;
+                height: 50px;
+                font-size: 1.25rem;
+                margin-bottom: 0.5rem;
+            }
+            .profile-name {
+                font-size: 0.9rem;
+            }
+            .profile-email {
+                font-size: 0.7rem;
+                margin-bottom: 0.75rem;
+            }
+            
+            /* Action Buttons */
+            .action-grid, .row.g-3 {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 0.5rem;
+            }
+            .action-item {
+                padding: 0.75rem;
+            }
+            .action-item i {
+                font-size: 1rem;
+                margin-bottom: 0.25rem;
+            }
+            .action-label {
+                font-size: 0.7rem;
+            }
+            
+            /* Buttons */
+            .btn-modern {
+                padding: 0.5rem 1rem;
+                font-size: 0.8rem;
+                width: 100%;
+                justify-content: center;
+            }
+            
+            /* Activity List */
+            .activity-list .fw-semibold {
+                font-size: 0.8rem;
+            }
+            .activity-list .badge {
+                font-size: 0.6rem;
+                padding: 0.3em 0.5em;
             }
         }
 
@@ -578,8 +670,10 @@ function fmtBookingDate(string $d, ?string $ti): string {
                     <div class="stat-icon primary">
                         <i class="bi bi-calendar-check"></i>
                     </div>
-                    <div class="stat-number" data-target="<?= $activeBookings ?>" data-prefix="">—</div>
-                    <div class="stat-label">Active Bookings</div>
+                    <div class="stat-info">
+                        <div class="stat-number" data-target="<?= $activeBookings ?>" data-prefix="">—</div>
+                        <div class="stat-label">Active Bookings</div>
+                    </div>
                 </div>
             </div>
             <div class="col-lg-4 col-md-6">
@@ -587,8 +681,10 @@ function fmtBookingDate(string $d, ?string $ti): string {
                     <div class="stat-icon success">
                         <i class="bi bi-star-fill"></i>
                     </div>
-                    <div class="stat-number" data-target="<?= $activitiesCount ?>" data-prefix="">—</div>
-                    <div class="stat-label">Activities</div>
+                    <div class="stat-info">
+                        <div class="stat-number" data-target="<?= $activitiesCount ?>" data-prefix="">—</div>
+                        <div class="stat-label">Activities</div>
+                    </div>
                 </div>
             </div>
             <div class="col-lg-4 col-md-6">
@@ -596,8 +692,10 @@ function fmtBookingDate(string $d, ?string $ti): string {
                     <div class="stat-icon warning">
                         <i class="bi bi-credit-card"></i>
                     </div>
-                    <div class="stat-number" data-target="<?= (int)$totalSpent ?>" data-prefix="₱">—</div>
-                    <div class="stat-label">Total Spent</div>
+                    <div class="stat-info">
+                        <div class="stat-number" data-target="<?= (int)$totalSpent ?>" data-prefix="₱">—</div>
+                        <div class="stat-label">Total Spent</div>
+                    </div>
                 </div>
             </div>
         </div>
