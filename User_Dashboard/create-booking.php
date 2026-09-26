@@ -455,7 +455,7 @@ if ($stmtSlots) {
             .page-wrap     { padding-top: 1rem; }
             .page-header   { display: none; }
             .packages-grid { grid-template-columns:1fr; }
-            .detail-grid   { grid-template-columns:1fr; }
+            .detail-grid   { grid-template-columns:1fr 1fr; gap:0.5rem; }
             .step-bar      { padding: 1rem; margin-bottom: 1.5rem; gap: 0.75rem; flex-wrap: nowrap; }
             .step-item     { font-size: 0.8rem; }
             .step-dot      { width: 24px; height: 24px; font-size: 0.7rem; }
@@ -531,6 +531,38 @@ if ($stmtSlots) {
                 flex: 1; /* Equal width buttons */
                 text-align: center; justify-content: center;
             }
+
+            /* Detail Modal on Mobile - Compact Centered */
+            #packageDetailModal .modal-dialog {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                min-height: 100%;
+                margin: 1.5rem; /* Forces it to be smaller than the screen */
+            }
+            #packageDetailModal .modal-content-modern {
+                border-radius: 1rem !important;
+                max-height: 55vh;
+                width: 100%;
+            }
+            .modal-header-modern { padding: 0.75rem 1rem; border-radius: 1rem 1rem 0 0 !important; }
+            .modal-body-modern { padding: 0.75rem 1rem; }
+            #packageDetailModalLabel { font-size: 0.95rem !important; line-height: 1.2; }
+            .modal-pkg-img { height: 100px !important; margin-bottom: 0.75rem !important; border-radius: 0.5rem !important; }
+            .modal-pkg-img-placeholder { height: 80px !important; margin-bottom: 0.75rem !important; font-size: 2rem !important; border-radius: 0.5rem !important; }
+            .detail-section { margin-bottom: 0.75rem; }
+            .detail-section-title { font-size: 0.7rem; margin-bottom: 0.4rem; }
+            .detail-section p { font-size: 0.75rem !important; line-height: 1.4 !important; }
+            .detail-grid { gap: 0.4rem; }
+            .detail-stat { padding: 0.4rem; border-radius: 0.5rem; }
+            .detail-stat-val { font-size: 0.85rem; }
+            .detail-stat-lbl { font-size: 0.6rem; margin-top: 0.1rem; }
+            .detail-price-tag { padding: 0.5rem; border-radius: 0.5rem; margin-bottom: 0.75rem !important; }
+            .detail-price-tag .price-main { font-size: 1rem; }
+            .detail-price-tag .price-sub { font-size: 0.65rem; }
+            .detail-list li { font-size: 0.7rem; margin-bottom: 0.2rem; }
+            .modal-footer-modern { padding: 0.75rem 1rem; border-radius: 0 0 1rem 1rem; gap: 0.5rem; }
+            #modalBookNowBtn, .modal-footer-modern .btn-secondary-modern { padding: 0.5rem 1rem !important; font-size: 0.75rem !important; }
         }
 
         /* ── STAY / TOUR TYPE SELECTION (STEP 1) ─────────────────── */
