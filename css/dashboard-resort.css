@@ -337,6 +337,11 @@ input[type="month"]::-webkit-calendar-picker-indicator:hover {
 }
 
 /* ── 10. Step indicators ─────────────────────────────────────────── */
+.step-item {
+    padding: 0.4rem 1rem !important;
+    border-radius: 50px !important;
+    transition: all 0.3s ease !important;
+}
 .step-item.active .step-dot {
     border-color: #9DFF00 !important;
     color: #9DFF00 !important;
@@ -347,7 +352,10 @@ input[type="month"]::-webkit-calendar-picker-indicator:hover {
     background: #27C46A !important;
     color: #000 !important;
 }
-.step-item.active { color: #9DFF00 !important; }
+.step-item.active { 
+    color: #9DFF00 !important;
+    background: rgba(157, 255, 0, 0.12) !important;
+}
 .step-item.done { color: #27C46A !important; }
 
 /* ── 11. Filter Pills ────────────────────────────────────────────── */

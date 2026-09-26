@@ -410,6 +410,7 @@ if ($diff->y >= 1) {
             gap: 0.6rem;
             border-bottom: 3px solid transparent;
             margin-bottom: -1px;
+            border-radius: 12px 12px 0 0;
         }
 
         .profile-tab i {
@@ -800,7 +801,7 @@ if ($diff->y >= 1) {
                 font-size: 0.85rem;
                 border-bottom: 3px solid transparent;
                 white-space: nowrap;
-                border-radius: 0;
+                border-radius: 12px 12px 0 0;
             }
 
             /* ⑤ Tab content area: generous inner breathing room */
