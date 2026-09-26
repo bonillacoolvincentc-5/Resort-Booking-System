@@ -109,6 +109,7 @@ while ($row = $statsResult->fetch_assoc()) {
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
+            color-scheme: dark;
             --bg-primary: #0f172a;
             --bg-secondary: #1e293b;
             --bg-tertiary: #334155;
@@ -335,39 +336,47 @@ while ($row = $statsResult->fetch_assoc()) {
             letter-spacing: 0.05em;
         }
 
-        /* Filter Bar */
-        .filter-bar {
+        /* Search Bar */
+        .search-bar-container {
             background: var(--bg-card);
             backdrop-filter: blur(10px);
             border: 1px solid var(--border-color);
             border-radius: 1rem;
-            padding: 1.5rem;
+            padding: 1.25rem;
             margin-bottom: 2rem;
-        }
-
-        .filter-group {
-            display: flex;
-            gap: 1rem;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
-        .filter-select {
-            background: var(--bg-tertiary);
-            border: 1px solid var(--border-color);
-            color: var(--text-primary);
-            padding: 0.75rem 1rem;
-            border-radius: 0.5rem;
-            font-size: 0.9rem;
             transition: all 0.3s ease;
         }
-
-        .filter-select:focus {
-            background: var(--bg-tertiary);
+        .search-bar-container:focus-within {
             border-color: var(--accent-primary);
-            color: var(--text-primary);
             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        .search-input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        .search-icon {
+            position: absolute;
+            left: 1.25rem;
+            color: var(--text-secondary);
+            font-size: 1.2rem;
+        }
+        .premium-search-input {
+            width: 100%;
+            background: var(--bg-tertiary);
+            border: 1px solid transparent;
+            color: var(--text-primary);
+            padding: 1rem 1rem 1rem 3.25rem;
+            border-radius: 0.75rem;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        .premium-search-input:focus {
             outline: none;
+            background: rgba(30, 41, 59, 0.9);
+        }
+        .premium-search-input::placeholder {
+            color: rgba(203, 213, 225, 0.5);
         }
 
         /* Booking Cards */
@@ -658,9 +667,26 @@ while ($row = $statsResult->fetch_assoc()) {
                 margin-top: 0.2rem;
             }
 
-            .filter-group {
-                flex-direction: column;
-                align-items: stretch;
+            .page-header {
+                padding: 1.25rem 1rem;
+                margin-bottom: 1.5rem;
+            }
+            .page-title {
+                font-size: 1.5rem;
+            }
+            .page-subtitle {
+                font-size: 0.85rem;
+            }
+            .search-bar-container {
+                padding: 0.75rem;
+            }
+            .premium-search-input {
+                padding: 0.8rem 1rem 0.8rem 2.8rem;
+                font-size: 0.9rem;
+            }
+            .search-icon {
+                left: 1rem;
+                font-size: 1.1rem;
             }
 
             .booking-info {
@@ -733,35 +759,11 @@ while ($row = $statsResult->fetch_assoc()) {
             </div>
         </div>
 
-        <!-- Filter Bar -->
-        <div class="filter-bar">
-            <div class="filter-group">
-                <select class="filter-select" id="statusFilter">
-                    <option value="">All Status</option>
-                    <option value="confirmed">Confirmed</option>
-                    <option value="pending">Pending</option>
-                    <option value="completed">Completed</option>
-                    <option value="cancelled">Cancelled</option>
-                </select>
-                <select class="filter-select" id="activityFilter">
-                    <option value="">All Activities</option>
-                    <option value="basketball">Basketball Court</option>
-                    <option value="swimming">Swimming Pool</option>
-                    <option value="gym">Fitness Gym</option>
-                    <option value="adventure">Adventure Rides</option>
-                </select>
-                <select class="filter-select" id="dateFilter">
-                    <option value="">All Time</option>
-                    <option value="today">Today</option>
-                    <option value="week">This Week</option>
-                    <option value="month">This Month</option>
-                </select>
-                <button class="btn-modern btn-primary-modern" onclick="applyFilters()">
-                    <i class="bi bi-funnel"></i>Apply Filters
-                </button>
-                <button class="btn-modern btn-secondary-modern" onclick="resetFilters()">
-                    <i class="bi bi-arrow-clockwise"></i>Reset
-                </button>
+        <!-- Search Bar -->
+        <div class="search-bar-container">
+            <div class="search-input-wrapper">
+                <i class="bi bi-search search-icon"></i>
+                <input type="text" id="bookingSearchInput" class="premium-search-input" placeholder="Search by Booking ID, Activity, Date, or Status..." onkeyup="searchBookings()">
             </div>
         </div>
 
@@ -1241,27 +1243,16 @@ while ($row = $statsResult->fetch_assoc()) {
             });
         }
 
-        // Filter Functions
-        function applyFilters() {
-            const statusFilter = document.getElementById('statusFilter').value;
-            const activityFilter = document.getElementById('activityFilter').value;
-            const dateFilter = document.getElementById('dateFilter').value;
-            
+        // Search Functionality
+        function searchBookings() {
+            const query = document.getElementById('bookingSearchInput').value.toLowerCase();
             const bookingCards = document.querySelectorAll('.booking-card');
             let visibleCount = 0;
             
             bookingCards.forEach(card => {
-                let show = true;
+                const textContent = card.textContent.toLowerCase();
                 
-                if (statusFilter && card.dataset.status !== statusFilter) {
-                    show = false;
-                }
-                
-                if (activityFilter && card.dataset.activity !== activityFilter) {
-                    show = false;
-                }
-                
-                if (show) {
+                if (textContent.includes(query)) {
                     card.style.display = 'block';
                     visibleCount++;
                 } else {
@@ -1280,24 +1271,6 @@ while ($row = $statsResult->fetch_assoc()) {
                 emptyState.style.display = 'none';
                 bookingsList.style.display = 'block';
             }
-            
-            showSuccess(`Filters applied. Showing ${visibleCount} bookings.`);
-        }
-
-        function resetFilters() {
-            document.getElementById('statusFilter').value = '';
-            document.getElementById('activityFilter').value = '';
-            document.getElementById('dateFilter').value = '';
-            
-            const bookingCards = document.querySelectorAll('.booking-card');
-            bookingCards.forEach(card => {
-                card.style.display = 'block';
-            });
-            
-            document.getElementById('emptyState').style.display = 'none';
-            document.getElementById('bookingsList').style.display = 'block';
-            
-            showSuccess('Filters reset successfully.');
         }
 
         function printBooking() {
