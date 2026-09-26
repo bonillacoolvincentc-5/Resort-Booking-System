@@ -560,11 +560,22 @@ while ($row = $statsResult->fetch_assoc()) {
         }
 
         /* Modal Styles */
+        .modal-dialog {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: calc(100% - 1rem);
+            margin: 0.5rem auto;
+        }
+
         .modal-content-modern {
             background: var(--bg-card);
             backdrop-filter: blur(20px);
             border: 1px solid var(--border-color);
             border-radius: 1rem;
+            max-height: 80vh;
+            display: flex;
+            flex-direction: column;
         }
 
         .modal-header-modern {
@@ -576,6 +587,7 @@ while ($row = $statsResult->fetch_assoc()) {
 
         .modal-body-modern {
             padding: 1.5rem;
+            overflow-y: auto;
         }
 
         .modal-footer-modern {
@@ -740,6 +752,25 @@ while ($row = $statsResult->fetch_assoc()) {
                 font-size: 0.75rem;
                 justify-content: center;
                 width: 100%;
+            }
+            
+            /* Center & Shrink Modal */
+            .modal-dialog {
+                min-height: calc(100% - 2rem);
+                margin: 1rem auto;
+                width: 88%;
+            }
+            .modal-content-modern {
+                max-height: 55vh;
+            }
+            .modal-footer-modern {
+                padding: 1rem;
+            }
+            .modal-body-modern {
+                padding: 1rem;
+            }
+            .modal-header-modern {
+                padding: 1rem;
             }
         }
 
@@ -938,14 +969,11 @@ while ($row = $statsResult->fetch_assoc()) {
                         <!-- Booking details will be loaded here -->
                     </div>
                 </div>
-                <div class="modal-footer modal-footer-modern d-flex justify-content-between align-items-center">
+                <div class="modal-footer modal-footer-modern" style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
                     <button type="button" class="btn-modern btn-secondary-modern" data-bs-dismiss="modal">Close</button>
-                    <div class="d-flex gap-2">
-                        <button type="button" id="viewBundleBtn" class="btn d-flex align-items-center gap-2" style="background: linear-gradient(135deg, rgba(157,255,0,0.15), rgba(0,212,255,0.15)); border: 1px solid rgba(157,255,0,0.5); color: #9dff00; border-radius: 8px; padding: 0.5rem 1.2rem; font-weight: 600; font-size: 0.9rem; transition: all 0.2s ease;" onmouseover="this.style.background='linear-gradient(135deg, rgba(157,255,0,0.3), rgba(0,212,255,0.25))';this.style.boxShadow='0 0 15px rgba(157,255,0,0.3)'" onmouseout="this.style.background='linear-gradient(135deg, rgba(157,255,0,0.15), rgba(0,212,255,0.15))';this.style.boxShadow='none'" onclick="openBundleModal()">
-                            <i class="bi bi-box-seam"></i> View Bundle Details
-                        </button>
-
-                    </div>
+                    <button type="button" id="viewBundleBtn" class="btn-modern d-flex align-items-center justify-content-center gap-2" style="background: linear-gradient(135deg, rgba(157,255,0,0.15), rgba(0,212,255,0.15)); border: 1px solid rgba(157,255,0,0.5); color: #9dff00; border-radius: 8px; padding: 0.5rem; font-weight: 600; font-size: 0.8rem; transition: all 0.2s ease;" onmouseover="this.style.background='linear-gradient(135deg, rgba(157,255,0,0.3), rgba(0,212,255,0.25))';this.style.boxShadow='0 0 15px rgba(157,255,0,0.3)'" onmouseout="this.style.background='linear-gradient(135deg, rgba(157,255,0,0.15), rgba(0,212,255,0.15))';this.style.boxShadow='none'" onclick="openBundleModal()">
+                        <i class="bi bi-box-seam"></i> Bundle Details
+                    </button>
                 </div>
             </div>
         </div>
