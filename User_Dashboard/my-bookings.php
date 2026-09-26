@@ -625,6 +625,37 @@ while ($row = $statsResult->fetch_assoc()) {
         @media (max-width: 768px) {
             .stats-grid {
                 grid-template-columns: repeat(2, 1fr);
+                gap: 0.75rem;
+            }
+            .stat-card {
+                display: grid;
+                grid-template-columns: auto 1fr;
+                grid-template-rows: auto auto;
+                padding: 0.75rem 0.6rem;
+                gap: 0 0.5rem;
+                text-align: left;
+                align-items: center;
+                border-radius: 0.75rem;
+            }
+            .stat-card .stat-icon {
+                grid-row: 1 / span 2;
+                margin: 0;
+                width: 38px; height: 38px;
+                font-size: 1.1rem;
+                border-radius: 0.5rem;
+            }
+            .stat-card .stat-number {
+                grid-row: 1;
+                font-size: 1.25rem;
+                margin-bottom: 0;
+                align-self: end;
+                line-height: 1;
+            }
+            .stat-card .stat-label {
+                grid-row: 2;
+                font-size: 0.6rem;
+                align-self: start;
+                margin-top: 0.2rem;
             }
 
             .filter-group {
