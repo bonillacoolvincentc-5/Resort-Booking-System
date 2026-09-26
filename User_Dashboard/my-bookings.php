@@ -688,17 +688,58 @@ while ($row = $statsResult->fetch_assoc()) {
                 left: 1rem;
                 font-size: 1.1rem;
             }
-
+            .booking-card {
+                margin-bottom: 1rem;
+                border-radius: 0.75rem;
+            }
+            .booking-header {
+                padding: 0.8rem 1rem;
+            }
+            .booking-id {
+                font-size: 0.8rem;
+            }
+            .booking-status {
+                padding: 0.2rem 0.6rem;
+                font-size: 0.65rem;
+            }
+            .booking-body {
+                padding: 1rem;
+            }
             .booking-info {
-                grid-template-columns: 1fr;
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 0.6rem;
+                margin-bottom: 0.8rem;
             }
-
+            .booking-info-item:nth-child(1) {
+                grid-column: 1 / -1;
+            }
+            .booking-info-item {
+                gap: 0.4rem;
+            }
+            .booking-info-icon {
+                width: 28px;
+                height: 28px;
+                font-size: 0.75rem;
+                border-radius: 0.35rem;
+            }
+            .booking-info-label {
+                font-size: 0.6rem;
+                margin-bottom: 0.1rem;
+            }
+            .booking-info-value {
+                font-size: 0.8rem;
+            }
             .booking-actions {
-                flex-direction: column;
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 0.5rem;
             }
-
             .btn-modern {
+                padding: 0.4rem 0.5rem;
+                font-size: 0.75rem;
                 justify-content: center;
+                width: 100%;
             }
         }
 
