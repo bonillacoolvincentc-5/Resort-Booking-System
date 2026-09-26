@@ -25,20 +25,7 @@ if (empty($userPhone) && $userId) {
     $userPhone = $rowP['phone_number'] ?? '';
 }
 
-// ── Sidebar: fetch up to 4 random active activities for "Other Activities" panel
-$sidebarActivities = [];
-$stmtSide = $conn->prepare(
-    "SELECT id, name, description, price_per_hour, price_type, image_url
-     FROM activities
-     WHERE is_active = 1
-     ORDER BY RAND()
-     LIMIT 4"
-);
-if ($stmtSide) {
-    $stmtSide->execute();
-    $sidebarActivities = $stmtSide->get_result()->fetch_all(MYSQLI_ASSOC);
-    $stmtSide->close();
-}
+
 
 // ── Fetch ALL active time slots (keyed by activity_id, used by JS) ────
 $timeSlots = [];
@@ -824,7 +811,7 @@ if ($stmtSlots) {
     <div id="step2Section" class="d-none">
         <div class="row g-4">
             <!-- Main form -->
-            <div class="col-lg-8">
+            <div class="col-12 col-xl-10 mx-auto">
                 <div class="card-modern">
                     <div class="card-header-modern">
                         <i class="bi bi-calendar-plus"></i> Booking Details
@@ -993,78 +980,7 @@ if ($stmtSlots) {
 
             </div>
 
-            <!-- Sidebar — Other Activities -->
-            <div class="col-lg-4 d-none d-lg-block">
-                <div class="card-modern" style="position:sticky;top:1.5rem;align-self:flex-start;">
-                    <div class="card-header-modern">
-                        <i class="bi bi-stars"></i> Other Activities
-                    </div>
-                    <div class="card-body-modern" style="padding-top:.75rem;">
 
-                        <?php if (!empty($sidebarActivities)): ?>
-                        <?php
-                        // Cycle through gradient palettes for visual variety
-                        $gradients = [
-                            'linear-gradient(135deg,rgba(59,130,246,.3),rgba(139,92,246,.3))',
-                            'linear-gradient(135deg,rgba(16,185,129,.3),rgba(59,130,246,.25))',
-                            'linear-gradient(135deg,rgba(245,158,11,.25),rgba(239,68,68,.2))',
-                            'linear-gradient(135deg,rgba(139,92,246,.3),rgba(16,185,129,.25))',
-                        ];
-                        $icons = ['bi-activity','bi-water','bi-tree','bi-controller'];
-                        foreach ($sidebarActivities as $idx => $act):
-                            $isLast   = ($idx === count($sidebarActivities) - 1);
-                            $grad     = $gradients[$idx % count($gradients)];
-                            $icon     = $icons[$idx % count($icons)];
-                            $imgSrc   = !empty($act['image_url'])
-                                        ? '../' . htmlspecialchars($act['image_url'], ENT_QUOTES)
-                                        : '';
-                            $priceLabel = '₱' . number_format($act['price_per_hour'], 0)
-                                        . ($act['price_type'] === 'per_head' ? ' / person' : ' / session');
-                            $desc = mb_strimwidth($act['description'] ?? '', 0, 100, '…');
-                        ?>
-                        <a href="create-booking.php?id=<?= (int)$act['id'] ?>&type=activity" class="text-decoration-none d-block" style="margin-bottom:<?= $isLast ? '.25rem' : '1rem' ?>;">
-                        <div class="other-activity-card" style="
-                            background:var(--bg-tertiary);
-                            border:1px solid var(--border-color);
-                            border-radius:.75rem;
-                            overflow:hidden;
-                            transition:all .25s ease;
-                        " onmouseover="this.style.borderColor='var(--accent-primary)';this.style.transform='translateY(-3px)'"
-                           onmouseout="this.style.borderColor='var(--border-color)';this.style.transform='translateY(0)'">
-                            <?php if ($imgSrc): ?>
-                            <div style="height:110px;overflow:hidden;">
-                                <img src="<?= $imgSrc ?>" alt="<?= htmlspecialchars($act['name'], ENT_QUOTES) ?>"
-                                     style="width:100%;height:100%;object-fit:cover;"
-                                     onerror="this.parentElement.style.background='<?= $grad ?>';this.style.display='none';">
-                            </div>
-                            <?php else: ?>
-                            <div style="height:110px;background:<?= $grad ?>;display:flex;align-items:center;justify-content:center;font-size:2.25rem;">
-                                <i class="bi <?= $icon ?>" style="color:rgba(255,255,255,.7);"></i>
-                            </div>
-                            <?php endif; ?>
-                            <div style="padding:.85rem 1rem;">
-                                <div style="font-weight:700;color:var(--text-primary);font-size:.9rem;margin-bottom:.25rem;">
-                                    <?= htmlspecialchars($act['name'], ENT_QUOTES) ?>
-                                </div>
-                                <div style="font-size:.78rem;color:var(--text-secondary);line-height:1.5;">
-                                    <?= htmlspecialchars($desc, ENT_QUOTES) ?>
-                                </div>
-                                <div style="margin-top:.6rem;font-size:.75rem;font-weight:700;color:var(--accent-success);">
-                                    From <?= $priceLabel ?>
-                                </div>
-                            </div>
-                        </div>
-                        </a>
-                        <?php endforeach; ?>
-                        <?php else: ?>
-                        <p style="font-size:.8rem;color:var(--text-muted);text-align:center;padding:1rem 0;">
-                            <i class="bi bi-info-circle me-1"></i>No other activities available right now.
-                        </p>
-                        <?php endif; ?>
-
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
 

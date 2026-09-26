@@ -561,7 +561,7 @@ function fmtBookingDate(string $d, ?string $ti): string {
                 <div class="welcome-card">
                     <div class="position-relative">
                         <h1 class="welcome-title">
-                            <i class="bi bi-hand-wave me-3"></i>Welcome back, <?= htmlspecialchars($firstName) ?>!
+                            Welcome back, <?= htmlspecialchars($firstName) ?>!
                         </h1>
                         <p class="welcome-text">
                             Ready for your next adventure? You have <strong><?= $activeBookings ?> active <?= $activeBookings === 1 ? 'booking' : 'bookings' ?></strong> and <strong><?= $activitiesCount ?> <?= $activitiesCount === 1 ? 'activity' : 'activities' ?></strong> to explore.
