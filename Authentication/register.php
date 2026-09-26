@@ -23,6 +23,131 @@
             display: flex; align-items: center; gap: 0.35rem; white-space: nowrap;
         }
         .select-resort option { background: #0D1810; }
+
+        /* ── Real-Time Validation & Indicator Styling ── */
+        .field-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.4rem;
+        }
+        .field-header-row .auth-label {
+            margin-bottom: 0;
+        }
+
+        .status-badge {
+            font-size: 0.72rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+            border-radius: 20px;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            letter-spacing: 0.02em;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(10px);
+        }
+        .badge-checking {
+            background: rgba(148, 163, 184, 0.12);
+            border: 1px solid rgba(148, 163, 184, 0.25);
+            color: #cbd5e1;
+        }
+        .badge-available {
+            background: rgba(132, 234, 59, 0.12);
+            border: 1px solid rgba(132, 234, 59, 0.35);
+            color: #84ea3b;
+            box-shadow: 0 0 12px rgba(132, 234, 59, 0.12);
+        }
+        .badge-taken {
+            background: rgba(239, 68, 68, 0.14);
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            color: #f87171;
+            box-shadow: 0 0 12px rgba(239, 68, 68, 0.15);
+        }
+        .badge-format {
+            background: rgba(245, 158, 11, 0.12);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            color: #fbbf24;
+        }
+
+        .phone-counter-badge {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-muted);
+        }
+        .phone-counter-badge.valid {
+            background: rgba(132, 234, 59, 0.12);
+            border: 1px solid rgba(132, 234, 59, 0.35);
+            color: #84ea3b;
+        }
+        .phone-counter-badge.warning {
+            background: rgba(245, 158, 11, 0.12);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            color: #fbbf24;
+        }
+
+        .auth-input-wrapper {
+            position: relative;
+        }
+        .auth-input-wrapper .auth-input {
+            padding-right: 2.8rem;
+        }
+
+        .field-status-icon {
+            position: absolute;
+            right: 0.95rem;
+            top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.05rem;
+            transition: all 0.25s ease;
+        }
+
+        .field-feedback-subtext {
+            font-size: 0.77rem;
+            margin-top: 0.45rem;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            line-height: 1.4;
+            transition: all 0.3s ease;
+        }
+        .feedback-error {
+            color: #f87171;
+        }
+        .feedback-success {
+            color: #84ea3b;
+        }
+        .feedback-warning {
+            color: #fbbf24;
+        }
+
+        /* Input Dynamic Glow States */
+        .input-state-valid {
+            border-color: rgba(132, 234, 59, 0.65) !important;
+            box-shadow: 0 0 0 3px rgba(132, 234, 59, 0.12) !important;
+        }
+        .input-state-invalid {
+            border-color: rgba(239, 68, 68, 0.7) !important;
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15) !important;
+        }
+        .input-state-warning {
+            border-color: rgba(245, 158, 11, 0.6) !important;
+            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.12) !important;
+        }
+
+        /* Spin Animation */
+        @keyframes spinIcon {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .spin-icon {
+            display: inline-block;
+            animation: spinIcon 0.85s linear infinite;
+        }
     </style>
 </head>
 <body>
@@ -90,14 +215,30 @@
                 </select>
             </div>
 
+            <!-- Email Address with Real-Time Database Availability Check -->
             <div class="auth-field">
-                <label for="email" class="auth-label">Email Address</label>
-                <input class="auth-input" type="email" id="email" name="email" placeholder="you@example.com" required autocomplete="email">
+                <div class="field-header-row">
+                    <label for="email" class="auth-label">Email Address</label>
+                    <span id="emailStatusBadge" class="status-badge" style="display:none;"></span>
+                </div>
+                <div class="auth-input-wrapper">
+                    <input class="auth-input" type="email" id="email" name="email" placeholder="you@example.com" required autocomplete="email">
+                    <span id="emailStatusIcon" class="field-status-icon"></span>
+                </div>
+                <div id="emailFeedback" class="field-feedback-subtext" style="display:none;"></div>
             </div>
 
+            <!-- Phone Number Restricted to Exactly 11 Digits -->
             <div class="auth-field">
-                <label for="phone" class="auth-label">Phone Number</label>
-                <input class="auth-input" type="tel" id="phone" name="phone" placeholder="+63 (XXX) XXX-XXXX" required>
+                <div class="field-header-row">
+                    <label for="phone" class="auth-label">Phone Number</label>
+                    <span id="phoneCounterBadge" class="status-badge phone-counter-badge">0 / 11 digits</span>
+                </div>
+                <div class="auth-input-wrapper">
+                    <input class="auth-input" type="tel" id="phone" name="phone" placeholder="09XXXXXXXXX" maxlength="11" inputmode="numeric" required autocomplete="tel">
+                    <span id="phoneStatusIcon" class="field-status-icon"></span>
+                </div>
+                <div id="phoneFeedback" class="field-feedback-subtext" style="display:none;"></div>
             </div>
 
             <!-- Address -->
@@ -190,6 +331,8 @@
 
 <script>
     const PSGC_API_BASE = 'https://psgc.gitlab.io/api';
+    let emailCheckTimer = null;
+    let isEmailAvailable = null; // null: unknown/empty, true: available, false: taken
 
     document.addEventListener('DOMContentLoaded', function() {
         loadRegions();
@@ -197,6 +340,184 @@
         document.getElementById('province').addEventListener('change', handleProvinceChange);
         document.getElementById('city').addEventListener('change', handleCityChange);
 
+        setupEmailRealTimeCheck();
+        setupPhoneRestriction();
+        setupPasswordChecker();
+    });
+
+    // ── Real-Time Email Availability Checker ──
+    function setupEmailRealTimeCheck() {
+        const emailInput = document.getElementById('email');
+        const badge = document.getElementById('emailStatusBadge');
+        const icon = document.getElementById('emailStatusIcon');
+        const feedback = document.getElementById('emailFeedback');
+
+        emailInput.addEventListener('input', function() {
+            const email = this.value.trim();
+            clearTimeout(emailCheckTimer);
+
+            if (!email) {
+                isEmailAvailable = null;
+                badge.style.display = 'none';
+                icon.innerHTML = '';
+                feedback.style.display = 'none';
+                emailInput.classList.remove('input-state-valid', 'input-state-invalid', 'input-state-warning');
+                return;
+            }
+
+            // Quick regex check for email syntax
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                isEmailAvailable = null;
+                badge.className = 'status-badge badge-format';
+                badge.innerHTML = '<i class="bi bi-envelope"></i> Incomplete email';
+                badge.style.display = 'inline-flex';
+
+                icon.innerHTML = '<i class="bi bi-dash-circle" style="color:#fbbf24;"></i>';
+                emailInput.classList.remove('input-state-valid', 'input-state-invalid');
+                emailInput.classList.add('input-state-warning');
+
+                feedback.className = 'field-feedback-subtext feedback-warning';
+                feedback.innerHTML = '<i class="bi bi-info-circle"></i> Please enter a complete email address.';
+                feedback.style.display = 'flex';
+                return;
+            }
+
+            // Show checking status immediately
+            badge.className = 'status-badge badge-checking';
+            badge.innerHTML = '<span class="spin-icon"><i class="bi bi-arrow-repeat"></i></span> Checking...';
+            badge.style.display = 'inline-flex';
+
+            icon.innerHTML = '<span class="spin-icon"><i class="bi bi-arrow-repeat" style="color:#94a3b8;"></i></span>';
+            emailInput.classList.remove('input-state-valid', 'input-state-invalid', 'input-state-warning');
+            feedback.style.display = 'none';
+
+            // Debounce the database query by 320ms to avoid spamming the server
+            emailCheckTimer = setTimeout(() => {
+                fetch(`../phpAuthentication/check_email.php?email=${encodeURIComponent(email)}`)
+                    .then(r => r.json())
+                    .then(data => {
+                        // Ensure input hasn't changed while request was in-flight
+                        if (emailInput.value.trim() !== email) return;
+
+                        if (data.success) {
+                            if (data.exists) {
+                                isEmailAvailable = false;
+                                badge.className = 'status-badge badge-taken';
+                                badge.innerHTML = '<i class="bi bi-x-circle-fill"></i> Already Registered';
+                                badge.style.display = 'inline-flex';
+
+                                icon.innerHTML = '<i class="bi bi-exclamation-circle-fill" style="color:#f87171;"></i>';
+                                emailInput.classList.remove('input-state-valid', 'input-state-warning');
+                                emailInput.classList.add('input-state-invalid');
+
+                                feedback.className = 'field-feedback-subtext feedback-error';
+                                feedback.innerHTML = '<i class="bi bi-exclamation-circle-fill"></i> This email already exists in our records. <a href="login.php" class="auth-link" style="color:var(--accent);text-decoration:underline;margin-left:0.3rem;">Sign in here</a>';
+                                feedback.style.display = 'flex';
+                            } else {
+                                isEmailAvailable = true;
+                                badge.className = 'status-badge badge-available';
+                                badge.innerHTML = '<i class="bi bi-check-circle-fill"></i> Available';
+                                badge.style.display = 'inline-flex';
+
+                                icon.innerHTML = '<i class="bi bi-check2-circle" style="color:#84ea3b;"></i>';
+                                emailInput.classList.remove('input-state-invalid', 'input-state-warning');
+                                emailInput.classList.add('input-state-valid');
+
+                                feedback.className = 'field-feedback-subtext feedback-success';
+                                feedback.innerHTML = '<i class="bi bi-shield-check"></i> Great! This email is available for registration.';
+                                feedback.style.display = 'flex';
+                            }
+                        }
+                    })
+                    .catch(() => {
+                        badge.style.display = 'none';
+                        icon.innerHTML = '';
+                    });
+            }, 320);
+        });
+    }
+
+    // ── Phone Number 11-Digit Restriction & Formatting ──
+    function setupPhoneRestriction() {
+        const phoneInput = document.getElementById('phone');
+        const badge = document.getElementById('phoneCounterBadge');
+        const icon = document.getElementById('phoneStatusIcon');
+        const feedback = document.getElementById('phoneFeedback');
+
+        // Block non-numeric keys at the keyboard level
+        phoneInput.addEventListener('keydown', function(e) {
+            // Allow: backspace, delete, tab, escape, enter, arrows
+            if ([46, 8, 9, 27, 13, 37, 38, 39, 40].includes(e.keyCode) ||
+                // Allow: Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
+                (e.ctrlKey === true || e.metaKey === true)) {
+                return;
+            }
+            // Ensure that it is a number and stop the keypress if not
+            if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) && (e.keyCode < 96 || e.keyCode > 105)) {
+                e.preventDefault();
+            }
+        });
+
+        // Real-time restriction on input and paste
+        phoneInput.addEventListener('input', function() {
+            // Strip any non-digit characters and cap at 11 digits
+            let digits = this.value.replace(/\D/g, '');
+            if (digits.length > 11) {
+                digits = digits.slice(0, 11);
+            }
+            this.value = digits;
+
+            const len = digits.length;
+            badge.textContent = `${len} / 11 digits`;
+
+            if (len === 0) {
+                badge.className = 'status-badge phone-counter-badge';
+                icon.innerHTML = '';
+                feedback.style.display = 'none';
+                phoneInput.classList.remove('input-state-valid', 'input-state-invalid', 'input-state-warning');
+                return;
+            }
+
+            if (len < 11) {
+                badge.className = 'status-badge phone-counter-badge warning';
+                icon.innerHTML = '<i class="bi bi-dash-circle" style="color:#fbbf24;"></i>';
+                phoneInput.classList.remove('input-state-valid', 'input-state-invalid');
+                phoneInput.classList.add('input-state-warning');
+
+                feedback.className = 'field-feedback-subtext feedback-warning';
+                feedback.innerHTML = `<i class="bi bi-info-circle"></i> Need ${11 - len} more digit${11 - len === 1 ? '' : 's'} (Must be 11 digits starting with 09)`;
+                feedback.style.display = 'flex';
+                return;
+            }
+
+            if (len === 11) {
+                if (digits.startsWith('09')) {
+                    badge.className = 'status-badge phone-counter-badge valid';
+                    badge.innerHTML = '<i class="bi bi-check2"></i> 11 / 11 digits';
+                    icon.innerHTML = '<i class="bi bi-check2-circle" style="color:#84ea3b;"></i>';
+                    phoneInput.classList.remove('input-state-invalid', 'input-state-warning');
+                    phoneInput.classList.add('input-state-valid');
+
+                    feedback.className = 'field-feedback-subtext feedback-success';
+                    feedback.innerHTML = '<i class="bi bi-check-circle-fill"></i> Valid 11-digit Philippine mobile format';
+                    feedback.style.display = 'flex';
+                } else {
+                    badge.className = 'status-badge phone-counter-badge invalid';
+                    badge.innerHTML = '<i class="bi bi-exclamation-triangle"></i> Must start with 09';
+                    icon.innerHTML = '<i class="bi bi-exclamation-circle-fill" style="color:#f87171;"></i>';
+                    phoneInput.classList.remove('input-state-valid', 'input-state-warning');
+                    phoneInput.classList.add('input-state-invalid');
+
+                    feedback.className = 'field-feedback-subtext feedback-error';
+                    feedback.innerHTML = '<i class="bi bi-exclamation-circle-fill"></i> Mobile number must begin with "09" (e.g. 09123456789)';
+                    feedback.style.display = 'flex';
+                }
+            }
+        });
+    }
+
+    function setupPasswordChecker() {
         document.getElementById('password').addEventListener('input', function() {
             const p = this.value;
             
@@ -220,7 +541,7 @@
             updateReq('req-number', /\d/.test(p), '1 number');
             updateReq('req-special', /[!@#$%^&*(),.?":{}|<>]/.test(p), '1 special char');
         });
-    });
+    }
 
     async function loadRegions() {
         try {
@@ -315,12 +636,28 @@
 
     document.getElementById('registerForm').addEventListener('submit', function(e) {
         e.preventDefault();
+        const email = document.getElementById('email').value.trim();
+        const phone = document.getElementById('phone').value.trim();
         const password = document.getElementById('password').value;
         const confirmPassword = document.getElementById('confirmPassword').value;
         const region = document.getElementById('region').value;
         const province = document.getElementById('province').value;
         const city = document.getElementById('city').value;
         const barangay = document.getElementById('barangay').value;
+
+        // Check if email was already confirmed to exist in database
+        if (isEmailAvailable === false) {
+            showError('This email is already registered. Please sign in or use a different email address.');
+            document.getElementById('email').focus();
+            return;
+        }
+
+        // Check phone restriction
+        if (phone.length !== 11 || !/^09\d{9}$/.test(phone)) {
+            showError('Phone number must be exactly 11 digits starting with 09 (e.g. 09123456789).');
+            document.getElementById('phone').focus();
+            return;
+        }
 
         if (!region || !province || !city || !barangay) { showError('Please complete all address fields.'); return; }
         if (password !== confirmPassword) { showError('Passwords do not match!'); return; }
