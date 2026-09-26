@@ -42,6 +42,19 @@ if (isset($_SESSION['user_id'])) {
 <!-- YP4K Resort — User Dashboard Navigation -->
 <link rel="stylesheet" href="../css/resort-theme.css">
 <style>
+@view-transition {
+    navigation: auto;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+main, .container-fluid, .content-container {
+    animation: fadeIn 0.3s ease-out forwards;
+}
+
 /* ── Pending-bookings badge on My Bookings nav link ── */
 .nav-booking-badge {
     display: inline-flex;
@@ -277,15 +290,18 @@ if (isset($_SESSION['user_id'])) {
 
     .mobile-bottom-nav .mbn-item:hover {
         color: var(--accent);
-        background: rgba(157, 255, 0, 0.05);
+        background: transparent; /* Changed to avoid sticky hover background */
     }
 
     /* Active bottom-bar tab: neon icon pill + bright label */
     .mobile-bottom-nav .mbn-item.active {
         color: #76ff03;
-        background: transparent;
+        background: transparent !important;
     }
     .mobile-bottom-nav .mbn-item.active .mbn-icon {
+        width: 3.5rem;
+        height: 2rem;
+        border-radius: 16px;
         background: rgba(118, 255, 3, 0.15);
         border: 1px solid rgba(118, 255, 3, 0.3);
     }
