@@ -776,43 +776,55 @@ if ($stmtSlots) {
         .pay-submit-btn:disabled { opacity: 0.55; cursor: not-allowed; }
 
         /* Loader & Success Overlays */
-        .submit-loader {
-            position: fixed; inset: 0; background: rgba(5, 8, 20, 0.92); backdrop-filter: blur(12px);
-            z-index: 4000; display: flex; flex-direction: column; align-items: center; justify-content: center;
-            gap: 1.5rem; opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+        .submit-loader, .success-overlay {
+            position: fixed; inset: 0; background: rgba(5, 10, 25, 0.85); backdrop-filter: blur(8px);
+            z-index: 4000; display: flex; align-items: center; justify-content: center;
+            opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
         }
-        .submit-loader.show { opacity: 1; pointer-events: all; }
-        .loader-ring-wrap { position: relative; width: 90px; height: 90px; }
+        .submit-loader.show, .success-overlay.show { opacity: 1; pointer-events: all; }
+        
+        .premium-modal-box {
+            background: linear-gradient(160deg, #1a2744 0%, #0f172a 100%);
+            border: 1px solid rgba(59,130,246,0.25);
+            border-radius: 1.25rem;
+            padding: 2rem;
+            width: min(400px, 90vw);
+            box-shadow: 0 30px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(59,130,246,0.1);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            text-align: center;
+            transform: scale(0.95); transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+        }
+        .submit-loader.show .premium-modal-box, .success-overlay.show .premium-modal-box { transform: scale(1); }
+
+        .loader-ring-wrap { position: relative; width: 70px; height: 70px; margin-bottom: 1.5rem; }
         .loader-ring {
-            width: 90px; height: 90px; border-radius: 50%;
-            border: 4px solid rgba(59,130,246,0.15); border-top-color: #3b82f6;
+            width: 70px; height: 70px; border-radius: 50%;
+            border: 3px solid rgba(59,130,246,0.15); border-top-color: #3b82f6;
             animation: spin 0.9s linear infinite;
         }
         .loader-icon {
             position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-            font-size: 1.6rem; color: #3b82f6;
+            font-size: 1.2rem; color: #3b82f6;
         }
-        .loader-text { font-size: 1.05rem; font-weight: 600; color: #e2e8f0; }
-        .success-overlay {
-            position: fixed; inset: 0;
-            background: radial-gradient(ellipse at center, rgba(10,25,50,0.97) 0%, rgba(5,10,20,0.99) 100%);
-            z-index: 3000; display: flex; flex-direction: column; align-items: center; justify-content: center;
-            opacity: 0; pointer-events: none; transition: opacity 0.4s ease;
-        }
-        .success-overlay.show { opacity: 1; pointer-events: all; }
+        .loader-text { font-size: 1.1rem; font-weight: 700; color: #f1f5f9; margin-bottom: 0.25rem; }
+        .loader-sub { font-size: 0.75rem; color: #94a3b8; line-height: 1.4; }
+
+        .success-overlay { z-index: 5000; }
         .success-icon-wrap {
-            width: 110px; height: 110px; border-radius: 50%;
-            background: rgba(16,185,129,0.15); border: 3px solid rgba(16,185,129,0.4);
-            display: flex; align-items: center; justify-content: center; margin-bottom: 1.5rem;
+            width: 70px; height: 70px; border-radius: 50%;
+            background: rgba(16,185,129,0.15); border: 2px solid rgba(16,185,129,0.4);
+            display: flex; align-items: center; justify-content: center; margin-bottom: 1.25rem;
         }
-        .success-icon-wrap i { font-size: 3.5rem; color: #10b981; }
-        .success-title { font-size: 2rem; font-weight: 800; color: #f1f5f9; margin-bottom: 0.5rem; }
-        .success-ref { font-size: 0.9rem; color: #10b981; font-weight: 600; margin-bottom: 0.5rem; }
-        .success-sub { font-size: 0.9rem; color: #94a3b8; text-align: center; max-width: 360px; margin-bottom: 2rem; }
+        .success-icon-wrap i { font-size: 2.2rem; color: #10b981; }
+        .success-title { font-size: 1.4rem; font-weight: 800; color: #f1f5f9; margin-bottom: 0.4rem; }
+        .success-ref { font-size: 0.85rem; color: #10b981; font-weight: 600; margin-bottom: 0.75rem; }
+        .success-sub { font-size: 0.8rem; color: #94a3b8; text-align: center; margin-bottom: 1.5rem; line-height: 1.4; }
         .success-btn {
-            padding: 0.8rem 2.5rem; background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            padding: 0.75rem 2rem; background: linear-gradient(135deg, #3b82f6, #8b5cf6);
             color: #fff; border: none; border-radius: 0.75rem; font-weight: 700; cursor: pointer;
+            font-size: 0.9rem; width: 100%; transition: transform 0.2s;
         }
+        .success-btn:active { transform: scale(0.97); }
 
         /* ── Add Another Room button ───────────────────────────────── */
         #add-room-btn {
@@ -1263,32 +1275,36 @@ if ($stmtSlots) {
 
 <!-- SUBMISSION LOADER -->
 <div class="submit-loader" id="submitLoader">
-    <div class="loader-ring-wrap">
-        <div class="loader-ring"></div>
-        <div class="loader-icon"><i class="bi bi-send"></i></div>
-    </div>
-    <div>
-        <div class="loader-text">
-            Processing your reservation…
+    <div class="premium-modal-box">
+        <div class="loader-ring-wrap">
+            <div class="loader-ring"></div>
+            <div class="loader-icon"><i class="bi bi-send"></i></div>
         </div>
-        <div class="loader-sub" style="font-size:0.8rem;color:#64748b;margin-top:0.4rem;text-align:center;">Uploading payment proof &amp; securing your booking. Please don't close this page.</div>
+        <div>
+            <div class="loader-text">
+                Processing...
+            </div>
+            <div class="loader-sub">Uploading payment proof &amp; securing your booking.</div>
+        </div>
     </div>
 </div>
 
 <!-- SUCCESS OVERLAY -->
 <div class="success-overlay" id="successOverlay">
-    <div class="success-icon-wrap">
-        <i class="bi bi-check-circle-fill"></i>
+    <div class="premium-modal-box">
+        <div class="success-icon-wrap">
+            <i class="bi bi-check-circle-fill"></i>
+        </div>
+        <div class="success-title">Reservation Submitted! 🎉</div>
+        <div class="success-ref" id="successRef"></div>
+        <p class="success-sub">
+            Your booking is now <strong style="color:#10b981;">pending admin review</strong>.
+            You'll receive a confirmation once it's approved. Thank you!
+        </p>
+        <button class="success-btn" id="successGoBtn">
+            <i class="bi bi-journal-check me-2"></i>View My Bookings
+        </button>
     </div>
-    <div class="success-title">Reservation Submitted! 🎉</div>
-    <div class="success-ref" id="successRef"></div>
-    <p class="success-sub">
-        Your booking is now <strong style="color:#10b981;">pending admin review</strong>.
-        You'll receive a confirmation once it's approved. Thank you!
-    </p>
-    <button class="success-btn" id="successGoBtn">
-        <i class="bi bi-journal-check me-2"></i>View My Bookings
-    </button>
 </div>
 
 <!-- ADDON NOTE MODAL -->
