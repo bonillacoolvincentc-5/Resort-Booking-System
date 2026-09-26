@@ -147,6 +147,12 @@
                         <i class="bi bi-eye" id="eyeIcon1"></i>
                     </button>
                 </div>
+                <div id="password-checker" style="font-size: 0.72rem; margin-top: 0.6rem; display: flex; flex-wrap: wrap; gap: 0.4rem;">
+                    <div id="req-length" style="color: rgba(255,255,255,0.5); background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.05); padding: 0.2rem 0.6rem; border-radius: 12px; display: flex; align-items: center; gap: 0.25rem; transition: all 0.3s ease;"><i class="bi bi-circle"></i> 8+ characters</div>
+                    <div id="req-capital" style="color: rgba(255,255,255,0.5); background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.05); padding: 0.2rem 0.6rem; border-radius: 12px; display: flex; align-items: center; gap: 0.25rem; transition: all 0.3s ease;"><i class="bi bi-circle"></i> 1 capital letter</div>
+                    <div id="req-number" style="color: rgba(255,255,255,0.5); background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.05); padding: 0.2rem 0.6rem; border-radius: 12px; display: flex; align-items: center; gap: 0.25rem; transition: all 0.3s ease;"><i class="bi bi-circle"></i> 1 number</div>
+                    <div id="req-special" style="color: rgba(255,255,255,0.5); background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.05); padding: 0.2rem 0.6rem; border-radius: 12px; display: flex; align-items: center; gap: 0.25rem; transition: all 0.3s ease;"><i class="bi bi-circle"></i> 1 special char</div>
+                </div>
             </div>
 
             <div class="auth-field">
@@ -190,6 +196,30 @@
         document.getElementById('region').addEventListener('change', handleRegionChange);
         document.getElementById('province').addEventListener('change', handleProvinceChange);
         document.getElementById('city').addEventListener('change', handleCityChange);
+
+        document.getElementById('password').addEventListener('input', function() {
+            const p = this.value;
+            
+            function updateReq(elementId, isValid, text) {
+                const el = document.getElementById(elementId);
+                if (isValid) {
+                    el.style.color = '#84ea3b';
+                    el.style.background = 'rgba(132, 234, 59, 0.1)';
+                    el.style.borderColor = 'rgba(132, 234, 59, 0.3)';
+                    el.innerHTML = '<i class="bi bi-check2-circle"></i> ' + text;
+                } else {
+                    el.style.color = 'rgba(255,255,255,0.5)';
+                    el.style.background = 'rgba(255,255,255,0.05)';
+                    el.style.borderColor = 'rgba(255,255,255,0.05)';
+                    el.innerHTML = '<i class="bi bi-circle"></i> ' + text;
+                }
+            }
+
+            updateReq('req-length', p.length >= 8, '8+ characters');
+            updateReq('req-capital', /[A-Z]/.test(p), '1 capital letter');
+            updateReq('req-number', /\d/.test(p), '1 number');
+            updateReq('req-special', /[!@#$%^&*(),.?":{}|<>]/.test(p), '1 special char');
+        });
     });
 
     async function loadRegions() {
@@ -294,7 +324,10 @@
 
         if (!region || !province || !city || !barangay) { showError('Please complete all address fields.'); return; }
         if (password !== confirmPassword) { showError('Passwords do not match!'); return; }
-        if (password.length < 8) { showError('Password must be at least 8 characters long!'); return; }
+        if (password.length < 8 || !/[A-Z]/.test(password) || !/\d/.test(password) || !/[!@#$%^&*(),.?":{}|<>]/.test(password)) { 
+            showError('Password does not meet all requirements!'); 
+            return; 
+        }
 
         submitRegistration();
     });

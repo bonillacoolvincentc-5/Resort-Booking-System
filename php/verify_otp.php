@@ -81,8 +81,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             exit;
         }
         
+        // Pad the DB OTP to 6 digits (in case it was stored as an INT and lost leading zeros)
+        $dbOtpStr = str_pad((string)$otpRecord['otp'], 6, '0', STR_PAD_LEFT);
+        
         // Wrong OTP: increment attempts and return a clear validation message
-        if (!hash_equals((string)$otpRecord['otp'], (string)$otp)) {
+        if (!hash_equals($dbOtpStr, (string)$otp)) {
             $update_attempts_stmt = $conn->prepare("UPDATE otp_verifications SET attempts = attempts + 1 WHERE id = ?");
             $update_attempts_stmt->bind_param("i", $otpRecord['id']);
             $update_attempts_stmt->execute();
@@ -148,24 +151,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $successMessage = 'Admin account created successfully! Please login with your credentials.';
             
         } else {
+            // Format address
+            $region = $userData['region'] ?? '';
+            $province = $userData['province'] ?? '';
+            $cityMunicipality = $userData['city_municipality'] ?? '';
+            $barangay = $userData['barangay'] ?? '';
+            $address = trim(implode(', ', array_filter([$barangay, $cityMunicipality, $province, $region])));
+
             // Insert user data
             $insert_stmt = $conn->prepare("
                 INSERT INTO users (
                     first_name, middle_name, last_name, suffix,
                     email, phone_number, region, province, 
-                    city_municipality, barangay, password, is_verified,
+                    city_municipality, barangay, address, password, is_verified,
                     verification_token, created_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, NOW())
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, NOW())
             ");
             
             $middleName = $userData['middle_name'] ?? '';
             $suffix = $userData['suffix'] ?? '';
-            $region = $userData['region'] ?? '';
-            $province = $userData['province'] ?? '';
-            $cityMunicipality = $userData['city_municipality'] ?? '';
-            $barangay = $userData['barangay'] ?? '';
             $insert_stmt->bind_param(
-                "ssssssssssss",
+                "sssssssssssss",
                 $userData['first_name'],
                 $middleName,
                 $userData['last_name'],
@@ -176,19 +182,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $province,
                 $cityMunicipality,
                 $barangay,
+                $address,
                 $hashedPassword,
                 $verificationToken
             );
             
-            $redirectPage = '../Authentication/login.php';
-            $successMessage = 'User account created successfully! Please login with your credentials.';
+            $redirectPage = '../userDashboard/dashboard.php';
+            $successMessage = 'User account created and verified successfully! Redirecting to dashboard...';
+            $autoLoginUserId = true;
         }
         
         if ($insert_stmt->execute()) {
+            // Get the newly created user ID
+            $newUserId = $insert_stmt->insert_id;
+            
             // Delete OTP record after successful registration
             $delete_otp_stmt = $conn->prepare("DELETE FROM otp_verifications WHERE id = ?");
             $delete_otp_stmt->bind_param("i", $otpRecord['id']);
             $delete_otp_stmt->execute();
+            
+            // Auto-login if it's a user
+            if (isset($autoLoginUserId) && $autoLoginUserId) {
+                $_SESSION['user_id'] = $newUserId;
+                $_SESSION['user_type'] = 'user';
+                // Also clear verification session vars
+                unset($_SESSION['verification_email']);
+                unset($_SESSION['verification_code']);
+                unset($_SESSION['user_data']);
+            }
             
             echo json_encode([
                 'success' => true,

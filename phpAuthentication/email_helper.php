@@ -75,6 +75,7 @@ class EmailHelper {
         try {
             $mail = new PHPMailer\PHPMailer\PHPMailer(true);
             $mail->isSMTP();
+            $mail->Timeout = 10;
             $mail->Host       = self::getEmailConfig()['host'];
             $mail->SMTPAuth   = true;
             $mail->Username   = self::getEmailConfig()['username'];
@@ -130,6 +131,7 @@ class EmailHelper {
             
             // Server settings
             $mail->isSMTP();
+            $mail->Timeout = 10;
             $mail->Host = self::getEmailConfig()['host'];
             $mail->SMTPAuth = true;
             $mail->Username = self::getEmailConfig()['username'];
@@ -169,6 +171,7 @@ class EmailHelper {
             
             // Server settings
             $mail->isSMTP();
+            $mail->Timeout = 10;
             $mail->Host       = self::getEmailConfig()['host'];
             $mail->SMTPAuth   = true;
             $mail->Username   = self::getEmailConfig()['username'];
@@ -328,6 +331,7 @@ class EmailHelper {
             
             // Server settings
             $mail->isSMTP();
+            $mail->Timeout = 10;
             $mail->Host = self::getEmailConfig()['host'];
             $mail->SMTPAuth = true;
             $mail->Username = self::getEmailConfig()['username'];
@@ -419,6 +423,7 @@ class EmailHelper {
             
             // Server settings
             $mail->isSMTP();
+            $mail->Timeout = 10;
             $mail->Host = self::getEmailConfig()['host'];
             $mail->SMTPAuth = true;
             $mail->Username = self::getEmailConfig()['username'];
