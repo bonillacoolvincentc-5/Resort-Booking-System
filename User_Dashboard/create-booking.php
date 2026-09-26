@@ -340,17 +340,28 @@ if ($stmtSlots) {
 
         /* ── ADDON CHECKLIST ─────────────────────────────────────── */
         .addon-item {
-            display:flex; align-items:center; gap:1rem;
+            display:flex; align-items:center; flex-wrap: wrap; gap:0.5rem 1rem;
             background:var(--bg-tertiary); border:1px solid var(--border-color);
             border-radius:.75rem; padding:.9rem 1rem; margin-bottom:.6rem;
             cursor:pointer; transition:all .25s ease;
         }
         .addon-item:hover { border-color:var(--accent-primary); }
         .addon-item.selected { border-color:var(--accent-primary); background:rgba(59,130,246,.08); }
-        .addon-check { flex-shrink:0; }
-        .addon-check input[type=checkbox] { width:18px; height:18px; accent-color:var(--accent-primary); cursor:pointer; }
-        .addon-name  { flex:1; font-weight:500; color:var(--text-primary); font-size:.875rem; }
-        .addon-price { font-weight:700; color:var(--accent-success); font-size:.875rem; }
+        .addon-check { flex-shrink:0; align-self: flex-start; margin-top: 0.25rem; }
+        .addon-check input[type=checkbox] { width:20px; height:20px; accent-color:var(--accent-primary); cursor:pointer; }
+        .addon-name  { flex:1 1 180px; font-weight:500; color:var(--text-primary); font-size:1rem; }
+        .addon-name > div { display: flex; flex-wrap: wrap; gap: 0.25rem; align-items: center; }
+        .addon-price { font-weight:700; color:var(--accent-success); font-size:1rem; white-space: nowrap; margin-left: auto; }
+        .addon-qty { margin-left: auto; }
+        
+        @media (max-width: 575.98px) {
+            .addon-item { padding: 0.6rem 0.75rem; gap: 0.25rem 0.5rem; margin-bottom: 0.4rem; }
+            .addon-name { min-width: 120px; font-size: 0.95rem; }
+            .addon-check { margin-top: 0.15rem; }
+            .addon-check input[type=checkbox] { width: 18px; height: 18px; }
+            .addon-qty { margin-left: 1.75rem; }
+            .addon-price { font-size: 0.9rem; }
+        }
 
         /* ── EMPTY STATE ─────────────────────────────────────────── */
         .empty-state { text-align:center; padding:4rem 2rem; color:var(--text-secondary); }
@@ -1131,12 +1142,37 @@ if ($stmtSlots) {
     </button>
 </div>
 
+<!-- ADDON NOTE MODAL -->
+<div class="modal fade" id="addonNoteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content-modern" style="border: 1px solid var(--border-color); background: var(--bg-card); border-radius: 0.75rem;">
+            <div class="modal-header-modern" style="border-bottom: 1px solid var(--border-color); padding: 1rem; border-radius: 0.75rem 0.75rem 0 0;">
+                <h5 class="modal-title" style="font-size: 1rem; font-weight: 600; color: var(--text-primary);">
+                    <i class="bi bi-info-circle me-2" style="color: var(--text-muted);"></i>Activity Note
+                </h5>
+            </div>
+            <div class="modal-body-modern" style="padding: 1.25rem 1rem; color: var(--text-secondary); font-size: 0.9rem;">
+                <span id="addonNoteText"></span>
+            </div>
+            <div class="modal-footer-modern" style="border-top: none; padding: 0.5rem 1rem 1rem;">
+                <button type="button" class="btn btn-secondary w-100" style="background: var(--bg-tertiary); border: none; font-size: 0.85rem;" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script src="../assets/js/bootstrap.bundle.min.js"></script>
 <script>
 /* ══════════════════════════════════════════════════════════════════
    YP4K Resort — Create Booking JS
 ══════════════════════════════════════════════════════════════════ */
 'use strict';
+
+function showAddonNote(text) {
+    document.getElementById('addonNoteText').textContent = text;
+    var noteModal = new bootstrap.Modal(document.getElementById('addonNoteModal'));
+    noteModal.show();
+}
 
 // ── "Add Another Room" state ──────────────────────────────
 let isAddingExtraRoom = false;   // true while user is picking an additional room
@@ -1920,15 +1956,20 @@ function renderAddons(currentPkg) {
         const qtyVal = (addonsMap[a.id] && addonsMap[a.id].qty) || 1;
 
         let noteHtml = '';
+        let rawNote = '';
         const lowerName = (a.name || '').toLowerCase();
         if (lowerName.includes('atv')) {
-            noteHtml = '<div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 3px; font-weight: normal; line-height: 1.2;">Note: Scheduled upon arrival. Subject to machine cooling periods for safety.</div>';
+            rawNote = 'Scheduled upon arrival. Subject to machine cooling periods for safety.';
         } else if (lowerName.includes('videoke')) {
-            noteHtml = '<div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 3px; font-weight: normal; line-height: 1.2;">Note: First-come, first-served. Maximum of 3hours per group to allow other guests to enjoy.</div>';
+            rawNote = 'First-come, first-served. Maximum of 3hours per group to allow other guests to enjoy.';
         } else if (lowerName.includes('basketball')) {
-            noteHtml = '<div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 3px; font-weight: normal; line-height: 1.2;">Note: First-come, first-served. Maximum of 2hours per group to allow other guests to enjoy.</div>';
+            rawNote = 'First-come, first-served. Maximum of 2hours per group to allow other guests to enjoy.';
         } else if (lowerName.includes('billiard')) {
-            noteHtml = '<div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 3px; font-weight: normal; line-height: 1.2;">Note: Queueing system upon arrival. Maximum of 2 hours per group to allow other guests to enjoy.</div>';
+            rawNote = 'Queueing system upon arrival. Maximum of 2 hours per group to allow other guests to enjoy.';
+        }
+
+        if (rawNote) {
+            noteHtml = `<i class="bi bi-exclamation-circle text-muted ms-2" style="font-size: 0.9rem; cursor: pointer; opacity: 0.7;" title="Click for details" onclick="event.stopPropagation(); showAddonNote('${rawNote.replace(/'/g, "\\'")}')"></i>`;
         }
 
         return `
@@ -1941,8 +1982,8 @@ function renderAddons(currentPkg) {
                 <div>
                     ${escHtml(a.name)}
                     ${priceType === 'per_head' ? '<span class="badge bg-secondary ms-1" style="font-size:.68rem;">Per Person</span>' : ''}
+                    ${noteHtml}
                 </div>
-                ${noteHtml}
             </div>
             <input type="number" class="addon-qty" id="addonQty-${a.id}" min="1" max="${maxQty}" value="${qtyVal}" step="1"
                    style="display:${(isSelected && priceType !== 'flat_rate') ? 'inline-block' : 'none'};width:4.5rem;text-align:center;background:var(--bg-secondary);border:1px solid var(--border-color);color:var(--text-primary);border-radius:.5rem;padding:.25rem .35rem;"
