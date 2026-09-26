@@ -5,6 +5,9 @@
  * Features: OTP verification, email sending, role-based registration
  */
 
+// Start output buffering to prevent HTML errors
+ob_start();
+
 session_start();
 require_once 'db_config.php';
 require_once 'email_helper.php';
@@ -13,6 +16,7 @@ header('Content-Type: application/json');
 
 // Function to send JSON response and exit
 function sendJsonResponse($success, $message, $data = []) {
+    while (ob_get_level()) { ob_end_clean(); } // Clean output buffer before sending JSON
     $response = array_merge(['success' => $success, 'message' => $message], $data);
     echo json_encode($response);
     exit();

@@ -73,9 +73,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $update_stmt->execute();
         
         if ($update_stmt->affected_rows === 0) {
-            // Create new OTP record if update failed (preserve original user data/type)
+            // Fetch the last known user_data and user_type for this email
             $sessionUserType = $_SESSION['user_type'] ?? 'user';
             $sessionUserData = $_SESSION['user_data'] ?? '{}';
+            
+            $get_old_data = $GLOBALS['conn']->prepare("SELECT user_type, user_data FROM otp_verifications WHERE email = ? ORDER BY created_at DESC LIMIT 1");
+            $get_old_data->bind_param("s", $email);
+            $get_old_data->execute();
+            $old_result = $get_old_data->get_result();
+            if ($old_row = $old_result->fetch_assoc()) {
+                if (!empty($old_row['user_type'])) $sessionUserType = $old_row['user_type'];
+                if (!empty($old_row['user_data']) && $old_row['user_data'] !== '{}') $sessionUserData = $old_row['user_data'];
+            }
+            $get_old_data->close();
+
+            // Create new OTP record if update failed (preserve original user data/type)
             $insert_stmt = $GLOBALS['conn']->prepare("
                 INSERT INTO otp_verifications (email, otp, user_type, user_data, expires_at) 
                 VALUES (?, ?, ?, ?, ?)

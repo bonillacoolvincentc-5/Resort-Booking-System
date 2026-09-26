@@ -259,14 +259,16 @@
         document.getElementById('errorText').textContent = message;
         const el = document.getElementById('errorMessage');
         el.style.display = 'flex';
-        setTimeout(() => el.style.display = 'none', 5000);
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        setTimeout(() => el.style.display = 'none', 7000);
     }
 
     function showSuccess(message) {
         document.getElementById('successText').textContent = message;
         const el = document.getElementById('successMessage');
         el.style.display = 'flex';
-        setTimeout(() => el.style.display = 'none', 5000);
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        setTimeout(() => el.style.display = 'none', 7000);
     }
 
     function togglePasswordVisibility(fieldId, iconId) {

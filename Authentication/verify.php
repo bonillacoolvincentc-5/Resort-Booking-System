@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -174,6 +174,7 @@
         const resendBtn = document.getElementById('resendBtn');
         const cooldownTimer = document.getElementById('cooldownTimer');
         resendBtn.disabled = true;
+        document.getElementById('resendText').textContent = 'Resend Code';
         cooldownTimer.style.display = 'block';
         cooldownTimer.textContent = `Resend available in ${seconds}s`;
         if (window.cooldownInterval) clearInterval(window.cooldownInterval);

@@ -16,14 +16,15 @@ class EmailHelper {
     private static function getEmailConfig() {
         $env_path = dirname(__DIR__) . '/.env';
         $env = file_exists($env_path) ? parse_ini_file($env_path) : [];
+        $port = (int)($env['SMTP_PORT'] ?? 587);
         return [
             'host' => $env['SMTP_HOST'] ?? 'smtp.gmail.com',
             'username' => $env['SMTP_USER'] ?? 'yp4kvillaberderesort@gmail.com',
             'password' => $env['SMTP_PASS'] ?? '', // Removed hardcoded password
             'from_email' => $env['SMTP_USER'] ?? 'yp4kvillaberderesort@gmail.com',
             'from_name' => 'YP4K Resort',
-            'port' => (int)($env['SMTP_PORT'] ?? 587),
-            'encryption' => 'tls'
+            'port' => $port,
+            'encryption' => ($port === 465) ? 'ssl' : 'tls'
         ];
     }
     
@@ -36,6 +37,7 @@ class EmailHelper {
             
             // Server settings
             $mail->isSMTP();
+            $mail->Timeout = 10; // Fail fast instead of hanging forever
             $mail->Host = self::getEmailConfig()['host'];
             $mail->SMTPAuth = true;
             $mail->Username = self::getEmailConfig()['username'];
