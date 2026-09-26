@@ -139,6 +139,162 @@ $userId = $_SESSION['user_id'];
                 grid-template-columns: 1fr;
             }
         }
+        
+        @media (max-width: 768px) {
+            .trail-banner {
+                padding: 1rem;
+                margin-bottom: 1.25rem;
+            }
+            .trail-title {
+                font-size: 1.1rem;
+                gap: 0.4rem;
+                margin-bottom: 0.25rem;
+            }
+            .trail-title i {
+                font-size: 1rem;
+            }
+            .trail-subtitle {
+                font-size: 0.7rem;
+                margin-bottom: 1rem;
+                line-height: 1.4;
+            }
+            .stats-badge-bar {
+                gap: 0.5rem;
+            }
+            .stat-pill {
+                font-size: 0.65rem;
+                gap: 0.35rem;
+            }
+            .stat-pill i {
+                font-size: 0.8rem;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .calculator-card {
+                padding: 0.75rem;
+            }
+            .card-heading {
+                font-size: 0.95rem;
+                margin-bottom: 0.75rem;
+            }
+            .form-label-custom {
+                font-size: 0.6rem;
+                margin-bottom: 0.2rem;
+            }
+            .form-select-modern {
+                padding: 0.4rem 0.6rem;
+                font-size: 0.75rem;
+            }
+            .pace-selector {
+                gap: 0.3rem;
+                margin-bottom: 0.75rem;
+            }
+            .pace-btn {
+                padding: 0.35rem;
+                font-size: 0.6rem;
+            }
+            .btn-calculate {
+                padding: 0.5rem 0.75rem;
+                font-size: 0.75rem;
+            }
+            .time-display {
+                padding: 0.6rem;
+                margin-bottom: 0.6rem;
+            }
+            .time-label {
+                font-size: 0.55rem;
+            }
+            .time-val {
+                font-size: 1.4rem;
+            }
+            .time-sub {
+                font-size: 0.6rem;
+            }
+            .metrics-grid {
+                gap: 0.4rem;
+                margin-bottom: 0.5rem;
+            }
+            .metric-box {
+                padding: 0.4rem;
+            }
+            .metric-lbl {
+                font-size: 0.55rem;
+            }
+            .metric-num {
+                font-size: 0.75rem;
+            }
+            .results-panel {
+                margin-top: 0.75rem;
+                padding-top: 0.75rem;
+            }
+            .section-title {
+                font-size: 0.95rem;
+                margin-bottom: 0.75rem;
+            }
+            .expeditions-grid {
+                gap: 0.75rem;
+            }
+            .expedition-card {
+                padding: 0.75rem;
+            }
+            .exp-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.2rem;
+                margin-bottom: 0.5rem;
+            }
+            .exp-title {
+                font-size: 0.85rem;
+            }
+            .diff-badge {
+                padding: 0.15rem 0.4rem;
+                font-size: 0.55rem;
+            }
+            .exp-desc {
+                font-size: 0.65rem;
+                margin-bottom: 0.5rem;
+                line-height: 1.3;
+            }
+            .exp-meta {
+                gap: 0.4rem;
+                margin-bottom: 0.5rem;
+                padding-bottom: 0.5rem;
+                flex-wrap: wrap;
+            }
+            .meta-item {
+                font-size: 0.65rem;
+                gap: 0.25rem;
+            }
+            .meta-item i {
+                font-size: 0.75rem;
+            }
+            .btn-exp-plan {
+                padding: 0.4rem 0.75rem;
+                font-size: 0.7rem;
+            }
+            .safety-card {
+                padding: 0.75rem;
+                gap: 0.5rem;
+                border-left-width: 3px;
+                border-radius: 12px;
+                align-items: flex-start;
+            }
+            .safety-icon {
+                width: 28px;
+                height: 28px;
+                font-size: 1rem;
+                border-radius: 8px;
+            }
+            .safety-content h5 {
+                font-size: 0.8rem;
+                margin-bottom: 0.2rem;
+            }
+            .safety-content p {
+                font-size: 0.65rem;
+                line-height: 1.35;
+            }
+        }
 
         /* Route Calculator Card */
         .calculator-card {
