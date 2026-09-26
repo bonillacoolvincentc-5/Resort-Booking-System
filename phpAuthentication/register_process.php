@@ -39,29 +39,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $agreeTerms = isset($_POST['agree_terms']) || isset($_POST['agreeTerms']);
         
         // Location fields (required for users, optional for admins)
+        // Note: frontend already sends resolved place names from the PSGC dropdowns
         $region = trim($_POST['region'] ?? '');
         $province = trim($_POST['province'] ?? '');
         $cityMunicipality = trim($_POST['city_municipality'] ?? $_POST['city'] ?? '');
         $barangay = trim($_POST['barangay'] ?? $_POST['barangay'] ?? '');
-        
-        // If location fields are numerical codes, convert using PSGC API
-        if (is_numeric($region) && strlen($region) >= 8) {
-            $json = @file_get_contents("https://psgc.gitlab.io/api/regions/{$region}/");
-            if ($json) { $d = json_decode($json, true); if (!empty($d['name'])) $region = $d['name']; }
-        }
-        if (is_numeric($province) && strlen($province) >= 8) {
-            $json = @file_get_contents("https://psgc.gitlab.io/api/provinces/{$province}/");
-            if ($json) { $d = json_decode($json, true); if (!empty($d['name'])) $province = $d['name']; }
-        }
-        if (is_numeric($cityMunicipality) && strlen($cityMunicipality) >= 8) {
-            $json = @file_get_contents("https://psgc.gitlab.io/api/cities-municipalities/{$cityMunicipality}/");
-            if ($json) { $d = json_decode($json, true); if (!empty($d['name'])) $cityMunicipality = $d['name']; }
-        }
-        if (is_numeric($barangay) && strlen($barangay) >= 8) {
-            $json = @file_get_contents("https://psgc.gitlab.io/api/barangays/{$barangay}/");
-            if ($json) { $d = json_decode($json, true); if (!empty($d['name'])) $barangay = $d['name']; }
-        }
-        
+
         // Validation
         $errors = array();
         

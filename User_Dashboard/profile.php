@@ -739,15 +739,47 @@ if ($diff->y >= 1) {
             .profile-sidebar {
                 position: relative;
                 top: 0;
-                margin-bottom: 2rem;
+                margin-bottom: 1rem;
+            }
+            
+            .profile-sidebar .profile-card {
+                padding: 1rem;
+            }
+            .profile-sidebar .profile-avatar {
+                width: 80px;
+                height: 80px;
+                font-size: 2rem;
+                margin-bottom: 0.5rem;
+            }
+            .profile-sidebar .profile-name {
+                font-size: 1.1rem;
+            }
+            .profile-sidebar .profile-email {
+                font-size: 0.8rem;
+                margin-bottom: 1rem;
             }
 
             .profile-stats {
                 grid-template-columns: repeat(2, 1fr);
+                gap: 0.5rem;
+            }
+            
+            .profile-stats .stat-box {
+                padding: 0.75rem;
+            }
+            .profile-stats .stat-box .stat-value {
+                font-size: 1.25rem;
+            }
+            .profile-stats .stat-box .stat-label {
+                font-size: 0.65rem;
             }
 
             .page-title {
-                font-size: 1.5rem;
+                font-size: 1.25rem;
+            }
+            .page-header {
+                padding: 1rem;
+                margin-bottom: 1rem;
             }
         }
 
@@ -760,8 +792,8 @@ if ($diff->y >= 1) {
                 backdrop-filter: blur(20px) saturate(180%);
                 -webkit-backdrop-filter: blur(20px) saturate(180%);
                 border: 1px solid rgba(157, 255, 0, 0.14);
-                border-radius: 1.25rem;          /* smooth, not boxy */
-                overflow: hidden;                /* clip tabs to rounded corners */
+                border-radius: 1rem;
+                overflow: hidden;
                 box-shadow:
                     0 8px 32px rgba(0, 0, 0, 0.45),
                     0 0 0 1px rgba(157, 255, 0, 0.04);
@@ -783,12 +815,12 @@ if ($diff->y >= 1) {
 
             /* ③ Mobile tab strip: horizontal scroll instead of vertical stack */
             .profile-tabs {
-                flex-direction: row;           /* keep horizontal on mobile */
+                flex-direction: row;
                 overflow-x: auto;
                 -webkit-overflow-scrolling: touch;
                 scrollbar-width: none;
-                padding: 0 0.75rem;
-                gap: 0.25rem;
+                padding: 0 0.5rem;
+                gap: 0.2rem;
                 background: rgba(8, 16, 12, 0.6);
                 border-bottom: 1px solid rgba(157, 255, 0, 0.12);
             }
@@ -797,30 +829,47 @@ if ($diff->y >= 1) {
             /* ④ Individual tabs: compact, pill-shaped, no pointer-overflow */
             .profile-tab {
                 flex-shrink: 0;
-                padding: 0.85rem 1.1rem;
-                font-size: 0.85rem;
-                border-bottom: 3px solid transparent;
+                padding: 0.6rem 0.85rem;
+                font-size: 0.75rem;
+                border-bottom: 2px solid transparent;
                 white-space: nowrap;
-                border-radius: 12px 12px 0 0;
+                border-radius: 8px 8px 0 0;
             }
 
             /* ⑤ Tab content area: generous inner breathing room */
             .tab-content {
-                padding: 1.5rem 1.25rem;
+                padding: 1rem;
             }
 
-            /* ⑥ Form section header (h5 "Account Security") */
+            /* ⑥ Form section header */
             .tab-content h5 {
-                font-size: 1rem;
+                font-size: 0.85rem;
+                margin-bottom: 0.75rem;
+            }
+            
+            /* Forms adjustments */
+            .form-label {
+                font-size: 0.65rem;
+                margin-bottom: 0.2rem;
+            }
+            .form-control, .form-select {
+                padding: 0.4rem 0.6rem;
+                font-size: 0.75rem;
+                border-radius: 6px;
             }
 
             /* ⑦ Action buttons row: stack vertically on small screens */
             .tab-content .d-flex.gap-2 {
                 flex-direction: column;
+                gap: 0.5rem !important;
             }
-            .tab-content .d-flex.gap-2 .btn-modern {
+            .tab-content .d-flex.gap-2 .btn-modern,
+            .btn-modern {
                 width: 100%;
                 justify-content: center;
+                padding: 0.5rem;
+                font-size: 0.75rem;
+                border-radius: 6px;
             }
         }
 
@@ -1225,6 +1274,54 @@ if ($diff->y >= 1) {
                 errorAlert.classList.add('d-none');
             }, 5000);
         }
+
+        function showInfo(message) {
+            hideAllAlerts();
+            // Create info alert if it doesn't exist
+            let infoAlert = document.getElementById('infoAlert');
+            if (!infoAlert) {
+                infoAlert = document.createElement('div');
+                infoAlert.id = 'infoAlert';
+                infoAlert.className = 'alert alert-modern alert-info-modern alert-dismissible fade show';
+                infoAlert.style.background = 'rgba(157, 255, 0, 0.1)';
+                infoAlert.style.color = '#9DFF00';
+                infoAlert.style.border = '1px solid rgba(157, 255, 0, 0.2)';
+                infoAlert.innerHTML = `
+                    <i class="bi bi-info-circle me-2"></i>
+                    <span id="infoMessage"></span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+                document.querySelector('.page-header').after(infoAlert);
+            }
+            
+            document.getElementById('infoMessage').textContent = message;
+            infoAlert.classList.remove('d-none');
+            
+            setTimeout(() => {
+                infoAlert.classList.add('d-none');
+            }, 5000);
+        }
+
+        function hideAllAlerts() {
+            document.querySelectorAll('.alert').forEach(alert => {
+                alert.classList.add('d-none');
+            });
+        }
+
+        // Check for URL parameters
+        window.addEventListener('load', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const success = urlParams.get('success');
+            
+            if (success) {
+                showSuccess(decodeURIComponent(success));
+            }
+        });
+    </script>
+
+    <script src="../assets/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
 
         function showInfo(message) {
             hideAllAlerts();
