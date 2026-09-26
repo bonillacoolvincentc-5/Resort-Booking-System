@@ -2761,35 +2761,37 @@ function renderExtraRoomCard(room) {
     const primaryGuests   = document.getElementById('numberOfGuests').value;
     const card = document.createElement('div');
     card.id = `extraRoomCard-${room.index}`;
-    card.style.cssText = 'background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.25);border-radius:.75rem;padding:1.25rem;margin-top:1.25rem;';
+    card.style.cssText = 'background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.25);border-radius:.5rem;padding:.75rem;margin-top:.75rem;';
     card.innerHTML = `
-        <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1rem;">
-            ${imgHtml}
+        <div style="display:flex;align-items:flex-start;gap:.5rem;margin-bottom:.75rem;">
+            <div style="transform: scale(0.85); transform-origin: top left;">
+                ${imgHtml}
+            </div>
             <div style="flex:1;">
-                <div style="font-weight:700;color:var(--text-primary);font-size:.95rem;">
-                    <span style="color:var(--accent-success);margin-right:.4rem;"><i class="bi bi-door-open"></i> Room ${room.index}:</span>
+                <div style="font-weight:700;color:var(--text-primary);font-size:.85rem;line-height:1.2;">
+                    <span style="color:var(--accent-success);"><i class="bi bi-door-open"></i> Room ${room.index}:</span><br>
                     ${escHtml(r.name)}
                 </div>
-                <div style="color:var(--accent-success);font-size:.8rem;margin-top:.2rem;">${escHtml(r.price_label||'')}</div>
+                <div style="color:var(--accent-success);font-size:.75rem;margin-top:.2rem;">${escHtml(r.price_label||'')}</div>
             </div>
             <button type="button" onclick="removeExtraRoom(${room.index})" title="Remove"
-                style="background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);color:#ef4444;border-radius:.5rem;padding:.3rem .6rem;cursor:pointer;font-size:.8rem;">
+                style="background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);color:#ef4444;border-radius:.35rem;padding:.2rem .4rem;cursor:pointer;font-size:.7rem;">
                 <i class="bi bi-x-lg"></i>
             </button>
         </div>
         <div class="row g-2">
-            <div class="col-md-6">
-                <label class="form-label-modern" style="font-size:.8rem;"><i class="bi bi-calendar3 me-1"></i>Date of Visit</label>
-                <input type="date" id="extraRoomDate-${room.index}" class="form-control-modern" value="${primaryDate}" style="font-size:.85rem;" oninput="recalcPrice()">
+            <div class="col-6" style="display:flex; flex-direction:column; justify-content:flex-end;">
+                <label class="form-label-modern" style="font-size:.7rem;margin-bottom:.2rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><i class="bi bi-calendar3 me-1"></i>Check-in</label>
+                <input type="date" id="extraRoomDate-${room.index}" class="form-control-modern" value="${primaryDate}" style="font-size:.75rem;padding:.3rem .5rem;min-height:0;" oninput="recalcPrice()">
             </div>
             ${isOvernight ? `
-            <div class="col-md-6">
-                <label class="form-label-modern" style="font-size:.8rem;"><i class="bi bi-calendar-check me-1"></i>Check-out Date</label>
-                <input type="date" id="extraRoomCheckOut-${room.index}" class="form-control-modern" value="${primaryCheckOut}" style="font-size:.85rem;" oninput="recalcPrice()">
-            </div>` : '<div class="col-md-6"></div>'}
-            <div class="col-md-6">
-                <label class="form-label-modern" style="font-size:.8rem;"><i class="bi bi-people me-1"></i>Guests for this Room</label>
-                <input type="number" id="extraRoomGuests-${room.index}" class="form-control-modern" value="${primaryGuests}" min="1" max="${r.capacity||100}" style="font-size:.85rem;" oninput="recalcPrice()">
+            <div class="col-6" style="display:flex; flex-direction:column; justify-content:flex-end;">
+                <label class="form-label-modern" style="font-size:.7rem;margin-bottom:.2rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><i class="bi bi-calendar-check me-1"></i>Check-out</label>
+                <input type="date" id="extraRoomCheckOut-${room.index}" class="form-control-modern" value="${primaryCheckOut}" style="font-size:.75rem;padding:.3rem .5rem;min-height:0;" oninput="recalcPrice()">
+            </div>` : ''}
+            <div class="${isOvernight ? 'col-12 mt-1' : 'col-6'}" style="display:flex; flex-direction:column; justify-content:flex-end;">
+                <label class="form-label-modern" style="font-size:.7rem;margin-bottom:.2rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><i class="bi bi-people me-1"></i>Guests</label>
+                <input type="number" id="extraRoomGuests-${room.index}" class="form-control-modern" value="${primaryGuests}" min="1" max="${r.capacity||100}" style="font-size:.75rem;padding:.3rem .5rem;min-height:0;" oninput="recalcPrice()">
             </div>
         </div>`;
     container.appendChild(card);
