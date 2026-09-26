@@ -9,10 +9,31 @@ if (!isset($_SESSION['user_id'])) {
 
 require_once '../phpAuthentication/db_config.php';
 
-$userName  = $_SESSION['user_name'];
-$userEmail = $_SESSION['user_email'];
 $userId    = $_SESSION['user_id'];
+$userName  = $_SESSION['user_name'] ?? '';
+$userEmail = $_SESSION['user_email'] ?? '';
 $userPhone = $_SESSION['user_phone'] ?? '';
+
+if ((empty($userName) || empty($userEmail) || empty($userPhone)) && $userId) {
+    $stmtU = $conn->prepare("SELECT first_name, last_name, email, phone_number FROM users WHERE id = ?");
+    $stmtU->bind_param("i", $userId);
+    $stmtU->execute();
+    $rowU = $stmtU->get_result()->fetch_assoc();
+    if ($rowU) {
+        if (empty($userName)) {
+            $userName = trim(($rowU['first_name'] ?? '') . ' ' . ($rowU['last_name'] ?? ''));
+            $_SESSION['user_name'] = $userName;
+        }
+        if (empty($userEmail)) {
+            $userEmail = $rowU['email'] ?? '';
+            $_SESSION['user_email'] = $userEmail;
+        }
+        if (empty($userPhone)) {
+            $userPhone = $rowU['phone_number'] ?? '';
+        }
+    }
+    $stmtU->close();
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">

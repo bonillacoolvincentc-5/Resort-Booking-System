@@ -14,61 +14,43 @@ require_once '../phpAuthentication/db_config.php';
 header('Content-Type: application/json');
 
 // Get cooldown status from database
-$email = $_SESSION['verification_email'] ?? '';
+$email = trim($_GET['email'] ?? $_SESSION['verification_email'] ?? '');
 
-if ($email) {
+if (!empty($email)) {
     $stmt = $GLOBALS['conn']->prepare("
-        SELECT created_at, attempts 
+        SELECT TIMESTAMPDIFF(SECOND, created_at, NOW()) AS time_diff 
         FROM otp_verifications 
-        WHERE email = ? AND expires_at > NOW() 
+        WHERE email = ? 
         ORDER BY created_at DESC LIMIT 1
     ");
     $stmt->bind_param("s", $email);
     $stmt->execute();
     $result = $stmt->get_result();
     
-    if ($result->num_rows === 1) {
+    if ($result->num_rows >= 1) {
         $data = $result->fetch_assoc();
-        $lastAttemptTime = strtotime($data['created_at']);
-        $currentTime = time();
-        $timeDiff = $currentTime - $lastAttemptTime;
-        $cooldownPeriod = 60; // 1 minute cooldown
+        $timeDiff = (int)($data['time_diff'] ?? 9999);
+        $cooldownPeriod = 120; // 2 minutes cooldown
         
-        if ($timeDiff < $cooldownPeriod) {
+        if ($timeDiff >= 0 && $timeDiff < $cooldownPeriod) {
             $remainingCooldown = $cooldownPeriod - $timeDiff;
-            // Clean output buffer
             ob_clean();
             echo json_encode([
                 'success' => true,
                 'cooldown' => $remainingCooldown,
                 'can_resend' => false
             ]);
-        } else {
-            // Clean output buffer
-            ob_clean();
-            echo json_encode([
-                'success' => true,
-                'cooldown' => 0,
-                'can_resend' => true
-            ]);
+            $stmt->close();
+            exit;
         }
-    } else {
-        // Clean output buffer
-        ob_clean();
-        echo json_encode([
-            'success' => true,
-            'cooldown' => 0,
-            'can_resend' => true
-        ]);
     }
     $stmt->close();
-} else {
-    // Clean output buffer
-    ob_clean();
-    echo json_encode([
-        'success' => true,
-        'cooldown' => 0,
-        'can_resend' => true
-    ]);
 }
+
+ob_clean();
+echo json_encode([
+    'success' => true,
+    'cooldown' => 0,
+    'can_resend' => true
+]);
 ?>

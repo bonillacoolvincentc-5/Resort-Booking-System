@@ -8,6 +8,17 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="../css/resort-theme.css">
     <link rel="stylesheet" href="../css/auth-resort.css">
+    <style>
+        #resendBtn:disabled {
+            opacity: 0.55 !important;
+            cursor: not-allowed !important;
+            pointer-events: none !important;
+            transform: none !important;
+            box-shadow: none !important;
+            border-color: rgba(255, 255, 255, 0.15) !important;
+            color: var(--text-muted) !important;
+        }
+    </style>
 </head>
 <body>
 <div class="resort-bg"></div>
@@ -39,7 +50,7 @@
             <i class="bi bi-check-circle"></i><span id="successText"></span>
         </div>
 
-        <!-- Verification Form — backend action and field names preserved -->
+        <!-- Verification Form -->
         <form id="verificationForm" method="POST">
             <div class="auth-field">
                 <label for="otpCode" class="auth-label"><i class="bi bi-shield-check me-1"></i>Verification Code</label>
@@ -60,10 +71,9 @@
             <div style="text-align:center;margin-top:1.25rem;">
                 <p style="color:var(--text-muted);font-size:0.85rem;margin-bottom:0.6rem;">Didn't receive the code?</p>
                 <button type="button" class="btn-resort-ghost" id="resendBtn" disabled style="padding:0.5rem 1.25rem;font-size:0.85rem;">
-                    <i class="bi bi-arrow-clockwise"></i>
+                    <i class="bi bi-arrow-clockwise" id="resendIcon"></i>
                     <span id="resendText">Resend Code</span>
                 </button>
-                <div id="cooldownTimer" style="color:var(--text-muted);font-size:0.8rem;margin-top:0.5rem;display:none;"></div>
             </div>
         </form>
 
@@ -75,14 +85,12 @@
 </div>
 
 <script>
-    // ── All backend-calling JS preserved exactly ──
     let cooldownInterval;
 
     document.addEventListener('DOMContentLoaded', function() {
         loadVerificationData();
         setupOTPInput();
         setupFormHandlers();
-        startCooldownTimer();
     });
 
     function loadVerificationData() {
@@ -90,12 +98,14 @@
         const email = urlParams.get('email');
         if (email) {
             document.getElementById('userEmail').textContent = email;
+            startCooldownTimer();
         } else {
             fetch('../php/get_verification_data.php')
                 .then(r => r.json())
                 .then(data => {
                     if (data.success && data.email) {
                         document.getElementById('userEmail').textContent = data.email;
+                        startCooldownTimer();
                     } else {
                         showError('Verification session expired. Please register again.');
                         setTimeout(() => window.location.href = 'register.php', 3000);
@@ -142,10 +152,22 @@
 
     function resendOTP() {
         const resendBtn = document.getElementById('resendBtn');
+        if (!resendBtn || resendBtn.disabled) return;
+
+        const userEmail = getCurrentEmail();
+        if (!userEmail) {
+            showError('No email found. Please register again.');
+            return;
+        }
+
+        const resendIcon = document.getElementById('resendIcon');
         const resendText = document.getElementById('resendText');
-        const userEmail = document.getElementById('userEmail').textContent;
+
+        // Immediately disable to prevent any duplicate clicks
         resendBtn.disabled = true;
-        resendText.textContent = 'Sending...';
+        if (resendIcon) resendIcon.className = 'bi bi-hourglass-split';
+        if (resendText) resendText.textContent = 'Sending...';
+
         fetch('../php/resend_otp.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -153,45 +175,107 @@
         })
         .then(r => { if (!r.ok) throw new Error('Network error'); return r.json(); })
         .then(data => {
-            if (data.success) { showSuccess(data.message); startCooldownTimer(); document.getElementById('otpCode').value = ''; document.getElementById('otpCode').focus(); }
-            else {
+            if (data.success) {
+                showSuccess(data.message || 'New verification code sent to your email');
+                document.getElementById('otpCode').value = '';
+                document.getElementById('otpCode').focus();
+
+                const cd = Number(data.cooldown || 120);
+                localStorage.setItem('resend_cooldown_end_' + userEmail, Date.now() + (cd * 1000));
+                updateCooldownButton(cd);
+            } else {
                 showError(data.message || 'Something went wrong.');
                 const rem = Number(data.cooldown || 0);
-                if (rem > 0) updateCooldownButton(rem); else enableResendButton();
+                if (rem > 0) {
+                    localStorage.setItem('resend_cooldown_end_' + userEmail, Date.now() + (rem * 1000));
+                    updateCooldownButton(rem);
+                } else {
+                    enableResendButton();
+                }
             }
         })
-        .catch(() => { showError('Something went wrong.'); enableResendButton(); })
-        .finally(() => { if (!resendBtn.disabled) resendText.textContent = 'Resend Code'; });
+        .catch(() => {
+            showError('Something went wrong. Please try again.');
+            enableResendButton();
+        });
     }
 
     function startCooldownTimer() {
-        fetch('../php/get_cooldown_status.php').then(r => r.json())
-        .then(data => { if (data.cooldown > 0) updateCooldownButton(data.cooldown); else enableResendButton(); })
-        .catch(() => enableResendButton());
+        const userEmail = getCurrentEmail();
+        if (!userEmail) return;
+
+        // Check localStorage first for instant UI response without waiting for network
+        const savedEnd = localStorage.getItem('resend_cooldown_end_' + userEmail);
+        if (savedEnd) {
+            const localRemaining = Math.ceil((Number(savedEnd) - Date.now()) / 1000);
+            if (localRemaining > 0 && localRemaining <= 120) {
+                updateCooldownButton(localRemaining);
+            }
+        }
+
+        const url = `../php/get_cooldown_status.php?email=${encodeURIComponent(userEmail)}`;
+        fetch(url)
+            .then(r => r.json())
+            .then(data => {
+                const serverCd = Number(data.cooldown || 0);
+                if (serverCd > 0) {
+                    localStorage.setItem('resend_cooldown_end_' + userEmail, Date.now() + (serverCd * 1000));
+                    updateCooldownButton(serverCd);
+                } else {
+                    const savedEndNow = localStorage.getItem('resend_cooldown_end_' + userEmail);
+                    const localRem = savedEndNow ? Math.ceil((Number(savedEndNow) - Date.now()) / 1000) : 0;
+                    if (localRem <= 0) {
+                        localStorage.removeItem('resend_cooldown_end_' + userEmail);
+                        enableResendButton();
+                    }
+                }
+            })
+            .catch(() => {
+                const savedEndNow = localStorage.getItem('resend_cooldown_end_' + userEmail);
+                const localRem = savedEndNow ? Math.ceil((Number(savedEndNow) - Date.now()) / 1000) : 0;
+                if (localRem <= 0) {
+                    enableResendButton();
+                }
+            });
     }
 
     function updateCooldownButton(seconds) {
+        seconds = Math.max(0, Math.floor(seconds));
+        if (seconds <= 0) {
+            enableResendButton();
+            return;
+        }
+
         const resendBtn = document.getElementById('resendBtn');
-        const cooldownTimer = document.getElementById('cooldownTimer');
-        resendBtn.disabled = true;
-        document.getElementById('resendText').textContent = 'Resend Code';
-        cooldownTimer.style.display = 'block';
-        cooldownTimer.textContent = `Resend available in ${seconds}s`;
+        const resendText = document.getElementById('resendText');
+        const resendIcon = document.getElementById('resendIcon');
+        
+        if (resendBtn) resendBtn.disabled = true;
+        if (resendIcon) resendIcon.className = 'bi bi-clock-history';
+        if (resendText) resendText.textContent = `Resend Code (${seconds}s)`;
+
         if (window.cooldownInterval) clearInterval(window.cooldownInterval);
         window.cooldownInterval = setInterval(() => {
             seconds--;
-            if (seconds <= 0) { clearInterval(window.cooldownInterval); enableResendButton(); }
-            else cooldownTimer.textContent = `Resend available in ${seconds}s`;
+            if (seconds <= 0) {
+                clearInterval(window.cooldownInterval);
+                const userEmail = getCurrentEmail();
+                if (userEmail) localStorage.removeItem('resend_cooldown_end_' + userEmail);
+                enableResendButton();
+            } else {
+                if (resendText) resendText.textContent = `Resend Code (${seconds}s)`;
+            }
         }, 1000);
     }
 
     function enableResendButton() {
-        const resendBtn = document.getElementById('resendBtn');
-        const cooldownTimer = document.getElementById('cooldownTimer');
-        resendBtn.disabled = false;
-        document.getElementById('resendText').textContent = 'Resend Code';
-        cooldownTimer.style.display = 'none';
         if (window.cooldownInterval) clearInterval(window.cooldownInterval);
+        const resendBtn = document.getElementById('resendBtn');
+        const resendText = document.getElementById('resendText');
+        const resendIcon = document.getElementById('resendIcon');
+        if (resendBtn) resendBtn.disabled = false;
+        if (resendIcon) resendIcon.className = 'bi bi-arrow-clockwise';
+        if (resendText) resendText.textContent = 'Resend Code';
     }
 
     function getCurrentEmail() {

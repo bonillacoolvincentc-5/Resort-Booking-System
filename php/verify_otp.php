@@ -31,17 +31,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $otp = trim($_POST['otp'] ?? '');
     
     if (empty($otp)) {
-        echo json_encode(['success' => false, 'message' => 'Verification code is required']);
-        exit;
+        sendJsonResponse(false, 'Verification code is required', ['error_type' => 'invalid_otp']);
     }
 
     if (empty($email)) {
-        echo json_encode([
-            'success' => false,
-            'message' => 'Verification session expired. Please register again.',
-            'error_type' => 'session_expired'
-        ]);
-        exit;
+        sendJsonResponse(false, 'Verification session expired. Please register again.', ['error_type' => 'session_expired']);
     }
     
     try {
@@ -187,7 +181,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $verificationToken
             );
             
-            $redirectPage = '../userDashboard/dashboard.php';
+            $redirectPage = '../User_Dashboard/dashboard.php';
             $successMessage = 'User account created and verified successfully! Redirecting to dashboard...';
             $autoLoginUserId = true;
         }
@@ -204,7 +198,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Auto-login if it's a user
             if (isset($autoLoginUserId) && $autoLoginUserId) {
                 $_SESSION['user_id'] = $newUserId;
+                $_SESSION['user_email'] = $userData['email'] ?? '';
+                $fName = $userData['first_name'] ?? '';
+                $lName = $userData['last_name'] ?? '';
+                $_SESSION['user_name'] = trim("$fName $lName");
+                $_SESSION['logged_in'] = true;
                 $_SESSION['user_type'] = 'user';
+                $_SESSION['login_time'] = time();
                 // Also clear verification session vars
                 unset($_SESSION['verification_email']);
                 unset($_SESSION['verification_code']);

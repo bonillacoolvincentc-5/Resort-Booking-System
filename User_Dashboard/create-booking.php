@@ -12,17 +12,29 @@ require_once '../phpAuthentication/db_config.php';
 /** @var mysqli $conn */
 global $conn;
 
-$userName  = $_SESSION['user_name'];
-$userEmail = $_SESSION['user_email'];
+$userName  = $_SESSION['user_name'] ?? '';
+$userEmail = $_SESSION['user_email'] ?? '';
 $userId    = $_SESSION['user_id'];
 $userPhone = $_SESSION['user_phone'] ?? '';
 
-if (empty($userPhone) && $userId) {
-    $stmtP = $conn->prepare("SELECT phone_number FROM users WHERE id = ?");
+if ((empty($userName) || empty($userEmail) || empty($userPhone)) && $userId) {
+    $stmtP = $conn->prepare("SELECT first_name, last_name, email, phone_number FROM users WHERE id = ?");
     $stmtP->bind_param("i", $userId);
     $stmtP->execute();
     $rowP = $stmtP->get_result()->fetch_assoc();
-    $userPhone = $rowP['phone_number'] ?? '';
+    if ($rowP) {
+        if (empty($userName)) {
+            $userName = trim(($rowP['first_name'] ?? '') . ' ' . ($rowP['last_name'] ?? ''));
+            $_SESSION['user_name'] = $userName;
+        }
+        if (empty($userEmail)) {
+            $userEmail = $rowP['email'] ?? '';
+            $_SESSION['user_email'] = $userEmail;
+        }
+        if (empty($userPhone)) {
+            $userPhone = $rowP['phone_number'] ?? '';
+        }
+    }
 }
 
 

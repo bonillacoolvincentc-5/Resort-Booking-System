@@ -132,11 +132,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Store OTP in database
         $otp_stmt = $conn->prepare("
             INSERT INTO otp_verifications (email, otp, user_type, user_data, expires_at) 
-            VALUES (?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, DATE_ADD(NOW(), INTERVAL 5 MINUTE))
         ");
         
         $userDataJson = json_encode($userData);
-        $otp_stmt->bind_param("sssss", $email, $otp, $userType, $userDataJson, $otpExpiry);
+        $otp_stmt->bind_param("ssss", $email, $otp, $userType, $userDataJson);
         
         if ($otp_stmt->execute()) {
             // Set session variables for verification page

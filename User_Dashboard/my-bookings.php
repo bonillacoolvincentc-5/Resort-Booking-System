@@ -16,9 +16,27 @@ require_once '../phpAuthentication/db_config.php';
 global $conn;
 
 // Get user info
-$userName = $_SESSION['user_name'];
-$userEmail = $_SESSION['user_email'];
-$userId = $_SESSION['user_id'];
+$userId    = $_SESSION['user_id'];
+$userName  = $_SESSION['user_name'] ?? '';
+$userEmail = $_SESSION['user_email'] ?? '';
+
+if ((empty($userName) || empty($userEmail)) && $userId) {
+    $stmtU = $conn->prepare("SELECT first_name, last_name, email FROM users WHERE id = ?");
+    $stmtU->bind_param("i", $userId);
+    $stmtU->execute();
+    $rowU = $stmtU->get_result()->fetch_assoc();
+    if ($rowU) {
+        if (empty($userName)) {
+            $userName = trim(($rowU['first_name'] ?? '') . ' ' . ($rowU['last_name'] ?? ''));
+            $_SESSION['user_name'] = $userName;
+        }
+        if (empty($userEmail)) {
+            $userEmail = $rowU['email'] ?? '';
+            $_SESSION['user_email'] = $userEmail;
+        }
+    }
+    $stmtU->close();
+}
 
 // Get user bookings from database
 $stmt = $conn->prepare("

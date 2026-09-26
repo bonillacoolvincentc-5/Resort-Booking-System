@@ -9,9 +9,7 @@ if (!isset($_SESSION['user_id'])) {
 
 require_once '../phpAuthentication/db_config.php';
 
-$userId    = $_SESSION['user_id'];
-$userEmail = $_SESSION['user_email'];
-$userName  = $_SESSION['user_name'];
+$userId = $_SESSION['user_id'];
 
 // ── 1. Fetch full user record (avatar, verified status) ──────────────────────
 $stmt = $conn->prepare("SELECT first_name, last_name, email, avatar, is_verified FROM users WHERE id = ?");
@@ -20,7 +18,16 @@ $stmt->execute();
 $userRow = $stmt->get_result()->fetch_assoc();
 $stmt->close();
 
-$firstName  = $userRow['first_name'] ?? explode(' ', $userName)[0];
+if (empty($_SESSION['user_email']) && !empty($userRow['email'])) {
+    $_SESSION['user_email'] = $userRow['email'];
+}
+if (empty($_SESSION['user_name']) && !empty($userRow)) {
+    $_SESSION['user_name'] = trim(($userRow['first_name'] ?? '') . ' ' . ($userRow['last_name'] ?? ''));
+}
+
+$userEmail  = $_SESSION['user_email'] ?? ($userRow['email'] ?? '');
+$userName   = $_SESSION['user_name'] ?? trim(($userRow['first_name'] ?? '') . ' ' . ($userRow['last_name'] ?? 'Guest'));
+$firstName  = $userRow['first_name'] ?? (explode(' ', $userName)[0] ?? 'Guest');
 $fullName   = trim(($userRow['first_name'] ?? '') . ' ' . ($userRow['last_name'] ?? '')) ?: $userName;
 $isVerified = !empty($userRow['is_verified']);
 $avatarPath = !empty($userRow['avatar']) ? htmlspecialchars($userRow['avatar']) : '';
