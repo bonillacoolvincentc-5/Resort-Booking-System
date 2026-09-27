@@ -2720,17 +2720,10 @@ function renderExtraRoomCard(room) {
                 <i class="bi bi-x-lg"></i>
             </button>
         </div>
+        <input type="hidden" id="extraRoomDate-${room.index}" value="${primaryDate}">
+        ${isOvernight ? `<input type="hidden" id="extraRoomCheckOut-${room.index}" value="${primaryCheckOut}">` : ''}
         <div class="row g-2">
-            <div class="col-6" style="display:flex; flex-direction:column; justify-content:flex-end;">
-                <label class="form-label-modern" style="font-size:.7rem;margin-bottom:.2rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><i class="bi bi-calendar3 me-1"></i>Check-in</label>
-                <input type="date" id="extraRoomDate-${room.index}" class="form-control-modern" value="${primaryDate}" style="font-size:.75rem;padding:.3rem .5rem;min-height:0;" oninput="recalcPrice()">
-            </div>
-            ${isOvernight ? `
-            <div class="col-6" style="display:flex; flex-direction:column; justify-content:flex-end;">
-                <label class="form-label-modern" style="font-size:.7rem;margin-bottom:.2rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><i class="bi bi-calendar-check me-1"></i>Check-out</label>
-                <input type="date" id="extraRoomCheckOut-${room.index}" class="form-control-modern" value="${primaryCheckOut}" style="font-size:.75rem;padding:.3rem .5rem;min-height:0;" oninput="recalcPrice()">
-            </div>` : ''}
-            <div class="${isOvernight ? 'col-12 mt-1' : 'col-6'}" style="display:flex; flex-direction:column; justify-content:flex-end;">
+            <div class="col-12" style="display:flex; flex-direction:column; justify-content:flex-end;">
                 <label class="form-label-modern" style="font-size:.7rem;margin-bottom:.2rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><i class="bi bi-people me-1"></i>Guests</label>
                 <input type="number" id="extraRoomGuests-${room.index}" class="form-control-modern" value="${primaryGuests}" min="1" max="${r.capacity||100}" style="font-size:.75rem;padding:.3rem .5rem;min-height:0;" oninput="recalcPrice()">
             </div>
