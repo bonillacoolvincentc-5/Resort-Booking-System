@@ -1357,10 +1357,17 @@ let isAddingExtraRoom = false;   // true while user is picking an additional roo
 let extraRooms        = [];      // [{pkg, guests, date, checkOut}]
 let cartCounts        = {};      // {roomId: quantity}
 
-document.getElementById('add-room-btn').addEventListener('click', function (e) {
+document.getElementById('add-room-btn').addEventListener('click', async function (e) {
     e.preventDefault();
     isAddingExtraRoom = true;
     
+    // Fetch accurate capacity for the selected date before going back to catalog
+    const bDate = document.getElementById('bookingDate')?.value;
+    if (bDate) {
+        catalogSelectedDate = bDate;
+        await loadPackages(bDate);
+    }
+
     // Hide bundle and activity filter pills
     const bundleBtn = document.getElementById('filterBundle');
     if (bundleBtn) bundleBtn.style.display = 'none';
@@ -1972,8 +1979,9 @@ function selectPackage(id, type) {
         // ── Validation using live capacity tracker ──
         const currentCount = cartCounts[pkg.id] || 0;
         const unitLimit = pkg.booking_limit || 1;
+        const bookedCount = pkg.booked_today_count || 0;
         
-        if (unitLimit - currentCount <= 0) {
+        if (unitLimit - bookedCount - currentCount <= 0) {
             alert(`"${pkg.name}" is fully booked or already added to its maximum capacity.`);
             isAddingExtraRoom = false;
             const bundleBtn = document.getElementById('filterBundle');
@@ -2915,7 +2923,7 @@ function renderCalendarView(data, container) {
         const dateStr = `${calYear}-${String(calMonth).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
         const dayData = (data.days && data.days[dateStr]) || { booked: 0, capacity: data.capacity, status: 'available', available: true };
 
-        const isPast = dateStr < todayStr;
+        const isPast = dateStr <= todayStr;
         let statusClass = dayData.status;
         let isClickable = dayData.available && !isPast && dayData.status !== 'blocked';
         if (isPast) statusClass = 'blocked';
