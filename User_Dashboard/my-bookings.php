@@ -954,9 +954,6 @@ while ($row = $statsResult->fetch_assoc()) {
                                     <i class="bi bi-qr-code-scan"></i> Pay Now (GCash)
                                 </button>
                                 <?php elseif ($booking['status_name'] === 'approved'): ?>
-                                <button class="btn-modern btn-success-modern" onclick="downloadTicket(<?php echo $booking['id']; ?>)">
-                                    <i class="bi bi-download"></i>Download Ticket
-                                </button>
                                 <button class="btn-modern btn-danger-modern" onclick="cancelBooking(<?php echo $booking['id']; ?>)">
                                     <i class="bi bi-x-circle"></i>Cancel Booking
                                 </button>
@@ -1430,10 +1427,6 @@ while ($row = $statsResult->fetch_assoc()) {
                     showSuccess(`Booking ${bookingId} would be cancelled and refunded`);
                 }
             });
-        }
-
-        function downloadTicket(bookingId) {
-            showSuccess(`Ticket download would generate PDF for booking: ${bookingId}`);
         }
 
         function rateActivity(bookingId) {

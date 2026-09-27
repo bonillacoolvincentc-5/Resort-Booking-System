@@ -2964,16 +2964,24 @@ function renderCalendarView(data, container) {
         if (isPast) statusClass = 'blocked';
 
         const isSelected = selectedDate === dateStr ? 'selected' : '';
-        const capToShow = dayData.global_cap ? dayData.global_cap : dayData.capacity;
+        const capToShow = (currentCalPkgType === 'accommodation') ? dayData.capacity : (dayData.global_cap ? dayData.global_cap : dayData.capacity);
+
+        let tooltipTitle = `Date: ${dateStr} | Booked: ${dayData.booked} / Cap: ${capToShow}`;
+        let metaFull = `Booked: ${dayData.booked} / Cap: ${capToShow}`;
+        let metaShort = `${dayData.booked}/${capToShow}`;
+
+        if (dayData.global_remaining !== undefined && dayData.global_remaining !== null) {
+            tooltipTitle += ` (${dayData.global_remaining} resort spots left)`;
+        }
 
         html += `
             <div class="act-cal-cell ${statusClass} ${isSelected}"
                  ${isClickable ? `data-date="${dateStr}" role="button" tabindex="0"` : `aria-disabled="true"`}
-                 title="Date: ${dateStr} | Booked: ${dayData.booked} / Cap: ${capToShow}">
+                 title="${tooltipTitle}">
                 <span class="act-cal-day-num">${d}</span>
                 <span class="act-cal-meta">
-                    <span class="meta-full">Booked: ${dayData.booked} / Cap: ${capToShow}</span>
-                    <span class="meta-short">${dayData.booked}/${capToShow}</span>
+                    <span class="meta-full">${metaFull}</span>
+                    <span class="meta-short">${metaShort}</span>
                 </span>
             </div>
         `;

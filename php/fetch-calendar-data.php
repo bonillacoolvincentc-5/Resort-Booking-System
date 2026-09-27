@@ -138,13 +138,6 @@ try {
     $capStmt->close();
 
     if (!empty($customCaps)) {
-        // Set global cap on each day
-        foreach ($customCaps as $date => $cap) {
-            if (isset($days[$date])) {
-                $days[$date]['global_cap'] = $cap;
-            }
-        }
-        
         // Find total guests per day
         $globalBookStmt = $conn->prepare("
             SELECT check_in_date, SUM(number_of_guests) AS total_guests
@@ -156,18 +149,30 @@ try {
         $globalBookStmt->bind_param('ss', $startDate, $endDate);
         $globalBookStmt->execute();
         $globalBookRes = $globalBookStmt->get_result();
+        $bookedGuestsMap = [];
         while ($row = $globalBookRes->fetch_assoc()) {
-            $d = $row['check_in_date'];
-            $totalG = (int)$row['total_guests'];
-            if (isset($customCaps[$d]) && $totalG >= $customCaps[$d]) {
-                if (isset($days[$d]) && $days[$d]['status'] !== 'blocked') {
-                    $days[$d]['status'] = 'full';
-                    $days[$d]['available'] = false;
-                    $days[$d]['global_full'] = true;
+            $bookedGuestsMap[$row['check_in_date']] = (int)$row['total_guests'];
+        }
+        $globalBookStmt->close();
+
+        $minGuests = max(1, (int)($item['base_capacity'] ?? 1));
+
+        foreach ($customCaps as $date => $cap) {
+            if (isset($days[$date])) {
+                $days[$date]['global_cap'] = $cap;
+                $totalG = $bookedGuestsMap[$date] ?? 0;
+                $remaining = max(0, $cap - $totalG);
+                $days[$date]['global_remaining'] = $remaining;
+
+                if ($remaining < $minGuests) {
+                    if ($days[$date]['status'] !== 'blocked') {
+                        $days[$date]['status'] = 'full';
+                        $days[$date]['available'] = false;
+                        $days[$date]['global_full'] = true;
+                    }
                 }
             }
         }
-        $globalBookStmt->close();
     }
 
     // Query Bookings
