@@ -1685,33 +1685,39 @@ async function loadPackages(targetDate = null) {
 
         if (!allPackages.length) { renderEmptyState('No packages available yet. Check back soon!'); return; }
 
-        // Check URL params for direct selection or tour type
-        const _p = new URLSearchParams(window.location.search);
-        const _tourParam = _p.get('tour_type');
-        const _id   = _p.get('id');
-        const _type = _p.get('type') || 'activity';
+        if (typeof window.initialLoadDone === 'undefined') {
+            // Check URL params for direct selection or tour type
+            const _p = new URLSearchParams(window.location.search);
+            const _tourParam = _p.get('tour_type');
+            const _id   = _p.get('id');
+            const _type = _p.get('type') || 'activity';
 
-        let initTour = 'daytour';
-        if (_tourParam === 'overnight') {
-            initTour = 'overnight';
-        } else if (_type === 'activity') {
-            // ATV and activities are Day Tour only
-            initTour = 'daytour';
-        } else if (_id && _type === 'accommodation') {
-            const matchPkg = allPackages.find(p => p.id == _id && p.package_type === _type);
-            if (matchPkg) {
-                const t = String(matchPkg.tour_type || '').toLowerCase();
-                if (t.includes('overnight') && !t.includes('day')) {
-                    initTour = 'overnight';
+            let initTour = 'daytour';
+            if (_tourParam === 'overnight') {
+                initTour = 'overnight';
+            } else if (_type === 'activity') {
+                // ATV and activities are Day Tour only
+                initTour = 'daytour';
+            } else if (_id && _type === 'accommodation') {
+                const matchPkg = allPackages.find(p => p.id == _id && p.package_type === _type);
+                if (matchPkg) {
+                    const t = String(matchPkg.tour_type || '').toLowerCase();
+                    if (t.includes('overnight') && !t.includes('day')) {
+                        initTour = 'overnight';
+                    }
                 }
             }
-        }
 
-        chooseInitialTourType(initTour);
+            chooseInitialTourType(initTour);
 
-        if (_id) {
-            const _pkg = allPackages.find(p => p.id == _id && p.package_type === _type);
-            if (_pkg) selectPackage(_pkg.id, _pkg.package_type);
+            if (_id) {
+                const _pkg = allPackages.find(p => p.id == _id && p.package_type === _type);
+                if (_pkg) selectPackage(_pkg.id, _pkg.package_type);
+            }
+            window.initialLoadDone = true;
+        } else {
+            // Reapply existing tour type and filters without auto-selecting packages from URL
+            chooseInitialTourType(currentTourType);
         }
     } catch(e) {
         console.error(e);

@@ -866,6 +866,57 @@ while ($row = $bundlesRes->fetch_assoc()) {
     </div>
     <!-- ═══ End Confirm Payment Modal ═══════════════════════════════════════ -->
 
+    <!-- ═══ Cancel Booking Modal (Premium UI) ═════════════════════════════ -->
+    <div id="cancelBookingModal" class="rbm-overlay" role="dialog" aria-modal="true" aria-labelledby="cbmTitle" style="display:none;">
+        <div class="rbm-dialog" style="max-width: 480px; border: 1px solid rgba(239, 68, 68, 0.35); box-shadow: 0 25px 60px rgba(0,0,0,0.65), 0 0 25px rgba(239, 68, 68, 0.15);">
+            <!-- Header -->
+            <div class="rbm-header" style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.18), rgba(220, 38, 38, 0.08)); border-bottom: 1px solid rgba(239, 68, 68, 0.25);">
+                <div class="rbm-header-icon" style="background: rgba(239, 68, 68, 0.2); border-color: rgba(239, 68, 68, 0.4); color: #ef4444;">
+                    <i class="bi bi-slash-circle" style="font-size: 1.25rem;"></i>
+                </div>
+                <div>
+                    <h5 class="rbm-title" id="cbmTitle" style="color: #f8fafc; font-size: 1.05rem;">Cancel Booking</h5>
+                    <p class="rbm-subtitle" style="color: #94a3b8;">Revoke approval & restore capacity</p>
+                </div>
+                <button class="rbm-close" onclick="closeCancelBookingModal()" aria-label="Close">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+
+            <!-- Body -->
+            <div class="rbm-body" style="padding: 1.5rem;">
+                <div style="display: flex; align-items: flex-start; gap: 0.85rem; background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.25); border-radius: 12px; padding: 1.1rem; margin-bottom: 1rem;">
+                    <i class="bi bi-exclamation-triangle" style="font-size: 1.45rem; color: #ef4444; flex-shrink: 0; margin-top: 1px;"></i>
+                    <div style="font-size: 0.9rem; color: #e2e8f0; line-height: 1.55;">
+                        Are you sure you want to cancel this booking? Calendar capacity will be restored immediately.
+                    </div>
+                </div>
+
+                <div class="form-group-modern" style="margin-top: 1rem;">
+                    <label class="form-label-modern" style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 0.5rem; display: block;">Cancellation Reason (Optional)</label>
+                    <textarea id="cbmReason" class="form-control-modern" rows="2" placeholder="e.g. Cancelled upon guest request" style="width: 100%; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: #f8fafc; padding: 0.75rem; font-size: 0.85rem;"></textarea>
+                </div>
+
+                <div id="cbmError" class="rbm-error" style="display:none; margin-top: 1rem; padding: 0.6rem 0.8rem; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.25); border-radius: 8px;">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                    <span id="cbmErrorMsg">Failed to cancel booking.</span>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="rbm-footer" style="padding: 1.1rem 1.5rem; background: rgba(0,0,0,0.25); border-top: 1px solid rgba(255,255,255,0.06);">
+                <button class="rbm-btn rbm-btn-cancel" onclick="closeCancelBookingModal()" id="cbmCancelBtn">
+                    Keep Booking
+                </button>
+                <button class="rbm-btn" style="background: linear-gradient(135deg, #ef4444, #dc2626); border: none; color: #ffffff; box-shadow: 0 4px 14px rgba(239, 68, 68, 0.35); font-weight: 600;" onclick="executeCancelBooking()" id="cbmConfirmBtn">
+                    <i class="bi bi-slash-circle me-1"></i>
+                    Yes, Cancel Booking
+                </button>
+            </div>
+        </div>
+    </div>
+    <!-- ═══ End Cancel Booking Modal ═══════════════════════════════════════ -->
+
     <style>
         /* ── Reject Booking Modal ─────────────────────────────────────── */
         .rbm-overlay {
@@ -1057,7 +1108,7 @@ while ($row = $bundlesRes->fetch_assoc()) {
 
         // -- Move modals to <body> on load to escape backdrop-filter stacking contexts --
         document.addEventListener('DOMContentLoaded', function () {
-            ['editBookingModal', 'viewBookingModal', 'walkInModal', 'rejectBookingModal'].forEach(function(id) {
+            ['editBookingModal', 'viewBookingModal', 'walkInModal', 'rejectBookingModal', 'confirmPaymentModal', 'cancelBookingModal'].forEach(function(id) {
                 const el = document.getElementById(id);
                 if (el && el.parentElement !== document.body) {
                     document.body.appendChild(el);
@@ -1300,28 +1351,95 @@ while ($row = $bundlesRes->fetch_assoc()) {
             }
         }
 
-        async function cancelBookingManual(bookingId) {
-            if (!confirm('Are you sure you want to cancel this booking? Calendar capacity will be restored immediately.')) return;
-            const reason = prompt('Optional: Enter cancellation reason for the guest:') || 'Cancelled by admin';
+        let _cancelBookingId = null;
+
+        function cancelBookingManual(bookingId) {
+            _cancelBookingId = bookingId;
+            const modal = document.getElementById('cancelBookingModal');
+            const errEl = document.getElementById('cbmError');
+            const confirmBtn = document.getElementById('cbmConfirmBtn');
+            const cancelBtn = document.getElementById('cbmCancelBtn');
+            const reasonInput = document.getElementById('cbmReason');
+
+            if (errEl) errEl.style.display = 'none';
+            if (confirmBtn) {
+                confirmBtn.disabled = false;
+                confirmBtn.innerHTML = '<i class="bi bi-slash-circle me-1"></i>Yes, Cancel Booking';
+            }
+            if (cancelBtn) cancelBtn.disabled = false;
+            if (reasonInput) reasonInput.value = '';
+
+            if (modal) {
+                modal.style.display = 'flex';
+                document.body.style.overflow = 'hidden';
+            }
+        }
+        
+        function closeCancelBookingModal() {
+            const modal = document.getElementById('cancelBookingModal');
+            if (modal) modal.style.display = 'none';
+            document.body.style.overflow = '';
+            _cancelBookingId = null;
+        }
+
+        async function executeCancelBooking() {
+            if (!_cancelBookingId) return;
+            const confirmBtn = document.getElementById('cbmConfirmBtn');
+            const cancelBtn  = document.getElementById('cbmCancelBtn');
+            const errEl      = document.getElementById('cbmError');
+            const errMsg     = document.getElementById('cbmErrorMsg');
+            const reasonInput = document.getElementById('cbmReason');
+            
+            let reason = 'Cancelled by admin';
+            if (reasonInput && reasonInput.value.trim() !== '') {
+                reason = reasonInput.value.trim();
+            }
+
+            if (confirmBtn) {
+                confirmBtn.disabled = true;
+                confirmBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status"></span>Cancelling...';
+            }
+            if (cancelBtn) cancelBtn.disabled = true;
+            if (errEl) errEl.style.display = 'none';
+
             try {
                 const res = await fetch('../php/update_booking_status.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        booking_id: bookingId,
+                        booking_id: _cancelBookingId,
                         status: 'cancelled',
                         notes: reason
                     })
                 });
                 const result = await res.json();
                 if (result.success) {
+                    if (confirmBtn) {
+                        confirmBtn.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i>Cancelled!';
+                    }
                     showNotification('Booking cancelled and calendar capacity restored.', 'success');
                     setTimeout(() => location.reload(), 1200);
                 } else {
-                    showNotification(result.message || 'Failed to cancel booking.', 'danger');
+                    if (errEl && errMsg) {
+                        errMsg.textContent = result.message || 'Failed to cancel booking.';
+                        errEl.style.display = 'flex';
+                    }
+                    if (confirmBtn) {
+                        confirmBtn.disabled = false;
+                        confirmBtn.innerHTML = '<i class="bi bi-slash-circle me-1"></i>Yes, Cancel Booking';
+                    }
+                    if (cancelBtn) cancelBtn.disabled = false;
                 }
             } catch(e) {
-                showNotification('Network error cancelling booking.', 'danger');
+                if (errEl && errMsg) {
+                    errMsg.textContent = 'Network error cancelling booking.';
+                    errEl.style.display = 'flex';
+                }
+                if (confirmBtn) {
+                    confirmBtn.disabled = false;
+                    confirmBtn.innerHTML = '<i class="bi bi-slash-circle me-1"></i>Yes, Cancel Booking';
+                }
+                if (cancelBtn) cancelBtn.disabled = false;
             }
         }
 
@@ -1383,6 +1501,9 @@ while ($row = $bundlesRes->fetch_assoc()) {
             document.getElementById('confirmPaymentModal')?.addEventListener('click', function (e) {
                 if (e.target === this) closeConfirmPaymentModal();
             });
+            document.getElementById('cancelBookingModal')?.addEventListener('click', function (e) {
+                if (e.target === this) closeCancelBookingModal();
+            });
             
             // Close on Escape key
             document.addEventListener('keydown', function (e) {
@@ -1395,6 +1516,9 @@ while ($row = $bundlesRes->fetch_assoc()) {
                     }
                     if (document.getElementById('confirmPaymentModal')?.style.display !== 'none') {
                         closeConfirmPaymentModal();
+                    }
+                    if (document.getElementById('cancelBookingModal')?.style.display !== 'none') {
+                        closeCancelBookingModal();
                     }
                 }
             });
