@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -113,7 +113,12 @@
                                     <i class="bi bi-eye" id="eyeIcon1"></i>
                                 </button>
                             </div>
-                            <small class="text-muted d-block mt-1" style="color: var(--text-primary);">Password must be at least 8 characters long</small>
+                            <div id="password-checker" style="font-size: 0.72rem; margin-top: 0.6rem; display: flex; flex-wrap: wrap; gap: 0.4rem;">
+                                <div id="req-length" style="color: rgba(255,255,255,0.5); background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.05); padding: 0.2rem 0.6rem; border-radius: 12px; display: flex; align-items: center; gap: 0.25rem; transition: all 0.3s ease;"><i class="bi bi-circle"></i> 8+ characters</div>
+                                <div id="req-capital" style="color: rgba(255,255,255,0.5); background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.05); padding: 0.2rem 0.6rem; border-radius: 12px; display: flex; align-items: center; gap: 0.25rem; transition: all 0.3s ease;"><i class="bi bi-circle"></i> 1 capital letter</div>
+                                <div id="req-number" style="color: rgba(255,255,255,0.5); background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.05); padding: 0.2rem 0.6rem; border-radius: 12px; display: flex; align-items: center; gap: 0.25rem; transition: all 0.3s ease;"><i class="bi bi-circle"></i> 1 number</div>
+                                <div id="req-special" style="color: rgba(255,255,255,0.5); background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.05); padding: 0.2rem 0.6rem; border-radius: 12px; display: flex; align-items: center; gap: 0.25rem; transition: all 0.3s ease;"><i class="bi bi-circle"></i> 1 special char</div>
+                            </div>
                         </div>
 
                         <!-- Confirm Password with Eye Icon -->
@@ -196,6 +201,37 @@
             }
         }
 
+        function setupPasswordChecker() {
+            const passInput = document.getElementById('password');
+            if (!passInput) return;
+
+            passInput.addEventListener('input', function() {
+                const p = this.value;
+                
+                function updateReq(elementId, isValid, text) {
+                    const el = document.getElementById(elementId);
+                    if (!el) return;
+                    if (isValid) {
+                        el.style.color = '#84ea3b';
+                        el.style.background = 'rgba(132, 234, 59, 0.1)';
+                        el.style.borderColor = 'rgba(132, 234, 59, 0.3)';
+                        el.innerHTML = '<i class="bi bi-check2-circle"></i> ' + text;
+                    } else {
+                        el.style.color = 'rgba(255,255,255,0.5)';
+                        el.style.background = 'rgba(255,255,255,0.05)';
+                        el.style.borderColor = 'rgba(255,255,255,0.05)';
+                        el.innerHTML = '<i class="bi bi-circle"></i> ' + text;
+                    }
+                }
+
+                updateReq('req-length', p.length >= 8, '8+ characters');
+                updateReq('req-capital', /[A-Z]/.test(p), '1 capital letter');
+                updateReq('req-number', /\d/.test(p), '1 number');
+                updateReq('req-special', /[!@#$%^&*(),.?":{}|<>]/.test(p), '1 special char');
+            });
+        }
+        document.addEventListener('DOMContentLoaded', setupPasswordChecker);
+
         // Form validation - Updated with agree_terms check
         document.getElementById('adminRegisterForm').addEventListener('submit', function(e) {
             e.preventDefault();
@@ -208,8 +244,8 @@
                 return false;
             }
 
-            if (password.length < 8) {
-                showError('Password must be at least 8 characters long!');
+            if (password.length < 8 || !/[A-Z]/.test(password) || !/\d/.test(password) || !/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+                showError('Password does not meet all requirements (min 8 chars, 1 uppercase, 1 number, 1 special character)!');
                 return false;
             }
 

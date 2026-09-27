@@ -254,7 +254,12 @@ while ($row = $result->fetch_assoc()) {
                                         <i class="bi bi-eye" id="staffEyeIcon"></i>
                                     </button>
                                 </div>
-                                <div class="form-text" style="color: #64748b; font-size: 0.75rem; margin-top: 0.25rem;">Must be at least 8 characters long.</div>
+                                <div id="staff-password-checker" style="font-size: 0.72rem; margin-top: 0.6rem; display: flex; flex-wrap: wrap; gap: 0.4rem;">
+                                    <div id="staff-req-length" style="color: rgba(255,255,255,0.5); background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.05); padding: 0.2rem 0.6rem; border-radius: 12px; display: flex; align-items: center; gap: 0.25rem; transition: all 0.3s ease;"><i class="bi bi-circle"></i> 8+ characters</div>
+                                    <div id="staff-req-capital" style="color: rgba(255,255,255,0.5); background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.05); padding: 0.2rem 0.6rem; border-radius: 12px; display: flex; align-items: center; gap: 0.25rem; transition: all 0.3s ease;"><i class="bi bi-circle"></i> 1 capital letter</div>
+                                    <div id="staff-req-number" style="color: rgba(255,255,255,0.5); background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.05); padding: 0.2rem 0.6rem; border-radius: 12px; display: flex; align-items: center; gap: 0.25rem; transition: all 0.3s ease;"><i class="bi bi-circle"></i> 1 number</div>
+                                    <div id="staff-req-special" style="color: rgba(255,255,255,0.5); background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.05); padding: 0.2rem 0.6rem; border-radius: 12px; display: flex; align-items: center; gap: 0.25rem; transition: all 0.3s ease;"><i class="bi bi-circle"></i> 1 special char</div>
+                                </div>
                             </div>
                         </div>
                     </form>
@@ -283,9 +288,59 @@ while ($row = $result->fetch_assoc()) {
         function openAddStaffModal() {
             const modal = new bootstrap.Modal(document.getElementById('addStaffModal'));
             document.getElementById('addStaffForm').reset();
+            resetStaffPasswordChecker();
             document.getElementById('addStaffAlert').style.display = 'none';
             modal.show();
         }
+
+        function resetStaffPasswordChecker() {
+            const reqs = [
+                { id: 'staff-req-length', text: '8+ characters' },
+                { id: 'staff-req-capital', text: '1 capital letter' },
+                { id: 'staff-req-number', text: '1 number' },
+                { id: 'staff-req-special', text: '1 special char' }
+            ];
+            reqs.forEach(r => {
+                const el = document.getElementById(r.id);
+                if (el) {
+                    el.style.color = 'rgba(255,255,255,0.5)';
+                    el.style.background = 'rgba(255,255,255,0.05)';
+                    el.style.borderColor = 'rgba(255,255,255,0.05)';
+                    el.innerHTML = '<i class="bi bi-circle"></i> ' + r.text;
+                }
+            });
+        }
+
+        function setupStaffPasswordChecker() {
+            const passInput = document.getElementById('staffPassword');
+            if (!passInput) return;
+
+            passInput.addEventListener('input', function() {
+                const p = this.value;
+                
+                function updateReq(elementId, isValid, text) {
+                    const el = document.getElementById(elementId);
+                    if (!el) return;
+                    if (isValid) {
+                        el.style.color = '#84ea3b';
+                        el.style.background = 'rgba(132, 234, 59, 0.1)';
+                        el.style.borderColor = 'rgba(132, 234, 59, 0.3)';
+                        el.innerHTML = '<i class="bi bi-check2-circle"></i> ' + text;
+                    } else {
+                        el.style.color = 'rgba(255,255,255,0.5)';
+                        el.style.background = 'rgba(255,255,255,0.05)';
+                        el.style.borderColor = 'rgba(255,255,255,0.05)';
+                        el.innerHTML = '<i class="bi bi-circle"></i> ' + text;
+                    }
+                }
+
+                updateReq('staff-req-length', p.length >= 8, '8+ characters');
+                updateReq('staff-req-capital', /[A-Z]/.test(p), '1 capital letter');
+                updateReq('staff-req-number', /\d/.test(p), '1 number');
+                updateReq('staff-req-special', /[!@#$%^&*(),.?":{}|<>]/.test(p), '1 special char');
+            });
+        }
+        document.addEventListener('DOMContentLoaded', setupStaffPasswordChecker);
 
         async function submitAddStaff() {
             const btn = document.getElementById('addStaffSubmitBtn');
@@ -294,6 +349,14 @@ while ($row = $result->fetch_assoc()) {
 
             if (!form.checkValidity()) {
                 form.reportValidity();
+                return;
+            }
+
+            const passwordVal = document.getElementById('staffPassword').value;
+            if (passwordVal.length < 8 || !/[A-Z]/.test(passwordVal) || !/\d/.test(passwordVal) || !/[!@#$%^&*(),.?":{}|<>]/.test(passwordVal)) {
+                alertEl.className = 'alert alert-danger';
+                alertEl.textContent = 'Password does not meet all requirements (min 8 characters, 1 capital letter, 1 number, and 1 special character).';
+                alertEl.style.display = 'block';
                 return;
             }
 

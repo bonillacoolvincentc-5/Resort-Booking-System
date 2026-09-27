@@ -143,8 +143,8 @@
                 <button type="submit" class="auth-submit" id="verifyCodeBtn">
                     <i class="bi bi-check-circle"></i><span>Verify Code</span>
                 </button>
-                <button type="button" class="btn-resort-ghost w-100 justify-content-center mt-2" onclick="resendCode()">
-                    <i class="bi bi-arrow-clockwise"></i> Resend Code
+                <button type="button" class="btn-resort-ghost w-100 justify-content-center mt-2" id="resendCodeBtn" onclick="resendCode()">
+                    <i class="bi bi-arrow-clockwise" id="resendCodeIcon"></i> <span id="resendCodeText">Resend Code</span>
                 </button>
             </form>
         </div>
@@ -160,7 +160,12 @@
                             <i class="bi bi-eye" id="newPasswordEye"></i>
                         </button>
                     </div>
-                    <small style="color:var(--text-muted);font-size:0.78rem;display:block;margin-top:0.4rem;">At least 8 characters long</small>
+                    <div id="password-checker" style="font-size: 0.72rem; margin-top: 0.6rem; display: flex; flex-wrap: wrap; gap: 0.4rem;">
+                        <div id="req-length" style="color: rgba(255,255,255,0.5); background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.05); padding: 0.2rem 0.6rem; border-radius: 12px; display: flex; align-items: center; gap: 0.25rem; transition: all 0.3s ease;"><i class="bi bi-circle"></i> 8+ characters</div>
+                        <div id="req-capital" style="color: rgba(255,255,255,0.5); background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.05); padding: 0.2rem 0.6rem; border-radius: 12px; display: flex; align-items: center; gap: 0.25rem; transition: all 0.3s ease;"><i class="bi bi-circle"></i> 1 capital letter</div>
+                        <div id="req-number" style="color: rgba(255,255,255,0.5); background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.05); padding: 0.2rem 0.6rem; border-radius: 12px; display: flex; align-items: center; gap: 0.25rem; transition: all 0.3s ease;"><i class="bi bi-circle"></i> 1 number</div>
+                        <div id="req-special" style="color: rgba(255,255,255,0.5); background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.05); padding: 0.2rem 0.6rem; border-radius: 12px; display: flex; align-items: center; gap: 0.25rem; transition: all 0.3s ease;"><i class="bi bi-circle"></i> 1 special char</div>
+                    </div>
                 </div>
                 <div class="auth-field">
                     <label class="auth-label"><i class="bi bi-lock-fill me-1"></i>Confirm Password</label>
@@ -213,6 +218,7 @@
                 userEmail = email;
                 goToStep(2);
                 showSuccess(data.message);
+                startResendCooldown(120);
             } else {
                 showError(data.message || 'Failed to send reset code.');
             }
@@ -271,7 +277,10 @@
         const pass    = document.getElementById('newPassword').value;
         const confirm = document.getElementById('confirmNewPassword').value;
 
-        if (pass.length < 8)      { showError('Password must be at least 8 characters.'); return; }
+        if (pass.length < 8 || !/[A-Z]/.test(pass) || !/\d/.test(pass) || !/[!@#$%^&*(),.?":{}|<>]/.test(pass)) {
+            showError('Password does not meet all requirements!');
+            return;
+        }
         if (pass !== confirm)     { showError('Passwords do not match.'); return; }
         if (!verifiedResetToken)  { showError('Reset session lost. Please start over.'); goToStep(1); return; }
 
@@ -291,6 +300,8 @@
             const data = await res.json();
 
             if (data.success) {
+                if (userEmail) localStorage.removeItem('fp_resend_cooldown_end_' + userEmail);
+                clearInterval(resendTimer);
                 verifiedResetToken = null;
                 userEmail = null;
                 showSuccess('Password reset! Redirecting to login…');
@@ -306,11 +317,57 @@
         btn.querySelector('span').textContent = 'Reset Password';
     });
 
-    // ── Resend code ────────────────────────────────────────────────
+    // ── Resend code with 120s cooldown ─────────────────────────────
+    let resendTimer = null;
+    let resendCountdown = 0;
+
+    function startResendCooldown(seconds = 120) {
+        if (resendTimer) clearInterval(resendTimer);
+        resendCountdown = Math.max(0, Math.floor(seconds));
+        if (userEmail) {
+            localStorage.setItem('fp_resend_cooldown_end_' + userEmail, Date.now() + (resendCountdown * 1000));
+        }
+        updateResendButton(resendCountdown);
+
+        resendTimer = setInterval(() => {
+            resendCountdown--;
+            if (resendCountdown <= 0) {
+                clearInterval(resendTimer);
+                if (userEmail) localStorage.removeItem('fp_resend_cooldown_end_' + userEmail);
+                enableResendButton();
+            } else {
+                updateResendButton(resendCountdown);
+            }
+        }, 1000);
+    }
+
+    function updateResendButton(seconds) {
+        const btn = document.getElementById('resendCodeBtn');
+        const icon = document.getElementById('resendCodeIcon');
+        const text = document.getElementById('resendCodeText');
+        if (btn) btn.disabled = true;
+        if (icon) icon.className = 'bi bi-clock-history';
+        if (text) text.textContent = `Resend Code (${seconds}s)`;
+    }
+
+    function enableResendButton() {
+        if (resendTimer) clearInterval(resendTimer);
+        const btn = document.getElementById('resendCodeBtn');
+        const icon = document.getElementById('resendCodeIcon');
+        const text = document.getElementById('resendCodeText');
+        if (btn) btn.disabled = false;
+        if (icon) icon.className = 'bi bi-arrow-clockwise';
+        if (text) text.textContent = 'Resend Code';
+    }
+
     async function resendCode() {
+        const btn = document.getElementById('resendCodeBtn');
         if (!userEmail) { showError('Please enter your email first.'); goToStep(1); return; }
+        if (btn && btn.disabled) return;
+
         hideAlerts();
         showInfo('Resending code…');
+        if (btn) btn.disabled = true;
 
         try {
             const fd = new FormData();
@@ -318,12 +375,74 @@
             fd.append('email', userEmail);
             const res  = await fetch('../php/forgot_password.php', { method: 'POST', body: fd });
             const data = await res.json();
-            if (data.success) showSuccess(data.message);
-            else showError(data.message || 'Could not resend. Please wait a moment and try again.');
+            if (data.success) {
+                showSuccess(data.message);
+                startResendCooldown(120);
+            } else {
+                showError(data.message || 'Could not resend. Please wait a moment and try again.');
+                if (data.cooldown) {
+                    startResendCooldown(Number(data.cooldown));
+                } else if (resendCountdown <= 0) {
+                    enableResendButton();
+                }
+            }
         } catch (err) {
             showError('Network error. Please try again.');
+            if (resendCountdown <= 0) {
+                enableResendButton();
+            }
         }
     }
+
+    // ── Real-Time Password Checker ─────────────────────────────────
+    function setupPasswordChecker() {
+        const passInput = document.getElementById('newPassword');
+        if (!passInput) return;
+
+        passInput.addEventListener('input', function() {
+            const p = this.value;
+            
+            function updateReq(elementId, isValid, text) {
+                const el = document.getElementById(elementId);
+                if (!el) return;
+                if (isValid) {
+                    el.style.color = '#84ea3b';
+                    el.style.background = 'rgba(132, 234, 59, 0.1)';
+                    el.style.borderColor = 'rgba(132, 234, 59, 0.3)';
+                    el.innerHTML = '<i class="bi bi-check2-circle"></i> ' + text;
+                } else {
+                    el.style.color = 'rgba(255,255,255,0.5)';
+                    el.style.background = 'rgba(255,255,255,0.05)';
+                    el.style.borderColor = 'rgba(255,255,255,0.05)';
+                    el.innerHTML = '<i class="bi bi-circle"></i> ' + text;
+                }
+            }
+
+            updateReq('req-length', p.length >= 8, '8+ characters');
+            updateReq('req-capital', /[A-Z]/.test(p), '1 capital letter');
+            updateReq('req-number', /\d/.test(p), '1 number');
+            updateReq('req-special', /[!@#$%^&*(),.?":{}|<>]/.test(p), '1 special char');
+        });
+    }
+
+    function checkExistingCooldown() {
+        if (!userEmail) return;
+        const savedEnd = localStorage.getItem('fp_resend_cooldown_end_' + userEmail);
+        if (savedEnd) {
+            const rem = Math.ceil((Number(savedEnd) - Date.now()) / 1000);
+            if (rem > 0 && rem <= 120) {
+                startResendCooldown(rem);
+            } else {
+                localStorage.removeItem('fp_resend_cooldown_end_' + userEmail);
+                enableResendButton();
+            }
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        setupPasswordChecker();
+        checkExistingCooldown();
+    });
 
     // ── Helpers ────────────────────────────────────────────────────
     function goToStep(step) {
@@ -336,6 +455,9 @@
             else if (i === step) el.classList.add('active');
         }
         currentStep = step;
+        if (step === 2) {
+            checkExistingCooldown();
+        }
     }
 
     function togglePassword(fieldId, iconId) {

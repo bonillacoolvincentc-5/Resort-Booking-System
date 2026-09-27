@@ -65,7 +65,7 @@ if ($action === 'send_code') {
         fp_json(true, 'If that email is registered, a reset code has been sent.');
     }
 
-    // Enforce 60-second cooldown per email
+    // Enforce 120-second cooldown per email
     $conn->query("CREATE TABLE IF NOT EXISTS `password_reset_otps` (
         `id` int NOT NULL AUTO_INCREMENT,
         `email` varchar(255) NOT NULL,
@@ -85,8 +85,8 @@ if ($action === 'send_code') {
     if ($coolRes->num_rows === 1) {
         $row = $coolRes->fetch_assoc();
         $diff = time() - strtotime($row['created_at']);
-        if ($diff < 60) {
-            $wait = 60 - $diff;
+        if ($diff < 120) {
+            $wait = 120 - $diff;
             fp_json(false, "Please wait {$wait} second(s) before requesting another code.", ['cooldown' => $wait]);
         }
     }
@@ -190,8 +190,8 @@ if ($action === 'reset_password') {
         fp_json(false, 'Reset session expired or invalid. Please start over.');
     }
 
-    if (strlen($newPassword) < 8) {
-        fp_json(false, 'Password must be at least 8 characters.');
+    if (strlen($newPassword) < 8 || !preg_match('/[A-Z]/', $newPassword) || !preg_match('/\d/', $newPassword) || !preg_match('/[!@#$%^&*(),.?":{}|<>]/', $newPassword)) {
+        fp_json(false, 'Password must be at least 8 characters long and include an uppercase letter, a number, and a special character.');
     }
 
     if ($newPassword !== $confirm) {

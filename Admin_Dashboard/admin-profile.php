@@ -909,6 +909,12 @@ $adminEmail = $_SESSION['admin_email'] ?? '';
                             <i class="bi bi-eye"></i>
                         </button>
                     </div>
+                    <div id="admin-password-checker" style="font-size: 0.72rem; margin-top: 0.6rem; display: flex; flex-wrap: wrap; gap: 0.4rem;">
+                        <div id="admin-req-length" style="color: rgba(255,255,255,0.5); background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.05); padding: 0.2rem 0.6rem; border-radius: 12px; display: flex; align-items: center; gap: 0.25rem; transition: all 0.3s ease;"><i class="bi bi-circle"></i> 8+ characters</div>
+                        <div id="admin-req-capital" style="color: rgba(255,255,255,0.5); background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.05); padding: 0.2rem 0.6rem; border-radius: 12px; display: flex; align-items: center; gap: 0.25rem; transition: all 0.3s ease;"><i class="bi bi-circle"></i> 1 capital letter</div>
+                        <div id="admin-req-number" style="color: rgba(255,255,255,0.5); background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.05); padding: 0.2rem 0.6rem; border-radius: 12px; display: flex; align-items: center; gap: 0.25rem; transition: all 0.3s ease;"><i class="bi bi-circle"></i> 1 number</div>
+                        <div id="admin-req-special" style="color: rgba(255,255,255,0.5); background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.05); padding: 0.2rem 0.6rem; border-radius: 12px; display: flex; align-items: center; gap: 0.25rem; transition: all 0.3s ease;"><i class="bi bi-circle"></i> 1 special char</div>
+                    </div>
                 </div>
 
                 <div class="modal-footer">
@@ -1110,7 +1116,57 @@ $adminEmail = $_SESSION['admin_email'] ?? '';
         document.getElementById('addAdminModal').classList.remove('open');
         document.body.style.overflow = '';
         document.getElementById('addAdminForm').reset();
+        resetAdminPasswordChecker();
     }
+
+    function resetAdminPasswordChecker() {
+        const reqs = [
+            { id: 'admin-req-length', text: '8+ characters' },
+            { id: 'admin-req-capital', text: '1 capital letter' },
+            { id: 'admin-req-number', text: '1 number' },
+            { id: 'admin-req-special', text: '1 special char' }
+        ];
+        reqs.forEach(r => {
+            const el = document.getElementById(r.id);
+            if (el) {
+                el.style.color = 'rgba(255,255,255,0.5)';
+                el.style.background = 'rgba(255,255,255,0.05)';
+                el.style.borderColor = 'rgba(255,255,255,0.05)';
+                el.innerHTML = '<i class="bi bi-circle"></i> ' + r.text;
+            }
+        });
+    }
+
+    function setupAdminPasswordChecker() {
+        const passInput = document.getElementById('newAdminTempPw');
+        if (!passInput) return;
+
+        passInput.addEventListener('input', function() {
+            const p = this.value;
+            
+            function updateReq(elementId, isValid, text) {
+                const el = document.getElementById(elementId);
+                if (!el) return;
+                if (isValid) {
+                    el.style.color = '#84ea3b';
+                    el.style.background = 'rgba(132, 234, 59, 0.1)';
+                    el.style.borderColor = 'rgba(132, 234, 59, 0.3)';
+                    el.innerHTML = '<i class="bi bi-check2-circle"></i> ' + text;
+                } else {
+                    el.style.color = 'rgba(255,255,255,0.5)';
+                    el.style.background = 'rgba(255,255,255,0.05)';
+                    el.style.borderColor = 'rgba(255,255,255,0.05)';
+                    el.innerHTML = '<i class="bi bi-circle"></i> ' + text;
+                }
+            }
+
+            updateReq('admin-req-length', p.length >= 8, '8+ characters');
+            updateReq('admin-req-capital', /[A-Z]/.test(p), '1 capital letter');
+            updateReq('admin-req-number', /\d/.test(p), '1 number');
+            updateReq('admin-req-special', /[!@#$%^&*(),.?":{}|<>]/.test(p), '1 special char');
+        });
+    }
+    document.addEventListener('DOMContentLoaded', setupAdminPasswordChecker);
 
     function closeModalOnBackdrop(event) {
         if (event.target === document.getElementById('addAdminModal')) {
@@ -1124,6 +1180,12 @@ $adminEmail = $_SESSION['admin_email'] ?? '';
 
     function submitNewAdmin(event) {
         event.preventDefault();
+        const pass = document.getElementById('newAdminTempPw').value;
+        if (pass.length < 8 || !/[A-Z]/.test(pass) || !/\d/.test(pass) || !/[!@#$%^&*(),.?":{}|<>]/.test(pass)) {
+            showToast('Password does not meet all requirements (min 8 chars, 1 uppercase, 1 number, 1 special character).', 'error');
+            return;
+        }
+
         const btn = document.getElementById('btnCreateAdmin');
         btn.disabled = true;
         btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Creating&hellip;';
