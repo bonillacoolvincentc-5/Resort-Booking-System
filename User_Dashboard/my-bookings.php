@@ -921,13 +921,12 @@ while ($row = $statsResult->fetch_assoc()) {
                                 <button class="btn-modern btn-primary-modern" onclick="viewBooking(<?php echo $booking['id']; ?>)">
                                     <i class="bi bi-eye"></i>View Details
                                 </button>
-                                <?php if ($booking['status_name'] === 'pending_review'): ?>
-                                <button class="btn-modern btn-danger-modern" onclick="cancelBooking(<?php echo $booking['id']; ?>)">
-                                    <i class="bi bi-x-circle"></i>Cancel Booking
-                                </button>
-                                <?php elseif ($booking['status_name'] === 'approved'): ?>
+                                <?php if ($booking['status_name'] === 'approved'): ?>
                                 <button class="btn-modern btn-success-modern" onclick="downloadTicket(<?php echo $booking['id']; ?>)">
                                     <i class="bi bi-download"></i>Download Ticket
+                                </button>
+                                <button class="btn-modern btn-danger-modern" onclick="cancelBooking(<?php echo $booking['id']; ?>)">
+                                    <i class="bi bi-x-circle"></i>Cancel Booking
                                 </button>
                                 <?php elseif ($booking['status_name'] === 'completed'): ?>
                                 <button class="btn-modern btn-primary-modern" onclick="rebookActivity(<?php echo $booking['id']; ?>)">
