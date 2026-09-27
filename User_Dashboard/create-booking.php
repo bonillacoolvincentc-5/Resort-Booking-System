@@ -976,15 +976,8 @@ if ($stmtSlots) {
             <button class="filter-pill" onclick="filterPackages('bundle',this)" id="filterBundle">
                 <i class="bi bi-box-seam"></i> Bundles
             </button>
-            <div class="catalog-date-wrap d-flex align-items-center gap-2 ms-md-auto">
-                <label for="catalogVisitDate" class="text-muted mb-0 d-flex align-items-center gap-1" style="font-size:.82rem; font-weight:600; white-space:nowrap;">
-                    <i class="bi bi-calendar-event text-primary"></i> Visit Date:
-                </label>
-                <input type="date" id="catalogVisitDate" class="form-control-modern" 
-                       style="padding:0.35rem 0.65rem; font-size:0.82rem; width:auto; min-width:140px; height:36px; border-radius:var(--radius-btn);"
-                       value="<?php echo date('Y-m-d'); ?>" min="<?php echo date('Y-m-d'); ?>"
-                       onchange="onCatalogDateChange(this.value)">
-                <span id="packageCount" class="text-muted ms-1" style="font-size:.8rem;"></span>
+            <div class="ms-md-auto">
+                <span id="packageCount" class="text-muted" style="font-size:.8rem;"></span>
             </div>
         </div>
 
@@ -1616,13 +1609,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (params.get('success')) showSuccess(decodeURIComponent(params.get('success')));
 });
 
-let catalogSelectedDate = '<?php echo date("Y-m-d"); ?>';
+let catalogSelectedDate = '<?php echo date("Y-m-d", strtotime("+1 day")); ?>';
 
-async function onCatalogDateChange(newDate) {
-    if (!newDate) return;
-    catalogSelectedDate = newDate;
-    await loadPackages(newDate);
-}
+
 
 // ── Load packages from API ─────────────────────────────────────────
 async function loadPackages(targetDate = null) {
@@ -1780,19 +1769,7 @@ function renderPackages(pkgs) {
             (extraRooms.filter(r => r.pkg.id === pkg.id).length + (typeof selectedPkg !== 'undefined' && selectedPkg && selectedPkg.id === pkg.id ? 1 : 0)) : 0;
         const unitLimit = pkg.booking_limit || 1;
         const isCartLimitReached = cartCount >= unitLimit;
-        const bookedCount = pkg.booked_today_count || 0;
-        const isFullyBooked = bookedCount >= unitLimit;
 
-        // Dynamic label for date
-        let dateLabel = 'Today';
-        if (catalogSelectedDate) {
-            const todayStr = new Date().toISOString().split('T')[0];
-            if (catalogSelectedDate !== todayStr) {
-                const [y, m, d] = catalogSelectedDate.split('-');
-                const dt = new Date(+y, +m - 1, +d);
-                dateLabel = dt.toLocaleDateString('en-PH', { month: 'short', day: 'numeric' });
-            }
-        }
 
         card.innerHTML = `
             <div class="card-img-wrap">
@@ -1808,11 +1785,6 @@ function renderPackages(pkgs) {
                         <i class="bi bi-tag"></i>
                         <span>${escHtml(displayPrice)}</span>
                     </div>
-                    <div class="card-meta-item" style="color:var(--text-secondary); margin-top:4px;">
-                        <i class="bi bi-bar-chart-fill" style="color:${isFullyBooked ? 'var(--accent-danger)' : 'var(--accent-primary)'};"></i>
-                        <span style="font-size:0.8rem;">${escHtml(dateLabel)}: <strong style="color:${isFullyBooked ? 'var(--accent-danger)' : 'inherit'};">${bookedCount}</strong> / ${unitLimit} booked</span>
-                        ${isFullyBooked ? '<span class="badge bg-danger ms-1" style="font-size:0.65rem; padding: 2px 6px;">Fully Booked</span>' : ''}
-                    </div>
                 </div>
             </div>
             <div class="card-actions">
@@ -1820,20 +1792,14 @@ function renderPackages(pkgs) {
                         onclick="openDetailModal(${pkg.id},'${escHtml(pkg.package_type)}')">
                     <i class="bi bi-eye"></i> View Details
                 </button>
-                ${isFullyBooked ? `
-                    <button class="btn-modern btn-danger-modern" style="flex:1; opacity:0.85; cursor:not-allowed;" disabled title="This package is fully booked for ${escHtml(dateLabel)}">
-                        <i class="bi bi-x-circle"></i> Fully Booked
-                    </button>
-                ` : `
-                    <button class="btn-modern btn-primary-modern btn-book-now" style="flex:1;" ${isCartLimitReached ? 'disabled' : ''}>
-                        <i class="bi ${isCartLimitReached ? 'bi-check-circle' : 'bi-calendar-plus'}"></i> ${isCartLimitReached ? 'Selected' : 'Book Now'}
-                    </button>
-                `}
+                <button class="btn-modern btn-primary-modern btn-book-now" style="flex:1;" ${isCartLimitReached ? 'disabled' : ''}>
+                    <i class="bi ${isCartLimitReached ? 'bi-check-circle' : 'bi-calendar-plus'}"></i> ${isCartLimitReached ? 'Selected' : 'Book Now'}
+                </button>
             </div>
         `;
         // Wire up card buttons — bundles use selectBundle, others use selectPackage
         const bookBtn = card.querySelector('.btn-book-now');
-        if (bookBtn && !isCartLimitReached && !isFullyBooked) {
+        if (bookBtn && !isCartLimitReached) {
             if (pkg.package_type === 'bundle') {
                 bookBtn.onclick = () => selectBundle(pkg.id);
             } else {
