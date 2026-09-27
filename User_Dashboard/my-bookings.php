@@ -76,7 +76,8 @@ $stmt = $conn->prepare("
             WHEN b.booking_type = 'activity' THEN 'bi-activity'
             WHEN b.booking_type = 'bundle' THEN 'bi-box-seam'
             ELSE 'bi-house-door'
-        END as item_icon
+        END as item_icon,
+        bun.description as bundle_description
     FROM bookings b
     LEFT JOIN booking_status bs ON b.status_id = bs.id
     LEFT JOIN activities a ON b.activity_id = a.id
@@ -1115,9 +1116,9 @@ while ($row = $statsResult->fetch_assoc()) {
                         <!-- Booking details will be loaded here -->
                     </div>
                 </div>
-                <div class="modal-footer modal-footer-modern" style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                <div class="modal-footer modal-footer-modern d-flex justify-content-end gap-2" id="bookingModalFooter">
                     <button type="button" class="btn-modern btn-secondary-modern" data-bs-dismiss="modal">Close</button>
-                    <button type="button" id="viewBundleBtn" class="btn-modern d-flex align-items-center justify-content-center gap-2" style="background: linear-gradient(135deg, rgba(157,255,0,0.15), rgba(0,212,255,0.15)); border: 1px solid rgba(157,255,0,0.5); color: #9dff00; border-radius: 8px; padding: 0.5rem; font-weight: 600; font-size: 0.8rem; transition: all 0.2s ease;" onmouseover="this.style.background='linear-gradient(135deg, rgba(157,255,0,0.3), rgba(0,212,255,0.25))';this.style.boxShadow='0 0 15px rgba(157,255,0,0.3)'" onmouseout="this.style.background='linear-gradient(135deg, rgba(157,255,0,0.15), rgba(0,212,255,0.15))';this.style.boxShadow='none'" onclick="openBundleModal()">
+                    <button type="button" id="viewBundleBtn" class="btn-modern align-items-center justify-content-center gap-2" style="display: none; background: linear-gradient(135deg, rgba(157,255,0,0.15), rgba(0,212,255,0.15)); border: 1px solid rgba(157,255,0,0.5); color: #9dff00; border-radius: 8px; padding: 0.5rem 1rem; font-weight: 600; font-size: 0.8rem; transition: all 0.2s ease;" onmouseover="this.style.background='linear-gradient(135deg, rgba(157,255,0,0.3), rgba(0,212,255,0.25))';this.style.boxShadow='0 0 15px rgba(157,255,0,0.3)'" onmouseout="this.style.background='linear-gradient(135deg, rgba(157,255,0,0.15), rgba(0,212,255,0.15))';this.style.boxShadow='none'" onclick="openBundleModal()">
                         <i class="bi bi-box-seam"></i> Bundle Details
                     </button>
                 </div>
@@ -1189,83 +1190,132 @@ while ($row = $statsResult->fetch_assoc()) {
             new bootstrap.Modal(document.getElementById('confirmModal')).show();
         }
 
-        // Booking Functions
-        function viewBooking(bookingId) {
-            const bookingData = {
-                'BK001': {
-                    activity: 'Basketball Court',
-                    date: 'March 25, 2026',
-                    time: '10:00 AM - 12:00 PM',
-                    duration: '2 hours',
-                    status: 'Confirmed',
-                    price: '₱25.00',
-                    location: 'Court A - Indoor Sports Complex',
-                    instructor: 'John Smith',
-                    equipment: 'Basketball provided',
-                    notes: 'Please arrive 10 minutes early'
-                },
-                'BK002': {
-                    activity: 'Swimming Pool',
-                    date: 'March 26, 2026',
-                    time: '2:00 PM - 3:00 PM',
-                    duration: '1 hour',
-                    status: 'Pending',
-                    price: '₱15.00',
-                    location: 'Main Pool - Recreation Center',
-                    instructor: 'Self-guided',
-                    equipment: 'Bring your own towel',
-                    notes: 'Shower facilities available'
-                },
-                'BK003': {
-                    activity: 'Fitness Gym',
-                    date: 'March 24, 2026',
-                    time: '6:00 AM - 7:30 AM',
-                    duration: '1.5 hours',
-                    status: 'Confirmed',
-                    price: '₱20.00',
-                    location: 'Gym Floor - Fitness Center',
-                    instructor: 'Sarah Johnson',
-                    equipment: 'All equipment provided',
-                    notes: 'Water bottle recommended'
-                },
-                'BK004': {
-                    activity: 'Adventure Rides',
-                    date: 'March 23, 2026',
-                    time: '3:00 PM - 6:00 PM',
-                    duration: '3 hours',
-                    status: 'Completed',
-                    price: '₱45.00',
-                    location: 'Adventure Zone - Outdoor Area',
-                    instructor: 'Mike Wilson',
-                    equipment: 'Safety gear provided',
-                    notes: 'Weather dependent activity'
+        // Booking Data & Functions
+        const allUserBookings = <?php echo json_encode(array_column($bookings, null, 'id'), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP); ?>;
+        let currentBundleId = null;
+
+        function escHtml(str) {
+            if (str == null) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function formatBookingDate(dateStr) {
+            if (!dateStr) return '—';
+            try {
+                const parts = dateStr.split('-');
+                if (parts.length === 3) {
+                    const d = new Date(parts[0], parts[1] - 1, parts[2]);
+                    return d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
                 }
-            };
-            
-            const booking = bookingData[bookingId] || bookingData['BK001'];
-            currentBundleId = bookingId;
+                return dateStr;
+            } catch(e) {
+                return dateStr;
+            }
+        }
+
+        function formatBookingTime(timeStr) {
+            if (!timeStr) return '';
+            try {
+                const parts = timeStr.split(':');
+                const h = parseInt(parts[0], 10);
+                const m = parseInt(parts[1], 10);
+                const ampm = h >= 12 ? 'PM' : 'AM';
+                const h12 = h % 12 || 12;
+                return `${h12}:${String(m).padStart(2, '0')} ${ampm}`;
+            } catch(e) {
+                return timeStr;
+            }
+        }
+
+        function viewBooking(bookingId) {
+            const booking = allUserBookings[bookingId];
+            if (!booking) {
+                console.warn("Booking not found for ID:", bookingId);
+                return;
+            }
+
+            currentBundleId = booking.id;
+
+            const checkInFmt = formatBookingDate(booking.check_in_date);
+            let dateDisplay = checkInFmt;
+            if (booking.check_out_date && booking.check_out_date !== booking.check_in_date) {
+                dateDisplay = `${checkInFmt} – ${formatBookingDate(booking.check_out_date)}`;
+            }
+
+            let timeDisplay = 'Standard Resort Hours';
+            if (booking.check_in_time) {
+                timeDisplay = formatBookingTime(booking.check_in_time);
+                if (booking.check_out_time) {
+                    timeDisplay += ' – ' + formatBookingTime(booking.check_out_time);
+                }
+            }
+
+            let durationDisplay = '1 Day';
+            if (booking.number_of_days && parseInt(booking.number_of_days, 10) > 1) {
+                durationDisplay = `${booking.number_of_days} Night(s)`;
+            } else if (booking.booking_type === 'activity') {
+                durationDisplay = `${booking.number_of_guests || 1} Pax`;
+            }
+
+            const statusColor = booking.status_color || '#3b82f6';
+            const statusLabel = (booking.status_name || 'Pending').replace(/_/g, ' ').toUpperCase();
+            const payStatusLabel = (booking.payment_status || 'Pending').toUpperCase();
+
+            // Toggle Bundle Details button
+            const bundleBtn = document.getElementById('viewBundleBtn');
+            if (bundleBtn) {
+                if (booking.booking_type === 'bundle') {
+                    bundleBtn.style.display = 'inline-flex';
+                } else {
+                    bundleBtn.style.display = 'none';
+                }
+            }
+
+            const specialReqsHtml = (booking.special_requests && booking.special_requests.trim())
+                ? escHtml(booking.special_requests).replace(/\n/g, '<br>')
+                : '<em>No special requests or add-ons specified.</em>';
 
             document.getElementById('bookingDetails').innerHTML = `
-                <div class="row">
+                <div class="d-flex align-items-center justify-content-between p-3 mb-4 rounded" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);">
+                    <div>
+                        <div class="text-muted small">Booking Reference</div>
+                        <div class="fw-bold text-primary fs-5" style="letter-spacing: 0.5px;">${escHtml(booking.booking_reference)}</div>
+                    </div>
+                    <div class="text-end">
+                        <span class="badge px-3 py-2 me-1" style="background: ${statusColor}; color: #fff; font-size: 0.8rem; font-weight: 700;">
+                            ${escHtml(statusLabel)}
+                        </span>
+                        <span class="badge px-2 py-2 ${booking.payment_status === 'paid' ? 'bg-success' : 'bg-warning text-dark'}" style="font-size: 0.8rem; font-weight: 700;">
+                            ${escHtml(payStatusLabel)}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="row g-4">
                     <div class="col-md-6">
-                        <h6 class="text-primary mb-3">Booking Information</h6>
+                        <h6 class="text-primary mb-3"><i class="bi bi-info-circle me-1"></i>Booking Information</h6>
                         <div class="booking-info">
                             <div class="booking-info-item">
                                 <div class="booking-info-icon">
-                                    <i class="bi bi-activity"></i>
+                                    <i class="bi ${escHtml(booking.item_icon || 'bi-house-door')}"></i>
                                 </div>
                                 <div class="booking-info-content">
-                                    <div class="booking-info-label">Activity</div>
-                                    <div class="booking-info-value">${booking.activity}</div>
+                                    <div class="booking-info-label">${escHtml((booking.booking_type || 'Package').toUpperCase())}</div>
+                                    <div class="booking-info-value fw-bold text-white">${escHtml(booking.item_name || 'Reservation')}</div>
                                 </div>
                             </div>
                             <div class="booking-info-item">
                                 <div class="booking-info-icon">
-                                    <i class="bi bi-calendar"></i>
+                                    <i class="bi bi-calendar-event"></i>
                                 </div>
                                 <div class="booking-info-content">
                                     <div class="booking-info-label">Date</div>
-                                    <div class="booking-info-value">${booking.date}</div>
+                                    <div class="booking-info-value">${escHtml(dateDisplay)}</div>
                                 </div>
                             </div>
                             <div class="booking-info-item">
@@ -1273,139 +1323,82 @@ while ($row = $statsResult->fetch_assoc()) {
                                     <i class="bi bi-clock"></i>
                                 </div>
                                 <div class="booking-info-content">
-                                    <div class="booking-info-label">Time</div>
-                                    <div class="booking-info-value">${booking.time}</div>
+                                    <div class="booking-info-label">Schedule / Time</div>
+                                    <div class="booking-info-value">${escHtml(timeDisplay)}</div>
                                 </div>
                             </div>
                         </div>
                     </div>
                     <div class="col-md-6">
-                        <h6 class="text-primary mb-3">Additional Details</h6>
+                        <h6 class="text-primary mb-3"><i class="bi bi-card-checklist me-1"></i>Reservation Details</h6>
                         <div class="booking-info">
                             <div class="booking-info-item">
                                 <div class="booking-info-icon">
-                                    <i class="bi bi-hourglass"></i>
+                                    <i class="bi bi-people"></i>
                                 </div>
                                 <div class="booking-info-content">
-                                    <div class="booking-info-label">Duration</div>
-                                    <div class="booking-info-value">${booking.duration}</div>
+                                    <div class="booking-info-label">Number of Guests</div>
+                                    <div class="booking-info-value">${parseInt(booking.number_of_guests, 10) || 1} Guest(s)</div>
                                 </div>
                             </div>
                             <div class="booking-info-item">
                                 <div class="booking-info-icon">
-                                    <i class="bi bi-tag"></i>
+                                    <i class="bi bi-hourglass-split"></i>
                                 </div>
                                 <div class="booking-info-content">
-                                    <div class="booking-info-label">Price</div>
-                                    <div class="booking-info-value">${booking.price}</div>
+                                    <div class="booking-info-label">Duration / Stay</div>
+                                    <div class="booking-info-value">${escHtml(durationDisplay)}</div>
                                 </div>
                             </div>
                             <div class="booking-info-item">
                                 <div class="booking-info-icon">
-                                    <i class="bi bi-geo-alt"></i>
+                                    <span style="font-weight: 800; font-style: normal; font-size: 1.1rem; line-height: 1;">₱</span>
                                 </div>
                                 <div class="booking-info-content">
-                                    <div class="booking-info-label">Location</div>
-                                    <div class="booking-info-value">${booking.location}</div>
+                                    <div class="booking-info-label">Total Amount</div>
+                                    <div class="booking-info-value fw-bold text-success fs-5">₱${parseFloat(booking.total_amount || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
+
                 <div class="row mt-3">
                     <div class="col-12">
-                        <h6 class="text-primary mb-3">Additional Information</h6>
-                        <div class="alert alert-modern alert-info-modern">
-                            <i class="bi bi-info-circle me-2"></i>
-                            <strong>Equipment:</strong> ${booking.equipment}<br>
-                            <strong>Notes:</strong> ${booking.notes}
+                        <h6 class="text-primary mb-2"><i class="bi bi-chat-left-dots me-1"></i>Special Requests & Add-ons</h6>
+                        <div class="p-3 rounded" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); font-size: 0.9rem; line-height: 1.5; color: var(--text-secondary, #94a3b8);">
+                            ${specialReqsHtml}
                         </div>
                     </div>
                 </div>
             `;
-            
+
             new bootstrap.Modal(document.getElementById('bookingModal')).show();
         }
 
-        // Bundle breakdown data per booking
-        const bundleBreakdownData = {
-            'BK001': {
-                bundleName: 'Basketball Court Package',
-                bundleDesc: 'Full court access package with all necessary equipment and facilities.',
-                items: [
-                    { icon: 'bi-building', name: 'Court Reservation', detail: 'Court A – Indoor Sports Complex (2 hrs)', price: '₱15.00' },
-                    { icon: 'bi-circle', name: 'Ball Rental', detail: 'Standard NBA-size basketball', price: '₱5.00' },
-                    { icon: 'bi-lightning', name: 'Flood Lights', detail: 'Full court lighting (1 hr)', price: '₱5.00' }
-                ],
-                total: '₱25.00'
-            },
-            'BK002': {
-                bundleName: 'Swimming Pool Package',
-                bundleDesc: 'Relaxing pool access bundle including locker storage for your belongings.',
-                items: [
-                    { icon: 'bi-water', name: 'Pool Access', detail: 'Main Pool – Adult entry (1 hr)', price: '₱10.00' },
-                    { icon: 'bi-lock', name: 'Locker Rental', detail: 'Secure locker for the session', price: '₱5.00' }
-                ],
-                total: '₱15.00'
-            },
-            'BK003': {
-                bundleName: 'Fitness Gym Package',
-                bundleDesc: 'Full gym access with professional instructor and all equipment included.',
-                items: [
-                    { icon: 'bi-person-arms-up', name: 'Gym Day Pass', detail: 'Full access to all gym equipment', price: '₱15.00' },
-                    { icon: 'bi-wind', name: 'Towel Rental', detail: 'Fresh towel for the session', price: '₱5.00' }
-                ],
-                total: '₱20.00'
-            },
-            'BK004': {
-                bundleName: 'Adventure Rides Package',
-                bundleDesc: 'Thrilling ATV adventure bundle with complete safety gear included.',
-                items: [
-                    { icon: 'bi-truck', name: 'ATV Rental', detail: '4-wheel all-terrain vehicle (2 hrs)', price: '₱35.00' },
-                    { icon: 'bi-shield-check', name: 'Safety Gear Bundle', detail: 'Helmet, knee pads & gloves', price: '₱10.00' }
-                ],
-                total: '₱45.00'
-            }
-        };
-
-        let currentBundleId = null;
-
         function openBundleModal() {
             if (!currentBundleId) return;
-            const data = bundleBreakdownData[currentBundleId] || bundleBreakdownData['BK001'];
+            const booking = allUserBookings[currentBundleId];
+            if (!booking) return;
 
-            const rows = data.items.map(item => `
-                <div class="d-flex align-items-start gap-3 py-3" style="border-bottom: 1px solid rgba(255,255,255,0.07);">
-                    <div style="width: 42px; height: 42px; flex-shrink: 0; border-radius: 10px; background: rgba(157,255,0,0.1); border: 1px solid rgba(157,255,0,0.25); display: flex; align-items: center; justify-content: center;">
-                        <i class="${item.icon}" style="color: #9dff00; font-size: 1.1rem;"></i>
-                    </div>
-                    <div class="flex-grow-1">
-                        <div class="fw-bold text-white" style="font-size: 0.95rem;">${item.name}</div>
-                        <div style="color: #94a3b8; font-size: 0.82rem; margin-top: 2px;">${item.detail}</div>
-                    </div>
-                    <div class="fw-bold text-end" style="color: #00d4ff; font-size: 0.95rem; white-space: nowrap;">${item.price}</div>
-                </div>
-            `).join('');
+            const bundleTitle = booking.item_name || 'Bundle Package';
+            const bundleDesc = booking.bundle_description || 'Exclusive bundle package with full resort amenities.';
+            const totalFmt = '₱' + parseFloat(booking.total_amount || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
             document.getElementById('bundleDetails').innerHTML = `
                 <div class="mb-4 p-3 rounded" style="background: rgba(157,255,0,0.05); border: 1px solid rgba(157,255,0,0.2);">
                     <div class="fw-bold text-white mb-1" style="font-size: 1.05rem;">
-                        <i class="bi bi-stars me-2" style="color: #9dff00;"></i>${data.bundleName}
+                        <i class="bi bi-stars me-2" style="color: #9dff00;"></i>${escHtml(bundleTitle)}
                     </div>
-                    <div style="color: #94a3b8; font-size: 0.875rem;">${data.bundleDesc}</div>
+                    <div style="color: #94a3b8; font-size: 0.875rem;">${escHtml(bundleDesc)}</div>
                 </div>
-
-                <h6 class="text-uppercase mb-3" style="color: #94a3b8; font-size: 0.75rem; letter-spacing: 0.08em;">What's Included</h6>
-
-                <div>${rows}</div>
 
                 <div class="d-flex justify-content-between align-items-center mt-4 pt-3" style="border-top: 1px solid rgba(255,255,255,0.1);">
                     <span class="fw-bold text-white" style="font-size: 1rem;">Total Amount</span>
-                    <span class="fw-bold" style="font-size: 1.4rem; color: #9dff00;">${data.total}</span>
+                    <span class="fw-bold" style="font-size: 1.4rem; color: #9dff00;">${totalFmt}</span>
                 </div>
             `;
 
-            // Hide booking modal first, then show bundle modal
             const bookingModalEl = document.getElementById('bookingModal');
             const bundleModalEl = document.getElementById('bundleModal');
             bootstrap.Modal.getInstance(bookingModalEl)?.hide();
