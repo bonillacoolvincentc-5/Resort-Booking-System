@@ -700,6 +700,7 @@ while ($row = $accResult->fetch_assoc()) {
 
                 if (result.success) {
                     activityModal.hide();
+                    sessionStorage.setItem('activeManagementTab', 'activities-tab');
                     location.reload();
                 } else {
                     alert(result.message || 'Failed to save activity');
@@ -729,6 +730,7 @@ while ($row = $accResult->fetch_assoc()) {
                 const result = await response.json();
 
                 if (result.success) {
+                    sessionStorage.setItem('activeManagementTab', 'activities-tab');
                     location.reload();
                 } else {
                     alert(result.message || 'Failed to delete activity');
@@ -753,6 +755,7 @@ while ($row = $accResult->fetch_assoc()) {
                 });
                 const result = await response.json();
                 if (result.success) {
+                    sessionStorage.setItem('activeManagementTab', 'activities-tab');
                     location.reload();
                 } else {
                     alert(result.message || 'Failed to update activity status');
@@ -891,6 +894,7 @@ while ($row = $accResult->fetch_assoc()) {
                 const result = await response.json();
                 if (result.success) {
                     accommodationModal.hide();
+                    sessionStorage.setItem('activeManagementTab', 'accommodations-tab');
                     location.reload();
                 } else {
                     alert(result.message || 'Failed to save amenity / room');
@@ -918,6 +922,7 @@ while ($row = $accResult->fetch_assoc()) {
                 const result = await response.json();
 
                 if (result.success) {
+                    sessionStorage.setItem('activeManagementTab', 'accommodations-tab');
                     location.reload();
                 } else {
                     alert(result.message || 'Failed to delete amenity / room');
@@ -941,6 +946,7 @@ while ($row = $accResult->fetch_assoc()) {
                 });
                 const result = await response.json();
                 if (result.success) {
+                    sessionStorage.setItem('activeManagementTab', 'accommodations-tab');
                     location.reload();
                 } else {
                     alert(result.message || 'Failed to update status');
@@ -955,6 +961,18 @@ while ($row = $accResult->fetch_assoc()) {
         function viewAnalytics(activityId) {
             alert('Analytics feature coming soon for activity ID: ' + activityId);
         }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const activeTab = sessionStorage.getItem('activeManagementTab');
+            if (activeTab) {
+                const tabEl = document.getElementById(activeTab);
+                if (tabEl) {
+                    const bsTab = new bootstrap.Tab(tabEl);
+                    bsTab.show();
+                }
+                sessionStorage.removeItem('activeManagementTab');
+            }
+        });
     </script>
 
     <script src="../assets/js/bootstrap.bundle.min.js"></script>
