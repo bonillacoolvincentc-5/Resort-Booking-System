@@ -505,6 +505,7 @@ if ($stmtSlots) {
             }
             .filter-bar::-webkit-scrollbar { display: none; /* Chrome/Safari */ }
             .filter-bar > span.text-muted, .filter-bar .ms-auto { display: none !important; } /* Hide text and count */
+            .catalog-date-wrap { width: 100%; justify-content: center; margin-top: 0.4rem; }
             .filter-pill { 
                 flex: 1 1 calc(50% - 0.5rem); 
                 justify-content: center;
@@ -975,8 +976,15 @@ if ($stmtSlots) {
             <button class="filter-pill" onclick="filterPackages('bundle',this)" id="filterBundle">
                 <i class="bi bi-box-seam"></i> Bundles
             </button>
-            <div class="ms-auto">
-                <span id="packageCount" class="text-muted" style="font-size:.8rem;"></span>
+            <div class="catalog-date-wrap d-flex align-items-center gap-2 ms-md-auto">
+                <label for="catalogVisitDate" class="text-muted mb-0 d-flex align-items-center gap-1" style="font-size:.82rem; font-weight:600; white-space:nowrap;">
+                    <i class="bi bi-calendar-event text-primary"></i> Visit Date:
+                </label>
+                <input type="date" id="catalogVisitDate" class="form-control-modern" 
+                       style="padding:0.35rem 0.65rem; font-size:0.82rem; width:auto; min-width:140px; height:36px; border-radius:var(--radius-btn);"
+                       value="<?php echo date('Y-m-d'); ?>" min="<?php echo date('Y-m-d'); ?>"
+                       onchange="onCatalogDateChange(this.value)">
+                <span id="packageCount" class="text-muted ms-1" style="font-size:.8rem;"></span>
             </div>
         </div>
 
@@ -1606,13 +1614,37 @@ document.addEventListener('DOMContentLoaded', () => {
     if (params.get('success')) showSuccess(decodeURIComponent(params.get('success')));
 });
 
+let catalogSelectedDate = '<?php echo date("Y-m-d"); ?>';
+
+async function onCatalogDateChange(newDate) {
+    if (!newDate) return;
+    catalogSelectedDate = newDate;
+    await loadPackages(newDate);
+}
+
 // ── Load packages from API ─────────────────────────────────────────
-async function loadPackages() {
+async function loadPackages(targetDate = null) {
     try {
-        const res  = await fetch('../php/get_packages.php');
+        const dateInput = document.getElementById('catalogVisitDate');
+        if (dateInput && !targetDate) {
+            targetDate = dateInput.value;
+        }
+        if (targetDate) {
+            catalogSelectedDate = targetDate;
+        }
+
+        const grid = document.getElementById('packagesGrid');
+        if (grid && !document.getElementById('packagesLoading')) {
+            grid.style.opacity = '0.5';
+        }
+
+        const url = catalogSelectedDate ? `../php/get_packages.php?date=${encodeURIComponent(catalogSelectedDate)}` : '../php/get_packages.php';
+        const res  = await fetch(url);
         const data = await res.json();
 
-        document.getElementById('packagesLoading').remove();
+        if (grid) grid.style.opacity = '1';
+        const loader = document.getElementById('packagesLoading');
+        if (loader) loader.remove();
 
         if (!data.success) { renderEmptyState('Could not load packages.'); return; }
 
@@ -1739,7 +1771,20 @@ function renderPackages(pkgs) {
         const cartCount = typeof extraRooms !== 'undefined' ? 
             (extraRooms.filter(r => r.pkg.id === pkg.id).length + (typeof selectedPkg !== 'undefined' && selectedPkg && selectedPkg.id === pkg.id ? 1 : 0)) : 0;
         const unitLimit = pkg.booking_limit || 1;
-        const isLimitReached = cartCount >= unitLimit;
+        const isCartLimitReached = cartCount >= unitLimit;
+        const bookedCount = pkg.booked_today_count || 0;
+        const isFullyBooked = bookedCount >= unitLimit;
+
+        // Dynamic label for date
+        let dateLabel = 'Today';
+        if (catalogSelectedDate) {
+            const todayStr = new Date().toISOString().split('T')[0];
+            if (catalogSelectedDate !== todayStr) {
+                const [y, m, d] = catalogSelectedDate.split('-');
+                const dt = new Date(+y, +m - 1, +d);
+                dateLabel = dt.toLocaleDateString('en-PH', { month: 'short', day: 'numeric' });
+            }
+        }
 
         card.innerHTML = `
             <div class="card-img-wrap">
@@ -1756,8 +1801,9 @@ function renderPackages(pkgs) {
                         <span>${escHtml(displayPrice)}</span>
                     </div>
                     <div class="card-meta-item" style="color:var(--text-secondary); margin-top:4px;">
-                        <i class="bi bi-bar-chart-fill" style="color:var(--accent-primary);"></i>
-                        <span style="font-size:0.8rem;">Today: <strong>${pkg.booked_today_count || 0}</strong> / ${pkg.booking_limit || 1} booked</span>
+                        <i class="bi bi-bar-chart-fill" style="color:${isFullyBooked ? 'var(--accent-danger)' : 'var(--accent-primary)'};"></i>
+                        <span style="font-size:0.8rem;">${escHtml(dateLabel)}: <strong style="color:${isFullyBooked ? 'var(--accent-danger)' : 'inherit'};">${bookedCount}</strong> / ${unitLimit} booked</span>
+                        ${isFullyBooked ? '<span class="badge bg-danger ms-1" style="font-size:0.65rem; padding: 2px 6px;">Fully Booked</span>' : ''}
                     </div>
                 </div>
             </div>
@@ -1766,14 +1812,20 @@ function renderPackages(pkgs) {
                         onclick="openDetailModal(${pkg.id},'${escHtml(pkg.package_type)}')">
                     <i class="bi bi-eye"></i> View Details
                 </button>
-                <button class="btn-modern btn-primary-modern btn-book-now" style="flex:1;" ${isLimitReached ? 'disabled' : ''}>
-                    <i class="bi ${isLimitReached ? 'bi-check-circle' : 'bi-calendar-plus'}"></i> ${isLimitReached ? 'Selected' : 'Book Now'}
-                </button>
+                ${isFullyBooked ? `
+                    <button class="btn-modern btn-danger-modern" style="flex:1; opacity:0.85; cursor:not-allowed;" disabled title="This package is fully booked for ${escHtml(dateLabel)}">
+                        <i class="bi bi-x-circle"></i> Fully Booked
+                    </button>
+                ` : `
+                    <button class="btn-modern btn-primary-modern btn-book-now" style="flex:1;" ${isCartLimitReached ? 'disabled' : ''}>
+                        <i class="bi ${isCartLimitReached ? 'bi-check-circle' : 'bi-calendar-plus'}"></i> ${isCartLimitReached ? 'Selected' : 'Book Now'}
+                    </button>
+                `}
             </div>
         `;
         // Wire up card buttons — bundles use selectBundle, others use selectPackage
         const bookBtn = card.querySelector('.btn-book-now');
-        if (bookBtn && !isLimitReached) {
+        if (bookBtn && !isCartLimitReached && !isFullyBooked) {
             if (pkg.package_type === 'bundle') {
                 bookBtn.onclick = () => selectBundle(pkg.id);
             } else {
@@ -1850,10 +1902,25 @@ function openDetailModal(id, type) {
     document.getElementById('packageDetailModalLabel').textContent = pkg.name;
 
     // "Book Now" inside modal
-    document.getElementById('modalBookNowBtn').onclick = () => {
-        detailModal.hide();
-        selectPackage(id, type);
-    };
+    const modalBookBtn = document.getElementById('modalBookNowBtn');
+    const unitLimit = pkg.booking_limit || 1;
+    const isFullyBooked = (pkg.booked_today_count || 0) >= unitLimit;
+    if (modalBookBtn) {
+        if (isFullyBooked) {
+            modalBookBtn.disabled = true;
+            modalBookBtn.className = 'btn-modern btn-danger-modern';
+            modalBookBtn.innerHTML = '<i class="bi bi-x-circle"></i> Fully Booked';
+            modalBookBtn.onclick = null;
+        } else {
+            modalBookBtn.disabled = false;
+            modalBookBtn.className = 'btn-modern btn-primary-modern';
+            modalBookBtn.innerHTML = '<i class="bi bi-calendar-plus"></i> Book Now';
+            modalBookBtn.onclick = () => {
+                detailModal.hide();
+                selectPackage(id, type);
+            };
+        }
+    }
 
     const body = document.getElementById('packageDetailBody');
 
@@ -2085,7 +2152,15 @@ function selectPackage(id, type) {
     // Add-on activities (only available in Day Tour; strictly excluded for overnight stays)
     renderAddons(pkg);
     if (typeof fetchAndRenderActivityCalendar === 'function') {
-        fetchAndRenderActivityCalendar(pkg.id, pkg.package_type);
+        let calY = undefined, calM = undefined;
+        if (catalogSelectedDate) {
+            const parts = catalogSelectedDate.split('-');
+            if (parts.length === 3) {
+                calY = parseInt(parts[0]);
+                calM = parseInt(parts[1]);
+            }
+        }
+        fetchAndRenderActivityCalendar(pkg.id, pkg.package_type, calY, calM);
     }
 
     recalcPrice();

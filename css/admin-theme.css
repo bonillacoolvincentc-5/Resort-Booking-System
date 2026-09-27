@@ -685,6 +685,7 @@ input[type="date"].filter-input::-webkit-calendar-picker-indicator {
 .btn-action {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 0.3rem;
     padding: 0.35rem 0.75rem;
     border-radius: 7px;

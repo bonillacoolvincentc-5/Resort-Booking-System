@@ -291,6 +291,9 @@ while ($row = $bundlesRes->fetch_assoc()) {
                     margin-bottom: 0.5rem;
                     opacity: 0.4;
                 }
+                .btn-action {
+                    justify-content: center;
+                }
             </style>
 
             <table class="table-modern">

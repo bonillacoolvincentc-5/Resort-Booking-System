@@ -38,6 +38,9 @@ window.animateBtn = async function(btn, fetchPromiseCallback) {
     
     if (originalWidth) btn.style.width = originalWidth + 'px';
     if (originalHeight) btn.style.height = originalHeight + 'px';
+    btn.style.display = 'inline-flex';
+    btn.style.alignItems = 'center';
+    btn.style.justifyContent = 'center';
     
     btn.disabled = true;
     btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>';
@@ -59,6 +62,9 @@ window.animateBtn = async function(btn, fetchPromiseCallback) {
             btn.disabled = false;
             btn.style.width = '';
             btn.style.height = '';
+            btn.style.display = '';
+            btn.style.alignItems = '';
+            btn.style.justifyContent = '';
         }
         return result;
     } catch (err) {
@@ -66,6 +72,9 @@ window.animateBtn = async function(btn, fetchPromiseCallback) {
         btn.disabled = false;
         btn.style.width = '';
         btn.style.height = '';
+        btn.style.display = '';
+        btn.style.alignItems = '';
+        btn.style.justifyContent = '';
         throw err;
     }
 };

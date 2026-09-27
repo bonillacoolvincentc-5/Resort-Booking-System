@@ -1129,10 +1129,16 @@ if ($diff->y >= 1) {
                     <span id="infoMessage"></span>
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 `;
-                document.querySelector('.page-header').after(infoAlert);
+                const header = document.querySelector('.page-header');
+                if (header) {
+                    header.after(infoAlert);
+                } else {
+                    document.body.prepend(infoAlert);
+                }
             }
             
-            document.getElementById('infoMessage').textContent = message;
+            const msgEl = document.getElementById('infoMessage');
+            if (msgEl) msgEl.textContent = message;
             infoAlert.classList.remove('d-none');
             
             setTimeout(() => {

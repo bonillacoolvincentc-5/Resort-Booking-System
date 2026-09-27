@@ -1291,58 +1291,16 @@ if ($diff->y >= 1) {
                     <span id="infoMessage"></span>
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 `;
-                document.querySelector('.page-header').after(infoAlert);
+                const header = document.querySelector('.page-header');
+                if (header) {
+                    header.after(infoAlert);
+                } else {
+                    document.body.prepend(infoAlert);
+                }
             }
             
-            document.getElementById('infoMessage').textContent = message;
-            infoAlert.classList.remove('d-none');
-            
-            setTimeout(() => {
-                infoAlert.classList.add('d-none');
-            }, 5000);
-        }
-
-        function hideAllAlerts() {
-            document.querySelectorAll('.alert').forEach(alert => {
-                alert.classList.add('d-none');
-            });
-        }
-
-        // Check for URL parameters
-        window.addEventListener('load', function() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const success = urlParams.get('success');
-            
-            if (success) {
-                showSuccess(decodeURIComponent(success));
-            }
-        });
-    </script>
-
-    <script src="../assets/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
-
-        function showInfo(message) {
-            hideAllAlerts();
-            // Create info alert if it doesn't exist
-            let infoAlert = document.getElementById('infoAlert');
-            if (!infoAlert) {
-                infoAlert = document.createElement('div');
-                infoAlert.id = 'infoAlert';
-                infoAlert.className = 'alert alert-modern alert-info-modern alert-dismissible fade show';
-                infoAlert.style.background = 'rgba(157, 255, 0, 0.1)';
-                infoAlert.style.color = '#9DFF00';
-                infoAlert.style.border = '1px solid rgba(157, 255, 0, 0.2)';
-                infoAlert.innerHTML = `
-                    <i class="bi bi-info-circle me-2"></i>
-                    <span id="infoMessage"></span>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                `;
-                document.querySelector('.page-header').after(infoAlert);
-            }
-            
-            document.getElementById('infoMessage').textContent = message;
+            const msgEl = document.getElementById('infoMessage');
+            if (msgEl) msgEl.textContent = message;
             infoAlert.classList.remove('d-none');
             
             setTimeout(() => {

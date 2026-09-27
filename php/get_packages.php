@@ -13,13 +13,15 @@ global $conn;
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 
-function normalizeImageUrl($url) {
-    if (empty($url)) return null;
-    $url = trim($url);
-    if (preg_match('#^https?://#i', $url)) return $url;
-    if (substr($url, 0, 1) === '/') return $url;
-    if (substr($url, 0, 3) === '../') return $url;
-    return '../' . ltrim($url, '/');
+if (!function_exists('normalizeImageUrl')) {
+    function normalizeImageUrl($url) {
+        if (empty($url)) return null;
+        $url = trim($url);
+        if (preg_match('#^https?://#i', $url)) return $url;
+        if (substr($url, 0, 1) === '/') return $url;
+        if (substr($url, 0, 3) === '../') return $url;
+        return '../' . ltrim($url, '/');
+    }
 }
 
 try {
@@ -32,6 +34,10 @@ try {
     if ($chkAcc && $chkAcc->num_rows === 0) {
         $conn->query("ALTER TABLE `accommodations` ADD COLUMN `daily_booking_limit` INT(11) NOT NULL DEFAULT 1 AFTER `capacity`");
     }
+
+    $targetDate = isset($_GET['date']) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $_GET['date']) 
+        ? $_GET['date'] 
+        : date('Y-m-d');
 
     // ── Activities ──────────────────────────────────────────────────────────
     $actStmt = $conn->prepare("
@@ -48,11 +54,12 @@ try {
             daily_booking_limit,
             image_url,
             is_active,
-            (SELECT COUNT(*) FROM bookings WHERE booking_type = 'activity' AND activity_id = activities.id AND check_in_date <= CURDATE() AND (check_out_date >= CURDATE() OR check_out_date IS NULL) AND status_id IN (SELECT id FROM booking_status WHERE name IN ('pending_review', 'approved', 'checked_in'))) AS booked_today_count
+            (SELECT COUNT(*) FROM bookings WHERE booking_type = 'activity' AND activity_id = activities.id AND (check_in_date = ? OR (check_in_date < ? AND check_out_date > ?)) AND status_id IN (SELECT id FROM booking_status WHERE name IN ('pending_review', 'approved', 'checked_in'))) AS booked_today_count
         FROM activities
         WHERE is_active = 1
         ORDER BY name ASC
     ");
+    $actStmt->bind_param('sss', $targetDate, $targetDate, $targetDate);
     $actStmt->execute();
     $actResult = $actStmt->get_result();
 
@@ -117,11 +124,12 @@ try {
             amenities,
             image_url,
             is_active,
-            (SELECT COUNT(*) FROM bookings WHERE booking_type = 'accommodation' AND accommodation_id = accommodations.id AND check_in_date <= CURDATE() AND (check_out_date >= CURDATE() OR check_out_date IS NULL) AND status_id IN (SELECT id FROM booking_status WHERE name IN ('pending_review', 'approved', 'checked_in'))) AS booked_today_count
+            (SELECT COUNT(*) FROM bookings WHERE booking_type = 'accommodation' AND accommodation_id = accommodations.id AND (check_in_date = ? OR (check_in_date < ? AND check_out_date > ?)) AND status_id IN (SELECT id FROM booking_status WHERE name IN ('pending_review', 'approved', 'checked_in'))) AS booked_today_count
         FROM accommodations
         WHERE is_active = 1
         ORDER BY type ASC, name ASC
     ");
+    $accStmt->bind_param('sss', $targetDate, $targetDate, $targetDate);
     $accStmt->execute();
     $accResult = $accStmt->get_result();
 
@@ -199,11 +207,12 @@ try {
             is_active,
             bundle_type,
             daily_booking_limit,
-            (SELECT COUNT(*) FROM bookings WHERE booking_type = 'bundle' AND bundle_id = bundles.id AND check_in_date <= CURDATE() AND (check_out_date >= CURDATE() OR check_out_date IS NULL) AND status_id IN (SELECT id FROM booking_status WHERE name IN ('pending_review', 'approved', 'checked_in'))) AS booked_today_count
+            (SELECT COUNT(*) FROM bookings WHERE booking_type = 'bundle' AND bundle_id = bundles.id AND (check_in_date = ? OR (check_in_date < ? AND check_out_date > ?)) AND status_id IN (SELECT id FROM booking_status WHERE name IN ('pending_review', 'approved', 'checked_in'))) AS booked_today_count
         FROM bundles
         WHERE is_active = 1
         ORDER BY name ASC
     ");
+    $bundleStmt->bind_param('sss', $targetDate, $targetDate, $targetDate);
     $bundleStmt->execute();
     $bundleResult = $bundleStmt->get_result();
 
@@ -289,6 +298,8 @@ try {
 
     echo json_encode([
         'success'        => true,
+        'filter_date'    => $targetDate,
+        'is_today'       => ($targetDate === date('Y-m-d')),
         'packages'       => $packages,
         'activities'     => $activities,
         'accommodations' => $accommodations,
