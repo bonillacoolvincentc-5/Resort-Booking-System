@@ -6,6 +6,7 @@
  */
 
 require_once __DIR__ . '/../phpAuthentication/db_config.php';
+require_once __DIR__ . '/check_expired_bookings.php';
 
 /** @var mysqli $conn */
 global $conn;
@@ -54,7 +55,7 @@ try {
             daily_booking_limit,
             image_url,
             is_active,
-            (SELECT COUNT(*) FROM bookings WHERE booking_type = 'activity' AND activity_id = activities.id AND (check_in_date = ? OR (check_in_date < ? AND check_out_date > ?)) AND status_id IN (SELECT id FROM booking_status WHERE name IN ('pending_review', 'approved', 'checked_in'))) AS booked_today_count
+            (SELECT COUNT(*) FROM bookings WHERE booking_type = 'activity' AND activity_id = activities.id AND (check_in_date = ? OR (check_in_date < ? AND check_out_date > ?)) AND status_id IN (SELECT id FROM booking_status WHERE name IN ('awaiting_payment', 'payment_verifying', 'approved', 'checked_in'))) AS booked_today_count
         FROM activities
         WHERE is_active = 1
         ORDER BY name ASC
@@ -124,7 +125,7 @@ try {
             amenities,
             image_url,
             is_active,
-            (SELECT COUNT(*) FROM bookings WHERE booking_type = 'accommodation' AND accommodation_id = accommodations.id AND (check_in_date = ? OR (check_in_date < ? AND check_out_date > ?)) AND status_id IN (SELECT id FROM booking_status WHERE name IN ('pending_review', 'approved', 'checked_in'))) AS booked_today_count
+            (SELECT COUNT(*) FROM bookings WHERE booking_type = 'accommodation' AND accommodation_id = accommodations.id AND (check_in_date = ? OR (check_in_date < ? AND check_out_date > ?)) AND status_id IN (SELECT id FROM booking_status WHERE name IN ('awaiting_payment', 'payment_verifying', 'approved', 'checked_in'))) AS booked_today_count
         FROM accommodations
         WHERE is_active = 1
         ORDER BY type ASC, name ASC
@@ -207,7 +208,7 @@ try {
             is_active,
             bundle_type,
             daily_booking_limit,
-            (SELECT COUNT(*) FROM bookings WHERE booking_type = 'bundle' AND bundle_id = bundles.id AND (check_in_date = ? OR (check_in_date < ? AND check_out_date > ?)) AND status_id IN (SELECT id FROM booking_status WHERE name IN ('pending_review', 'approved', 'checked_in'))) AS booked_today_count
+            (SELECT COUNT(*) FROM bookings WHERE booking_type = 'bundle' AND bundle_id = bundles.id AND (check_in_date = ? OR (check_in_date < ? AND check_out_date > ?)) AND status_id IN (SELECT id FROM booking_status WHERE name IN ('awaiting_payment', 'payment_verifying', 'approved', 'checked_in'))) AS booked_today_count
         FROM bundles
         WHERE is_active = 1
         ORDER BY name ASC

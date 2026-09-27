@@ -20,6 +20,9 @@ $adminEmail = $_SESSION['admin_email'];
 // Get database connection
 global $conn;
 
+// Auto-cancel expired awaiting_payment bookings (restores calendar capacity)
+require_once __DIR__ . '/../php/check_expired_bookings.php';
+
 // Auto-archive past-due approved bookings → Completed (before UI loads)
 $conn->query("
     UPDATE bookings b
@@ -55,6 +58,9 @@ $query = "
         b.total_amount,
         b.payment_status,
         b.payment_method,
+        b.payment_proof,
+        b.expires_at,
+        TIMESTAMPDIFF(SECOND, NOW(), b.expires_at) as seconds_remaining,
         b.created_at,
         bs.name as status_name,
         bs.description as status_description,
@@ -72,7 +78,7 @@ $query = "
             WHEN b.booking_type = 'activity' THEN 'bi-activity'
             ELSE NULL
         END as item_icon,
-        pr.file_path as receipt_path
+        COALESCE(b.payment_proof, pr.file_path) as receipt_path
     FROM bookings b
     LEFT JOIN booking_status bs ON b.status_id = bs.id
     LEFT JOIN users u ON b.user_id = u.id
@@ -196,6 +202,16 @@ while ($row = $bundlesRes->fetch_assoc()) {
                     Pending Review
                     <span class="bst-count" id="cntPending">0</span>
                 </button>
+                <button class="bst-tab bst-awaiting" data-filter="awaiting_payment">
+                    <span class="bst-dot"></span>
+                    Awaiting Payment
+                    <span class="bst-count" id="cntAwaiting">0</span>
+                </button>
+                <button class="bst-tab bst-verifying" data-filter="payment_verifying">
+                    <span class="bst-dot"></span>
+                    Payment Verifying
+                    <span class="bst-count" id="cntVerifying">0</span>
+                </button>
                 <button class="bst-tab bst-approved" data-filter="approved">
                     <span class="bst-dot"></span>
                     Approved
@@ -248,10 +264,12 @@ while ($row = $bundlesRes->fetch_assoc()) {
                     display: inline-block;
                     flex-shrink: 0;
                 }
-                .bst-pending .bst-dot  { background: #F7B731; box-shadow: 0 0 6px rgba(247,183,49,0.5); }
-                .bst-approved .bst-dot { background: #27C46A; box-shadow: 0 0 6px rgba(39,196,106,0.5); }
-                .bst-rejected .bst-dot { background: #FF5A5F; box-shadow: 0 0 6px rgba(255,90,95,0.5); }
-                .bst-all .bst-dot      { display: none; }
+                .bst-pending .bst-dot   { background: #F7B731; box-shadow: 0 0 6px rgba(247,183,49,0.5); }
+                .bst-awaiting .bst-dot  { background: #F59E0B; box-shadow: 0 0 6px rgba(245,158,11,0.5); }
+                .bst-verifying .bst-dot { background: #8B5CF6; box-shadow: 0 0 6px rgba(139,92,246,0.5); }
+                .bst-approved .bst-dot  { background: #27C46A; box-shadow: 0 0 6px rgba(39,196,106,0.5); }
+                .bst-rejected .bst-dot  { background: #FF5A5F; box-shadow: 0 0 6px rgba(255,90,95,0.5); }
+                .bst-all .bst-dot       { display: none; }
                 .bst-count {
                     display: inline-flex;
                     align-items: center;
@@ -270,14 +288,18 @@ while ($row = $bundlesRes->fetch_assoc()) {
                     background: rgba(21,34,29,0.9);
                     border-color: var(--border);
                 }
-                .bst-pending.active  { color: #F7B731; border-top-color: #F7B731; }
-                .bst-approved.active { color: #27C46A; border-top-color: #27C46A; }
-                .bst-rejected.active { color: #FF5A5F; border-top-color: #FF5A5F; }
-                .bst-all.active      { color: var(--accent); border-top-color: var(--accent); }
-                .bst-pending.active  .bst-count { background: rgba(247,183,49,0.15);  color: #F7B731; }
-                .bst-approved.active .bst-count { background: rgba(39,196,106,0.15);  color: #27C46A; }
-                .bst-rejected.active .bst-count { background: rgba(255,90,95,0.15);   color: #FF5A5F; }
-                .bst-all.active      .bst-count { background: rgba(157,255,0,0.12);   color: var(--accent); }
+                .bst-pending.active   { color: #F7B731; border-top-color: #F7B731; }
+                .bst-awaiting.active  { color: #F59E0B; border-top-color: #F59E0B; }
+                .bst-verifying.active { color: #A78BFA; border-top-color: #8B5CF6; }
+                .bst-approved.active  { color: #27C46A; border-top-color: #27C46A; }
+                .bst-rejected.active  { color: #FF5A5F; border-top-color: #FF5A5F; }
+                .bst-all.active       { color: var(--accent); border-top-color: var(--accent); }
+                .bst-pending.active   .bst-count { background: rgba(247,183,49,0.15);  color: #F7B731; }
+                .bst-awaiting.active  .bst-count { background: rgba(245,158,11,0.15);  color: #F59E0B; }
+                .bst-verifying.active .bst-count { background: rgba(139,92,246,0.15); color: #A78BFA; }
+                .bst-approved.active  .bst-count { background: rgba(39,196,106,0.15);  color: #27C46A; }
+                .bst-rejected.active  .bst-count { background: rgba(255,90,95,0.15);   color: #FF5A5F; }
+                .bst-all.active       .bst-count { background: rgba(157,255,0,0.12);   color: var(--accent); }
                 #bookingsTableBody tr.bst-hidden { display: none; }
                 #bstEmptyRow { display: none; }
                 #bstEmptyRow td {
@@ -325,6 +347,38 @@ while ($row = $bundlesRes->fetch_assoc()) {
                                                 <i class="bi bi-x-circle"></i>
                                                 Reject
                                             </button>
+                                        <?php elseif ($booking['status_name'] === 'awaiting_payment'): ?>
+                                            <?php if (!empty($booking['expires_at'])): ?>
+                                                <span class="badge bg-warning text-dark px-2 py-1 d-inline-flex align-items-center gap-1" style="font-size:0.72rem; font-weight:700;">
+                                                    <i class="bi bi-clock-history"></i><span class="admin-countdown" data-remaining="<?php echo max(0, (int)($booking['seconds_remaining'] ?? 0)); ?>">--:--</span>
+                                                </span>
+                                            <?php endif; ?>
+                                            <button class="btn-action btn-reject" onclick="cancelBookingManual(<?php echo $booking['id']; ?>)" title="Cancel Booking">
+                                                <i class="bi bi-slash-circle"></i>
+                                                Cancel
+                                            </button>
+                                        <?php elseif ($booking['status_name'] === 'payment_verifying'): ?>
+                                            <?php $recPath = !empty($booking['receipt_path']) ? $booking['receipt_path'] : ($booking['payment_proof'] ?? ''); ?>
+                                            <button class="btn-action" style="background: rgba(139,92,246,0.15); color: #a78bfa; border: 1px solid rgba(139,92,246,0.3);" onclick="viewReceiptModal('<?php echo htmlspecialchars($recPath); ?>', '<?php echo htmlspecialchars($booking['booking_reference'] ?? ''); ?>')">
+                                                <i class="bi bi-receipt"></i>
+                                                Receipt
+                                            </button>
+                                            <button class="btn-action btn-approve" onclick="confirmPayment(this, <?php echo $booking['id']; ?>)">
+                                                <i class="bi bi-check2-circle"></i>
+                                                Confirm Pay
+                                            </button>
+                                            <button class="btn-action btn-reject" onclick="cancelBookingManual(<?php echo $booking['id']; ?>)" title="Cancel Booking">
+                                                <i class="bi bi-slash-circle"></i>
+                                                Cancel
+                                            </button>
+                                        <?php elseif ($booking['status_name'] === 'approved'): ?>
+                                            <button class="notification-btn" onclick="notifyBooking(<?php echo $booking['id']; ?>)" title="Notify">
+                                                <i class="bi bi-bell"></i>
+                                            </button>
+                                            <button class="btn-action btn-reject" onclick="cancelBookingManual(<?php echo $booking['id']; ?>)" title="Cancel Booking">
+                                                <i class="bi bi-slash-circle"></i>
+                                                Cancel
+                                            </button>
                                         <?php endif; ?>
                                         <button class="btn-action btn-view" onclick="viewBooking(<?php echo $booking['id']; ?>)">
                                             <i class="bi bi-eye"></i>
@@ -334,11 +388,6 @@ while ($row = $bundlesRes->fetch_assoc()) {
                                             <i class="bi bi-pencil"></i>
                                             Edit
                                         </button>
-                                        <?php if ($booking['status_name'] === 'approved'): ?>
-                                            <button class="notification-btn" onclick="notifyBooking(<?php echo $booking['id']; ?>)" title="Notify">
-                                                <i class="bi bi-bell"></i>
-                                            </button>
-                                        <?php endif; ?>
                                     </div>
                                 </td>
                             </tr>
@@ -556,6 +605,31 @@ while ($row = $bundlesRes->fetch_assoc()) {
         </div>
     </div>
     <!-- ═══ End Walk-In Modal ════════════════════════════════════════════ -->
+
+    <!-- Receipt Viewer Modal -->
+    <div class="modal fade" id="receiptViewerModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content modal-content-modern" style="background: #1e293b; border: 1px solid rgba(255,255,255,0.1); border-radius: 1rem;">
+                <div class="modal-header modal-header-modern" style="border-bottom: 1px solid rgba(255,255,255,0.08); padding: 1rem 1.25rem;">
+                    <h5 class="modal-title" style="font-size: 1rem; color: #f8fafc; font-weight: 700;">
+                        <i class="bi bi-receipt me-2" style="color: #a78bfa;"></i>Payment Receipt &mdash; <span id="rvmRef"></span>
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body modal-body-modern text-center p-3">
+                    <div id="rvmImgContainer" style="background: #0f172a; border-radius: 0.75rem; padding: 1rem; border: 1px solid rgba(255,255,255,0.06); max-height: 500px; overflow: auto;">
+                        <img id="rvmImg" src="" alt="Payment Receipt" style="max-width: 100%; height: auto; border-radius: 0.5rem;">
+                    </div>
+                </div>
+                <div class="modal-footer modal-footer-modern" style="border-top: 1px solid rgba(255,255,255,0.08); padding: 0.75rem 1.25rem; display: flex; justify-content: space-between;">
+                    <a id="rvmDownloadBtn" href="" target="_blank" class="btn-modern btn-secondary" style="font-size: 0.8rem;">
+                        <i class="bi bi-box-arrow-up-right me-1"></i>Open Full Size
+                    </a>
+                    <button type="button" class="btn-modern btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Edit Booking Modal -->
     <div class="modal fade" id="editBookingModal" tabindex="-1">
@@ -1084,9 +1158,76 @@ while ($row = $bundlesRes->fetch_assoc()) {
                 const result = await response.json();
                 if (!result.success) {
                     showAlert(result.message || 'Failed to approve booking', 'danger');
+                } else {
+                    showNotification(result.message || 'Booking approved! Guest given 2 hours to pay.', 'success');
+                    setTimeout(() => location.reload(), 1500);
                 }
                 return result;
             });
+        }
+
+        function confirmPayment(btn, bookingId) {
+            if (!confirm('Confirm that you have verified the payment receipt and approve this booking?')) return;
+            animateBtn(btn, async () => {
+                const response = await fetch('../php/update_booking_status.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        booking_id: bookingId,
+                        status: 'approved',
+                        notes: 'Payment verified and approved by admin'
+                    })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    showNotification('Payment verified & booking confirmed!', 'success');
+                    setTimeout(() => location.reload(), 1200);
+                } else {
+                    showNotification(result.message || 'Failed to confirm payment', 'danger');
+                }
+                return result;
+            });
+        }
+
+        async function cancelBookingManual(bookingId) {
+            if (!confirm('Are you sure you want to cancel this booking? Calendar capacity will be restored immediately.')) return;
+            const reason = prompt('Optional: Enter cancellation reason for the guest:') || 'Cancelled by admin';
+            try {
+                const res = await fetch('../php/update_booking_status.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        booking_id: bookingId,
+                        status: 'cancelled',
+                        notes: reason
+                    })
+                });
+                const result = await res.json();
+                if (result.success) {
+                    showNotification('Booking cancelled and calendar capacity restored.', 'success');
+                    setTimeout(() => location.reload(), 1200);
+                } else {
+                    showNotification(result.message || 'Failed to cancel booking.', 'danger');
+                }
+            } catch(e) {
+                showNotification('Network error cancelling booking.', 'danger');
+            }
+        }
+
+        let receiptViewerModalObj = null;
+        function viewReceiptModal(path, ref) {
+            if (!path) {
+                showNotification('No receipt screenshot on file.', 'danger');
+                return;
+            }
+            const fullPath = path.startsWith('../') ? path : ('../' + path);
+            document.getElementById('rvmRef').textContent = ref || '';
+            document.getElementById('rvmImg').src = fullPath;
+            document.getElementById('rvmDownloadBtn').href = fullPath;
+            if (!receiptViewerModalObj) {
+                receiptViewerModalObj = new bootstrap.Modal(document.getElementById('receiptViewerModal'));
+            }
+            receiptViewerModalObj.show();
         }
 
         // ── Reject Booking Modal Logic ────────────────────────────────────────
@@ -1537,16 +1678,18 @@ while ($row = $bundlesRes->fetch_assoc()) {
             // Count badges: tally rows by status
             function updateCounts() {
                 const allRows = document.querySelectorAll('#bookingsTableBody tr[data-status]');
-                const counts  = { pending_review: 0, approved: 0, rejected: 0, completed: 0 };
+                const counts  = { pending_review: 0, awaiting_payment: 0, payment_verifying: 0, approved: 0, rejected: 0, completed: 0, cancelled: 0 };
                 allRows.forEach(r => {
                     const s = r.dataset.status;
                     if (s in counts) counts[s]++;
                 });
-                document.getElementById('cntPending').textContent  = counts.pending_review;
-                document.getElementById('cntApproved').textContent = counts.approved;
-                document.getElementById('cntRejected').textContent = counts.rejected;
+                if (document.getElementById('cntPending'))   document.getElementById('cntPending').textContent   = counts.pending_review;
+                if (document.getElementById('cntAwaiting'))  document.getElementById('cntAwaiting').textContent  = counts.awaiting_payment;
+                if (document.getElementById('cntVerifying')) document.getElementById('cntVerifying').textContent = counts.payment_verifying;
+                if (document.getElementById('cntApproved'))  document.getElementById('cntApproved').textContent  = counts.approved;
+                if (document.getElementById('cntRejected'))  document.getElementById('cntRejected').textContent  = counts.rejected;
                 const cntRecords = document.getElementById('cntRecords');
-                if (cntRecords) cntRecords.textContent = counts.completed + counts.rejected;
+                if (cntRecords) cntRecords.textContent = counts.completed + counts.rejected + counts.cancelled;
             }
 
             // Unified filter: tab + search + status-select + date
@@ -1565,7 +1708,7 @@ while ($row = $bundlesRes->fetch_assoc()) {
 
                     const tabOk = (() => {
                         if (activeBstFilter === 'booking_records') {
-                            return rowStatus === 'completed' || rowStatus === 'rejected';
+                            return rowStatus === 'completed' || rowStatus === 'rejected' || rowStatus === 'cancelled';
                         }
                         return rowStatus === activeBstFilter;
                     })();
@@ -1598,6 +1741,29 @@ while ($row = $bundlesRes->fetch_assoc()) {
                     applyFilters();
                 });
             });
+
+            // Live 2-Hour Countdown for Admin Table
+            function updateAdminCountdowns() {
+                document.querySelectorAll('.admin-countdown').forEach(el => {
+                    if (!el.dataset.targetTime) {
+                        const remainingSec = parseInt(el.getAttribute('data-remaining') || '0', 10);
+                        el.dataset.targetTime = Date.now() + (remainingSec * 1000);
+                    }
+                    const target = parseInt(el.dataset.targetTime, 10);
+                    const diff = Math.floor((target - Date.now()) / 1000);
+                    if (diff <= 0) {
+                        el.textContent = 'Expired';
+                        el.closest('.badge')?.classList.replace('bg-warning', 'bg-danger');
+                    } else {
+                        const h = Math.floor(diff / 3600);
+                        const m = Math.floor((diff % 3600) / 60);
+                        const s = diff % 60;
+                        el.textContent = `${h}h ${String(m).padStart(2,'0')}m ${String(s).padStart(2,'0')}s`;
+                    }
+                });
+            }
+            setInterval(updateAdminCountdowns, 1000);
+            updateAdminCountdowns();
 
             // Existing filter inputs
             if (searchInput)  searchInput.addEventListener('input',  applyFilters);

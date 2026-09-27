@@ -6,6 +6,7 @@
 
 session_start();
 require_once '../phpAuthentication/db_config.php';
+require_once __DIR__ . '/check_expired_bookings.php';
 
 header('Content-Type: application/json');
 
@@ -158,7 +159,7 @@ try {
         }
     }
 
-    // ── Handle payment proof upload ───────────────────────────────
+    // ── Handle payment proof upload (Optional for initial booking request) ──
     $proofPath = null;
     if (!empty($_FILES['payment_proof']) && $_FILES['payment_proof']['error'] === UPLOAD_ERR_OK) {
         $uploadDir = '../assets/uploads/payment_proofs/';
@@ -185,14 +186,14 @@ try {
             throw new Exception('Invalid file type. Only JPG, PNG, and WEBP images are accepted.');
         }
 
-        $maxSize = 1048576; // 1 MiB
+        $maxSize = 2097152; // 2 MiB
         if ($_FILES['payment_proof']['size'] > $maxSize) {
-            throw new Exception('File too large. Maximum allowed size is 1 MB.');
+            throw new Exception('File too large. Maximum allowed size is 2 MB.');
         }
 
         // Derive extension from the detected MIME type (safe — not from client filename)
         $mimeExtMap = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
-        $ext = $mimeExtMap[$detectedMime];
+        $ext = $mimeExtMap[$detectedMime] ?? 'jpg';
         $filename = 'proof_' . $_SESSION['user_id'] . '_' . time() . '.' . $ext;
         $fullPath = $uploadDir . $filename;
 
@@ -201,8 +202,6 @@ try {
         }
 
         $proofPath = 'assets/uploads/payment_proofs/' . $filename;
-    } else {
-        throw new Exception('Payment proof image is required.');
     }
 
     // ── Global Daily Resort Capacity Check ────────────────────────
@@ -213,7 +212,7 @@ try {
     if ($globalCapRow = $globalCapResult->fetch_assoc()) {
         $dailyResortCap = intval($globalCapRow['max_guests']);
         
-        $activeStatuses = "(SELECT id FROM booking_status WHERE name IN ('pending_review','approved'))";
+        $activeStatuses = "(SELECT id FROM booking_status WHERE name IN ('awaiting_payment','payment_verifying','approved','checked_in'))";
         $totalGuestsStmt = $conn->prepare("
             SELECT SUM(number_of_guests) as total_guests 
             FROM bookings 
@@ -230,7 +229,7 @@ try {
     }
 
     // ── Availability / overlap check ──────────────────────────────
-    $activeStatuses = "(SELECT id FROM booking_status WHERE name IN ('pending_review','approved'))";
+    $activeStatuses = "(SELECT id FROM booking_status WHERE name IN ('awaiting_payment','payment_verifying','approved','checked_in'))";
 
     if ($bookingType === 'accommodation') {
         // Each accommodation row = 1 physical unit.
@@ -424,7 +423,7 @@ try {
     // ── Log creation ──────────────────────────────────────────────
     $log = $conn->prepare("
         INSERT INTO booking_logs (booking_id, old_status_id, new_status_id, changed_by, changed_by_id, notes)
-        VALUES (?, NULL, ?, 'user', ?, 'Booking created with GCash payment proof')
+        VALUES (?, NULL, ?, 'user', ?, 'Booking request submitted (pending admin review)')
     ");
     $log->bind_param('iii', $bookingId, $statusId, $userId);
     $log->execute();
@@ -478,18 +477,7 @@ try {
         $extraRoomIndex++;
     }
 
-    // ── Update availability ───────────────────────────────────────
-    $avRec = $conn->prepare("SELECT id, available_slots FROM availability WHERE item_type = ? AND item_id = ? AND date = ?");
-    $avRec->bind_param('sis', $bookingType, $itemId, $checkInDate);
-    $avRec->execute();
-    $avData = $avRec->get_result()->fetch_assoc();
-    if ($avData) {
-        $newSlots = max(0, $avData['available_slots'] - 1);
-        $isAvail  = $newSlots > 0 ? 1 : 0;
-        $avUp = $conn->prepare("UPDATE availability SET available_slots=?, is_available=?, updated_at=NOW() WHERE id=?");
-        $avUp->bind_param('iii', $newSlots, $isAvail, $avData['id']);
-        $avUp->execute();
-    }
+    // Availability is reserved/deducted upon Admin Approval into 'awaiting_payment'
 
     echo json_encode([
         'success'           => true,

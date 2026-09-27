@@ -1599,8 +1599,10 @@ const detailModal = new bootstrap.Modal(document.getElementById('packageDetailMo
 document.addEventListener('DOMContentLoaded', () => {
     loadPackages();
     initDateInputs();
-    initPaymentModal();
-    document.getElementById('bookingForm').addEventListener('submit', handleBookingSubmit);
+    const bForm = document.getElementById('bookingForm');
+    if (bForm) bForm.addEventListener('submit', handleBookingSubmit);
+    const sBtn = document.getElementById('submitBtn');
+    if (sBtn) sBtn.addEventListener('click', (e) => { e.preventDefault(); handleBookingSubmit(e); });
     document.getElementById('bookingDate').addEventListener('change', recalcPrice);
     document.getElementById('checkoutDate').addEventListener('change',  recalcPrice);
     // timeSlotSelect drives validation & recalc (timeIn/timeOut hidden fields are set by onTimeSlotChange)
@@ -2583,201 +2585,13 @@ async function handleBookingSubmit(e) {
     }
     if (guests < 1) { showError('At least 1 guest is required.'); return; }
 
-    // Display total amount in modal & open GCash modal
-    const totalEl = document.getElementById('grandTotal');
-    const totalTxt = totalEl ? totalEl.textContent : '₱0';
-    console.log(" [DEBUG] Calculated Total:", totalTxt);
-
-    const feeEl = document.getElementById('modalFeeAmount');
-    if (feeEl) feeEl.textContent = totalTxt;
-
-    console.log(" [DEBUG] Now calling openGcashModal()...");
-    openGcashModal();
-}
-
-function initPaymentModal() {
-    console.log(" [DEBUG] Initializing GCash Payment Modal listeners...");
-    const backdrop = document.getElementById('payModalBackdrop');
-    const closeBtn = document.getElementById('payModalClose');
-    const dropArea = document.getElementById('uploadDropArea');
-    const fileInp  = document.getElementById('proofFileInput');
-    const submitBtn = document.getElementById('paySubmitBtn');
-
-    if (closeBtn) closeBtn.addEventListener('click', closePayModal);
-    if (backdrop) {
-        backdrop.addEventListener('click', e => {
-            if (e.target === backdrop) closePayModal();
-        });
-    }
-
-    if (fileInp) {
-        fileInp.addEventListener('change', e => {
-            if (e.target.files && e.target.files[0]) {
-                handleFileSelect(e.target.files[0]);
-            }
-        });
-    }
-
-    if (dropArea) {
-        ['dragenter', 'dragover'].forEach(evt => {
-            dropArea.addEventListener(evt, e => { e.preventDefault(); dropArea.classList.add('dragover'); });
-        });
-        ['dragleave', 'drop'].forEach(evt => {
-            dropArea.addEventListener(evt, e => { e.preventDefault(); dropArea.classList.remove('dragover'); });
-        });
-        dropArea.addEventListener('drop', e => {
-            const files = e.dataTransfer.files;
-            if (files && files[0]) {
-                fileInp.files = files;
-                handleFileSelect(files[0]);
-            }
-        });
-    }
-
+    // ── Direct Submission (Approve First, Pay Later) ──
+    const submitBtn = document.getElementById('submitBtn');
     if (submitBtn) {
-        submitBtn.addEventListener('click', submitWithProof);
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Submitting Request...';
     }
-}
-
-function openGcashModal() {
-    console.log(" [DEBUG] openGcashModal() called!");
-    const backdrop = document.getElementById('payModalBackdrop');
-    if (backdrop) {
-        console.log(" [DEBUG] #payModalBackdrop found! Adding 'open' class...");
-        backdrop.classList.add('open');
-        document.body.style.overflow = 'hidden';
-    } else {
-        console.error(" [DEBUG ERROR] #payModalBackdrop element NOT FOUND in DOM!");
-    }
-}
-
-function closePayModal() {
-    console.log(" [DEBUG] closePayModal() called.");
-    const backdrop = document.getElementById('payModalBackdrop');
-    if (backdrop) {
-        backdrop.classList.remove('open');
-        document.body.style.overflow = '';
-    }
-}
-
-function handleFileSelect(file) {
-    const allowedMimes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-    if (!allowedMimes.includes(file.type)) {
-        showError('Invalid file type. Please select a JPG, PNG, or WEBP image only.');
-        return;
-    }
-    compressGcashProof(file).then(compressed => {
-        proofFile = compressed;
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const thumbImg = document.getElementById('thumbImg');
-            const placeholder = document.getElementById('thumbPlaceholder');
-            const thumb = document.getElementById('uploadThumb');
-            const filenameEl = document.getElementById('uploadFilename');
-            const submitBtn = document.getElementById('paySubmitBtn');
-
-            thumbImg.src = e.target.result;
-            thumbImg.style.display = 'block';
-            placeholder.style.display = 'none';
-            thumb.classList.add('has-image');
-
-            const name = compressed.name.length > 18 ? compressed.name.substring(0, 15) + '...' : compressed.name;
-            filenameEl.textContent = name;
-            submitBtn.disabled = false;
-        };
-        reader.readAsDataURL(compressed);
-    }).catch(err => {
-        proofFile = null;
-        const submitBtn = document.getElementById('paySubmitBtn');
-        if (submitBtn) submitBtn.disabled = true;
-        alert(err.message || 'Could not process the image.');
-        showError(err.message || 'Could not process the image.');
-    });
-}
-
-const GCASH_MAX_BYTES = 1048576;
-
-function compressGcashProof(file) {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onerror = () => reject(new Error('Could not read the image file.'));
-        reader.onload = () => {
-            const img = new Image();
-            img.onload = () => {
-                let width = img.naturalWidth || img.width;
-                let height = img.naturalHeight || img.height;
-                const scale = Math.min(1, 854 / width, 480 / height);
-                width = Math.max(1, Math.round(width * scale));
-                height = Math.max(1, Math.round(height * scale));
-                const canvas = document.createElement('canvas');
-                canvas.width = width;
-                canvas.height = height;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0, width, height);
-
-                const toBlob = (type, quality) => new Promise(res => canvas.toBlob(res, type, quality));
-                (async () => {
-                    let blob = await toBlob('image/webp', 0.82);
-                    let mime = 'image/webp';
-                    let ext = 'webp';
-                    if (!blob) {
-                        blob = await toBlob('image/jpeg', 0.82);
-                        mime = 'image/jpeg';
-                        ext = 'jpg';
-                    }
-                    let quality = 0.7;
-                    while (blob && blob.size > GCASH_MAX_BYTES && quality >= 0.4) {
-                        const next = await toBlob(mime, quality);
-                        if (next) blob = next;
-                        quality -= 0.15;
-                    }
-                    if (!blob || blob.size > GCASH_MAX_BYTES) {
-                        reject(new Error('Image is still larger than 1MB after compression. Please choose a smaller screenshot.'));
-                        return;
-                    }
-                    resolve(new File([blob], 'gcash-proof.' + ext, { type: blob.type || mime, lastModified: Date.now() }));
-                })().catch(() => reject(new Error('Could not compress the image.')));
-            };
-            img.onerror = () => reject(new Error('Could not load the image.'));
-            img.src = reader.result;
-        };
-        reader.readAsDataURL(file);
-    });
-}
-
-function showLoader() {
-    document.getElementById('submitLoader').classList.add('show');
-    document.body.style.overflow = 'hidden';
-}
-
-function hideLoader() {
-    document.getElementById('submitLoader').classList.remove('show');
-    document.body.style.overflow = '';
-}
-
-async function submitWithProof() {
-    if (!proofFile || !selectedPkg) {
-        showError('Please select an image screenshot of your GCash payment first.');
-        return;
-    }
-    if (proofFile.size > 1048576) {
-        alert('Image is still larger than 1MB after compression. Please choose a smaller screenshot.');
-        showError('Payment screenshot must be 1MB or smaller.');
-        return;
-    }
-
-    const submitBtn = document.getElementById('paySubmitBtn');
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = '<i class="bi bi-send-fill"></i> Submitting...';
-
-    closePayModal();
     showLoader();
-
-    const date     = document.getElementById('bookingDate').value;
-    const guests   = parseInt(document.getElementById('numberOfGuests').value);
-    const tIn      = document.getElementById('timeIn').value;
-    const tOut     = document.getElementById('timeOut').value;
-    const checkOut = document.getElementById('checkoutDate').value;
 
     const fd = new FormData();
     fd.append('booking_type',     selectedPkg.package_type);
@@ -2790,8 +2604,7 @@ async function submitWithProof() {
     fd.append('check_in_time',    tIn || '');
     fd.append('check_out_time',   tOut || '');
     fd.append('number_of_guests', guests);
-    fd.append('special_requests', document.getElementById('specialRequests').value || '');
-    fd.append('payment_proof',    proofFile, proofFile.name);
+    fd.append('special_requests', document.getElementById('specialRequests')?.value || '');
 
     const selectedAddons = Object.values(addonsMap).filter(a => a.selected).map(a => {
         const qtyEl = document.getElementById('addonQty-' + a.id);
@@ -2827,12 +2640,12 @@ async function submitWithProof() {
         try {
             data = JSON.parse(rawText);
         } catch(e) {
-            console.error("Server raw response:", rawText);
             hideLoader();
-            openGcashModal();
             showError('Server error: ' + rawText.substring(0, 100));
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = '<i class="bi bi-send-fill"></i> Submit Reservation';
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="bi bi-check-circle"></i> Confirm Booking';
+            }
             return;
         }
 
@@ -2841,24 +2654,42 @@ async function submitWithProof() {
             showSuccessOverlay(data.booking_reference);
         } else {
             hideLoader();
-            openGcashModal();
             showError(data.message || 'Failed to submit booking.');
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = '<i class="bi bi-send-fill"></i> Submit Reservation';
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="bi bi-check-circle"></i> Confirm Booking';
+            }
         }
     } catch (err) {
         console.error(err);
         hideLoader();
-        openGcashModal();
         showError('Network error. Please check your internet and try again.');
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = '<i class="bi bi-send-fill"></i> Submit Reservation';
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="bi bi-check-circle"></i> Confirm Booking';
+        }
     }
+}
+
+function showLoader() {
+    const el = document.getElementById('submitLoader');
+    if (el) el.classList.add('show');
+    document.body.style.overflow = 'hidden';
+}
+
+function hideLoader() {
+    const el = document.getElementById('submitLoader');
+    if (el) el.classList.remove('show');
+    document.body.style.overflow = '';
 }
 
 function showSuccessOverlay(ref) {
     document.getElementById('successRef').textContent = `Booking Reference: ${ref || ''}`;
     document.getElementById('successOverlay').classList.add('show');
+    const goBtn = document.getElementById('successGoBtn');
+    if (goBtn) {
+        goBtn.onclick = () => { window.location.href = 'my-bookings.php'; };
+    }
     // Redirect to my-bookings or dashboard after 4.5 seconds
     setTimeout(() => { window.location.href = 'my-bookings.php'; }, 4500);
 }

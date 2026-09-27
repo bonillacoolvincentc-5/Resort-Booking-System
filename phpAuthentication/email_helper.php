@@ -237,6 +237,88 @@ class EmailHelper {
             return ['success' => false, 'message' => 'Failed to send notification email: ' . $e->getMessage()];
         }
     }
+
+    /**
+     * Send Awaiting Payment Notification Email (2-Hour Window)
+     */
+    public static function sendAwaitingPaymentEmail($email, $firstName, $bookingReference, $totalAmount, $expiresAt) {
+        try {
+            $mail = new PHPMailer\PHPMailer\PHPMailer(true);
+            
+            $mail->isSMTP();
+            $mail->Timeout    = 10;
+            $mail->Host       = self::getEmailConfig()['host'];
+            $mail->SMTPAuth   = true;
+            $mail->Username   = self::getEmailConfig()['username'];
+            $mail->Password   = self::getEmailConfig()['password'];
+            $mail->SMTPSecure = self::getEmailConfig()['encryption'] === 'ssl' ? 
+                               PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_SMTPS : 
+                               PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
+            $mail->Port       = self::getEmailConfig()['port'];
+            
+            $mail->setFrom(self::getEmailConfig()['from_email'], self::getEmailConfig()['from_name']);
+            $mail->addAddress($email);
+            
+            $mail->Subject = "Booking Approved! Action Required: Submit Payment within 2 Hours - YP4K Resort";
+            $mail->isHTML(true);
+            
+            $greeting = $firstName ? "Dear $firstName," : "Hello,";
+            $amountFmt = number_format((float)$totalAmount, 2);
+            $expiresFmt = date('g:i A (M j, Y)', strtotime($expiresAt));
+            
+            $mail->Body = "
+            <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #f8f9fa;'>
+                <div style='background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;'>
+                    <h1 style='margin: 0; font-size: 24px;'>YP4K Resort</h1>
+                    <p style='margin: 5px 0 0; opacity: 0.9;'>Booking Approved — Payment Required</p>
+                </div>
+                
+                <div style='background: white; padding: 30px; border-radius: 0 0 10px 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);'>
+                    <p style='color: #333; margin-bottom: 20px; font-size: 16px;'>{$greeting}</p>
+                    <p style='color: #666; line-height: 1.6; font-size: 15px;'>
+                        Great news! Your booking request <strong>{$bookingReference}</strong> has been approved by admin.
+                    </p>
+                    <p style='color: #666; line-height: 1.6; font-size: 15px;'>
+                        To secure your reservation, please submit your payment via GCash within <strong>2 hours</strong> (before <strong>{$expiresFmt}</strong>).
+                    </p>
+                    
+                    <div style='background: #fffbeb; border: 2px solid #f59e0b; padding: 20px; text-align: center; margin: 25px 0; border-radius: 8px;'>
+                        <p style='margin: 0 0 5px; color: #b45309; font-size: 14px; font-weight: bold; text-transform: uppercase;'>Total Reservation Fee</p>
+                        <h2 style='margin: 0; font-size: 32px; color: #d97706;'>₱{$amountFmt}</h2>
+                        <p style='margin: 8px 0 0; color: #78350f; font-size: 13px;'>Payment Deadline: {$expiresFmt}</p>
+                    </div>
+
+                    <div style='background: #f1f5f9; padding: 18px; border-radius: 8px; margin: 20px 0;'>
+                        <h4 style='margin: 0 0 10px; color: #1e293b; font-size: 15px;'>How to Complete Your Payment:</h4>
+                        <ol style='margin: 0; padding-left: 20px; color: #475569; font-size: 14px; line-height: 1.7;'>
+                            <li>Go to <strong>My Bookings</strong> in your User Dashboard.</li>
+                            <li>Locate booking <strong>{$bookingReference}</strong> and click <strong>Pay Now</strong>.</li>
+                            <li>Scan our GCash QR code and upload your proof of payment.</li>
+                        </ol>
+                    </div>
+
+                    <div style='background: #fee2e2; border-left: 4px solid #ef4444; padding: 14px; margin: 20px 0; border-radius: 4px;'>
+                        <p style='margin: 0; color: #991b1b; font-size: 13px; line-height: 1.5;'>
+                            <strong>Important:</strong> If payment is not submitted before the 2-hour window expires, your booking will be automatically cancelled and the slots will be released to other guests.
+                        </p>
+                    </div>
+                    
+                    <hr style='border: none; border-top: 1px solid #eee; margin: 30px 0;'>
+                    <p style='color: #999; font-size: 12px; text-align: center; margin: 0;'>
+                        This is an automated message from YP4K Resort. Please do not reply directly to this email.
+                    </p>
+                </div>
+            </div>";
+            
+            $mail->AltBody = "Your booking (Ref: $bookingReference) has been approved!\n\nPlease submit payment of PHP $amountFmt within 2 hours (before $expiresFmt) via your My Bookings dashboard.\n\nUnpaid bookings will be automatically cancelled after 2 hours.\n\nThank you,\nYP4K Resort";
+            
+            $mail->send();
+            return ['success' => true, 'message' => 'Payment reminder email sent successfully'];
+        } catch (Exception $e) {
+            error_log("Awaiting payment email failed: " . $e->getMessage());
+            return ['success' => false, 'message' => 'Failed to send email: ' . $e->getMessage()];
+        }
+    }
     
     /**
      * Generate OTP email template

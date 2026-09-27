@@ -9,6 +9,7 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 require_once __DIR__ . '/../phpAuthentication/db_config.php';
+require_once __DIR__ . '/check_expired_bookings.php';
 
 if (!headers_sent()) {
     header('Content-Type: application/json');
@@ -148,7 +149,7 @@ try {
         $globalBookStmt = $conn->prepare("
             SELECT check_in_date, SUM(number_of_guests) AS total_guests
             FROM bookings
-            WHERE status_id IN (SELECT id FROM booking_status WHERE name IN ('pending_review', 'approved', 'checked_in'))
+            WHERE status_id IN (SELECT id FROM booking_status WHERE name IN ('awaiting_payment', 'payment_verifying', 'approved', 'checked_in'))
               AND check_in_date BETWEEN ? AND ?
             GROUP BY check_in_date
         ");
@@ -176,7 +177,7 @@ try {
             FROM bookings
             WHERE booking_type = 'accommodation'
               AND accommodation_id = ?
-              AND status_id IN (SELECT id FROM booking_status WHERE name IN ('pending_review', 'approved', 'checked_in'))
+              AND status_id IN (SELECT id FROM booking_status WHERE name IN ('awaiting_payment', 'payment_verifying', 'approved', 'checked_in'))
               AND check_in_date <= ?
               AND (check_out_date IS NULL OR check_out_date >= ?)
         ");
@@ -215,7 +216,7 @@ try {
             FROM bookings
             WHERE booking_type = 'activity'
               AND activity_id = ?
-              AND status_id IN (SELECT id FROM booking_status WHERE name IN ('pending_review', 'approved', 'checked_in'))
+              AND status_id IN (SELECT id FROM booking_status WHERE name IN ('awaiting_payment', 'payment_verifying', 'approved', 'checked_in'))
               AND check_in_date BETWEEN ? AND ?
             GROUP BY check_in_date
         ");

@@ -11,6 +11,7 @@ $lastVisitedBookings = $_SESSION['last_visited_bookings'] ?? '2000-01-01 00:00:0
 $_SESSION['last_visited_bookings'] = date('Y-m-d H:i:s');
 
 require_once '../phpAuthentication/db_config.php';
+require_once __DIR__ . '/../php/check_expired_bookings.php';
 
 /** @var mysqli $conn */
 global $conn;
@@ -46,6 +47,7 @@ $stmt = $conn->prepare("
         b.booking_type,
         b.activity_id,
         b.accommodation_id,
+        b.bundle_id,
         b.full_name,
         b.email,
         b.phone_number,
@@ -58,22 +60,28 @@ $stmt = $conn->prepare("
         b.special_requests,
         b.total_amount,
         b.payment_status,
+        b.payment_proof,
+        b.expires_at,
+        TIMESTAMPDIFF(SECOND, NOW(), b.expires_at) as seconds_remaining,
         b.created_at,
         bs.name as status_name,
         bs.description as status_description,
         bs.color as status_color,
         CASE 
             WHEN b.booking_type = 'activity' THEN a.name
+            WHEN b.booking_type = 'bundle' THEN bun.name
             ELSE acc.name
         END as item_name,
         CASE 
             WHEN b.booking_type = 'activity' THEN 'bi-activity'
-            ELSE NULL
+            WHEN b.booking_type = 'bundle' THEN 'bi-box-seam'
+            ELSE 'bi-house-door'
         END as item_icon
     FROM bookings b
     LEFT JOIN booking_status bs ON b.status_id = bs.id
     LEFT JOIN activities a ON b.activity_id = a.id
     LEFT JOIN accommodations acc ON b.accommodation_id = acc.id
+    LEFT JOIN bundles bun ON b.bundle_id = bun.id
     WHERE b.user_id = ?
     ORDER BY b.created_at DESC
 ");
@@ -866,10 +874,22 @@ while ($row = $statsResult->fetch_assoc()) {
                         $highlightClass = $isUnread ? ' unread-highlight' : '';
                     ?>
                     <div class="booking-card<?php echo $highlightClass; ?>" data-status="<?php echo $booking['status_name']; ?>" data-activity="<?php echo $booking['item_name']; ?>">
-                        <div class="booking-header">
-                            <span class="booking-status status-<?php echo $booking['status_name']; ?>">
-                                <?php echo ucfirst(str_replace('_', ' ', $booking['status_name'])); ?>
-                            </span>
+                        <div class="booking-header d-flex align-items-center justify-content-between flex-wrap gap-2">
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="booking-status status-<?php echo $booking['status_name']; ?>">
+                                    <?php echo ucfirst(str_replace('_', ' ', $booking['status_name'])); ?>
+                                </span>
+                                <?php if ($booking['status_name'] === 'awaiting_payment' && !empty($booking['expires_at'])): ?>
+                                    <span class="badge bg-warning text-dark d-inline-flex align-items-center gap-1 px-2 py-1" style="font-size: 0.78rem; border-radius: 0.4rem; font-weight: 700;">
+                                        <i class="bi bi-clock-history"></i>
+                                        Pay within: <span class="countdown-timer" data-remaining="<?php echo max(0, (int)($booking['seconds_remaining'] ?? 0)); ?>">--:--</span>
+                                    </span>
+                                <?php elseif ($booking['status_name'] === 'payment_verifying'): ?>
+                                    <span class="badge d-inline-flex align-items-center gap-1 px-2 py-1" style="background: rgba(139,92,246,0.2); color: #c4b5fd; border: 1px solid rgba(139,92,246,0.4); font-size: 0.78rem; border-radius: 0.4rem; font-weight: 600;">
+                                        <i class="bi bi-hourglass-split"></i> Verifying Payment
+                                    </span>
+                                <?php endif; ?>
+                            </div>
                         </div>
                         <div class="booking-body">
                             <div class="booking-info">
@@ -921,7 +941,18 @@ while ($row = $statsResult->fetch_assoc()) {
                                 <button class="btn-modern btn-primary-modern" onclick="viewBooking(<?php echo $booking['id']; ?>)">
                                     <i class="bi bi-eye"></i>View Details
                                 </button>
-                                <?php if ($booking['status_name'] === 'approved'): ?>
+                                <?php if ($booking['status_name'] === 'awaiting_payment'): ?>
+                                <button class="btn-modern btn-warning-modern pay-now-btn" style="background: linear-gradient(135deg, #f59e0b, #d97706); color: white; font-weight: 700; box-shadow: 0 4px 12px rgba(245,158,11,0.25);" onclick='openPaymentModal(<?php echo htmlspecialchars(json_encode([
+                                    "id" => (int)$booking["id"],
+                                    "booking_reference" => $booking["booking_reference"],
+                                    "item_name" => $booking["item_name"],
+                                    "total_amount" => (float)$booking["total_amount"],
+                                    "expires_at" => $booking["expires_at"],
+                                    "remaining_seconds" => max(0, (int)($booking["seconds_remaining"] ?? 0))
+                                ]), ENT_QUOTES, "UTF-8"); ?>)'>
+                                    <i class="bi bi-qr-code-scan"></i> Pay Now (GCash)
+                                </button>
+                                <?php elseif ($booking['status_name'] === 'approved'): ?>
                                 <button class="btn-modern btn-success-modern" onclick="downloadTicket(<?php echo $booking['id']; ?>)">
                                     <i class="bi bi-download"></i>Download Ticket
                                 </button>
@@ -968,6 +999,104 @@ while ($row = $statsResult->fetch_assoc()) {
             <button class="btn-modern btn-secondary-modern" onclick="window.location.href='../index.html#booking'">
                 <i class="bi bi-plus-circle"></i>Make a Booking
             </button>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         PAYMENT MODAL (GCASH 2-HOUR WINDOW & CANVAS COMPRESSION)
+    ════════════════════════════════════════════════════════════ -->
+    <div class="modal fade" id="paymentModal" tabindex="-1" aria-labelledby="paymentModalLabel" aria-hidden="true" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered" style="max-width: 480px;">
+            <div class="modal-content modal-content-modern" style="background: linear-gradient(145deg, #1e293b, #0f172a); border: 1px solid rgba(245,158,11,0.3); border-radius: 1.25rem; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5), 0 0 30px rgba(245,158,11,0.15);">
+                <!-- Header -->
+                <div class="modal-header modal-header-modern" style="background: rgba(15,23,42,0.6); border-bottom: 1px solid rgba(255,255,255,0.08); padding: 1.25rem 1.5rem; border-radius: 1.25rem 1.25rem 0 0;">
+                    <div class="d-flex align-items-center gap-2">
+                        <div style="width: 36px; height: 36px; border-radius: 0.5rem; background: linear-gradient(135deg, #0284c7, #0369a1); display: flex; align-items: center; justify-content: center; color: white;">
+                            <i class="bi bi-wallet2" style="font-size: 1.1rem;"></i>
+                        </div>
+                        <div>
+                            <h5 class="modal-title mb-0" id="paymentModalLabel" style="font-weight: 700; font-size: 1.05rem; color: #f8fafc;">GCash Payment</h5>
+                            <span style="font-size: 0.72rem; color: #94a3b8;">Complete payment to confirm reservation</span>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <!-- Body -->
+                <div class="modal-body modal-body-modern" style="padding: 1.5rem; overflow-y: auto;">
+                    <!-- Countdown Banner -->
+                    <div id="modalCountdownBox" style="background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.3); border-radius: 0.75rem; padding: 0.75rem 1rem; margin-bottom: 1.25rem; display: flex; align-items: center; justify-content: space-between;">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-clock-history" style="color: #f59e0b; font-size: 1.2rem;"></i>
+                            <div>
+                                <div style="font-size: 0.72rem; color: #cbd5e1; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;">Time Remaining</div>
+                                <div id="modalCountdownText" style="font-size: 1.15rem; font-weight: 800; color: #fbbf24; font-variant-numeric: tabular-nums;">--:--:--</div>
+                            </div>
+                        </div>
+                        <span class="badge" style="background: rgba(245,158,11,0.2); color: #fbbf24; font-size: 0.7rem; font-weight: 600;">2-Hour Limit</span>
+                    </div>
+
+                    <!-- Price Summary Card -->
+                    <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 0.75rem; padding: 1rem; margin-bottom: 1.25rem;">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span style="font-size: 0.8rem; color: #94a3b8;">Reserved Item:</span>
+                            <span id="modalPayItem" style="font-size: 0.85rem; font-weight: 600; color: #f1f5f9;">—</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span style="font-size: 0.8rem; color: #94a3b8;">Reference:</span>
+                            <span id="modalPayRef" style="font-size: 0.82rem; font-family: monospace; color: #38bdf8; font-weight: 700;">—</span>
+                        </div>
+                        <div style="border-top: 1px dashed rgba(255,255,255,0.1); margin-top: 0.5rem; padding-top: 0.5rem;" class="d-flex justify-content-between align-items-center">
+                            <span style="font-size: 0.9rem; font-weight: 600; color: #f8fafc;">Total Amount / Fee:</span>
+                            <span id="modalPayAmount" style="font-size: 1.35rem; font-weight: 800; color: #10b981;">₱0.00</span>
+                        </div>
+                    </div>
+
+                    <!-- QR Code Section -->
+                    <div style="text-align: center; margin-bottom: 1.25rem;">
+                        <div style="font-size: 0.75rem; color: #94a3b8; font-weight: 600; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.05em;">
+                            <i class="bi bi-qr-code me-1"></i>Scan GCash QR Code
+                        </div>
+                        <div style="display: inline-block; background: white; padding: 0.6rem; border-radius: 0.75rem; box-shadow: 0 10px 25px rgba(0,0,0,0.3);">
+                            <img src="../assets/gcash/gcash_qr.png" alt="GCash QR" style="width: 170px; height: 170px; object-fit: contain; display: block; border-radius: 0.35rem;" onerror="this.src='https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=GCash-YP4K-Resort';">
+                        </div>
+                        <div style="font-size: 0.75rem; color: #cbd5e1; margin-top: 0.5rem;">
+                            Account: <strong>YP4K Villa Verde Resort</strong>
+                        </div>
+                    </div>
+
+                    <!-- Receipt Upload & Compression Form -->
+                    <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.08); border-radius: 0.75rem; padding: 1rem;">
+                        <label class="form-label" style="font-size: 0.8rem; font-weight: 600; color: #e2e8f0; margin-bottom: 0.4rem; display: flex; align-items: center; justify-content: space-between;">
+                            <span><i class="bi bi-image me-1"></i>Upload Payment Screenshot</span>
+                            <span style="font-size: 0.7rem; color: #94a3b8;">Max 2MB (Auto-compressed)</span>
+                        </label>
+                        <input type="file" id="payModalFileInput" class="form-control" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" style="background: rgba(15,23,42,0.8); border: 1px solid rgba(255,255,255,0.15); color: #f8fafc; font-size: 0.82rem; border-radius: 0.5rem; padding: 0.45rem 0.65rem;" onchange="if(this.files && this.files[0]) handleReceiptFileSelect(this.files[0]);">
+                        <div style="font-size: 0.7rem; color: #94a3b8; margin-top: 0.3rem;">
+                            Accepted formats: JPG, JPEG, WEBP, PNG.
+                        </div>
+
+                        <!-- Compression preview box -->
+                        <div id="compressPreviewBox" style="display: none; margin-top: 0.75rem; padding: 0.6rem; background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.3); border-radius: 0.5rem;">
+                            <div class="d-flex align-items-center gap-2">
+                                <img id="compressThumb" src="" alt="Thumbnail" style="width: 48px; height: 48px; object-fit: cover; border-radius: 0.35rem; border: 1px solid rgba(255,255,255,0.2);">
+                                <div style="flex: 1; min-width: 0;">
+                                    <div style="font-size: 0.75rem; font-weight: 700; color: #34d399;"><i class="bi bi-check-circle-fill me-1"></i>Compressed Ready</div>
+                                    <div id="compressStatsText" style="font-size: 0.7rem; color: #cbd5e1;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <div class="modal-footer modal-footer-modern" style="background: rgba(15,23,42,0.6); border-top: 1px solid rgba(255,255,255,0.08); padding: 1rem 1.5rem; border-radius: 0 0 1.25rem 1.25rem; display: flex; gap: 0.75rem;">
+                    <button type="button" class="btn-modern btn-secondary-modern" data-bs-dismiss="modal" style="flex: 1; justify-content: center;">Cancel</button>
+                    <button type="button" class="btn-modern btn-primary-modern" id="payModalSubmitBtn" disabled style="flex: 2; justify-content: center; background: linear-gradient(135deg, #10b981, #059669); box-shadow: 0 4px 15px rgba(16,185,129,0.3);" onclick="submitPaymentReceipt()">
+                        <i class="bi bi-upload"></i> Submit Receipt
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -1425,6 +1554,207 @@ while ($row = $statsResult->fetch_assoc()) {
                 showSuccess(decodeURIComponent(success));
             }
         });
+
+        // ═══════════════════════════════════════════════════════════════
+        // GCASH PAYMENT MODAL, CLIENT-SIDE COMPRESSION & LIVE TIMER
+        // ═══════════════════════════════════════════════════════════════
+        let currentPayBooking = null;
+        let compressedReceiptBlob = null;
+        let paymentModalObj = null;
+
+        function openPaymentModal(booking) {
+            currentPayBooking = booking;
+            compressedReceiptBlob = null;
+            const remainingSec = parseInt(booking.remaining_seconds != null ? booking.remaining_seconds : 0, 10);
+            currentPayBooking.targetTime = Date.now() + (remainingSec * 1000);
+
+            document.getElementById('modalPayItem').textContent = booking.item_name || 'Reservation';
+            document.getElementById('modalPayRef').textContent = booking.booking_reference || '';
+            document.getElementById('modalPayAmount').textContent = '₱' + parseFloat(booking.total_amount || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            
+            // Reset file input & preview
+            const fileInp = document.getElementById('payModalFileInput');
+            if (fileInp) fileInp.value = '';
+            const previewBox = document.getElementById('compressPreviewBox');
+            if (previewBox) previewBox.style.display = 'none';
+            const submitBtn = document.getElementById('payModalSubmitBtn');
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="bi bi-upload"></i> Submit Receipt';
+            }
+
+            if (!paymentModalObj) {
+                paymentModalObj = new bootstrap.Modal(document.getElementById('paymentModal'));
+            }
+            updateModalTimer();
+            paymentModalObj.show();
+        }
+
+        // ── Canvas API Image Compressor ─────────────────────────────────
+        function compressReceiptImage(file) {
+            return new Promise((resolve, reject) => {
+                const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+                if (!allowedTypes.includes(file.type)) {
+                    return reject(new Error('Invalid file type. Please select a JPG, PNG, or WEBP image.'));
+                }
+                if (file.size > 2 * 1024 * 1024) {
+                    return reject(new Error('File size exceeds 2MB limit. Please choose a smaller image.'));
+                }
+
+                const reader = new FileReader();
+                reader.onerror = () => reject(new Error('Failed to read image file.'));
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onerror = () => reject(new Error('Invalid image file.'));
+                    img.onload = () => {
+                        const maxDim = 1200;
+                        let width = img.naturalWidth || img.width;
+                        let height = img.naturalHeight || img.height;
+
+                        if (width > maxDim || height > maxDim) {
+                            if (width > height) {
+                                height = Math.round((height * maxDim) / width);
+                                width = maxDim;
+                            } else {
+                                width = Math.round((width * maxDim) / height);
+                                height = maxDim;
+                            }
+                        }
+
+                        const canvas = document.createElement('canvas');
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+
+                        canvas.toBlob(blob => {
+                            if (!blob) {
+                                return reject(new Error('Canvas compression failed.'));
+                            }
+                            resolve({
+                                blob: blob,
+                                originalSize: file.size,
+                                compressedSize: blob.size,
+                                previewUrl: URL.createObjectURL(blob)
+                            });
+                        }, 'image/jpeg', 0.82);
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        async function handleReceiptFileSelect(file) {
+            const submitBtn = document.getElementById('payModalSubmitBtn');
+            const previewBox = document.getElementById('compressPreviewBox');
+            const thumb = document.getElementById('compressThumb');
+            const stats = document.getElementById('compressStatsText');
+
+            try {
+                const compressed = await compressReceiptImage(file);
+                compressedReceiptBlob = compressed.blob;
+                thumb.src = compressed.previewUrl;
+                
+                const origKB = (compressed.originalSize / 1024).toFixed(0);
+                const compKB = (compressed.compressedSize / 1024).toFixed(0);
+                const savedPercent = Math.max(0, Math.round((1 - compressed.compressedSize / compressed.originalSize) * 100));
+                stats.innerHTML = `Compressed: <strong>${compKB} KB</strong> (from ${origKB} KB, -${savedPercent}%)`;
+                
+                previewBox.style.display = 'block';
+                submitBtn.disabled = false;
+            } catch(err) {
+                compressedReceiptBlob = null;
+                if (previewBox) previewBox.style.display = 'none';
+                if (submitBtn) submitBtn.disabled = true;
+                showError(err.message || 'Error processing image.');
+            }
+        }
+
+        async function submitPaymentReceipt() {
+            if (!currentPayBooking || !compressedReceiptBlob) {
+                showError('Please attach your GCash payment screenshot.');
+                return;
+            }
+
+            const submitBtn = document.getElementById('payModalSubmitBtn');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Uploading...';
+
+            const fd = new FormData();
+            fd.append('booking_id', currentPayBooking.id);
+            fd.append('receipt', compressedReceiptBlob, 'receipt_' + currentPayBooking.id + '.jpg');
+
+            try {
+                const res = await fetch('../php/submit_payment_receipt.php', {
+                    method: 'POST',
+                    body: fd
+                });
+                const result = await res.json();
+                if (result.success) {
+                    if (paymentModalObj) paymentModalObj.hide();
+                    showSuccess(result.message);
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    showError(result.message || 'Failed to submit payment receipt.');
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="bi bi-upload"></i> Submit Receipt';
+                }
+            } catch(e) {
+                showError('Network error uploading payment receipt.');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="bi bi-upload"></i> Submit Receipt';
+            }
+        }
+
+        // ── Live 2-Hour Countdown Timer ─────────────────────────────────
+        function updateAllCountdowns() {
+            // Update badge countdowns on cards
+            document.querySelectorAll('.countdown-timer').forEach(el => {
+                if (!el.dataset.targetTime) {
+                    const remainingSec = parseInt(el.getAttribute('data-remaining') || '0', 10);
+                    el.dataset.targetTime = Date.now() + (remainingSec * 1000);
+                }
+                const target = parseInt(el.dataset.targetTime, 10);
+                const diff = Math.floor((target - Date.now()) / 1000);
+                if (diff <= 0) {
+                    el.textContent = 'Expired';
+                    el.closest('.badge')?.classList.replace('bg-warning', 'bg-danger');
+                } else {
+                    const h = Math.floor(diff / 3600);
+                    const m = Math.floor((diff % 3600) / 60);
+                    const s = diff % 60;
+                    el.textContent = `${h}h ${String(m).padStart(2,'0')}m ${String(s).padStart(2,'0')}s`;
+                }
+            });
+
+            updateModalTimer();
+        }
+
+        function updateModalTimer() {
+            if (!currentPayBooking || currentPayBooking.targetTime === undefined) return;
+            const diff = Math.floor((currentPayBooking.targetTime - Date.now()) / 1000);
+            const textEl = document.getElementById('modalCountdownText');
+            const submitBtn = document.getElementById('payModalSubmitBtn');
+
+            if (!textEl) return;
+
+            if (diff <= 0) {
+                textEl.textContent = '00:00:00 (Expired)';
+                textEl.style.color = '#ef4444';
+                if (submitBtn) submitBtn.disabled = true;
+            } else {
+                const h = Math.floor(diff / 3600);
+                const m = Math.floor((diff % 3600) / 60);
+                const s = diff % 60;
+                textEl.textContent = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+                textEl.style.color = diff < 900 ? '#ef4444' : '#fbbf24';
+                if (submitBtn && compressedReceiptBlob) submitBtn.disabled = false;
+            }
+        }
+
+        setInterval(updateAllCountdowns, 1000);
+        document.addEventListener('DOMContentLoaded', updateAllCountdowns);
     </script>
 
     <script src="../assets/js/bootstrap.bundle.min.js"></script>
