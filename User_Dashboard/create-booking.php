@@ -3224,11 +3224,21 @@ window.fetchAndRenderActivityCalendar = fetchAndRenderActivityCalendar;
     transform: scale(0.96);
 }
 .act-cal-cell.full {
-    background: rgba(239, 68, 68, 0.15);
-    border-color: rgba(239, 68, 68, 0.6);
-    color: #f87171;
+    background: rgba(239, 68, 68, 0.15) !important;
+    border-color: rgba(239, 68, 68, 0.6) !important;
+    color: #f87171 !important;
     opacity: 0.65;
     cursor: not-allowed;
+}
+.act-cal-cell.full.selected,
+.act-cal-cell.full.range-start,
+.act-cal-cell.full.range-end {
+    background: rgba(239, 68, 68, 0.3) !important;
+    border-color: #ef4444 !important;
+    box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.5) !important;
+}
+.act-cal-cell.full.in-range {
+    background: rgba(239, 68, 68, 0.2) !important;
 }
 .act-cal-cell.blocked {
     background: rgba(51, 65, 85, 0.25);
