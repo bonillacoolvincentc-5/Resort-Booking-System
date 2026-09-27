@@ -1055,11 +1055,13 @@ while ($row = $statsResult->fetch_assoc()) {
                         <div style="font-size: 0.75rem; color: #94a3b8; font-weight: 600; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.05em;">
                             <i class="bi bi-qr-code me-1"></i>Scan GCash QR Code
                         </div>
-                        <div style="display: inline-block; background: white; padding: 0.6rem; border-radius: 0.75rem; box-shadow: 0 10px 25px rgba(0,0,0,0.3);">
-                            <img src="../assets/gcash/gcash_qr.png" alt="GCash QR" style="width: 170px; height: 170px; object-fit: contain; display: block; border-radius: 0.35rem;" onerror="this.src='https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=GCash-YP4K-Resort';">
+                        <div style="display: inline-block; background: #ffffff; padding: 0.65rem; border-radius: 0.85rem; box-shadow: 0 10px 25px rgba(0,0,0,0.3); max-width: 220px; width: 100%;">
+                            <a href="../assets/gcash/gcashqr.jpg" target="_blank" title="Click to view full size">
+                                <img src="../assets/gcash/gcashqr.jpg" alt="GCash QR" style="width: 100%; height: auto; aspect-ratio: 1/1; object-fit: contain; display: block; border-radius: 0.4rem;" onerror="this.src='../assets/gcash/gcash_qr.png';">
+                            </a>
                         </div>
-                        <div style="font-size: 0.75rem; color: #cbd5e1; margin-top: 0.5rem;">
-                            Account: <strong>YP4K Villa Verde Resort</strong>
+                        <div style="font-size: 0.72rem; color: #94a3b8; margin-top: 0.45rem;">
+                            <i class="bi bi-zoom-in me-1"></i>Click / tap image to view full size
                         </div>
                     </div>
 

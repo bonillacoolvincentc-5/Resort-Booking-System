@@ -384,10 +384,6 @@ while ($row = $bundlesRes->fetch_assoc()) {
                                             <i class="bi bi-eye"></i>
                                             View
                                         </button>
-                                        <button class="btn-action btn-edit" onclick="editBooking(<?php echo $booking['id']; ?>)">
-                                            <i class="bi bi-pencil"></i>
-                                            Edit
-                                        </button>
                                     </div>
                                 </td>
                             </tr>
@@ -689,6 +685,7 @@ while ($row = $bundlesRes->fetch_assoc()) {
                                     </select>
                                 </div>
                             </div>
+                        </div>
                         <div class="form-group-modern">
                             <label class="form-label-modern">Special Requests</label>
                             <textarea class="form-control-modern" id="editSpecialRequests" rows="3" placeholder="Any special requirements..."></textarea>
@@ -817,6 +814,57 @@ while ($row = $bundlesRes->fetch_assoc()) {
         </div>
     </div>
     <!-- ═══ End Reject Booking Modal ════════════════════════════════════ -->
+
+    <!-- ═══ Confirm Payment Modal (Premium UI) ═════════════════════════════ -->
+    <div id="confirmPaymentModal" class="rbm-overlay" role="dialog" aria-modal="true" aria-labelledby="cpmTitle" style="display:none;">
+        <div class="rbm-dialog" style="max-width: 480px; border: 1px solid rgba(16, 185, 129, 0.35); box-shadow: 0 25px 60px rgba(0,0,0,0.65), 0 0 25px rgba(16, 185, 129, 0.15);">
+            <!-- Header -->
+            <div class="rbm-header" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.18), rgba(5, 150, 105, 0.08)); border-bottom: 1px solid rgba(16, 185, 129, 0.25);">
+                <div class="rbm-header-icon" style="background: rgba(16, 185, 129, 0.2); border-color: rgba(16, 185, 129, 0.4); color: #10b981;">
+                    <i class="bi bi-patch-check-fill" style="font-size: 1.25rem;"></i>
+                </div>
+                <div>
+                    <h5 class="rbm-title" id="cpmTitle" style="color: #f8fafc; font-size: 1.05rem;">Verify & Confirm Payment</h5>
+                    <p class="rbm-subtitle" style="color: #94a3b8;">Receipt verification & booking approval</p>
+                </div>
+                <button class="rbm-close" onclick="closeConfirmPaymentModal()" aria-label="Close">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+
+            <!-- Body -->
+            <div class="rbm-body" style="padding: 1.5rem;">
+                <div style="display: flex; align-items: flex-start; gap: 0.85rem; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 12px; padding: 1.1rem; margin-bottom: 1rem;">
+                    <i class="bi bi-shield-check" style="font-size: 1.45rem; color: #10b981; flex-shrink: 0; margin-top: 1px;"></i>
+                    <div style="font-size: 0.9rem; color: #e2e8f0; line-height: 1.55;">
+                        Confirm that you have verified the payment receipt and approve this booking?
+                    </div>
+                </div>
+
+                <div style="font-size: 0.8rem; color: #94a3b8; display: flex; align-items: center; gap: 0.45rem; padding-left: 0.25rem;">
+                    <i class="bi bi-info-circle-fill" style="color: #38bdf8;"></i>
+                    <span>Status will update to <strong style="color: #10b981;">Approved</strong> and guest will be confirmed.</span>
+                </div>
+
+                <div id="cpmError" class="rbm-error" style="display:none; margin-top: 1rem; padding: 0.6rem 0.8rem; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.25); border-radius: 8px;">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                    <span id="cpmErrorMsg">Failed to confirm payment.</span>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="rbm-footer" style="padding: 1.1rem 1.5rem; background: rgba(0,0,0,0.25); border-top: 1px solid rgba(255,255,255,0.06);">
+                <button class="rbm-btn rbm-btn-cancel" onclick="closeConfirmPaymentModal()" id="cpmCancelBtn">
+                    Cancel
+                </button>
+                <button class="rbm-btn" style="background: linear-gradient(135deg, #10b981, #059669); border: none; color: #ffffff; box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35); font-weight: 600;" onclick="executeConfirmPayment()" id="cpmConfirmBtn">
+                    <i class="bi bi-check2-circle me-1"></i>
+                    Yes, Approve Booking
+                </button>
+            </div>
+        </div>
+    </div>
+    <!-- ═══ End Confirm Payment Modal ═══════════════════════════════════════ -->
 
     <style>
         /* ── Reject Booking Modal ─────────────────────────────────────── */
@@ -1166,27 +1214,90 @@ while ($row = $bundlesRes->fetch_assoc()) {
             });
         }
 
+        let _confirmPayBookingId = null;
+        let _confirmPayBtn = null;
+
         function confirmPayment(btn, bookingId) {
-            if (!confirm('Confirm that you have verified the payment receipt and approve this booking?')) return;
-            animateBtn(btn, async () => {
+            _confirmPayBookingId = bookingId;
+            _confirmPayBtn = btn;
+            const modal = document.getElementById('confirmPaymentModal');
+            const errEl = document.getElementById('cpmError');
+            const confirmBtn = document.getElementById('cpmConfirmBtn');
+            const cancelBtn = document.getElementById('cpmCancelBtn');
+            if (errEl) errEl.style.display = 'none';
+            if (confirmBtn) {
+                confirmBtn.disabled = false;
+                confirmBtn.innerHTML = '<i class="bi bi-check2-circle me-1"></i>Yes, Approve Booking';
+            }
+            if (cancelBtn) cancelBtn.disabled = false;
+            if (modal) {
+                modal.style.display = 'flex';
+                document.body.style.overflow = 'hidden';
+            }
+        }
+
+        function closeConfirmPaymentModal() {
+            const modal = document.getElementById('confirmPaymentModal');
+            if (modal) modal.style.display = 'none';
+            document.body.style.overflow = '';
+            _confirmPayBookingId = null;
+            _confirmPayBtn = null;
+        }
+
+        async function executeConfirmPayment() {
+            if (!_confirmPayBookingId) return;
+            const confirmBtn = document.getElementById('cpmConfirmBtn');
+            const cancelBtn  = document.getElementById('cpmCancelBtn');
+            const errEl      = document.getElementById('cpmError');
+            const errMsg     = document.getElementById('cpmErrorMsg');
+
+            if (confirmBtn) {
+                confirmBtn.disabled = true;
+                confirmBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status"></span>Confirming...';
+            }
+            if (cancelBtn) cancelBtn.disabled = true;
+            if (errEl) errEl.style.display = 'none';
+
+            try {
                 const response = await fetch('../php/update_booking_status.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        booking_id: bookingId,
+                        booking_id: _confirmPayBookingId,
                         status: 'approved',
                         notes: 'Payment verified and approved by admin'
                     })
                 });
                 const result = await response.json();
                 if (result.success) {
+                    if (confirmBtn) {
+                        confirmBtn.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i>Approved!';
+                    }
                     showNotification('Payment verified & booking confirmed!', 'success');
                     setTimeout(() => location.reload(), 1200);
                 } else {
-                    showNotification(result.message || 'Failed to confirm payment', 'danger');
+                    if (errEl && errMsg) {
+                        errMsg.textContent = result.message || 'Failed to confirm payment';
+                        errEl.style.display = 'flex';
+                    }
+                    if (confirmBtn) {
+                        confirmBtn.disabled = false;
+                        confirmBtn.innerHTML = '<i class="bi bi-check2-circle me-1"></i>Yes, Approve Booking';
+                    }
+                    if (cancelBtn) cancelBtn.disabled = false;
                 }
-                return result;
-            });
+            } catch (e) {
+                console.error(e);
+                if (errEl && errMsg) {
+                    errMsg.textContent = 'Network or server error while confirming payment.';
+                    errEl.style.display = 'flex';
+                }
+                if (confirmBtn) {
+                    confirmBtn.disabled = false;
+                    confirmBtn.innerHTML = '<i class="bi bi-check2-circle me-1"></i>Yes, Approve Booking';
+                }
+                if (cancelBtn) cancelBtn.disabled = false;
+            }
         }
 
         async function cancelBookingManual(bookingId) {
@@ -1263,21 +1374,27 @@ while ($row = $bundlesRes->fetch_assoc()) {
 
         // Close on overlay backdrop click
         document.addEventListener('DOMContentLoaded', function () {
-            document.getElementById('rejectBookingModal').addEventListener('click', function (e) {
+            document.getElementById('rejectBookingModal')?.addEventListener('click', function (e) {
                 if (e.target === this) closeRejectModal();
             });
-            document.getElementById('approveBookingModal').addEventListener('click', function (e) {
+            document.getElementById('approveBookingModal')?.addEventListener('click', function (e) {
                 if (e.target === this) closeApproveModal();
+            });
+            document.getElementById('confirmPaymentModal')?.addEventListener('click', function (e) {
+                if (e.target === this) closeConfirmPaymentModal();
             });
             
             // Close on Escape key
             document.addEventListener('keydown', function (e) {
                 if (e.key === 'Escape') {
-                    if (document.getElementById('rejectBookingModal').style.display !== 'none') {
+                    if (document.getElementById('rejectBookingModal')?.style.display !== 'none') {
                         closeRejectModal();
                     }
-                    if (document.getElementById('approveBookingModal').style.display !== 'none') {
+                    if (document.getElementById('approveBookingModal')?.style.display !== 'none') {
                         closeApproveModal();
+                    }
+                    if (document.getElementById('confirmPaymentModal')?.style.display !== 'none') {
+                        closeConfirmPaymentModal();
                     }
                 }
             });

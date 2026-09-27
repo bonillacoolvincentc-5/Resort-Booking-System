@@ -1241,8 +1241,8 @@ if ($stmtSlots) {
         <div class="qr-section">
             <div class="qr-label"><i class="bi bi-qr-code"></i> Scan to Pay via GCash</div>
             <div class="qr-frame">
-                <img src="../assets/gcash/gcash_qr.png" alt="GCash QR" id="gcashQrImg"
-                     onerror="this.style.display='none';document.getElementById('gcashQrMissing').style.display='flex';">
+                <img src="../assets/gcash/gcashqr.jpg" alt="GCash QR" id="gcashQrImg" style="width: 180px; height: 180px; object-fit: contain; display: block; border-radius: 0.5rem;"
+                     onerror="this.src='../assets/gcash/gcash_qr.png';">
                 <div class="qr-missing" id="gcashQrMissing" style="display:none;">
                     <i class="bi bi-qr-code-scan"></i>
                     <span>QR code will be placed here by the admin</span>
@@ -1977,14 +1977,6 @@ function openDetailModal(id, type) {
         <div class="detail-price-tag mb-4">
             <div class="price-main">${escHtml(modalPrice)}</div>
             <div class="price-sub">${escHtml(modalSub)}</div>
-        </div>
-        <div class="detail-section">
-            <div class="detail-section-title"><i class="bi bi-gift"></i> What's Included</div>
-            <ul class="detail-list">${inclusionsHtml}</ul>
-        </div>
-        <div class="detail-section">
-            <div class="detail-section-title"><i class="bi bi-star"></i> Amenities</div>
-            <ul class="detail-list">${amenitiesHtml}</ul>
         </div>
         ${pkg.package_type === 'activity' ? `
         <div class="detail-section">
