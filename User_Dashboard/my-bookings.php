@@ -11,6 +11,8 @@ $lastVisitedBookings = $_SESSION['last_visited_bookings'] ?? '2000-01-01 00:00:0
 $_SESSION['last_visited_bookings'] = date('Y-m-d H:i:s');
 
 require_once '../phpAuthentication/db_config.php';
+require_once '../phpAuthentication/blocked_email_helper.php';
+kick_blocked_user_session($conn);
 require_once __DIR__ . '/../php/check_expired_bookings.php';
 
 /** @var mysqli $conn */

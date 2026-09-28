@@ -453,7 +453,20 @@
                         if (emailInput.value.trim() !== email) return;
 
                         if (data.success) {
-                            if (data.exists) {
+                            if (data.blocked) {
+                                isEmailAvailable = false;
+                                badge.className = 'status-badge badge-taken';
+                                badge.innerHTML = '<i class="bi bi-slash-circle"></i> Blocked';
+                                badge.style.display = 'inline-flex';
+
+                                icon.innerHTML = '<i class="bi bi-slash-circle" style="color:#f87171;"></i>';
+                                emailInput.classList.remove('input-state-valid', 'input-state-warning');
+                                emailInput.classList.add('input-state-invalid');
+
+                                feedback.className = 'field-feedback-subtext feedback-error';
+                                feedback.innerHTML = '<i class="bi bi-slash-circle"></i> This email is blocked and cannot be used to register.';
+                                feedback.style.display = 'flex';
+                            } else if (data.exists) {
                                 isEmailAvailable = false;
                                 badge.className = 'status-badge badge-taken';
                                 badge.innerHTML = '<i class="bi bi-x-circle-fill"></i> Already Registered';

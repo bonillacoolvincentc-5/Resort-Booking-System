@@ -8,8 +8,10 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 require_once '../phpAuthentication/db_config.php';
+require_once '../phpAuthentication/blocked_email_helper.php';
 
 $userId = $_SESSION['user_id'];
+kick_blocked_user_session($conn, true);
 $currentPassword = $_POST['current_password'] ?? '';
 $newPassword = $_POST['new_password'] ?? '';
 

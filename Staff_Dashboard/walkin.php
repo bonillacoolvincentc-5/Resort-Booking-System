@@ -258,6 +258,7 @@ if ($stmtSlots) {
             line-height: 1.45;
             display: -webkit-box;
             -webkit-line-clamp: 2;
+            line-clamp: 2;
             -webkit-box-orient: vertical;
             overflow: hidden;
         }
@@ -1427,7 +1428,7 @@ if ($stmtSlots) {
                     disableBtn = true;
                     showAlert('This item is fully booked for this date.', 'danger');
                 } else {
-                    statusBadge = `<div class="availability-badge" style="margin-top:0.5rem;color:#34d399;font-size:0.8rem;font-weight:600;"><i class="bi bi-check-circle-fill me-1"></i>Available: ${result.available_slots} slot(s) left</div>`;
+                    statusBadge = '';
                     clearAlert();
                 }
                 

@@ -10,6 +10,7 @@ ob_start();
 
 session_start();
 require_once '../phpAuthentication/db_config.php';
+require_once '../phpAuthentication/blocked_email_helper.php';
 
 // Never emit PHP warnings/notices into JSON responses
 ini_set('display_errors', '0');
@@ -36,6 +37,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (empty($email)) {
         sendJsonResponse(false, 'Verification session expired. Please register again.', ['error_type' => 'session_expired']);
+    }
+
+    if (is_email_blocked($conn, $email)) {
+        sendJsonResponse(false, blocked_email_message('register'), ['blocked' => true]);
     }
     
     try {

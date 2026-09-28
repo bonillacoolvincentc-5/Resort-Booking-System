@@ -8,6 +8,7 @@ ob_start();
 session_start();
 require_once '../phpAuthentication/db_config.php';
 require_once '../phpAuthentication/email_helper.php';
+require_once '../phpAuthentication/blocked_email_helper.php';
 
 ini_set('display_errors', '0');
 error_reporting(E_ALL);
@@ -32,6 +33,10 @@ if ($action === 'send_code') {
 
     if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
         fp_json(false, 'Please enter a valid email address.');
+    }
+
+    if (is_email_blocked($conn, $email)) {
+        fp_json(false, blocked_email_message('forgot'), ['blocked' => true]);
     }
 
     $requestedType = trim($_POST['type'] ?? 'user');
@@ -127,6 +132,10 @@ if ($action === 'verify_code') {
         fp_json(false, 'Email and code are required.');
     }
 
+    if (is_email_blocked($conn, $email)) {
+        fp_json(false, blocked_email_message('forgot'), ['blocked' => true]);
+    }
+
     $stmt = $conn->prepare("SELECT id, otp, attempts, expires_at FROM password_reset_otps WHERE email = ? ORDER BY created_at DESC LIMIT 1");
     $stmt->bind_param('s', $email);
     $stmt->execute();
@@ -199,6 +208,10 @@ if ($action === 'reset_password') {
     }
 
     $email    = $_SESSION['fp_reset_email'];
+    if (is_email_blocked($conn, $email)) {
+        unset($_SESSION['fp_reset_token'], $_SESSION['fp_reset_email'], $_SESSION['fp_token_expiry']);
+        fp_json(false, blocked_email_message('forgot'), ['blocked' => true]);
+    }
     $hashed   = password_hash($newPassword, PASSWORD_DEFAULT);
 
     // Try users first, then admins

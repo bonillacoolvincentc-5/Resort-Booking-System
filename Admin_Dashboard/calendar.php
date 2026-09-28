@@ -316,16 +316,26 @@ $adminEmail = $_SESSION['admin_email'];
                     is_blocked: false
                 };
 
+                const todayStart = new Date();
+                todayStart.setHours(0, 0, 0, 0);
+                const cellDate = new Date(currentYear, currentMonth, day);
+                cellDate.setHours(0, 0, 0, 0);
+                const isPast = cellDate < todayStart;
+
                 if (dayData.is_blocked) {
                     dayElement.classList.add('blocked');
-                } else if (dayData.total_bookings > 0) {
+                } else if (!isPast && dayData.total_bookings > 0) {
                     dayElement.classList.add('has-bookings');
                 }
 
                 const countEl = document.createElement('div');
-                const level = dayData.is_blocked ? 'blocked' : dayData.occupancy_level;
+                const level = dayData.is_blocked ? 'blocked' : (isPast ? 'none' : dayData.occupancy_level);
                 countEl.className = `booking-count ${level}`;
-                countEl.textContent = dayData.is_blocked ? 'Blocked' : `Booked: ${dayData.total_bookings}`;
+                if (dayData.is_blocked) {
+                    countEl.textContent = 'Blocked';
+                } else if (!isPast) {
+                    countEl.textContent = `Booked: ${dayData.total_bookings}`;
+                }
                 dayElement.appendChild(countEl);
 
                 dayElement.onclick = () => openDateDetailsModal(dateStr);

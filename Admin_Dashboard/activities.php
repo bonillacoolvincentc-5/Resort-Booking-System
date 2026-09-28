@@ -297,7 +297,13 @@ while ($row = $accResult->fetch_assoc()) {
                             <div class="activity-card">
                                 <div class="activity-image position-relative">
                                     <?php if ($acc['image_url']): ?>
-                                        <img src="<?php echo htmlspecialchars($acc['image_url']); ?>" alt="<?php echo htmlspecialchars($acc['name']); ?>" style="width: 100%; height: 100%; object-fit: cover;">
+                                        <?php
+                                            $accImgSrc = $acc['image_url'];
+                                            if (!preg_match('#^(https?:)?//#i', $accImgSrc) && strpos($accImgSrc, '/') !== 0 && strpos($accImgSrc, '../') !== 0) {
+                                                $accImgSrc = '../' . ltrim($accImgSrc, '/');
+                                            }
+                                        ?>
+                                        <img src="<?php echo htmlspecialchars($accImgSrc); ?>" alt="<?php echo htmlspecialchars($acc['name']); ?>" style="width: 100%; height: 100%; object-fit: cover;">
                                     <?php else: ?>
                                         <i class="bi <?php echo $icon; ?>"></i>
                                     <?php endif; ?>

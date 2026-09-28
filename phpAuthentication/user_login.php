@@ -6,6 +6,7 @@
 
 // Include database configuration
 require_once 'db_config.php';
+require_once 'blocked_email_helper.php';
 
 // Start session for login state
 session_start();
@@ -44,6 +45,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     
     try {
+        if (isset($conn) && is_email_blocked($conn, $email)) {
+            echo json_encode([
+                'success' => false,
+                'message' => blocked_email_message('login'),
+                'blocked' => true
+            ]);
+            exit;
+        }
+
         // Find user by email
         $stmt = $db->prepare("SELECT id, first_name, last_name, email, phone_number, password, created_at FROM users WHERE email = ?");
         $stmt->execute([$email]);

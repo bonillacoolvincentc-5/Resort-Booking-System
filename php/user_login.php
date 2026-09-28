@@ -7,6 +7,7 @@
 
 session_start();
 require_once '../phpAuthentication/db_config.php';
+require_once '../phpAuthentication/blocked_email_helper.php';
 
 header('Content-Type: application/json');
 
@@ -36,6 +37,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             sendJsonResponse(false, "Invalid email format!");
         }
         
+        if (is_email_blocked($conn, $email)) {
+            sendJsonResponse(false, blocked_email_message('login'), ['blocked' => true]);
+        }
+
         // Check user in users table
         $user_stmt = $conn->prepare("
             SELECT id, first_name, last_name, email, phone_number, password, is_verified 

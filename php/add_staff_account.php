@@ -5,6 +5,7 @@
  */
 session_start();
 require_once '../phpAuthentication/db_config.php';
+require_once '../phpAuthentication/blocked_email_helper.php';
 
 // Ensure response is JSON
 header('Content-Type: application/json');
@@ -43,6 +44,11 @@ if (empty($firstName) || empty($lastName) || empty($email) || empty($phone) || e
 
 if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
     echo json_encode(['success' => false, 'message' => 'Invalid email format.']);
+    exit();
+}
+
+if (is_email_blocked($conn, $email)) {
+    echo json_encode(['success' => false, 'message' => blocked_email_message('register'), 'blocked' => true]);
     exit();
 }
 

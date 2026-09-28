@@ -6,6 +6,7 @@
 
 // Include database configuration
 require_once 'db_config.php';
+require_once 'blocked_email_helper.php';
 
 // Enable error reporting for development
 error_reporting(E_ALL);
@@ -92,6 +93,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     
     try {
+        if (isset($conn) && is_email_blocked($conn, $email)) {
+            echo json_encode([
+                'success' => false,
+                'message' => blocked_email_message('register'),
+                'blocked' => true
+            ]);
+            exit;
+        }
+
         // Check if email already exists
         $stmt = $db->prepare("SELECT id FROM users WHERE email = ?");
         $stmt->execute([$email]);

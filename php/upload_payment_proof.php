@@ -6,6 +6,7 @@
 
 session_start();
 require_once '../phpAuthentication/db_config.php';
+require_once '../phpAuthentication/blocked_email_helper.php';
 require_once __DIR__ . '/check_expired_bookings.php';
 
 header('Content-Type: application/json');
@@ -14,6 +15,8 @@ if (!isset($_SESSION['user_id'])) {
     echo json_encode(['success' => false, 'message' => 'You must be logged in.']);
     exit();
 }
+
+kick_blocked_user_session($conn, true);
 
 try {
     // ── Validate required text fields ─────────────────────────────

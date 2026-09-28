@@ -11,6 +11,7 @@ ob_start();
 session_start();
 require_once 'db_config.php';
 require_once 'email_helper.php';
+require_once 'blocked_email_helper.php';
 
 header('Content-Type: application/json');
 
@@ -112,6 +113,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             sendJsonResponse(false, implode(" ", $errors));
         }
         
+        if (!empty($email) && is_email_blocked($conn, $email)) {
+            sendJsonResponse(false, blocked_email_message('register'), ['blocked' => true]);
+        }
+
         // Determine which table to check based on user type
         $table = ($userType === 'admin') ? 'admins' : 'users';
         

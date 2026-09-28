@@ -1536,6 +1536,12 @@ textarea.form-ctrl {
     border: 1px solid rgba(255, 90, 95, 0.22);
 }
 
+.status-blocked {
+    background: rgba(148, 163, 184, 0.12);
+    color: #cbd5e1;
+    border: 1px solid rgba(148, 163, 184, 0.28);
+}
+
 /* ── 41. Activity Stats Row ───────────────────────────────────────── */
 .activity-stats {
     display: flex;
@@ -2062,6 +2068,28 @@ textarea.form-ctrl {
     background: rgba(255, 90, 95, 0.15);
     border-color: rgba(255, 90, 95, 0.35);
     color: #FF5A5F;
+}
+
+.btn-action.btn-block {
+    border-color: rgba(248, 113, 113, 0.22);
+    color: #f87171;
+}
+
+.btn-action.btn-block:hover {
+    background: rgba(248, 113, 113, 0.15);
+    border-color: rgba(248, 113, 113, 0.4);
+    color: #fca5a5;
+}
+
+.btn-action.btn-unblock {
+    border-color: rgba(157, 255, 0, 0.22);
+    color: #9DFF00;
+}
+
+.btn-action.btn-unblock:hover {
+    background: rgba(157, 255, 0, 0.12);
+    border-color: rgba(157, 255, 0, 0.4);
+    color: #b8ff4d;
 }
 
 /* ═══════════════════════════════════════════════════════════════════

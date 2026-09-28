@@ -6,6 +6,7 @@
 
 session_start();
 require_once 'db_config.php';
+require_once 'blocked_email_helper.php';
 
 // Check if form is submitted
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -42,6 +43,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($result->num_rows === 1) {
             $user = $result->fetch_assoc();
+
+            if (is_email_blocked($conn, $user['email'] ?? '')) {
+                header("Location: ../Authentication/forgot-pass.php?error=" . urlencode(blocked_email_message('forgot')));
+                exit();
+            }
 
             // Hash new password
             $hashedPassword = password_hash($newPassword, PASSWORD_BCRYPT, ['cost' => 12]);

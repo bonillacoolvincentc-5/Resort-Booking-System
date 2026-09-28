@@ -893,19 +893,19 @@ $adminEmail = $_SESSION['admin_email'] ?? '';
                 </div>
 
                 <div class="modal-field">
-                    <label class="profile-label" for="newAdminTempPw">Temporary Password</label>
+                    <label class="profile-label" for="newAdminTempPw">Password</label>
                     <div class="profile-input-group">
                         <input class="modal-input modal-input-pw"
                                type="password"
                                id="newAdminTempPw"
                                name="temp_password"
-                               placeholder="Set a temporary password"
+                               placeholder="Set a password"
                                autocomplete="new-password"
                                required>
                         <button type="button"
                                 class="profile-eye-btn"
                                 onclick="togglePw('newAdminTempPw', this)"
-                                aria-label="Show or hide temporary password">
+                                aria-label="Show or hide password">
                             <i class="bi bi-eye"></i>
                         </button>
                     </div>

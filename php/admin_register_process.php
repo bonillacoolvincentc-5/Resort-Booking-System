@@ -8,6 +8,7 @@
 session_start();
 require_once '../phpAuthentication/db_config.php';
 require_once '../phpAuthentication/email_helper.php';
+require_once '../phpAuthentication/blocked_email_helper.php';
 
 header('Content-Type: application/json');
 
@@ -93,7 +94,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!empty($errors)) {
             sendJsonResponse(false, implode(" ", $errors));
         }
-        
+
+        if (is_email_blocked($conn, $email)) {
+            sendJsonResponse(false, blocked_email_message('register'), ['blocked' => true]);
+        }
+
         // Check if email already exists in admins table
         $check_stmt = $conn->prepare("SELECT id FROM admins WHERE email = ?");
         $check_stmt->bind_param("s", $email);

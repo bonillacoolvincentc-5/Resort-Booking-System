@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Sep 27, 2026 at 11:52 AM
+-- Generation Time: Sep 28, 2026 at 08:59 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.1.25
 
@@ -43,41 +43,36 @@ CREATE TABLE `accommodations` (
   `image_url` varchar(500) DEFAULT NULL,
   `is_active` tinyint(1) DEFAULT 1,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `check_in_time` time DEFAULT '14:00:00',
+  `check_out_time` time DEFAULT '12:00:00'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Dumping data for table `accommodations`
 --
 
-INSERT INTO `accommodations` (`id`, `name`, `type`, `tour_type`, `description`, `base_capacity`, `capacity`, `daily_booking_limit`, `extra_person_fee`, `price_per_night`, `price_per_day`, `amenities`, `image_url`, `is_active`, `created_at`, `updated_at`) VALUES
-(1, 'VIP ROOM', 'room', 'overnight,day_tour', 'king size bed', 4, 4, 1, 0.00, 2000.00, 4000.00, 'Testing, Testing, Testing', 'assets/uploads/accommodations/6a4d26cc483e0.jfif', 1, '2026-07-07 16:18:20', '2026-09-22 13:28:43'),
-(2, 'Day Tour Kubo Non-Aircon Room (8 Hours)', 'cottage', 'day_tour', 'Day tour cottage room. Good for 2 persons. Non-aircon Kubo. 8-hour stay. Extra hour P200. Cut-off 9PM. Walk-in only. Free: Pool, Gym, Basketball Court, Parking, WiFi, Common Bathroom, Playground. Plus daytour entrance fee. VAT excluded.', 2, 2, 1, 0.00, 0.00, 799.00, 'Pool, Gym, Basketball Court, Parking, WiFi, Common Bathroom, Playground', NULL, 1, '2026-07-08 15:59:21', '2026-09-22 14:56:30'),
-(3, 'Day Tour Kubo Non-Aircon Room (12 Hours)', 'cottage', 'day_tour', 'Day tour cottage room. Good for 2 persons. Non-aircon Kubo. 12-hour stay. Cut-off 9PM. Walk-in only. Free: Pool, Gym, Basketball Court, Parking, WiFi, Common Bathroom, Playground. Plus daytour entrance fee. VAT excluded.', 2, 2, 1, 0.00, 999.00, 999.00, 'Pool, Gym, Basketball Court, Parking, WiFi, Common Bathroom, Playground', NULL, 1, '2026-07-08 15:59:21', '2026-09-22 13:40:28'),
-(4, 'Day Tour Kubo Aircon Room (8 Hours)', 'cottage', 'day_tour', 'Day tour cottage room. Good for 2 persons. Aircon Kubo. 8-hour stay. Extra hour P200. Cut-off 9PM. Walk-in only. Free: Pool, Gym, Basketball Court, Parking, WiFi, Common Bathroom, Playground, Air Conditioning. Plus daytour entrance fee. VAT excluded.', 2, 2, 1, 0.00, 999.00, 999.00, 'Pool, Gym, Basketball Court, Parking, WiFi, Common Bathroom, Playground, Air Conditioning', NULL, 1, '2026-07-08 15:59:21', '2026-09-22 13:40:28'),
-(5, 'Day Tour Kubo Aircon Room (12 Hours)', 'cottage', 'day_tour', 'Day tour cottage room. Good for 2 persons. Aircon Kubo. 12-hour stay. Cut-off 9PM. Walk-in only. Free: Pool, Gym, Basketball Court, Parking, WiFi, Common Bathroom, Playground, Air Conditioning. Plus daytour entrance fee. VAT excluded.', 2, 2, 1, 0.00, 1499.00, 1499.00, 'Pool, Gym, Basketball Court, Parking, WiFi, Common Bathroom, Playground, Air Conditioning', NULL, 1, '2026-07-08 15:59:21', '2026-09-22 13:40:28'),
-(6, 'Umbrella Cottage (8 Pax+)', 'cottage', 'day_tour', 'Outdoor umbrella cottage. Good for 8 pax and up. Includes table and chairs. Plus entrance fee. Free access: Gym, Kids Playground, Pool, Basketball Court, Shower, Griller, Pool Bench. VAT excluded.', 8, 8, 1, 0.00, 0.00, 500.00, 'Table and Chairs, Gym, Kids Playground, Swimming Pool, Basketball Court, Shower, Griller, Pool Bench', NULL, 1, '2026-07-08 15:59:21', '2026-09-22 13:50:13'),
-(7, 'Small Awning Cottage (10 Pax+)', 'cottage', 'day_tour', 'Small awning cottage. Good for 10 pax and up. Includes table and chairs. Plus entrance fee. VAT excluded.', 10, 10, 1, 0.00, 700.00, 700.00, 'Table and Chairs, Gym, Kids Playground, Swimming Pool, Basketball Court, Shower, Griller', NULL, 1, '2026-07-08 15:59:21', '2026-09-22 13:40:28'),
-(8, 'Kubo Cottage (15 Pax+)', 'cottage', 'day_tour', 'Kubo cottage. Good for 15 pax and up. Includes table and chairs. Plus entrance fee. VAT excluded.', 15, 15, 1, 0.00, 1200.00, 1200.00, 'Table and Chairs, Gym, Kids Playground, Swimming Pool, Basketball Court, Shower, Griller', NULL, 1, '2026-07-08 15:59:21', '2026-09-22 13:40:28'),
-(9, 'Big Kubo Cottage (20 Pax+)', 'cottage', 'day_tour', 'Big kubo cottage. Good for 20 pax and up. Includes table and chairs. Plus entrance fee. VAT excluded.', 20, 20, 5, 0.00, 1500.00, 1500.00, 'Table and Chairs, Gym, Kids Playground, Swimming Pool, Basketball Court, Shower, Griller', NULL, 1, '2026-07-08 15:59:21', '2026-09-24 14:02:38'),
-(10, 'Pavilion Cottage (25 Pax+)', 'cottage', 'day_tour', 'Pavilion cottage. Good for 25 pax and up. Includes table and chairs. Daytime rate. Plus entrance fee. VAT excluded.', 25, 25, 1, 0.00, 1500.00, 1500.00, 'Table and Chairs, Gym, Kids Playground, Swimming Pool, Basketball Court, Shower, Griller', NULL, 1, '2026-07-08 15:59:21', '2026-09-22 13:40:28'),
-(11, 'Private Big Pavilion - Daytime (35 Pax+)', 'cottage', 'day_tour', 'Private big pavilion. Good for 35 pax and up. Includes table and chairs. Daytime rate. Plus entrance fee. VAT excluded.', 35, 35, 1, 0.00, 2000.00, 2000.00, 'Table and Chairs, Gym, Kids Playground, Swimming Pool, Basketball Court, Shower, Griller', NULL, 1, '2026-07-08 15:59:21', '2026-09-22 13:40:28'),
-(12, 'Private Big Pavilion - 3PM Onwards (35 Pax+)', 'cottage', 'day_tour', 'Private big pavilion. Good for 35 pax and up. Includes table and chairs. 3PM onwards rate. Plus entrance fee. VAT excluded.', 35, 35, 1, 0.00, 2500.00, 2500.00, 'Table and Chairs, Gym, Kids Playground, Swimming Pool, Basketball Court, Shower, Griller', NULL, 1, '2026-07-08 15:59:21', '2026-09-22 13:40:28'),
-(13, 'Private Big Kubo - Daytime (50 Pax+)', 'cottage', 'day_tour', 'Private big kubo cottage. Good for 50 pax and up. Includes table and chairs. Daytime rate. Plus entrance fee. VAT excluded.', 50, 50, 1, 0.00, 3000.00, 3000.00, 'Table and Chairs, Gym, Kids Playground, Swimming Pool, Basketball Court, Shower, Griller', NULL, 1, '2026-07-08 15:59:21', '2026-09-22 13:40:28'),
-(14, 'Private Big Kubo - 3PM Onwards (50 Pax+)', 'cottage', 'day_tour', 'Private big kubo cottage. Good for 50 pax and up. Includes table and chairs. 3PM onwards rate. Plus entrance fee. VAT excluded.', 50, 50, 1, 0.00, 4000.00, 4000.00, 'Table and Chairs, Gym, Kids Playground, Swimming Pool, Basketball Court, Shower, Griller', NULL, 1, '2026-07-08 15:59:21', '2026-09-22 13:40:28'),
-(15, 'Kubo Room Non-Aircon (Transient)', 'room', 'overnight', 'Transient Kubo non-aircon room. Max 2 persons only. P1,499 per night. Plus P500 excess per person. Amenities: Swimming Pool, Karaoke and Sounds, Free Parking, Strong WiFi, Genset Backup, Playground. VAT excluded.', 2, 2, 1, 500.00, 1499.00, 1499.00, 'Swimming Pool, Karaoke and Sounds, Free Parking, Strong WiFi, Genset Backup, Playground', NULL, 1, '2026-07-08 15:59:21', '2026-09-22 13:40:28'),
-(16, 'Kubo Room Aircon (Transient)', 'room', 'overnight', 'Transient Kubo aircon room. Max 2 persons only. P2,499 per night. Plus P500 excess per person. Amenities: Swimming Pool, Karaoke and Sounds, Free Parking, Strong WiFi, Genset Backup, Air Conditioning, Playground. VAT excluded.', 2, 2, 1, 500.00, 2499.00, 2499.00, 'Swimming Pool, Karaoke and Sounds, Free Parking, Strong WiFi, Genset Backup, Air Conditioning, Playground', NULL, 1, '2026-07-08 15:59:21', '2026-09-22 13:40:28'),
-(17, 'Regular Room', 'room', 'overnight', 'Transient regular room. Up to 8 pax bed capacity. 4 persons: P3,999 (max 8 persons). Plus P400 excess per person. Amenities: Swimming Pool, Karaoke and Sounds, Free Parking, Strong WiFi, Genset Backup. VAT excluded.', 4, 8, 1, 400.00, 3999.00, 3999.00, 'Swimming Pool, Karaoke and Sounds, Free Parking, Strong WiFi, Genset Backup, Playground', NULL, 1, '2026-07-08 15:59:21', '2026-09-22 13:40:28'),
-(18, 'Dome Tent Room VIP', 'room', 'overnight', 'Transient VIP Dome Tent room. Max 2-8 persons. VIP 2 persons: P3,499 (max 4 persons). Regular Dome max 8 persons. Plus P500 excess per person. VAT excluded.', 2, 4, 1, 500.00, 3499.00, 3499.00, 'Swimming Pool, Karaoke and Sounds, Free Parking, Strong WiFi, Genset Backup', NULL, 1, '2026-07-08 15:59:21', '2026-09-22 13:40:28'),
-(19, 'VIP Master Bedroom', 'room', 'overnight', 'Transient VIP Master Bedroom. Up to 6 pax bed capacity. 2 persons: P3,999 (max 6 persons). Plus P500 excess per person. Amenities: Swimming Pool, Karaoke and Sounds, Free Parking, Strong WiFi, Genset Backup, Air Conditioning. VAT excluded.', 2, 6, 1, 500.00, 3999.00, 3999.00, 'Swimming Pool, Karaoke and Sounds, Free Parking, Strong WiFi, Genset Backup, Air Conditioning', NULL, 1, '2026-07-08 15:59:21', '2026-09-22 13:40:28'),
-(20, 'Regular Family Room', 'room', 'overnight', 'Transient regular family room. Up to 15 pax bed capacity. 10 persons: P5,999 (max 15 persons). Plus P400 excess per person. Amenities: Swimming Pool, Karaoke and Sounds, Free Parking, Strong WiFi, Genset Backup. VAT excluded.', 10, 15, 1, 400.00, 5999.00, 5999.00, 'Swimming Pool, Karaoke and Sounds, Free Parking, Strong WiFi, Genset Backup, Playground', NULL, 1, '2026-07-08 15:59:21', '2026-09-22 13:40:28'),
-(21, 'Regular Barkada Room', 'room', 'overnight', 'Transient regular barkada room. Up to 22 pax bed capacity. 10 persons: P6,499 (max 22 persons). Plus P400 excess per person. Amenities: Swimming Pool, Karaoke and Sounds, Free Parking, Strong WiFi, Genset Backup. VAT excluded.', 10, 22, 1, 400.00, 6499.00, 6499.00, 'Swimming Pool, Karaoke and Sounds, Free Parking, Strong WiFi, Genset Backup, Playground', NULL, 1, '2026-07-08 15:59:21', '2026-09-22 13:40:28'),
-(22, 'Grand Villa Room', 'room', 'overnight', 'Transient VIP Grand Villa Room. Up to 50 pax bed capacity. 15 persons: P11,999 | 25 persons: P15,999 | 35 persons: P19,999 | Unli Pax: P24,999 (max 50). Plus P500 excess per person. Amenities: Swimming Pool, Karaoke and Sounds, Free Parking, Strong WiFi, Air Conditioning, Genset Backup. VAT excluded.', 15, 50, 1, 500.00, 11999.00, 11999.00, 'Swimming Pool, Karaoke and Sounds, Free Parking, Strong WiFi, Air Conditioning, Genset Backup', NULL, 1, '2026-07-08 15:59:21', '2026-09-22 13:40:28'),
-(23, 'Mega Family Room', 'room', 'overnight', 'Transient VIP Mega Family Room. Up to 24 pax bed capacity. 10 persons: P7,999 | 20 persons: P10,999 (max 24). Plus P500 excess per person. Amenities: Swimming Pool, Karaoke and Sounds, Free Parking, Strong WiFi, Air Conditioning, Genset Backup. VAT excluded.', 10, 24, 1, 500.00, 7999.00, 7999.00, 'Swimming Pool, Karaoke and Sounds, Free Parking, Strong WiFi, Air Conditioning, Genset Backup', NULL, 1, '2026-07-08 15:59:21', '2026-09-22 13:40:28'),
-(24, 'Mega Barkada Room', 'room', 'overnight', 'Transient VIP Mega Barkada Room. Up to 50 pax bed capacity. 15 persons: P9,000 | 30 persons: P14,999 | 45 persons: P19,999 (max 50). Plus P500 excess per person. Amenities: Swimming Pool, Karaoke and Sounds, Free Parking, Strong WiFi, Air Conditioning, Genset Backup. VAT excluded.', 15, 50, 1, 500.00, 9000.00, 9000.00, 'Swimming Pool, Karaoke and Sounds, Free Parking, Strong WiFi, Air Conditioning, Genset Backup', NULL, 1, '2026-07-08 15:59:21', '2026-09-22 13:40:28'),
-(25, 'Family Private Villa', 'room', 'overnight', 'Transient VIP Family Private Villa. 2 Rooms and Solo Pool. Up to 20 pax bed capacity. 15 persons: P13,999 (max 20). Plus P650 excess per person. Amenities: Private Pool, 2 Aircon Rooms, Swimming Pool, Karaoke and Sounds, Free Parking, Strong WiFi, Genset Backup. VAT excluded.', 15, 20, 1, 650.00, 13999.00, 13999.00, 'Private Pool, 2 Aircon Rooms, Swimming Pool, Karaoke and Sounds, Free Parking, Strong WiFi, Genset Backup', NULL, 1, '2026-07-08 15:59:21', '2026-09-22 13:40:28'),
-(26, 'Barkada Private Villa', 'room', 'overnight', 'Transient VIP Barkada Private Villa. 4 Rooms and Solo Pool. Up to 40 pax bed capacity. 20 persons: P15,999 | 30 persons: P19,999 | Unli Pax: P24,999 (max 40). Plus P650 excess per person. Amenities: Private Pool, 4 Aircon Rooms, Swimming Pool, Karaoke and Sounds, Free Parking, Strong WiFi, Genset Backup. VAT excluded.', 20, 40, 1, 650.00, 15999.00, 15999.00, 'Private Pool, 4 Aircon Rooms, Swimming Pool, Karaoke and Sounds, Free Parking, Strong WiFi, Genset Backup', NULL, 1, '2026-07-08 15:59:21', '2026-09-22 13:40:28'),
-(27, 'Private Grand Villa', 'room', 'overnight', 'Transient VIP Private Grand Villa. 3 Rooms and Solo Pool. Up to 75 pax bed capacity. 30 persons: P19,999 | 40 persons: P24,999 | Unli Pax: P29,999 (max 75). Plus P650 excess per person. Amenities: Private Pool, 3 Aircon Rooms, Swimming Pool, Karaoke and Sounds, Free Parking, Strong WiFi, Genset Backup. VAT excluded.', 30, 75, 1, 650.00, 19999.00, 19999.00, 'Private Pool, 3 Aircon Rooms, Swimming Pool, Karaoke and Sounds, Free Parking, Strong WiFi, Genset Backup', NULL, 1, '2026-07-08 15:59:21', '2026-09-22 13:40:28');
+INSERT INTO `accommodations` (`id`, `name`, `type`, `tour_type`, `description`, `base_capacity`, `capacity`, `daily_booking_limit`, `extra_person_fee`, `price_per_night`, `price_per_day`, `amenities`, `image_url`, `is_active`, `created_at`, `updated_at`, `check_in_time`, `check_out_time`) VALUES
+(2, 'Day Tour Kubo Non-Aircon Room (8 Hours)', 'cottage', 'day_tour', 'Day tour cottage room. Good for 2 persons. Non-aircon Kubo. 8-hour stay. Cut-off 9PM. Free: Pool, Parking, WiFi, Common Bathroom, Playground. Plus daytour entrance fee. VAT excluded.', 2, 2, 1, 0.00, 0.00, 799.00, 'Pool, Gym, Basketball Court, Parking, WiFi, Common Bathroom, Playground', 'assets/uploads/accommodations/6abab3c2a0a8a.webp', 1, '2026-07-08 15:59:21', '2026-09-28 18:36:50', '14:00:00', '12:00:00'),
+(3, 'Day Tour Kubo Non-Aircon Room (12 Hours)', 'cottage', 'day_tour', 'Day tour cottage room. Good for 2 persons. Non-aircon Kubo. 12-hour stay. Cut-off 9PM. Free: Pool, Parking, WiFi, Common Bathroom, Playground. Plus daytour entrance fee. VAT excluded.', 2, 6, 5, 250.00, 0.00, 999.00, 'Pool, Gym, Basketball Court, Parking, WiFi, Common Bathroom, Playground', 'assets/uploads/accommodations/6abab3cfb41bf.webp', 1, '2026-07-08 15:59:21', '2026-09-28 18:37:03', '14:00:00', '12:00:00'),
+(4, 'Day Tour Kubo Aircon Room (8 Hours)', 'cottage', 'day_tour', 'Day tour cottage room. Good for 2 persons. Aircon Kubo. 8-hour stay. Extra hour P200. Cut-off 9PM. Walk-in only. Free: Pool, Gym, Basketball Court, Parking, WiFi, Common Bathroom, Playground, Air Conditioning. Plus daytour entrance fee. VAT excluded.', 2, 2, 1, 0.00, 999.00, 999.00, 'Pool, Gym, Basketball Court, Parking, WiFi, Common Bathroom, Playground, Air Conditioning', 'assets/uploads/accommodations/6abab3db706ef.webp', 1, '2026-07-08 15:59:21', '2026-09-28 18:37:15', '14:00:00', '12:00:00'),
+(5, 'Day Tour Kubo Aircon Room (12 Hours)', 'cottage', 'day_tour', 'Day tour cottage room. Good for 2 persons. Aircon Kubo. 12-hour stay. Cut-off 9PM. Free: Pool, Parking, WiFi, Common Bathroom, Playground, Air Conditioning. Plus daytour entrance fee. VAT excluded.', 2, 6, 2, 250.00, 0.00, 1499.00, 'Pool, Gym, Basketball Court, Parking, WiFi, Common Bathroom, Playground, Air Conditioning', 'assets/uploads/accommodations/6abab3e895788.webp', 1, '2026-07-08 15:59:21', '2026-09-28 18:37:28', '14:00:00', '12:00:00'),
+(6, 'Umbrella Cottage (8 Pax+)', 'cottage', 'day_tour', 'Outdoor umbrella cottage. Good for 8 pax and up. Includes table and chairs. Plus entrance fee. Free access: Gym, Kids Playground, Pool, Basketball Court, Shower, Griller, Pool Bench. VAT excluded.', 8, 8, 5, 0.00, 0.00, 500.00, 'Table and Chairs, Gym, Kids Playground, Swimming Pool, Basketball Court, Shower, Griller, Pool Bench', 'assets/uploads/accommodations/6abab0e6aab9c.jpg', 1, '2026-07-08 15:59:21', '2026-09-28 18:24:38', '14:00:00', '12:00:00'),
+(7, 'Small Awning Cottage (10 Pax+)', 'cottage', 'day_tour', 'Small awning cottage. Good for 10 pax and up. Includes table and chairs. Plus entrance fee. VAT excluded.', 10, 10, 1, 0.00, 700.00, 700.00, 'Table and Chairs, Gym, Kids Playground, Swimming Pool, Basketball Court, Shower, Griller', 'assets/uploads/accommodations/6abab109b559e.webp', 1, '2026-07-08 15:59:21', '2026-09-28 18:25:13', '14:00:00', '12:00:00'),
+(8, 'Kubo Cottage (15 Pax+)', 'cottage', 'day_tour', 'Kubo cottage. Good for 15 pax and up. Includes table and chairs. Plus entrance fee. VAT excluded.', 15, 15, 1, 0.00, 1200.00, 1200.00, 'Table and Chairs, Gym, Kids Playground, Swimming Pool, Basketball Court, Shower, Griller', 'assets/uploads/accommodations/6abab11aab5be.webp', 1, '2026-07-08 15:59:21', '2026-09-28 18:25:30', '14:00:00', '12:00:00'),
+(9, 'Big Kubo Cottage (20 Pax+)', 'cottage', 'day_tour', 'Big kubo cottage. Good for 20 pax and up. Includes table and chairs. Plus entrance fee. VAT excluded.', 20, 20, 5, 0.00, 1500.00, 1500.00, 'Table and Chairs, Gym, Kids Playground, Swimming Pool, Basketball Court, Shower, Griller', 'assets/uploads/accommodations/6abab13519f09.webp', 1, '2026-07-08 15:59:21', '2026-09-28 18:25:57', '14:00:00', '12:00:00'),
+(10, 'Pavilion Cottage (25 Pax+)', 'cottage', 'day_tour', 'Pavilion cottage. Good for 25 pax and up. Includes table and chairs. Daytime rate. Plus entrance fee. VAT excluded.', 25, 25, 1, 0.00, 1500.00, 1500.00, 'Table and Chairs, Gym, Kids Playground, Swimming Pool, Basketball Court, Shower, Griller', 'assets/uploads/accommodations/6abab1847b86a.webp', 1, '2026-07-08 15:59:21', '2026-09-28 18:27:16', '14:00:00', '12:00:00'),
+(11, 'Private Big Pavilion - Daytime (35 Pax+)', 'cottage', 'day_tour', 'Private big pavilion. Good for 35 pax and up. Includes table and chairs. Daytime rate. Plus entrance fee. VAT excluded.', 35, 35, 1, 0.00, 2000.00, 2000.00, 'Table and Chairs, Gym, Kids Playground, Swimming Pool, Basketball Court, Shower, Griller', 'assets/uploads/accommodations/6abab1a50088b.webp', 1, '2026-07-08 15:59:21', '2026-09-28 18:27:49', '14:00:00', '12:00:00'),
+(12, 'Private Big Pavilion - 3PM Onwards (35 Pax+)', 'cottage', 'day_tour', 'Private big pavilion. Good for 35 pax and up. Includes table and chairs. 3PM onwards rate. Plus entrance fee. VAT excluded.', 35, 35, 1, 0.00, 2500.00, 2500.00, 'Table and Chairs, Gym, Kids Playground, Swimming Pool, Basketball Court, Shower, Griller', 'assets/uploads/accommodations/6abab1b03d20a.webp', 1, '2026-07-08 15:59:21', '2026-09-28 18:28:00', '14:00:00', '12:00:00'),
+(13, 'Private Big Kubo - Daytime (50 Pax+)', 'cottage', 'day_tour', 'Private big kubo cottage. Good for 50 pax and up. Includes table and chairs. Daytime rate. Plus entrance fee. VAT excluded.', 50, 50, 1, 0.00, 3000.00, 3000.00, 'Table and Chairs, Gym, Kids Playground, Swimming Pool, Basketball Court, Shower, Griller', 'assets/uploads/accommodations/6abab1c7ad369.webp', 1, '2026-07-08 15:59:21', '2026-09-28 18:28:23', '14:00:00', '12:00:00'),
+(14, 'Private Big Kubo - 3PM Onwards (50 Pax+)', 'cottage', 'day_tour', 'Private big kubo cottage. Good for 50 pax and up. Includes table and chairs. 3PM onwards rate. Plus entrance fee. VAT excluded.', 50, 50, 5, 0.00, 4000.00, 4000.00, 'Table and Chairs, Gym, Kids Playground, Swimming Pool, Basketball Court, Shower, Griller', 'assets/uploads/accommodations/6abab1d3b08e1.webp', 1, '2026-07-08 15:59:21', '2026-09-28 18:28:35', '14:00:00', '12:00:00'),
+(15, 'Kubo Room Non-Aircon (Transient)', 'room', 'overnight', 'Transient Kubo non-aircon room. Max 2 persons only. P1,499 per night. Plus P500 excess per person. Amenities: Swimming Pool, Karaoke and Sounds, Free Parking, Strong WiFi, Genset Backup, Playground. VAT excluded.', 2, 2, 1, 500.00, 1499.00, 1499.00, 'Swimming Pool, Karaoke and Sounds, Free Parking, Strong WiFi, Genset Backup, Playground', 'assets/uploads/accommodations/6abab3f50a4c5.webp', 1, '2026-07-08 15:59:21', '2026-09-28 18:37:41', '14:00:00', '12:00:00'),
+(16, 'Kubo Room Aircon (Transient)', 'room', 'overnight', 'Transient Kubo aircon room. Max 2 persons only. P2,499 per night. Plus P500 excess per person. Amenities: Swimming Pool, Karaoke and Sounds, Free Parking, Strong WiFi, Genset Backup, Air Conditioning, Playground. VAT excluded.', 2, 2, 1, 500.00, 2499.00, 2499.00, 'Swimming Pool, Karaoke and Sounds, Free Parking, Strong WiFi, Genset Backup, Air Conditioning, Playground', 'assets/uploads/accommodations/6abab3fd655ba.webp', 1, '2026-07-08 15:59:21', '2026-09-28 18:37:49', '14:00:00', '12:00:00'),
+(17, 'Regular Room', 'room', 'overnight', 'Transient regular room. Up to 8 pax bed capacity. 4 persons: P3,999 (max 8 persons). Plus P400 excess per person. Amenities: Swimming Pool, Karaoke and Sounds, Free Parking, Strong WiFi, Genset Backup. VAT excluded.', 4, 8, 1, 400.00, 3999.00, 3999.00, 'Swimming Pool, Karaoke and Sounds, Free Parking, Strong WiFi, Genset Backup, Playground', 'assets/uploads/accommodations/6abab29d742d3.jpg', 1, '2026-07-08 15:59:21', '2026-09-28 18:31:57', '18:00:00', '16:00:00'),
+(18, 'Dome Tent Room VIP', 'room', 'overnight', 'Transient VIP Dome Tent room. Max 2-8 persons. VIP 2 persons: P3,499 (max 4 persons). Regular Dome max 8 persons. Plus P500 excess per person. VAT excluded.', 2, 4, 1, 500.00, 3499.00, 3499.00, 'Swimming Pool, Karaoke and Sounds, Free Parking, Strong WiFi, Genset Backup', NULL, 1, '2026-07-08 15:59:21', '2026-09-28 18:34:03', '14:00:00', '12:00:00'),
+(19, 'VIP Master Bedroom', 'room', 'overnight', 'Transient VIP Master Bedroom. Up to 6 pax bed capacity. 2 persons: P3,999 (max 6 persons). Plus P500 excess per person. Amenities: Swimming Pool, Karaoke and Sounds, Free Parking, Strong WiFi, Genset Backup, Air Conditioning. VAT excluded.', 2, 6, 1, 500.00, 3999.00, 3999.00, 'Swimming Pool, Karaoke and Sounds, Free Parking, Strong WiFi, Genset Backup, Air Conditioning', 'assets/uploads/accommodations/6abab287e92a0.webp', 1, '2026-07-08 15:59:21', '2026-09-28 18:31:35', '14:00:00', '12:00:00'),
+(26, 'Barkada Private Villa', 'room', 'overnight', 'Transient VIP Barkada Private Villa. 4 Rooms and Solo Pool. Up to 40 pax bed capacity. 20 persons: P15,999 | 30 persons: P19,999 | Unli Pax: P24,999 (max 40). Plus P650 excess per person. Amenities: Private Pool, 4 Aircon Rooms, Swimming Pool, Karaoke and Sounds, Free Parking, Strong WiFi, Genset Backup. VAT excluded.', 20, 40, 1, 650.00, 15999.00, 15999.00, 'Private Pool, 4 Aircon Rooms, Swimming Pool, Karaoke and Sounds, Free Parking, Strong WiFi, Genset Backup', 'assets/uploads/accommodations/6abab377f2184.webp', 1, '2026-07-08 15:59:21', '2026-09-28 18:35:36', '14:00:00', '12:00:00'),
+(27, 'Private Grand Villa', 'room', 'overnight', 'Transient VIP Private Grand Villa. 3 Rooms and Solo Pool. Up to 75 pax bed capacity. 30 persons: P19,999 | 40 persons: P24,999 | Unli Pax: P29,999 (max 75). Plus P650 excess per person. Amenities: Private Pool, 3 Aircon Rooms, Swimming Pool, Karaoke and Sounds, Free Parking, Strong WiFi, Genset Backup. VAT excluded.', 30, 75, 1, 650.00, 19999.00, 19999.00, 'Private Pool, 3 Aircon Rooms, Swimming Pool, Karaoke and Sounds, Free Parking, Strong WiFi, Genset Backup', 'assets/uploads/accommodations/6abab382bfa40.webp', 1, '2026-07-08 15:59:21', '2026-09-28 18:35:46', '14:00:00', '12:00:00');
 
 -- --------------------------------------------------------
 
@@ -111,8 +106,8 @@ INSERT INTO `activities` (`id`, `name`, `slug`, `description`, `price_per_hour`,
 (10, 'ATV Short Ride - Direct Bolo Beach Tour', 'atv-short-ride-direct-bolo-beach-tour', 'YP4K ATV and UTV Sports. Short ride 1 hour. Direct Bolo Beach Tour. P1,500 per ATV. Tour guide P1,500 mandatory. Destinations: Sabangan, Telbang, Tubuey Rd., Bolo Beach. VAT excluded.', 1500.00, 'per_head', 1.00, 1.00, 10, 10, 'assets/uploads/activities/6aa221779df1e.jpg', 1, '2026-07-08 15:59:21', '2026-09-10 14:51:37'),
 (11, 'ATV Long Ride - Mountain and Bolo Beach Tour', 'atv-long-ride-mountain-and-bolo-beach-tour', 'YP4K ATV and UTV Sports. Long ride almost 2 hours. Mountain and Bolo Beach Tour. P2,000 per ATV. Tour guide P1,500 mandatory. VAT excluded.', 3000.00, 'per_head', 2.00, 2.00, 10, 10, 'assets/uploads/activities/6aa2216cf4013.jpg', 1, '2026-07-08 15:59:21', '2026-09-23 12:59:47'),
 (12, 'Basketball Court - Flood Light Rental (Guest)', 'basketball-court-flood-light-rental-guest-', 'Open Basketball Court at Resort-2 Venue. All guests: P500/hour flood light rental. Solar light: FREE. Morning/afternoon play: FREE. Strictly time-scheduled. Please register first.', 500.00, 'flat_rate', 1.00, 4.00, 30, 10, 'assets/uploads/activities/6aa22248936e7.jpg', 1, '2026-07-08 15:59:21', '2026-09-10 03:21:44'),
-(15, 'Pickleball Court - Private Rental (Guest/Member)', 'pickleball-court-private-rental-guest-member', 'Sports Central YP4K. Soft opening special rates. Mon-Sun 4PM-9PM. Guest/member private rental: P250/hour. Open Play: P100 (4PM-9PM). 2 courts only. Full payment upon reservation.', 250.00, 'flat_rate', 1.00, 5.00, 10, 10, NULL, 1, '2026-07-08 15:59:21', '2026-07-08 15:59:21'),
-(16, 'Videoke Rental', 'videoke-rental', 'Videoke rental at YP4K Villa Berde Resort. P1,500 flat rate per session.', 750.00, 'flat_rate', 1.00, 4.00, 50, 10, NULL, 1, '2026-07-08 15:59:21', '2026-07-08 15:59:21');
+(15, 'Pickleball Court - Private Rental (Guest/Member)', 'pickleball-court-private-rental-guest-member-', 'Sports Central YP4K. Soft opening special rates. Mon-Sun 4PM-9PM. Guest/member private rental: P250/hour. Open Play: P100 (4PM-9PM). 2 courts only. Full payment upon reservation.', 250.00, 'flat_rate', 1.00, 5.00, 10, 10, 'assets/uploads/activities/6abaaacfba620.webp', 1, '2026-07-08 15:59:21', '2026-09-28 17:58:39'),
+(16, 'Videoke Rental', 'videoke-rental', 'Videoke rental at YP4K Villa Berde Resort. P1,500 flat rate per session.', 750.00, 'flat_rate', 1.00, 4.00, 50, 10, 'assets/uploads/activities/6abaaae7975dd.jpg', 1, '2026-07-08 15:59:21', '2026-09-28 17:59:03');
 
 -- --------------------------------------------------------
 
@@ -129,6 +124,167 @@ CREATE TABLE `activity_availability_schedule` (
   `max_concurrent_bookings` int(11) NOT NULL DEFAULT 1,
   `is_active` tinyint(1) DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `activity_logs`
+--
+
+CREATE TABLE `activity_logs` (
+  `id` int(11) NOT NULL,
+  `user_id` int(11) DEFAULT NULL,
+  `role` varchar(50) DEFAULT NULL,
+  `action_type` varchar(50) DEFAULT NULL,
+  `description` text DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `activity_logs`
+--
+
+INSERT INTO `activity_logs` (`id`, `user_id`, `role`, `action_type`, `description`, `created_at`) VALUES
+(1, 1, 'admin', 'logout', 'Admin logged out.', '2026-09-28 00:23:08'),
+(2, 1, 'admin', 'login', 'Admin logged in.', '2026-09-28 00:23:22'),
+(3, 1, 'admin', 'walk_in', 'Walk-in booking #WI-2026-21E5CC created for Feliciano Nando (accommodation).', '2026-09-28 00:56:50'),
+(4, 1, 'admin', 'login', 'Admin logged in.', '2026-09-28 03:16:50'),
+(5, 1, 'admin', 'logout', 'Admin logged out.', '2026-09-28 03:17:28'),
+(6, 2, 'staff', 'login', 'Staff logged in.', '2026-09-28 03:17:38'),
+(7, 2, 'staff', 'logout', 'Staff logged out.', '2026-09-28 04:39:11'),
+(8, 1, 'admin', 'login', 'Admin logged in.', '2026-09-28 04:39:20'),
+(9, 1, 'admin', 'logout', 'Admin logged out.', '2026-09-28 04:48:09'),
+(10, 1, 'admin', 'login', 'Admin logged in.', '2026-09-28 04:56:26'),
+(11, 1, 'admin', 'status_update', 'Booking #29 status updated to awaiting_payment.', '2026-09-28 04:57:00'),
+(12, 1, 'admin', 'status_update', 'Booking #28 status updated to awaiting_payment.', '2026-09-28 04:57:05'),
+(13, 1, 'admin', 'status_update', 'Booking #28 status updated to approved.', '2026-09-28 04:57:08'),
+(14, 1, 'admin', 'logout', 'Admin logged out.', '2026-09-28 04:57:36'),
+(15, 1, 'admin', 'login', 'Admin logged in.', '2026-09-28 05:00:38'),
+(16, 1, 'admin', 'status_update', 'Booking #29 status updated to approved.', '2026-09-28 05:01:20'),
+(17, 1, 'admin', 'logout', 'Admin logged out.', '2026-09-28 05:07:31'),
+(18, 1, 'admin', 'login', 'Admin logged in.', '2026-09-28 05:07:52'),
+(19, 1, 'admin', 'edit_accommodation', 'Edited accommodation: Day Tour Kubo Aircon Room (8 Hours) (ID: 4).', '2026-09-28 05:09:18'),
+(20, 1, 'admin', 'logout', 'Admin logged out.', '2026-09-28 05:09:26'),
+(21, 1, 'admin', 'login', 'Admin logged in.', '2026-09-28 05:19:15'),
+(22, 1, 'admin', 'status_update', 'Booking #30 status updated to awaiting_payment.', '2026-09-28 05:19:26'),
+(23, 1, 'admin', 'logout', 'Admin logged out.', '2026-09-28 05:20:30'),
+(24, 1, 'admin', 'login', 'Admin logged in.', '2026-09-28 05:24:04'),
+(25, 1, 'admin', 'status_update', 'Booking #30 status updated to cancelled.', '2026-09-28 05:26:07'),
+(26, 1, 'admin', 'logout', 'Admin logged out.', '2026-09-28 05:26:24'),
+(27, 1, 'admin', 'login', 'Admin logged in.', '2026-09-28 05:28:09'),
+(28, 1, 'admin', 'logout', 'Admin logged out.', '2026-09-28 05:28:24'),
+(29, 1, 'admin', 'login', 'Admin logged in.', '2026-09-28 06:18:17'),
+(30, 1, 'admin', 'logout', 'Admin logged out.', '2026-09-28 06:50:37'),
+(31, 2, 'staff', 'login', 'Staff logged in.', '2026-09-28 06:50:50'),
+(32, 2, 'staff', 'logout', 'Staff logged out.', '2026-09-28 06:54:54'),
+(33, 1, 'admin', 'login', 'Admin logged in.', '2026-09-28 09:44:28'),
+(34, 1, 'admin', 'logout', 'Admin logged out.', '2026-09-28 09:45:28'),
+(35, 1, 'admin', 'login', 'Admin logged in.', '2026-09-28 10:03:01'),
+(36, 1, 'admin', 'edit_bundle', 'Edited bundle: Daytour Private Resort 2 - 6HRS Daytime (Unli Pax) (ID: 4).', '2026-09-28 10:06:47'),
+(37, 1, 'admin', 'edit_bundle', 'Edited bundle: Daytour Private Resort 2 - 6HRS 3PM Onwards (Unli Pax) (ID: 5).', '2026-09-28 10:06:59'),
+(38, 1, 'admin', 'edit_bundle', 'Edited bundle: Private Resort 2 - 10HRS Full Day (ID: 6).', '2026-09-28 10:07:04'),
+(39, 1, 'admin', 'logout', 'Admin logged out.', '2026-09-28 10:07:12'),
+(40, 1, 'admin', 'login', 'Admin logged in.', '2026-09-28 11:03:56'),
+(41, 1, 'admin', 'status_update', 'Booking #31 status updated to awaiting_payment.', '2026-09-28 11:06:47'),
+(42, 1, 'admin', 'logout', 'Admin logged out.', '2026-09-28 11:06:57'),
+(43, 1, 'admin', 'login', 'Admin logged in.', '2026-09-28 11:08:32'),
+(44, 1, 'admin', 'edit_accommodation', 'Edited accommodation: Day Tour Kubo Non-Aircon Room (8 Hours) (ID: 2).', '2026-09-28 11:34:14'),
+(45, 1, 'admin', 'edit_accommodation', 'Edited accommodation: Day Tour Kubo Non-Aircon Room (8 Hours) (ID: 2).', '2026-09-28 11:35:23'),
+(46, 1, 'admin', 'edit_accommodation', 'Edited accommodation: Day Tour Kubo Non-Aircon Room (12 Hours) (ID: 3).', '2026-09-28 12:14:14'),
+(47, 1, 'admin', 'logout', 'Admin logged out.', '2026-09-28 12:18:43'),
+(48, 1, 'admin', 'login', 'Admin logged in.', '2026-09-28 12:31:19'),
+(49, 1, 'admin', 'edit_accommodation', 'Edited accommodation: Day Tour Kubo Non-Aircon Room (12 Hours) (ID: 3).', '2026-09-28 12:31:58'),
+(50, 1, 'admin', 'logout', 'Admin logged out.', '2026-09-28 12:32:01'),
+(51, 1, 'admin', 'login', 'Admin logged in.', '2026-09-28 12:36:17'),
+(52, 1, 'admin', 'edit_accommodation', 'Edited accommodation: Day Tour Kubo Aircon Room (12 Hours) (ID: 5).', '2026-09-28 12:37:35'),
+(53, 1, 'admin', 'logout', 'Admin logged out.', '2026-09-28 12:37:50'),
+(54, 1, 'admin', 'login', 'Admin logged in.', '2026-09-28 13:00:57'),
+(55, 1, 'admin', 'logout', 'Admin logged out.', '2026-09-28 13:08:30'),
+(56, 1, 'admin', 'login', 'Admin logged in.', '2026-09-28 13:41:37'),
+(57, 1, 'admin', 'status_update', 'Booking #32 status updated to awaiting_payment.', '2026-09-28 13:41:50'),
+(58, 1, 'admin', 'logout', 'Admin logged out.', '2026-09-28 13:42:19'),
+(59, 2, 'staff', 'login', 'Staff logged in.', '2026-09-28 13:42:51'),
+(60, 2, 'staff', 'logout', 'Staff logged out.', '2026-09-28 13:44:23'),
+(61, 1, 'admin', 'login', 'Admin logged in.', '2026-09-28 13:45:46'),
+(62, 1, 'admin', 'status_update', 'Booking #32 status updated to approved.', '2026-09-28 13:47:31'),
+(63, 1, 'admin', 'logout', 'Admin logged out.', '2026-09-28 13:48:29'),
+(64, 2, 'staff', 'login', 'Staff logged in.', '2026-09-28 13:48:48'),
+(65, 2, 'staff', 'logout', 'Staff logged out.', '2026-09-28 14:02:57'),
+(66, 1, 'admin', 'login', 'Admin logged in.', '2026-09-28 14:03:12'),
+(67, 1, 'admin', 'logout', 'Admin logged out.', '2026-09-28 15:09:39'),
+(68, 1, 'admin', 'login', 'Admin logged in.', '2026-09-28 15:10:34'),
+(69, 1, 'admin', 'edit_accommodation', 'Edited accommodation: Umbrella Cottage (8 Pax+) (ID: 6).', '2026-09-28 15:11:09'),
+(70, 1, 'admin', 'logout', 'Admin logged out.', '2026-09-28 15:11:13'),
+(71, 1, 'admin', 'login', 'Admin logged in.', '2026-09-28 15:11:47'),
+(72, 1, 'admin', 'edit_accommodation', 'Edited accommodation: Private Big Kubo - 3PM Onwards (50 Pax+) (ID: 14).', '2026-09-28 15:12:31'),
+(73, 1, 'admin', 'logout', 'Admin logged out.', '2026-09-28 15:12:34'),
+(74, 1, 'admin', 'login', 'Admin logged in.', '2026-09-28 15:14:08'),
+(75, 1, 'admin', 'status_update', 'Booking #33 status updated to awaiting_payment.', '2026-09-28 15:14:13'),
+(76, 1, 'admin', 'logout', 'Admin logged out.', '2026-09-28 15:14:48'),
+(77, 1, 'admin', 'login', 'Admin logged in.', '2026-09-28 15:25:40'),
+(78, 1, 'admin', 'status_update', 'Booking #34 status updated to awaiting_payment.', '2026-09-28 15:25:45'),
+(79, 1, 'admin', 'logout', 'Admin logged out.', '2026-09-28 15:26:08'),
+(80, 1, 'admin', 'login', 'Admin logged in.', '2026-09-28 15:28:22'),
+(81, 1, 'admin', 'status_update', 'Booking #35 status updated to awaiting_payment.', '2026-09-28 15:29:56'),
+(82, 1, 'admin', 'logout', 'Admin logged out.', '2026-09-28 15:30:14'),
+(83, 1, 'admin', 'login', 'Admin logged in.', '2026-09-28 15:33:03'),
+(84, 1, 'admin', 'status_update', 'Booking #36 status updated to awaiting_payment.', '2026-09-28 15:33:06'),
+(85, 1, 'admin', 'logout', 'Admin logged out.', '2026-09-28 15:33:17'),
+(86, 1, 'admin', 'login', 'Admin logged in.', '2026-09-28 15:45:54'),
+(87, 1, 'admin', 'status_update', 'Booking #37 status updated to awaiting_payment.', '2026-09-28 15:45:58'),
+(88, 1, 'admin', 'logout', 'Admin logged out.', '2026-09-28 15:46:07'),
+(89, 1, 'admin', 'login', 'Admin logged in.', '2026-09-28 15:47:59'),
+(90, 1, 'admin', 'status_update', 'Booking #38 status updated to awaiting_payment.', '2026-09-28 15:48:03'),
+(91, 1, 'admin', 'logout', 'Admin logged out.', '2026-09-28 15:48:35'),
+(92, 2, 'staff', 'login', 'Staff logged in.', '2026-09-28 15:49:22'),
+(93, 2, 'staff', 'logout', 'Staff logged out.', '2026-09-28 15:52:31'),
+(94, 1, 'admin', 'login', 'Admin logged in.', '2026-09-28 15:52:48'),
+(95, 1, 'admin', 'logout', 'Admin logged out.', '2026-09-28 17:07:12'),
+(96, 1, 'admin', 'login', 'Admin logged in.', '2026-09-28 17:27:36'),
+(97, 1, 'admin', 'edit_accommodation', 'Edited accommodation: Regular Room (ID: 17).', '2026-09-28 17:33:30'),
+(98, 1, 'admin', 'logout', 'Admin logged out.', '2026-09-28 17:34:20'),
+(99, 1, 'admin', 'login', 'Admin logged in.', '2026-09-28 17:35:10'),
+(100, 1, 'admin', 'edit_activity', 'Edited activity: Pickleball Court - Private Rental (Guest/Member) (ID: 15).', '2026-09-28 17:58:39'),
+(101, 1, 'admin', 'edit_activity', 'Edited activity: Videoke Rental (ID: 16).', '2026-09-28 17:59:03'),
+(102, 1, 'admin', 'edit_accommodation', 'Edited accommodation: Day Tour Kubo Non-Aircon Room (8 Hours) (ID: 2).', '2026-09-28 18:00:02'),
+(103, 1, 'admin', 'edit_accommodation', 'Edited accommodation: Day Tour Kubo Non-Aircon Room (8 Hours) (ID: 2).', '2026-09-28 18:00:21'),
+(104, 1, 'admin', 'login', 'Admin logged in.', '2026-09-28 18:16:20'),
+(105, 1, 'admin', 'edit_accommodation', 'Edited accommodation: Day Tour Kubo Non-Aircon Room (12 Hours) (ID: 3).', '2026-09-28 18:16:50'),
+(106, 1, 'admin', 'edit_accommodation', 'Edited accommodation: Day Tour Kubo Aircon Room (8 Hours) (ID: 4).', '2026-09-28 18:17:05'),
+(107, 1, 'admin', 'edit_accommodation', 'Edited accommodation: Day Tour Kubo Aircon Room (12 Hours) (ID: 5).', '2026-09-28 18:17:21'),
+(108, 1, 'admin', 'edit_accommodation', 'Edited accommodation: Kubo Cottage (15 Pax+) (ID: 8).', '2026-09-28 18:23:17'),
+(109, 1, 'admin', 'edit_accommodation', 'Edited accommodation: Umbrella Cottage (8 Pax+) (ID: 6).', '2026-09-28 18:24:38'),
+(110, 1, 'admin', 'edit_accommodation', 'Edited accommodation: Small Awning Cottage (10 Pax+) (ID: 7).', '2026-09-28 18:25:13'),
+(111, 1, 'admin', 'edit_accommodation', 'Edited accommodation: Kubo Cottage (15 Pax+) (ID: 8).', '2026-09-28 18:25:30'),
+(112, 1, 'admin', 'edit_accommodation', 'Edited accommodation: Big Kubo Cottage (20 Pax+) (ID: 9).', '2026-09-28 18:25:57'),
+(113, 1, 'admin', 'edit_accommodation', 'Edited accommodation: Pavilion Cottage (25 Pax+) (ID: 10).', '2026-09-28 18:27:16'),
+(114, 1, 'admin', 'edit_accommodation', 'Edited accommodation: Private Big Pavilion - Daytime (35 Pax+) (ID: 11).', '2026-09-28 18:27:49'),
+(115, 1, 'admin', 'edit_accommodation', 'Edited accommodation: Private Big Pavilion - 3PM Onwards (35 Pax+) (ID: 12).', '2026-09-28 18:28:00'),
+(116, 1, 'admin', 'edit_accommodation', 'Edited accommodation: Private Big Kubo - Daytime (50 Pax+) (ID: 13).', '2026-09-28 18:28:23'),
+(117, 1, 'admin', 'edit_accommodation', 'Edited accommodation: Private Big Kubo - 3PM Onwards (50 Pax+) (ID: 14).', '2026-09-28 18:28:35'),
+(118, 1, 'admin', 'edit_accommodation', 'Edited accommodation: Kubo Room Non-Aircon (Transient) (ID: 15).', '2026-09-28 18:28:55'),
+(119, 1, 'admin', 'edit_accommodation', 'Edited accommodation: Kubo Room Aircon (Transient) (ID: 16).', '2026-09-28 18:29:05'),
+(120, 1, 'admin', 'edit_accommodation', 'Edited accommodation: Regular Room (ID: 17).', '2026-09-28 18:31:14'),
+(121, 1, 'admin', 'edit_accommodation', 'Edited accommodation: VIP Master Bedroom (ID: 19).', '2026-09-28 18:31:35'),
+(122, 1, 'admin', 'edit_accommodation', 'Edited accommodation: Regular Room (ID: 17).', '2026-09-28 18:31:57'),
+(123, 1, 'admin', 'delete_accommodation', 'Deleted accommodation: VIP ROOM.', '2026-09-28 18:33:18'),
+(124, 1, 'admin', 'delete_accommodation', 'Deleted accommodation: Family Private Villa.', '2026-09-28 18:33:37'),
+(125, 1, 'admin', 'delete_accommodation', 'Deleted accommodation: Mega Barkada Room.', '2026-09-28 18:33:41'),
+(126, 1, 'admin', 'delete_accommodation', 'Deleted accommodation: Mega Family Room.', '2026-09-28 18:33:44'),
+(127, 1, 'admin', 'delete_accommodation', 'Deleted accommodation: Regular Barkada Room.', '2026-09-28 18:33:49'),
+(128, 1, 'admin', 'toggle_accommodation', 'Changed accommodation (ID: 18) status to Inactive.', '2026-09-28 18:34:01'),
+(129, 1, 'admin', 'toggle_accommodation', 'Changed accommodation (ID: 18) status to Active.', '2026-09-28 18:34:03'),
+(130, 1, 'admin', 'delete_accommodation', 'Deleted accommodation: Regular Family Room.', '2026-09-28 18:34:11'),
+(131, 1, 'admin', 'delete_accommodation', 'Deleted accommodation: Grand Villa Room.', '2026-09-28 18:34:24'),
+(132, 1, 'admin', 'edit_accommodation', 'Edited accommodation: Barkada Private Villa (ID: 26).', '2026-09-28 18:35:36'),
+(133, 1, 'admin', 'edit_accommodation', 'Edited accommodation: Private Grand Villa (ID: 27).', '2026-09-28 18:35:46'),
+(134, 1, 'admin', 'edit_accommodation', 'Edited accommodation: Day Tour Kubo Non-Aircon Room (8 Hours) (ID: 2).', '2026-09-28 18:36:50'),
+(135, 1, 'admin', 'edit_accommodation', 'Edited accommodation: Day Tour Kubo Non-Aircon Room (12 Hours) (ID: 3).', '2026-09-28 18:37:03'),
+(136, 1, 'admin', 'edit_accommodation', 'Edited accommodation: Day Tour Kubo Aircon Room (8 Hours) (ID: 4).', '2026-09-28 18:37:15'),
+(137, 1, 'admin', 'edit_accommodation', 'Edited accommodation: Day Tour Kubo Aircon Room (12 Hours) (ID: 5).', '2026-09-28 18:37:28'),
+(138, 1, 'admin', 'edit_accommodation', 'Edited accommodation: Kubo Room Non-Aircon (Transient) (ID: 15).', '2026-09-28 18:37:41'),
+(139, 1, 'admin', 'edit_accommodation', 'Edited accommodation: Kubo Room Aircon (Transient) (ID: 16).', '2026-09-28 18:37:49'),
+(140, 1, 'admin', 'status_update', 'Booking #15 status updated to cancelled.', '2026-09-28 18:49:22');
 
 -- --------------------------------------------------------
 
@@ -166,7 +322,7 @@ CREATE TABLE `admins` (
 --
 
 INSERT INTO `admins` (`id`, `first_name`, `middle_name`, `last_name`, `suffix`, `email`, `phone_number`, `password`, `is_verified`, `verification_token`, `reset_token`, `reset_token_expiry`, `remember_token`, `token_expiry`, `created_at`, `updated_at`, `role`, `address`, `birthdate`, `gender`, `bio`, `avatar`) VALUES
-(1, 'Saiyon', '', 'Madarame', '', 'rhainearia@gmail.com', '09563695447', '$2y$10$l6ZJu.OEwCf454micPxxXO0pnHtUZyMXmJlrI8a/uZLGYl.Y8TcKO', 0, '696bc6d7cec17df661ed8408600c4bf7c2e081c2f8ff0ab97b7794dab79a97f0', NULL, NULL, NULL, NULL, '2026-03-26 16:56:37', '2026-03-26 16:56:37', 'admin', NULL, NULL, NULL, NULL, NULL),
+(1, 'Saiyon', '', 'Madarame', '', 'rhainearia@gmail.com', '09563695447', '$2y$10$ACwsnFAOshGieC504ZKCVeic3OmsGiHfnHCyut6tS8ymY8Jl.mrQa', 0, '696bc6d7cec17df661ed8408600c4bf7c2e081c2f8ff0ab97b7794dab79a97f0', NULL, NULL, NULL, NULL, '2026-03-26 16:56:37', '2026-09-28 09:44:11', 'admin', NULL, NULL, NULL, NULL, NULL),
 (2, 'Shion', NULL, 'Madarame', NULL, 'Shionmadarame@gmail.com', '09653765434', '$2y$10$hFjTTnFQptcIFilzpxTAd.01oZ0zkGRzmV.flRkHJ87X2Np/aY7oK', 1, NULL, NULL, NULL, NULL, NULL, '2026-09-15 17:10:16', '2026-09-15 17:10:16', 'staff', NULL, NULL, NULL, NULL, NULL);
 
 -- --------------------------------------------------------
@@ -215,6 +371,28 @@ CREATE TABLE `blocked_dates` (
 
 INSERT INTO `blocked_dates` (`id`, `blocked_date`, `reason`, `blocked_by`, `created_at`) VALUES
 (1, '2026-07-15', 'Testing', 1, '2026-07-02 16:06:37');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `blocked_emails`
+--
+
+CREATE TABLE `blocked_emails` (
+  `id` int(11) NOT NULL,
+  `email` varchar(255) NOT NULL,
+  `user_id` int(11) DEFAULT NULL,
+  `reason` varchar(255) DEFAULT NULL,
+  `blocked_by` int(11) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `blocked_emails`
+--
+
+INSERT INTO `blocked_emails` (`id`, `email`, `user_id`, `reason`, `blocked_by`, `created_at`) VALUES
+(2, 'pranksimithel@gmail.com', 2, 'Blocked by admin', 1, '2026-09-28 18:46:14');
 
 -- --------------------------------------------------------
 
@@ -272,8 +450,62 @@ INSERT INTO `bookings` (`id`, `booking_reference`, `user_id`, `booking_type`, `a
 (12, 'BK202609238215', 1, 'accommodation', NULL, 27, NULL, 3, 'Cool Vincent Bonilla', 'bonillacoolvincentc@gmail.com', '09563695447', '2026-09-24', NULL, '2026-09-30', NULL, 6, 75, '[Add-on Activities]: Billiards, Basketball Court - Flood Light Rental (Guest), Pickleball Court - Private Rental (Guest/Member), Videoke Rental', 297194.00, 'pending', 'gcash', 'online', NULL, NULL, '2026-09-23 06:55:13', '2026-09-23 07:00:02', 'assets/uploads/payment_proofs/proof_1_1790146513.webp', NULL),
 (13, 'BK202609264537', 1, 'accommodation', NULL, 9, NULL, 3, 'Cool Vincent Bonilla', 'bonillacoolvincentc@gmail.com', '09563695447', '2026-09-30', NULL, NULL, NULL, 1, 1, '[Add-on Activities]: Billiards, ATV Short Ride - Direct Bolo Beach Tour (Qty: 1), ATV Long Ride - Mountain and Bolo Beach Tour (Qty: 1), Basketball Court - Flood Light Rental (Guest), Pickleball Court - Private Rental (Guest/Member), Videoke Rental', 7700.00, 'pending', 'gcash', 'online', NULL, NULL, '2026-09-26 15:04:08', '2026-09-27 06:16:30', 'assets/uploads/payment_proofs/proof_1_1790435048.webp', NULL),
 (14, 'BK202609260386', 1, 'accommodation', NULL, 9, NULL, 3, 'Cool Vincent Bonilla', 'bonillacoolvincentc@gmail.com', '09563695447', '2026-09-30', NULL, NULL, NULL, 1, 1, '[Add-on Activities]: ATV Long Ride - Mountain and Bolo Beach Tour (Qty: 1)', 4500.00, 'pending', 'gcash', 'online', NULL, NULL, '2026-09-26 15:10:15', '2026-09-27 06:16:15', 'assets/uploads/payment_proofs/proof_1_1790435415.webp', NULL),
-(15, 'BK202609265181', 1, 'accommodation', NULL, 5, NULL, 2, 'Cool Vincent Bonilla', 'bonillacoolvincentc@gmail.com', '09563695447', '2026-09-30', NULL, NULL, NULL, 1, 2, '[Add-on Activities]: ATV Long Ride - Mountain and Bolo Beach Tour (Qty: 1)', 4499.00, 'pending', 'gcash', 'online', NULL, NULL, '2026-09-26 15:10:50', '2026-09-27 07:50:44', 'assets/uploads/payment_proofs/proof_1_1790435450.webp', NULL),
-(16, 'BK202609276217', 1, 'accommodation', NULL, 9, NULL, 2, 'Cool Vincent Bonilla', 'bonillacoolvincentc@gmail.com', '09563695447', '2026-09-28', NULL, NULL, NULL, 1, 1, '[Add-on Activities]: Billiards, Basketball Court - Flood Light Rental (Guest), Pickleball Court - Private Rental (Guest/Member), Videoke Rental', 3200.00, 'pending', 'gcash', 'online', NULL, NULL, '2026-09-27 08:39:53', '2026-09-27 08:40:22', 'assets/uploads/payment_proofs/proof_1_1790498393.webp', NULL);
+(15, 'BK202609265181', 1, 'accommodation', NULL, 5, NULL, 5, 'Cool Vincent Bonilla', 'bonillacoolvincentc@gmail.com', '09563695447', '2026-09-30', NULL, NULL, NULL, 1, 2, '[Add-on Activities]: ATV Long Ride - Mountain and Bolo Beach Tour (Qty: 1)', 4499.00, 'pending', 'gcash', 'online', NULL, NULL, '2026-09-26 15:10:50', '2026-09-28 18:49:22', 'assets/uploads/payment_proofs/proof_1_1790435450.webp', NULL),
+(16, 'BK202609276217', 1, 'accommodation', NULL, 9, NULL, 5, 'Cool Vincent Bonilla', 'bonillacoolvincentc@gmail.com', '09563695447', '2026-09-28', NULL, NULL, NULL, 1, 1, '[Add-on Activities]: Billiards, Basketball Court - Flood Light Rental (Guest), Pickleball Court - Private Rental (Guest/Member), Videoke Rental', 3200.00, 'pending', 'gcash', 'online', NULL, NULL, '2026-09-27 08:39:53', '2026-09-27 12:58:07', 'assets/uploads/payment_proofs/proof_1_1790498393.webp', NULL),
+(17, 'BK202609270968', 1, 'accommodation', NULL, 5, NULL, 2, 'Cool Vincent Bonilla', 'bonillacoolvincentc@gmail.com', '09563695447', '2026-09-28', NULL, NULL, NULL, 1, 1, '', 1499.00, 'paid', 'gcash', 'online', NULL, NULL, '2026-09-27 10:20:32', '2026-09-27 12:57:43', 'assets/uploads/payment_proofs/receipt_17_1790511028.jpg', NULL),
+(18, 'BK202609274905', 1, 'accommodation', NULL, 26, NULL, 5, 'Cool Vincent Bonilla', 'bonillacoolvincentc@gmail.com', '09563695447', '2026-10-01', NULL, '2026-10-03', NULL, 2, 40, '', 57998.00, 'pending', 'gcash', 'online', NULL, NULL, '2026-09-27 13:06:48', '2026-09-27 15:10:01', NULL, '2026-09-27 11:07:46'),
+(19, 'BK202609272922', 1, 'accommodation', NULL, 9, NULL, 3, 'Cool Vincent Bonilla', 'bonillacoolvincentc@gmail.com', '09563695447', '2026-09-28', NULL, NULL, NULL, 1, 20, '', 1500.00, 'pending', 'gcash', 'online', NULL, NULL, '2026-09-27 13:29:49', '2026-09-27 13:31:45', NULL, NULL),
+(20, 'BK202609272922-EXT1', 1, 'accommodation', NULL, 9, NULL, 3, 'Cool Vincent Bonilla', 'bonillacoolvincentc@gmail.com', '09563695447', '2026-09-29', NULL, '2026-09-30', NULL, 1, 20, 'Extra Room (Part of Booking BK202609272922)', 0.00, 'pending', 'gcash', 'online', NULL, NULL, '2026-09-27 13:29:49', '2026-09-27 13:32:03', NULL, NULL),
+(21, 'BK202609272562', 1, 'accommodation', NULL, 9, NULL, 5, 'Cool Vincent Bonilla', 'bonillacoolvincentc@gmail.com', '09563695447', '2026-09-30', NULL, NULL, NULL, 1, 1, '', 1500.00, 'pending', 'gcash', 'online', NULL, NULL, '2026-09-27 13:54:17', '2026-09-28 00:56:54', NULL, '2026-09-27 11:54:40'),
+(22, 'BK202609274061', 1, 'accommodation', NULL, 9, NULL, 3, 'Cool Vincent Bonilla', 'bonillacoolvincentc@gmail.com', '09563695447', '2026-09-30', NULL, NULL, NULL, 1, 20, '', 1500.00, 'pending', 'gcash', 'online', NULL, NULL, '2026-09-27 14:03:01', '2026-09-27 14:04:44', NULL, NULL),
+(23, 'BK202609274061-EXT1', 1, 'accommodation', NULL, 9, NULL, 3, 'Cool Vincent Bonilla', 'bonillacoolvincentc@gmail.com', '09563695447', '2026-09-30', NULL, '2026-10-01', NULL, 1, 20, 'Extra Room (Part of Booking BK202609274061)', 0.00, 'pending', 'gcash', 'online', NULL, NULL, '2026-09-27 14:03:01', '2026-09-27 14:04:54', NULL, NULL),
+(24, 'BK202609274061-EXT2', 1, 'accommodation', NULL, 9, NULL, 3, 'Cool Vincent Bonilla', 'bonillacoolvincentc@gmail.com', '09563695447', '2026-09-30', NULL, '2026-10-01', NULL, 1, 20, 'Extra Room (Part of Booking BK202609274061)', 0.00, 'pending', 'gcash', 'online', NULL, NULL, '2026-09-27 14:03:01', '2026-09-27 14:05:02', NULL, NULL),
+(25, 'BK202609274061-EXT3', 1, 'accommodation', NULL, 9, NULL, 3, 'Cool Vincent Bonilla', 'bonillacoolvincentc@gmail.com', '09563695447', '2026-09-30', NULL, '2026-10-01', NULL, 1, 20, 'Extra Room (Part of Booking BK202609274061)', 0.00, 'pending', 'gcash', 'online', NULL, NULL, '2026-09-27 14:03:01', '2026-09-27 14:05:11', NULL, NULL),
+(26, 'BK202609274061-EXT4', 1, 'accommodation', NULL, 9, NULL, 3, 'Cool Vincent Bonilla', 'bonillacoolvincentc@gmail.com', '09563695447', '2026-09-30', NULL, '2026-10-01', NULL, 1, 20, 'Extra Room (Part of Booking BK202609274061)', 0.00, 'pending', 'gcash', 'online', NULL, NULL, '2026-09-27 14:03:01', '2026-09-27 14:05:26', NULL, NULL),
+(27, 'WI-2026-21E5CC', NULL, 'accommodation', NULL, 5, NULL, 6, 'Feliciano Nando', '', '09952544624', '2026-09-28', '08:00:00', '2026-09-28', '19:00:00', 0, 1, NULL, 1499.00, 'paid', 'cash', 'walk_in', 'Feliciano Nando', '09952544624', '2026-09-28 00:56:50', '2026-09-28 00:56:50', NULL, NULL),
+(28, 'BK202609281581', 1, 'accommodation', NULL, 5, NULL, 2, 'Cool Vincent Bonilla', 'bonillacoolvincentc@gmail.com', '09563695447', '2026-09-29', NULL, NULL, NULL, 1, 2, '', 1499.00, 'paid', 'gcash', 'online', NULL, NULL, '2026-09-28 04:55:48', '2026-09-28 04:57:08', NULL, NULL),
+(29, 'BK202609281581-EXT1', 1, 'accommodation', NULL, 9, NULL, 2, 'Cool Vincent Bonilla', 'bonillacoolvincentc@gmail.com', '09563695447', '2026-09-29', NULL, '2026-09-30', NULL, 1, 20, 'Extra Room (Part of Booking BK202609281581)', 0.00, 'paid', 'gcash', 'online', NULL, NULL, '2026-09-28 04:55:48', '2026-09-28 05:01:20', 'assets/uploads/payment_proofs/receipt_29_1790571616.jpg', NULL),
+(30, 'BK202609287727', 1, 'accommodation', NULL, 18, NULL, 5, 'Cool Vincent Bonilla', 'bonillacoolvincentc@gmail.com', '09563695447', '2026-10-01', NULL, '2026-10-31', NULL, 30, 4, '', 134970.00, 'pending', 'gcash', 'online', NULL, NULL, '2026-09-28 05:18:56', '2026-09-28 05:26:07', 'assets/uploads/payment_proofs/receipt_30_1790573025.jpg', '2026-09-28 03:19:26'),
+(31, 'BK202609284552', 1, 'accommodation', NULL, 5, NULL, 5, 'Cool Vincent Bonilla', 'bonillacoolvincentc@gmail.com', '09563695447', '2026-10-01', NULL, NULL, NULL, 1, 2, '[Additional Rooms]:\n- Day Tour Kubo Aircon Room (8 Hours) (Guests: 2, Dates: 2026-10-01 to 2026-10-02, Price: ₱999.00)', 2498.00, 'pending', 'gcash', 'online', NULL, NULL, '2026-09-28 11:03:30', '2026-09-28 13:08:55', NULL, '2026-09-28 09:06:47'),
+(32, 'BK202609282864', 1, 'accommodation', NULL, 3, NULL, 2, 'Cool Vincent Bonilla', 'bonillacoolvincentc@gmail.com', '09563695447', '2026-09-30', '09:00:00', NULL, '21:00:00', 1, 4, '[Add-on Activities]: Billiards, Basketball Court - Flood Light Rental (Guest), Pickleball Court - Private Rental (Guest/Member), Videoke Rental', 3199.00, 'paid', 'gcash', 'online', NULL, NULL, '2026-09-28 13:41:23', '2026-09-28 13:47:31', 'assets/uploads/payment_proofs/receipt_32_1790603120.jpg', NULL),
+(33, 'BK202609282911', 1, 'accommodation', NULL, 6, NULL, 5, 'Cool Vincent Bonilla', 'bonillacoolvincentc@gmail.com', '09563695447', '2026-09-29', NULL, NULL, NULL, 1, 8, '[Additional Rooms]:\n- Private Big Kubo - 3PM Onwards (50 Pax+) (Guests: 8, Dates: 2026-09-29 to 2026-09-30, Price: ₱4,000.00)', 4500.00, 'pending', 'gcash', 'online', NULL, NULL, '2026-09-28 15:13:55', '2026-09-28 17:18:46', NULL, '2026-09-28 13:14:13'),
+(34, 'BK202609280473', 1, 'accommodation', NULL, 6, NULL, 5, 'Cool Vincent Bonilla', 'bonillacoolvincentc@gmail.com', '09563695447', '2026-09-30', NULL, NULL, NULL, 1, 1, '[Additional Rooms]:\n- Private Big Kubo - 3PM Onwards (50 Pax+) (Guests: 50, Dates: 2026-09-30 to 2026-10-01, Price: ₱4,000.00)', 4500.00, 'pending', 'gcash', 'online', NULL, NULL, '2026-09-28 15:25:29', '2026-09-28 17:26:06', NULL, '2026-09-28 13:25:45'),
+(35, 'BK202609285766', 1, 'accommodation', NULL, 9, NULL, 5, 'Cool Vincent Bonilla', 'bonillacoolvincentc@gmail.com', '09563695447', '2026-09-30', NULL, NULL, NULL, 1, 1, '[Additional Rooms]:\n- Day Tour Kubo Aircon Room (12 Hours) (Guests: 1, Dates: 2026-09-30 to 2026-10-01, Price: ₱1,499.00)', 2999.00, 'pending', 'gcash', 'online', NULL, NULL, '2026-09-28 15:28:01', '2026-09-28 17:33:37', NULL, '2026-09-28 13:29:56'),
+(36, 'BK202609284455', 1, 'accommodation', NULL, 5, NULL, 5, 'Cool Vincent Bonilla', 'bonillacoolvincentc@gmail.com', '09563695447', '2026-10-08', NULL, NULL, NULL, 1, 6, '[Additional Rooms]:\n- Big Kubo Cottage (20 Pax+) (Guests: 6, Dates: 2026-10-08 to 2026-10-09, Price: ₱1,500.00)', 3999.00, 'pending', 'gcash', 'online', NULL, NULL, '2026-09-28 15:32:50', '2026-09-28 17:33:37', NULL, '2026-09-28 13:33:06'),
+(37, 'BK202609280338', 1, 'accommodation', NULL, 9, NULL, 5, 'Cool Vincent Bonilla', 'bonillacoolvincentc@gmail.com', '09563695447', '2026-10-15', NULL, NULL, NULL, 1, 20, '[Additional Rooms]:\n- Day Tour Kubo Aircon Room (12 Hours) (Guests: 20, Date: 2026-10-15, Price: ₱5,999.00)', 7499.00, 'pending', 'gcash', 'online', NULL, NULL, '2026-09-28 15:45:43', '2026-09-28 18:49:12', NULL, '2026-09-28 13:45:58'),
+(38, 'BK202609286277', 1, 'accommodation', NULL, 26, NULL, 5, 'Cool Vincent Bonilla', 'bonillacoolvincentc@gmail.com', '09563695447', '2026-10-08', NULL, '2026-10-10', NULL, 2, 40, '[Additional Rooms]:\n- Family Private Villa (Guests: 40, Dates: 2026-10-08 to 2026-10-10, Price: ₱30,249.00)', 88247.00, 'pending', 'gcash', 'online', NULL, NULL, '2026-09-28 15:47:42', '2026-09-28 18:49:12', NULL, '2026-09-28 13:48:03'),
+(39, 'WI-2026-2456C8', NULL, 'accommodation', NULL, 3, NULL, 6, 'Joshua Fernandez', '', '09876475647', '2026-10-30', '07:00:00', '2026-10-30', '19:00:00', 0, 6, '[Additional Rooms]:\n- Kubo Cottage (15 Pax+) (Guests: 15, Price: ₱1,200.00)', 1200.00, 'paid', 'cash', 'walk_in', 'Joshua Fernandez', '09876475647', '2026-09-28 16:00:50', '2026-09-28 16:00:50', NULL, NULL),
+(40, 'WI-2026-23032E', NULL, 'accommodation', NULL, 2, NULL, 6, 'Joshua Fernandez', '', '09875468763', '2026-10-30', '08:00:00', '2026-10-30', '16:00:00', 0, 2, 'Extra Cusion\n\n[Additional Rooms]:\n- Kubo Cottage (15 Pax+) (Guests: 15, Price: ₱1,200.00)', 1200.00, 'paid', 'cash', 'walk_in', 'Joshua Fernandez', '09875468763', '2026-09-28 16:07:14', '2026-09-28 16:07:14', NULL, NULL);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `booking_extra_rooms`
+--
+
+CREATE TABLE `booking_extra_rooms` (
+  `id` int(11) NOT NULL,
+  `booking_id` int(11) NOT NULL,
+  `accommodation_id` int(11) NOT NULL,
+  `num_guests` int(11) NOT NULL DEFAULT 1,
+  `check_in_date` date NOT NULL,
+  `check_out_date` date DEFAULT NULL,
+  `price` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `booking_extra_rooms`
+--
+
+INSERT INTO `booking_extra_rooms` (`id`, `booking_id`, `accommodation_id`, `num_guests`, `check_in_date`, `check_out_date`, `price`, `created_at`) VALUES
+(1, 34, 14, 50, '2026-09-30', '2026-10-01', 4000.00, '2026-09-28 15:25:29'),
+(2, 35, 5, 1, '2026-09-30', '2026-10-01', 1499.00, '2026-09-28 15:28:01'),
+(3, 36, 9, 6, '2026-10-08', '2026-10-09', 1500.00, '2026-09-28 15:32:50'),
+(4, 37, 5, 20, '2026-10-15', NULL, 5999.00, '2026-09-28 15:45:43'),
+(5, 38, 25, 40, '2026-10-08', '2026-10-10', 30249.00, '2026-09-28 15:47:42'),
+(6, 39, 8, 15, '2026-10-30', '2026-10-30', 1200.00, '2026-09-28 16:00:50'),
+(7, 40, 8, 15, '2026-10-30', '2026-10-30', 1200.00, '2026-09-28 16:07:14');
 
 -- --------------------------------------------------------
 
@@ -327,7 +559,66 @@ INSERT INTO `booking_logs` (`id`, `booking_id`, `old_status_id`, `new_status_id`
 (28, 13, 1, 3, 'admin', 1, 'Kulang ang bayad', '2026-09-27 06:16:30'),
 (29, 15, 1, 2, 'admin', 1, 'Booking approved by admin', '2026-09-27 07:50:44'),
 (30, 16, NULL, 1, 'user', 1, 'Booking created with GCash payment proof', '2026-09-27 08:39:53'),
-(31, 16, 1, 2, 'admin', 1, 'Booking approved by admin', '2026-09-27 08:40:22');
+(31, 16, 1, 2, 'admin', 1, 'Booking approved by admin', '2026-09-27 08:40:22'),
+(32, 17, NULL, 1, 'user', 1, 'Booking request submitted (pending admin review)', '2026-09-27 10:20:32'),
+(33, 17, 1, 7, 'admin', 1, 'Approved by admin — Awaiting guest payment (2hr window)', '2026-09-27 10:22:49'),
+(34, 17, 7, 8, 'user', 1, 'Payment receipt submitted by guest for verification', '2026-09-27 12:10:28'),
+(35, 17, 8, 2, 'admin', 1, 'Payment verified and approved by admin', '2026-09-27 12:57:43'),
+(36, 16, 2, 5, 'admin', 1, 'Cancelled by admin', '2026-09-27 12:58:07'),
+(37, 18, NULL, 1, 'user', 1, 'Booking request submitted (pending admin review)', '2026-09-27 13:06:48'),
+(38, 18, 1, 7, 'admin', 1, 'Approved by admin — Awaiting guest payment (2hr window)', '2026-09-27 13:07:46'),
+(39, 19, NULL, 1, 'user', 1, 'Booking request submitted (pending admin review)', '2026-09-27 13:29:49'),
+(40, 19, 1, 3, 'admin', 1, 'Not enogh', '2026-09-27 13:31:45'),
+(41, 20, 1, 3, 'admin', 1, 'Full slot,  you\'re too late', '2026-09-27 13:32:03'),
+(42, 21, NULL, 1, 'user', 1, 'Booking request submitted (pending admin review)', '2026-09-27 13:54:17'),
+(43, 21, 1, 7, 'admin', 1, 'Approved by admin — Awaiting guest payment (2hr window)', '2026-09-27 13:54:40'),
+(44, 22, NULL, 1, 'user', 1, 'Booking request submitted (pending admin review)', '2026-09-27 14:03:01'),
+(45, 22, 1, 3, 'admin', 1, 'sdsd', '2026-09-27 14:04:44'),
+(46, 23, 1, 3, 'admin', 1, 'fsdfsd', '2026-09-27 14:04:54'),
+(47, 24, 1, 3, 'admin', 1, 'fsdfds', '2026-09-27 14:05:02'),
+(48, 25, 1, 3, 'admin', 1, 'fsdfs', '2026-09-27 14:05:11'),
+(49, 26, 1, 3, 'admin', 1, 'sdasdasdasdas', '2026-09-27 14:05:26'),
+(50, 18, 7, 5, 'system', NULL, 'Auto-cancelled: 2-hour payment window expired', '2026-09-27 15:10:01'),
+(51, 27, NULL, 6, 'admin', 1, 'Walk-in reservation created by admin.', '2026-09-28 00:56:50'),
+(52, 21, 7, 5, 'system', NULL, 'Auto-cancelled: 2-hour payment window expired', '2026-09-28 00:56:54'),
+(53, 28, NULL, 1, 'user', 1, 'Booking request submitted (pending admin review)', '2026-09-28 04:55:48'),
+(54, 29, 1, 7, 'admin', 1, 'Approved by admin — Awaiting guest payment (2hr window)', '2026-09-28 04:57:00'),
+(55, 28, 1, 7, 'admin', 1, 'Approved by admin — Awaiting guest payment (2hr window)', '2026-09-28 04:57:05'),
+(56, 28, 7, 2, 'admin', 1, 'Booking approved by admin', '2026-09-28 04:57:08'),
+(57, 29, 7, 8, 'user', 1, 'Payment receipt submitted by guest for verification', '2026-09-28 05:00:16'),
+(58, 29, 8, 2, 'admin', 1, 'Payment verified and approved by admin', '2026-09-28 05:01:20'),
+(59, 30, NULL, 1, 'user', 1, 'Booking request submitted (pending admin review)', '2026-09-28 05:18:56'),
+(60, 30, 1, 7, 'admin', 1, 'Approved by admin — Awaiting guest payment (2hr window)', '2026-09-28 05:19:26'),
+(61, 30, 7, 8, 'user', 1, 'Payment receipt submitted by guest for verification', '2026-09-28 05:23:45'),
+(62, 30, 8, 5, 'admin', 1, 'kulang', '2026-09-28 05:26:07'),
+(63, 31, NULL, 1, 'user', 1, 'Booking request submitted (pending admin review)', '2026-09-28 11:03:30'),
+(64, 31, 1, 7, 'admin', 1, 'Approved by admin — Awaiting guest payment (2hr window)', '2026-09-28 11:06:47'),
+(65, 31, 7, 5, 'system', NULL, 'Auto-cancelled: 2-hour payment window expired', '2026-09-28 13:08:55'),
+(66, 32, NULL, 1, 'user', 1, 'Booking request submitted (pending admin review)', '2026-09-28 13:41:23'),
+(67, 32, 1, 7, 'admin', 1, 'Approved by admin — Awaiting guest payment (2hr window)', '2026-09-28 13:41:50'),
+(68, 32, 7, 8, 'user', 1, 'Payment receipt submitted by guest for verification', '2026-09-28 13:45:20'),
+(69, 32, 8, 2, 'admin', 1, 'Payment verified and approved by admin', '2026-09-28 13:47:31'),
+(70, 33, NULL, 1, 'user', 1, 'Booking request submitted (pending admin review)', '2026-09-28 15:13:55'),
+(71, 33, 1, 7, 'admin', 1, 'Approved by admin — Awaiting guest payment (2hr window)', '2026-09-28 15:14:13'),
+(72, 34, NULL, 1, 'user', 1, 'Booking request submitted (pending admin review)', '2026-09-28 15:25:29'),
+(73, 34, 1, 7, 'admin', 1, 'Approved by admin — Awaiting guest payment (2hr window)', '2026-09-28 15:25:45'),
+(74, 35, NULL, 1, 'user', 1, 'Booking request submitted (pending admin review)', '2026-09-28 15:28:01'),
+(75, 35, 1, 7, 'admin', 1, 'Approved by admin — Awaiting guest payment (2hr window)', '2026-09-28 15:29:56'),
+(76, 36, NULL, 1, 'user', 1, 'Booking request submitted (pending admin review)', '2026-09-28 15:32:50'),
+(77, 36, 1, 7, 'admin', 1, 'Approved by admin — Awaiting guest payment (2hr window)', '2026-09-28 15:33:06'),
+(78, 37, NULL, 1, 'user', 1, 'Booking request submitted (pending admin review)', '2026-09-28 15:45:43'),
+(79, 37, 1, 7, 'admin', 1, 'Approved by admin — Awaiting guest payment (2hr window)', '2026-09-28 15:45:58'),
+(80, 38, NULL, 1, 'user', 1, 'Booking request submitted (pending admin review)', '2026-09-28 15:47:42'),
+(81, 38, 1, 7, 'admin', 1, 'Approved by admin — Awaiting guest payment (2hr window)', '2026-09-28 15:48:03'),
+(82, 39, NULL, 6, 'admin', 1, 'Walk-in reservation created by admin.', '2026-09-28 16:00:50'),
+(83, 40, NULL, 6, 'admin', 1, 'Walk-in reservation created by admin.', '2026-09-28 16:07:14'),
+(84, 33, 7, 5, 'system', NULL, 'Auto-cancelled: 2-hour payment window expired', '2026-09-28 17:18:46'),
+(85, 34, 7, 5, 'system', NULL, 'Auto-cancelled: 2-hour payment window expired', '2026-09-28 17:26:06'),
+(86, 35, 7, 5, 'system', NULL, 'Auto-cancelled: 2-hour payment window expired', '2026-09-28 17:33:37'),
+(87, 36, 7, 5, 'system', NULL, 'Auto-cancelled: 2-hour payment window expired', '2026-09-28 17:33:37'),
+(88, 37, 7, 5, 'system', NULL, 'Auto-cancelled: 2-hour payment window expired', '2026-09-28 18:49:12'),
+(89, 38, 7, 5, 'system', NULL, 'Auto-cancelled: 2-hour payment window expired', '2026-09-28 18:49:12'),
+(90, 15, 2, 5, 'admin', 1, 'gg', '2026-09-28 18:49:22');
 
 -- --------------------------------------------------------
 
@@ -379,17 +670,19 @@ CREATE TABLE `bundles` (
   `image_url` varchar(500) DEFAULT NULL,
   `is_active` tinyint(1) DEFAULT 1,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `check_in_time` time DEFAULT '14:00:00',
+  `check_out_time` time DEFAULT '12:00:00'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Dumping data for table `bundles`
 --
 
-INSERT INTO `bundles` (`id`, `name`, `slug`, `description`, `price`, `capacity`, `daily_booking_limit`, `start_time`, `duration_hours`, `bundle_type`, `amenities`, `image_url`, `is_active`, `created_at`, `updated_at`) VALUES
-(4, 'Daytour Private Resort 2 - 6HRS Daytime (Unli Pax)', 'daytour-private-resort-2-6hrs-daytime-unli-pax-', 'Daytour Private Resort 2 Rental (UNLIPAX). For exclusive use only. 6 Hours daytime. Unli Pax guest, cut-off 9PM. With 4 Cogon Kubo Rooms for celebrant. Includes: Resort 5,000sqm lot area, Private Kubo, 2 Rooms Kubo, Private Pavillion, Pavillion Area, Whole Basketball Court, Big Pool, Big Stage, Videoke Area, Table and Chairs, Kids Playground, CR/Shower/Hot Shower, Projector Big Screen, Free Parking. All payments non-refundable. VAT excluded.', 29999.00, 100, 1, '08:00:00', 6, 'both', 'Resort 5000sqm Lot, Private Kubo, 2 Rooms Kubo, Private Pavillion, Pavillion, Whole Basketball Court, Big Pool, Big Stage, Videoke, Table and Chairs, Kids Playground, CR/Shower/Hot Shower, Projector Big Screen, Free Parking, 4 Cogon Kubo Rooms', NULL, 1, '2026-07-08 15:59:21', '2026-09-24 15:50:27'),
-(5, 'Daytour Private Resort 2 - 6HRS 3PM Onwards (Unli Pax)', 'daytour-private-resort-2-6hrs-3pm-onwards-unli-pax-', 'Daytour Private Resort 2 Rental (UNLIPAX). For exclusive use only. 6 Hours from 3PM onwards. Unli Pax guest, cut-off 9PM. Same inclusions as daytime package. All payments non-refundable. VAT excluded.', 39999.00, 200, 1, '15:00:01', 6, 'both', 'Resort 5000sqm Lot, Private Kubo, 2 Rooms Kubo, Private Pavillion, Pavillion, Whole Basketball Court, Big Pool, Big Stage, Videoke, Table and Chairs, Kids Playground, CR/Shower/Hot Shower, Projector Big Screen, Free Parking, 4 Cogon Kubo Rooms', NULL, 1, '2026-07-08 15:59:21', '2026-09-24 15:50:15'),
-(6, 'Private Resort 2 - 10HRS Full Day', 'private-resort-2-10hrs-full-day', 'Daytour Private Resort 2 Rental (UNLIPAX). For exclusive use only. 10 Hours full day rental. Unli Pax guest, cut-off 9PM. Same inclusions as other packages. All payments non-refundable. VAT excluded.', 49999.00, 200, 1, '09:00:22', 10, 'both', 'Resort 5000sqm Lot, Private Kubo, 2 Rooms Kubo, Private Pavillion, Pavillion, Whole Basketball Court, Big Pool, Big Stage, Videoke, Table and Chairs, Kids Playground, CR/Shower/Hot Shower, Projector Big Screen, Free Parking, 4 Cogon Kubo Rooms', NULL, 1, '2026-07-08 15:59:21', '2026-09-24 15:50:21');
+INSERT INTO `bundles` (`id`, `name`, `slug`, `description`, `price`, `capacity`, `daily_booking_limit`, `start_time`, `duration_hours`, `bundle_type`, `amenities`, `image_url`, `is_active`, `created_at`, `updated_at`, `check_in_time`, `check_out_time`) VALUES
+(4, 'Daytour Private Resort 2 - 6HRS Daytime (Unli Pax)', 'daytour-private-resort-2-6hrs-daytime-unli-pax-', 'Daytour Private Resort 2 Rental (UNLIPAX). For exclusive use only. 6 Hours daytime. Unli Pax guest, cut-off 9PM. With 4 Cogon Kubo Rooms for celebrant. Includes: Resort 5,000sqm lot area, Private Kubo, 2 Rooms Kubo, Private Pavillion, Pavillion Area, Whole Basketball Court, Big Pool, Big Stage, Videoke Area, Table and Chairs, Kids Playground, CR/Shower/Hot Shower, Projector Big Screen, Free Parking. All payments non-refundable. VAT excluded.', 29999.00, 100, 1, '08:00:00', 6, 'day_tour', 'Resort 5000sqm Lot, Private Kubo, 2 Rooms Kubo, Private Pavillion, Pavillion, Whole Basketball Court, Big Pool, Big Stage, Videoke, Table and Chairs, Kids Playground, CR/Shower/Hot Shower, Projector Big Screen, Free Parking, 4 Cogon Kubo Rooms', NULL, 1, '2026-07-08 15:59:21', '2026-09-28 10:06:47', '14:00:00', '12:00:00'),
+(5, 'Daytour Private Resort 2 - 6HRS 3PM Onwards (Unli Pax)', 'daytour-private-resort-2-6hrs-3pm-onwards-unli-pax-', 'Daytour Private Resort 2 Rental (UNLIPAX). For exclusive use only. 6 Hours from 3PM onwards. Unli Pax guest, cut-off 9PM. Same inclusions as daytime package. All payments non-refundable. VAT excluded.', 39999.00, 200, 1, '15:00:01', 6, 'day_tour', 'Resort 5000sqm Lot, Private Kubo, 2 Rooms Kubo, Private Pavillion, Pavillion, Whole Basketball Court, Big Pool, Big Stage, Videoke, Table and Chairs, Kids Playground, CR/Shower/Hot Shower, Projector Big Screen, Free Parking, 4 Cogon Kubo Rooms', NULL, 1, '2026-07-08 15:59:21', '2026-09-28 10:06:59', '14:00:00', '12:00:00'),
+(6, 'Private Resort 2 - 10HRS Full Day', 'private-resort-2-10hrs-full-day', 'Daytour Private Resort 2 Rental (UNLIPAX). For exclusive use only. 10 Hours full day rental. Unli Pax guest, cut-off 9PM. Same inclusions as other packages. All payments non-refundable. VAT excluded.', 49999.00, 200, 1, '09:00:22', 10, 'day_tour', 'Resort 5000sqm Lot, Private Kubo, 2 Rooms Kubo, Private Pavillion, Pavillion, Whole Basketball Court, Big Pool, Big Stage, Videoke, Table and Chairs, Kids Playground, CR/Shower/Hot Shower, Projector Big Screen, Free Parking, 4 Cogon Kubo Rooms', NULL, 1, '2026-07-08 15:59:21', '2026-09-28 10:07:04', '14:00:00', '12:00:00');
 
 -- --------------------------------------------------------
 
@@ -435,10 +728,6 @@ CREATE TABLE `daily_resort_capacity` (
 INSERT INTO `daily_resort_capacity` (`target_date`, `max_guests`, `updated_by`, `updated_at`) VALUES
 ('2026-09-25', 6, 1, '2026-09-24 15:16:06'),
 ('2026-09-26', 5, 1, '2026-09-24 14:57:59'),
-('2026-09-27', 5, 1, '2026-09-24 15:02:15'),
-('2026-09-28', 5, 1, '2026-09-24 15:00:49'),
-('2026-09-29', 5, 1, '2026-09-24 15:00:42'),
-('2026-09-30', 6, 1, '2026-09-24 15:11:05'),
 ('2026-10-15', 5, 1, '2026-09-24 15:19:48'),
 ('2026-10-27', 3, 1, '2026-09-24 15:26:04');
 
@@ -554,6 +843,13 @@ CREATE TABLE `password_reset_otps` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `password_reset_otps`
+--
+
+INSERT INTO `password_reset_otps` (`id`, `email`, `otp`, `user_type`, `attempts`, `expires_at`, `created_at`) VALUES
+(6, 'pranksimithel@gmail.com', '179667', 'user', 0, '2026-09-28 11:47:35', '2026-09-28 09:42:35');
+
 -- --------------------------------------------------------
 
 --
@@ -569,6 +865,16 @@ CREATE TABLE `payment_receipts` (
   `file_type` varchar(50) NOT NULL,
   `uploaded_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `payment_receipts`
+--
+
+INSERT INTO `payment_receipts` (`id`, `booking_id`, `file_name`, `file_path`, `file_size`, `file_type`, `uploaded_at`) VALUES
+(1, 17, 'receipt_17.jpg', 'assets/uploads/payment_proofs/receipt_17_1790511028.jpg', 7357, 'image/jpeg', '2026-09-27 12:10:28'),
+(2, 29, 'receipt_29.jpg', 'assets/uploads/payment_proofs/receipt_29_1790571616.jpg', 78760, 'image/jpeg', '2026-09-28 05:00:16'),
+(3, 30, 'receipt_30.jpg', 'assets/uploads/payment_proofs/receipt_30_1790573025.jpg', 78760, 'image/jpeg', '2026-09-28 05:23:45'),
+(4, 32, 'receipt_32.jpg', 'assets/uploads/payment_proofs/receipt_32_1790603120.jpg', 78760, 'image/jpeg', '2026-09-28 13:45:20');
 
 -- --------------------------------------------------------
 
@@ -626,7 +932,19 @@ CREATE TABLE `time_slots` (
 INSERT INTO `time_slots` (`id`, `activity_id`, `accommodation_id`, `label`, `start_time`, `end_time`, `is_active`, `created_at`) VALUES
 (1, NULL, NULL, 'Morning Session', '08:00:00', '12:00:00', 1, '2026-09-21 14:54:11'),
 (2, NULL, NULL, 'Afternoon Session', '13:00:00', '17:00:00', 1, '2026-09-21 14:54:11'),
-(3, NULL, NULL, 'Full Day', '08:00:00', '17:00:00', 1, '2026-09-21 14:54:11');
+(3, NULL, NULL, 'Full Day', '08:00:00', '17:00:00', 1, '2026-09-21 14:54:11'),
+(46, NULL, 2, '', '07:00:00', '15:00:00', 1, '2026-09-28 18:36:50'),
+(47, NULL, 2, '', '08:00:00', '16:00:00', 1, '2026-09-28 18:36:50'),
+(48, NULL, 2, '', '09:00:00', '17:00:00', 1, '2026-09-28 18:36:50'),
+(49, NULL, 2, '', '10:00:00', '18:00:00', 1, '2026-09-28 18:36:50'),
+(50, NULL, 2, '', '11:00:00', '19:00:00', 1, '2026-09-28 18:36:50'),
+(51, NULL, 2, '', '00:00:00', '20:00:00', 1, '2026-09-28 18:36:50'),
+(52, NULL, 2, '', '13:00:00', '21:00:00', 1, '2026-09-28 18:36:50'),
+(53, NULL, 3, '', '07:00:00', '19:00:00', 1, '2026-09-28 18:37:03'),
+(54, NULL, 3, '', '08:00:00', '20:00:00', 1, '2026-09-28 18:37:03'),
+(55, NULL, 3, '', '09:00:00', '21:00:00', 1, '2026-09-28 18:37:03'),
+(56, NULL, 4, '', '09:00:00', '20:00:00', 1, '2026-09-28 18:37:15'),
+(57, NULL, 4, '', '09:00:00', '21:00:00', 1, '2026-09-28 18:37:15');
 
 -- --------------------------------------------------------
 
@@ -698,6 +1016,12 @@ ALTER TABLE `activity_availability_schedule`
   ADD KEY `idx_day_of_week` (`day_of_week`);
 
 --
+-- Indexes for table `activity_logs`
+--
+ALTER TABLE `activity_logs`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- Indexes for table `admins`
 --
 ALTER TABLE `admins`
@@ -729,6 +1053,13 @@ ALTER TABLE `blocked_dates`
   ADD KEY `idx_blocked_date` (`blocked_date`);
 
 --
+-- Indexes for table `blocked_emails`
+--
+ALTER TABLE `blocked_emails`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uniq_blocked_email` (`email`);
+
+--
 -- Indexes for table `bookings`
 --
 ALTER TABLE `bookings`
@@ -745,6 +1076,14 @@ ALTER TABLE `bookings`
   ADD KEY `idx_created_at` (`created_at`),
   ADD KEY `fk_bookings_bundle` (`bundle_id`),
   ADD KEY `idx_booking_source` (`booking_source`);
+
+--
+-- Indexes for table `booking_extra_rooms`
+--
+ALTER TABLE `booking_extra_rooms`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `fk_booking_id` (`booking_id`),
+  ADD KEY `fk_accommodation_id` (`accommodation_id`);
 
 --
 -- Indexes for table `booking_logs`
@@ -913,6 +1252,12 @@ ALTER TABLE `activity_availability_schedule`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `activity_logs`
+--
+ALTER TABLE `activity_logs`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=141;
+
+--
 -- AUTO_INCREMENT for table `admins`
 --
 ALTER TABLE `admins`
@@ -931,16 +1276,28 @@ ALTER TABLE `blocked_dates`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
+-- AUTO_INCREMENT for table `blocked_emails`
+--
+ALTER TABLE `blocked_emails`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
 -- AUTO_INCREMENT for table `bookings`
 --
 ALTER TABLE `bookings`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=41;
+
+--
+-- AUTO_INCREMENT for table `booking_extra_rooms`
+--
+ALTER TABLE `booking_extra_rooms`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT for table `booking_logs`
 --
 ALTER TABLE `booking_logs`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=32;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=91;
 
 --
 -- AUTO_INCREMENT for table `booking_status`
@@ -1000,13 +1357,13 @@ ALTER TABLE `password_reset_logs`
 -- AUTO_INCREMENT for table `password_reset_otps`
 --
 ALTER TABLE `password_reset_otps`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT for table `payment_receipts`
 --
 ALTER TABLE `payment_receipts`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `promotions`
@@ -1024,7 +1381,7 @@ ALTER TABLE `room_inventory`
 -- AUTO_INCREMENT for table `time_slots`
 --
 ALTER TABLE `time_slots`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=58;
 
 --
 -- AUTO_INCREMENT for table `users`
@@ -1051,6 +1408,12 @@ ALTER TABLE `bookings`
   ADD CONSTRAINT `fk_bookings_bundle` FOREIGN KEY (`bundle_id`) REFERENCES `bundles` (`id`) ON DELETE SET NULL,
   ADD CONSTRAINT `fk_bookings_status` FOREIGN KEY (`status_id`) REFERENCES `booking_status` (`id`),
   ADD CONSTRAINT `fk_bookings_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL;
+
+--
+-- Constraints for table `booking_extra_rooms`
+--
+ALTER TABLE `booking_extra_rooms`
+  ADD CONSTRAINT `fk_booking` FOREIGN KEY (`booking_id`) REFERENCES `bookings` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `booking_logs`

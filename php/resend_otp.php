@@ -11,6 +11,7 @@ ob_start();
 session_start();
 require_once '../phpAuthentication/db_config.php';
 require_once '../phpAuthentication/email_helper.php';
+require_once '../phpAuthentication/blocked_email_helper.php';
 
 header('Content-Type: application/json');
 
@@ -28,6 +29,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (empty($email)) {
             ob_clean();
             echo json_encode(['success' => false, 'message' => 'No email found for verification']);
+            exit;
+        }
+
+        if (is_email_blocked($GLOBALS['conn'], $email)) {
+            ob_clean();
+            echo json_encode(['success' => false, 'message' => blocked_email_message('register'), 'blocked' => true]);
             exit;
         }
         

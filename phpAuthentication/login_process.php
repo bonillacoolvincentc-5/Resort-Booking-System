@@ -6,6 +6,7 @@
 
 session_start();
 require_once 'db_config.php';
+require_once 'blocked_email_helper.php';
 
 // Check if form is submitted
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -27,6 +28,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     try {
+        if (is_email_blocked($conn, $email)) {
+            header("Location: ../Authentication/login.php?error=" . urlencode(blocked_email_message('login')));
+            exit();
+        }
+
         // Prepare SQL statement to prevent SQL injection
         $stmt = $conn->prepare("SELECT id, first_name, last_name, email, password FROM users WHERE email = ?");
         

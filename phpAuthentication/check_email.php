@@ -9,6 +9,7 @@ ob_start();
 header('Content-Type: application/json');
 
 require_once __DIR__ . '/db_config.php';
+require_once __DIR__ . '/blocked_email_helper.php';
 
 $email = trim($_GET['email'] ?? $_POST['email'] ?? '');
 
@@ -32,6 +33,8 @@ if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
 }
 
 try {
+    $blocked = is_email_blocked($conn, $email);
+
     // Check in users table
     $stmtUsers = $conn->prepare("SELECT id FROM users WHERE email = ? LIMIT 1");
     $stmtUsers->bind_param("s", $email);
@@ -57,9 +60,12 @@ try {
     echo json_encode([
         'success' => true,
         'valid_format' => true,
-        'exists' => $exists,
-        'available' => !$exists,
-        'message' => $exists ? 'This email is already registered.' : 'Email is available.'
+        'blocked' => $blocked,
+        'exists' => $exists || $blocked,
+        'available' => !$exists && !$blocked,
+        'message' => $blocked
+            ? blocked_email_message('register')
+            : ($exists ? 'This email is already registered.' : 'Email is available.')
     ]);
 } catch (Throwable $e) {
     error_log("Check email error: " . $e->getMessage());

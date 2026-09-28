@@ -12,6 +12,7 @@ if (!isset($_SESSION['is_admin']) || $_SESSION['is_admin'] !== true) {
 
 // Include database configuration
 admin_include('db_config.php');
+require_once __DIR__ . '/../phpAuthentication/blocked_email_helper.php';
 
 // Get admin info
 $adminName = $_SESSION['admin_name'];
@@ -19,14 +20,17 @@ $adminEmail = $_SESSION['admin_email'];
 
 // Get database connection
 global $conn;
+ensure_blocked_emails_table($conn);
 
 // Fetch real users from database
 $query = "
     SELECT 
         u.*,
-        COUNT(b.id) as booking_count
+        COUNT(b.id) as booking_count,
+        CASE WHEN be.id IS NOT NULL THEN 1 ELSE 0 END as is_blocked
     FROM users u
     LEFT JOIN bookings b ON u.id = b.user_id
+    LEFT JOIN blocked_emails be ON be.email = LOWER(u.email)
     GROUP BY u.id
     ORDER BY u.created_at DESC
 ";
@@ -57,6 +61,28 @@ while ($row = $result->fetch_assoc()) {
     <link rel="stylesheet" href="components/navbar.css">
     
     <link rel="stylesheet" href="../css/admin-theme.css">
+    <style>
+        .btn-action.btn-block {
+            background: rgba(248, 113, 113, 0.1);
+            border-color: rgba(248, 113, 113, 0.28);
+            color: #f87171;
+        }
+        .btn-action.btn-block:hover {
+            background: rgba(248, 113, 113, 0.18);
+            border-color: rgba(248, 113, 113, 0.45);
+            color: #fca5a5;
+        }
+        .btn-action.btn-unblock {
+            background: rgba(157, 255, 0, 0.08);
+            border-color: rgba(157, 255, 0, 0.22);
+            color: #9DFF00;
+        }
+        .btn-action.btn-unblock:hover {
+            background: rgba(157, 255, 0, 0.16);
+            border-color: rgba(157, 255, 0, 0.4);
+            color: #b8ff4d;
+        }
+    </style>
     <script src="components/admin-components.js" defer></script>
 </head>
 <body>
@@ -97,9 +123,14 @@ while ($row = $result->fetch_assoc()) {
                                 $fullName = trim($user['first_name'] . ' ' . $user['middle_name'] . ' ' . $user['last_name']);
                                 $initials = strtoupper(substr($user['first_name'], 0, 1) . substr($user['last_name'], 0, 1));
                                 
-                                // Determine status based on is_verified
-                                $statusClass = $user['is_verified'] ? 'status-active' : 'status-inactive';
-                                $statusText = $user['is_verified'] ? 'Active' : 'Inactive';
+                                $isBlocked = !empty($user['is_blocked']);
+                                if ($isBlocked) {
+                                    $statusClass = 'status-blocked';
+                                    $statusText = 'Blocked';
+                                } else {
+                                    $statusClass = $user['is_verified'] ? 'status-active' : 'status-inactive';
+                                    $statusText = $user['is_verified'] ? 'Active' : 'Inactive';
+                                }
                                 
                                 // Format date
                                 $joinedDate = date('M j, Y', strtotime($user['created_at']));
@@ -132,12 +163,18 @@ while ($row = $result->fetch_assoc()) {
                                 <td><span class="status-badge <?php echo $statusClass; ?>"><?php echo $statusText; ?></span></td>
                                 <td>
                                     <div class="action-buttons">
-                                        <button class="btn-action btn-view" onclick="viewUser(<?php echo $user['id']; ?>)">
+                                        <button class="btn-action btn-view" onclick="viewUser(<?php echo $user['id']; ?>)" title="View user">
                                             <i class="bi bi-eye"></i>
                                         </button>
-                                        <button class="btn-action btn-delete" onclick="deleteUser(<?php echo $user['id']; ?>)">
-                                            <i class="bi bi-trash"></i>
+                                        <?php if ($isBlocked): ?>
+                                        <button class="btn-action btn-unblock" title="Unblock email" onclick="toggleUserBlock(<?php echo (int) $user['id']; ?>, 'unblock', '<?php echo htmlspecialchars($user['email'], ENT_QUOTES); ?>')">
+                                            <i class="bi bi-unlock"></i>
                                         </button>
+                                        <?php else: ?>
+                                        <button class="btn-action btn-block" title="Block email" onclick="toggleUserBlock(<?php echo (int) $user['id']; ?>, 'block', '<?php echo htmlspecialchars($user['email'], ENT_QUOTES); ?>')">
+                                            <i class="bi bi-slash-circle"></i>
+                                        </button>
+                                        <?php endif; ?>
                                     </div>
                                 </td>
                             </tr>
@@ -205,6 +242,10 @@ while ($row = $result->fetch_assoc()) {
                                     <label class="text-muted small d-block">Total Bookings</label>
                                     <span id="modalBookings" class="fw-medium badge bg-primary px-3 py-1">0</span>
                                 </div>
+                                <div class="col-sm-6">
+                                    <label class="text-muted small d-block">Account Status</label>
+                                    <span id="modalBlockedStatus" class="fw-medium text-white">---</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -247,7 +288,7 @@ while ($row = $result->fetch_assoc()) {
                                 <input type="tel" class="form-control" id="staffPhone" required pattern="^09\d{9}$" placeholder="09XXXXXXXXX" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff;">
                             </div>
                             <div class="col-md-12">
-                                <label class="form-label text-muted small fw-bold">Temporary Password <span class="text-danger">*</span></label>
+                                <label class="form-label text-muted small fw-bold">Password <span class="text-danger">*</span></label>
                                 <div class="auth-input-group" style="position: relative; display: flex; align-items: center;">
                                     <input type="password" class="form-control" id="staffPassword" required minlength="8" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; width: 100%; padding-right: 2.5rem;">
                                     <button type="button" class="auth-eye-btn" onclick="toggleStaffPasswordVisibility()" id="toggleStaffPassword" aria-label="Toggle password visibility" style="position: absolute; right: 0.5rem; background: transparent; border: none; color: #94a3b8; display: flex; align-items: center; justify-content: center; height: 100%; padding: 0 0.5rem; cursor: pointer; z-index: 10;">
@@ -430,6 +471,7 @@ while ($row = $result->fetch_assoc()) {
             document.getElementById('modalBirthdate').textContent = user.birthdate || 'Not specified';
             document.getElementById('modalAddress').textContent = address;
             document.getElementById('modalBookings').textContent = user.booking_count || '0';
+            document.getElementById('modalBlockedStatus').textContent = Number(user.is_blocked) ? 'Blocked' : (Number(user.is_verified) ? 'Active' : 'Inactive');
 
             // Date joined format
             if (user.created_at) {
@@ -443,14 +485,30 @@ while ($row = $result->fetch_assoc()) {
             modal.show();
         }
 
-        // Table interactions
-        document.addEventListener('click', function(e) {
-            if (e.target.closest('.btn-delete')) {
-                if (confirm('Are you sure you want to delete this user?')) {
-                    alert('User deleted');
+        async function toggleUserBlock(userId, action, email) {
+            const isBlock = action === 'block';
+            const confirmMsg = isBlock
+                ? `Block ${email}? This address will not be able to log in, reset a password, or register until it is unblocked.`
+                : `Unblock ${email}? This address will be allowed to log in and recover a password again.`;
+            if (!confirm(confirmMsg)) return;
+
+            try {
+                const res = await fetch('../php/block_user_email.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action, user_id: userId })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert(data.message || 'Failed to update block status.');
                 }
+            } catch (err) {
+                console.error(err);
+                alert('Connection error. Please try again.');
             }
-        });
+        }
     </script>
 
     <script src="../assets/js/bootstrap.bundle.min.js"></script>

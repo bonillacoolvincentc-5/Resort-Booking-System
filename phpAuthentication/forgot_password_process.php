@@ -6,6 +6,7 @@
 
 session_start();
 require_once 'db_config.php';
+require_once 'blocked_email_helper.php';
 
 // Check if form is submitted
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -23,6 +24,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     try {
+        if (is_email_blocked($conn, $email)) {
+            header("Location: ../Authentication/forgot-pass.php?error=" . urlencode(blocked_email_message('forgot')));
+            exit();
+        }
+
         // Check if email exists in database
         $stmt = $conn->prepare("SELECT id, email, firstName FROM users WHERE email = ?");
         $stmt->bind_param("s", $email);
