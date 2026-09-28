@@ -42,7 +42,7 @@ if ((empty($userName) || empty($userEmail) || empty($userPhone)) && $userId) {
 // ── Fetch ALL active time slots (keyed by activity_id, used by JS) ────
 $timeSlots = [];
 $stmtSlots = $conn->query(
-    "SELECT id, activity_id, label, start_time, end_time
+    "SELECT id, activity_id, accommodation_id, label, start_time, end_time
      FROM time_slots
      WHERE is_active = 1
      ORDER BY start_time ASC"
@@ -967,9 +967,6 @@ if ($stmtSlots) {
             <button class="filter-pill active" onclick="filterPackages('all',this)" id="filterAll">
                 <i class="bi bi-grid-3x3-gap"></i> All Packages
             </button>
-            <button class="filter-pill" onclick="filterPackages('activity',this)" id="filterActivity">
-                <i class="bi bi-activity"></i> Activities
-            </button>
             <button class="filter-pill" onclick="filterPackages('accommodation',this)" id="filterAccommodation">
                 <i class="bi bi-house-door"></i> Accommodations
             </button>
@@ -1045,6 +1042,18 @@ if ($stmtSlots) {
                                     <div class="mt-1" style="font-size:.7rem;color:var(--text-muted);">
                                         Select your check-out date (minimum 1 night)
                                     </div>
+                                </div>
+                            </div>
+
+                            <!-- Overnight check-in and check-out fixed times (Readonly) -->
+                            <div class="row mb-4 d-none" id="overnightTimeSection">
+                                <div class="col-md-6 mb-3 mb-md-0">
+                                    <label class="form-label-modern"><i class="bi bi-clock me-1"></i>Check-in Time</label>
+                                    <input type="time" id="overnightCheckIn" class="form-control-modern" readonly style="background:var(--bg-tertiary); color:var(--text-muted); cursor:not-allowed;">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label-modern"><i class="bi bi-clock-history me-1"></i>Check-out Time</label>
+                                    <input type="time" id="overnightCheckOut" class="form-control-modern" readonly style="background:var(--bg-tertiary); color:var(--text-muted); cursor:not-allowed;">
                                 </div>
                             </div>
 
@@ -1523,28 +1532,35 @@ function applyPackageFilters() {
 // ── Time slot data (PHP → JS) — grouped by activity_id ────────────
 const allTimeSlots = (function() {
     const raw = <?php
-        // Build a map: { activityId: [ {id, label, start_time, end_time}, ... ] }
+        // Build a map: { "activity_ID": [...], "accommodation_ID": [...] }
         $slotMap = [];
         foreach ($timeSlots as $s) {
-            $aid = (int)$s['activity_id'];
-            $slotMap[$aid][] = [
-                'id'         => (int)$s['id'],
-                'label'      => $s['label'],
-                'start_time' => $s['start_time'],   // "HH:MM:SS"
-                'end_time'   => $s['end_time'],
-                'start_fmt'  => date('g:i A', strtotime($s['start_time'])),
-                'end_fmt'    => date('g:i A', strtotime($s['end_time'])),
-                'start_val'  => date('H:i',   strtotime($s['start_time'])),
-                'end_val'    => date('H:i',   strtotime($s['end_time'])),
-            ];
+            $key = '';
+            if (!empty($s['activity_id'])) {
+                $key = 'activity_' . $s['activity_id'];
+            } elseif (!empty($s['accommodation_id'])) {
+                $key = 'accommodation_' . $s['accommodation_id'];
+            }
+            if ($key) {
+                $slotMap[$key][] = [
+                    'id'         => (int)$s['id'],
+                    'label'      => $s['label'],
+                    'start_time' => $s['start_time'],   // "HH:MM:SS"
+                    'end_time'   => $s['end_time'],
+                    'start_fmt'  => date('g:i A', strtotime($s['start_time'])),
+                    'end_fmt'    => date('g:i A', strtotime($s['end_time'])),
+                    'start_val'  => date('H:i',   strtotime($s['start_time'])),
+                    'end_val'    => date('H:i',   strtotime($s['end_time'])),
+                ];
+            }
         }
         echo json_encode($slotMap, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT);
     ?>;
     return raw;
 })();
 
-// ── Populate time slot <select> for the given activity ID ──────────
-function populateTimeSlots(activityId) {
+// ── Populate time slot <select> for the given package ID and type ──────────
+function populateTimeSlots(id, type) {
     const sel    = document.getElementById('timeSlotSelect');
     const timeIn  = document.getElementById('timeIn');
     const timeOut = document.getElementById('timeOut');
@@ -1557,7 +1573,7 @@ function populateTimeSlots(activityId) {
     if (disp)    disp.textContent = 'Duration: —';
     document.getElementById('timeValidation')?.classList.add('d-none');
 
-    const slots = allTimeSlots[activityId] || [];
+    const slots = allTimeSlots[type + '_' + id] || [];
     sel.innerHTML = ''; // clear old options
 
     if (!slots.length) {
@@ -1565,7 +1581,7 @@ function populateTimeSlots(activityId) {
         opt.value = '';
         opt.dataset.in  = '';
         opt.dataset.out = '';
-        opt.textContent = '— No time slots for this activity —';
+        opt.textContent = '— No time slots —';
         sel.appendChild(opt);
         return;
     }
@@ -1579,9 +1595,7 @@ function populateTimeSlots(activityId) {
     sel.appendChild(placeholder);
 
     slots.forEach(s => {
-        const label = s.label
-            ? `${s.label}\u00a0(${s.start_fmt} – ${s.end_fmt})`
-            : `${s.start_fmt} – ${s.end_fmt}`;
+        const label = `${s.start_fmt} – ${s.end_fmt}`;
         const opt = document.createElement('option');
         opt.value        = s.id;
         opt.dataset.in   = s.start_val;
@@ -1717,7 +1731,8 @@ async function loadPackages(targetDate = null) {
         }
     } catch(e) {
         console.error(e);
-        document.getElementById('packagesLoading').remove();
+        const errLoader = document.getElementById('packagesLoading');
+        if (errLoader) errLoader.remove();
         renderEmptyState('Failed to load packages. Please refresh the page.');
     }
 }
@@ -1885,12 +1900,17 @@ function openDetailModal(id, type) {
     // "Book Now" inside modal
     const modalBookBtn = document.getElementById('modalBookNowBtn');
     const unitLimit = pkg.booking_limit || 1;
-    const isFullyBooked = (pkg.booked_today_count || 0) >= unitLimit;
+    
+    // Check cart limit just like the grid does
+    const cartCount = typeof extraRooms !== 'undefined' ? 
+        (extraRooms.filter(r => r.pkg.id === pkg.id).length + (typeof selectedPkg !== 'undefined' && selectedPkg && selectedPkg.id === pkg.id ? 1 : 0)) : 0;
+    const isCartLimitReached = cartCount >= unitLimit;
+
     if (modalBookBtn) {
-        if (isFullyBooked) {
+        if (isCartLimitReached) {
             modalBookBtn.disabled = true;
             modalBookBtn.className = 'btn-modern btn-danger-modern';
-            modalBookBtn.innerHTML = '<i class="bi bi-x-circle"></i> Fully Booked';
+            modalBookBtn.innerHTML = '<i class="bi bi-check-circle"></i> Selected';
             modalBookBtn.onclick = null;
         } else {
             modalBookBtn.disabled = false;
@@ -2084,27 +2104,42 @@ function selectPackage(id, type) {
     const checkoutSec = document.getElementById('checkoutSection');
     const checkoutInp = document.getElementById('checkoutDate');
 
+    const overnightTimeSec = document.getElementById('overnightTimeSection');
+    const overnightCheckIn = document.getElementById('overnightCheckIn');
+    const overnightCheckOut = document.getElementById('overnightCheckOut');
+
+    if (overnightTimeSec) overnightTimeSec.classList.add('d-none');
+
     if (pkg.package_type === 'activity') {
         document.getElementById('timeRangeSection').classList.remove('d-none');
         if (checkoutSec) checkoutSec.classList.add('d-none');
         if (checkoutInp) checkoutInp.value = '';
         if (labelText) labelText.textContent = 'Date of Visit';
         if (hintText) hintText.textContent = 'Select your activity date';
-        populateTimeSlots(pkg.id);
+        populateTimeSlots(pkg.id, 'activity');
     } else if (pkg.package_type === 'accommodation') {
-        document.getElementById('timeRangeSection').classList.add('d-none');
-
         if (currentTourType === 'daytour') {
             // Day tour: change the check in word to date of visit and remove the check out date
             if (labelText) labelText.textContent = 'Date of Visit';
             if (hintText) hintText.textContent = 'Select your preferred date of visit';
             if (checkoutSec) checkoutSec.classList.add('d-none');
             if (checkoutInp) checkoutInp.value = '';
+            // Show time slots for Day Tours
+            document.getElementById('timeRangeSection').classList.remove('d-none');
+            populateTimeSlots(pkg.id, 'accommodation');
         } else {
             // Overnight: show the check in and check out date and hide the date of visit word
             if (labelText) labelText.textContent = 'Check-in Date';
             if (hintText) hintText.textContent = 'Select your preferred check-in date';
             if (checkoutSec) checkoutSec.classList.remove('d-none');
+            document.getElementById('timeRangeSection').classList.add('d-none');
+            if (overnightTimeSec) {
+                overnightTimeSec.classList.remove('d-none');
+                if (pkg.check_in_time) overnightCheckIn.value = pkg.check_in_time.substring(0,5);
+                if (pkg.check_out_time) overnightCheckOut.value = pkg.check_out_time.substring(0,5);
+                document.getElementById('timeIn').value = pkg.check_in_time || '14:00:00';
+                document.getElementById('timeOut').value = pkg.check_out_time || '12:00:00';
+            }
         }
     } else {
         // Bundle
@@ -2112,10 +2147,21 @@ function selectPackage(id, type) {
         if (checkoutSec) checkoutSec.classList.remove('d-none');
         if (labelText) labelText.textContent = 'Check-in Date';
         if (hintText) hintText.textContent = 'Select your check-in date';
+        if (overnightTimeSec) {
+            overnightTimeSec.classList.remove('d-none');
+            if (pkg.check_in_time) overnightCheckIn.value = pkg.check_in_time.substring(0,5);
+            if (pkg.check_out_time) overnightCheckOut.value = pkg.check_out_time.substring(0,5);
+            document.getElementById('timeIn').value = pkg.check_in_time || '14:00:00';
+            document.getElementById('timeOut').value = pkg.check_out_time || '12:00:00';
+        }
     }
 
     // Capacity hint
-    document.getElementById('capacityHint').textContent = `(max ${pkg.capacity})`;
+    let extraFeeText = '';
+    if (pkg.extra_person_fee && parseFloat(pkg.extra_person_fee) > 0) {
+        extraFeeText = `, Extra: ₱${parseFloat(pkg.extra_person_fee).toFixed(2)}/pax`;
+    }
+    document.getElementById('capacityHint').textContent = `(Base: ${pkg.base_capacity || 1}, Max: ${pkg.capacity}${extraFeeText})`;
     document.getElementById('numberOfGuests').max = pkg.capacity;
 
     // Inclusions (element removed from DOM; guard against null to avoid crashing the handler)
@@ -2152,13 +2198,14 @@ function renderAddons(currentPkg) {
     // 1. Exclude the currently selected package if it's an activity (cannot add-on same activity)
     // 2. ATV is Day Tour only; so exclude ATV if staying overnight. All other activities (videoke, swimming pool, basketball, gym, etc.) are available!
     const available = allActivities.filter(a => {
+        if (currentTourType === 'overnight') {
+            return false; // Add-ons only available in day tour
+        }
         if (currentPkg.package_type === 'activity' && a.id == currentPkg.id) {
             return false;
         }
-        const lowerName = (a.name || '').toLowerCase();
-        const isAtv = lowerName.includes('atv');
-        if (currentTourType === 'overnight' && isAtv) {
-            return false; // ATV only available in day tour
+        if (currentPkg.package_type === 'accommodation' && currentTourType === 'daytour') {
+            // Activities are allowed
         }
         return true;
     });
@@ -2211,11 +2258,13 @@ function renderAddons(currentPkg) {
                     ${noteHtml}
                 </div>
             </div>
+            ${lowerName.includes('atv') ? `
             <input type="number" class="addon-qty" id="addonQty-${a.id}" min="1" max="${maxQty}" value="${qtyVal}" step="1"
-                   style="display:${(isSelected && priceType !== 'flat_rate') ? 'inline-block' : 'none'};width:4.5rem;text-align:center;background:var(--bg-secondary);border:1px solid var(--border-color);color:var(--text-primary);border-radius:.5rem;padding:.25rem .35rem;"
+                   style="display:${isSelected ? 'inline-block' : 'none'};width:4.5rem;text-align:center;background:var(--bg-secondary);border:1px solid var(--border-color);color:var(--text-primary);border-radius:.5rem;padding:.25rem .35rem;"
                    title="Quantity for this add-on"
                    onclick="event.stopPropagation()"
                    oninput="onAddonQtyChange(${a.id}, this)">
+            ` : ''}
             <div class="addon-price">+${escHtml(formattedPrice)}${escHtml(suffix)}</div>
         </div>`;
     }).join('');
@@ -2241,11 +2290,28 @@ function toggleAddon(id, price, chk) {
     const item = document.getElementById('addon-' + id);
     const qtyEl = document.getElementById('addonQty-' + id);
     const priceType = (item && item.dataset.type) || (addonsMap[id] && addonsMap[id].price_type) || 'flat_rate';
+    
     if (chk.checked) {
+        // Enforce mutually exclusive ATV selection
+        const lowerName = allActivities.find(a => a.id == id)?.name.toLowerCase() || '';
+        if (lowerName.includes('atv')) {
+            const otherAtv = allActivities.find(a => a.name.toLowerCase().includes(lowerName.includes('short') ? 'atv long' : 'atv short'));
+            if (otherAtv && addonsMap[otherAtv.id] && addonsMap[otherAtv.id].selected) {
+                addonsMap[otherAtv.id].selected = false;
+                const otherChk = document.getElementById('addonChk-' + otherAtv.id);
+                if (otherChk) otherChk.checked = false;
+                const otherItem = document.getElementById('addon-' + otherAtv.id);
+                if (otherItem) otherItem.classList.remove('selected');
+                const otherQty = document.getElementById('addonQty-' + otherAtv.id);
+                if (otherQty) otherQty.style.display = 'none';
+            }
+        }
+        
+        
         if (item) item.classList.add('selected');
         const qtyVal = Math.max(1, parseInt(qtyEl ? qtyEl.value : 1, 10) || 1);
-        addonsMap[id] = { ...addonsMap[id], selected: true, price: parseFloat(price) || 0, price_type: priceType, qty: qtyVal };
-        if (qtyEl) qtyEl.style.display = (priceType === 'flat_rate') ? 'none' : 'inline-block';
+        addonsMap[id] = { ...addonsMap[id], selected: true, price: parseFloat(price) || 0, price_type: priceType, qty: qtyVal, name: allActivities.find(a => a.id == id)?.name };
+        if (qtyEl && lowerName.includes('atv')) qtyEl.style.display = 'inline-block';
     } else {
         if (item) item.classList.remove('selected');
         if (addonsMap[id]) addonsMap[id].selected = false;
@@ -2261,9 +2327,7 @@ function recalcPrice() {
     const guestsEl = document.getElementById('numberOfGuests');
     const guests   = Math.max(1, parseInt(guestsEl ? guestsEl.value : 1) || 1);
     document.querySelectorAll('.addon-qty').forEach(qtyEl => {
-        qtyEl.max = guests;
         const current = parseInt(qtyEl.value, 10) || 1;
-        if (current > guests) qtyEl.value = guests;
         if (current < 1) qtyEl.value = 1;
     });
 
@@ -2342,6 +2406,38 @@ function recalcPrice() {
     let summaryHtml = '';
     let grandTotal = base;
 
+    // Add Booking Details info
+    if (selectedPkg.package_type === 'accommodation' || selectedPkg.package_type === 'activity') {
+        const tIn = document.getElementById('timeIn')?.value;
+        const tOut = document.getElementById('timeOut')?.value;
+        let timeSlotText = '';
+        if (tIn && tOut) {
+            const formatTime = (time24) => {
+                const [h, m] = time24.split(':');
+                const hour = parseInt(h, 10);
+                const ampm = hour >= 12 ? 'PM' : 'AM';
+                const hour12 = hour % 12 || 12;
+                return `${hour12}:${m} ${ampm}`;
+            };
+            timeSlotText = `<div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.5rem;"><i class="bi bi-clock me-1"></i>Time: ${formatTime(tIn)} – ${formatTime(tOut)}</div>`;
+        }
+
+        let guestsText = '';
+        if (selectedPkg.capacity) {
+            guestsText = `<div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.8rem;"><i class="bi bi-people me-1"></i>Capacity: Base ${selectedPkg.base_capacity || 1}, Max ${selectedPkg.capacity} guests</div>`;
+        }
+
+        if (timeSlotText || guestsText) {
+            summaryHtml += `
+                <div style="border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; margin-bottom: 1rem;">
+                    <div style="font-weight: 600; font-size: 0.95rem; margin-bottom: 0.5rem; color: var(--text-primary);">Booking Details</div>
+                    ${timeSlotText}
+                    ${guestsText}
+                </div>
+            `;
+        }
+    }
+
     // 1. Base Price
     summaryHtml += `
         <div class="price-row">
@@ -2365,23 +2461,23 @@ function recalcPrice() {
     delete window.extraGuestsLabel;
 
     // 3. Add-ons
+    let hasATVShort = false;
+    let hasATVLong = false;
+    
     Object.values(addonsMap).filter(a => a.selected).forEach(a => {
         const type = a.price_type || 'flat_rate';
         let cost = 0;
         let label = a.name;
+        
+        const lowerName = (a.name || '').toLowerCase();
+        if (lowerName.includes('atv short ride')) hasATVShort = true;
+        if (lowerName.includes('atv long ride')) hasATVLong = true;
         
         if (type === 'flat_rate') {
             cost = Number(a.price);
         } else {
             const qtyEl = document.getElementById('addonQty-' + a.id);
             let qty = Math.max(1, parseInt(qtyEl ? qtyEl.value : 1, 10) || 1);
-            if (qtyEl) {
-                qtyEl.max = guests;
-                if (qty > guests) {
-                    qty = guests;
-                    qtyEl.value = guests;
-                }
-            }
             cost = Number(a.price) * qty;
             label = `${a.name} (x${qty})`;
         }
@@ -2394,6 +2490,25 @@ function recalcPrice() {
         `;
         grandTotal += cost;
     });
+    
+    // Auto-add Required Tour Guide for ATVs
+    if (hasATVShort) {
+        summaryHtml += `
+            <div class="price-row" style="color: var(--text-secondary); font-size: 0.9rem;">
+                <span class="price-label" style="padding-left: 0.5rem; border-left: 2px solid var(--border-color);"><i class="bi bi-person-badge me-1"></i>Required Tour Guide (ATV Short Ride)</span>
+                <span class="price-val">₱1,500.00</span>
+            </div>
+        `;
+        grandTotal += 1500;
+    } else if (hasATVLong) {
+        summaryHtml += `
+            <div class="price-row" style="color: var(--text-secondary); font-size: 0.9rem;">
+                <span class="price-label" style="padding-left: 0.5rem; border-left: 2px solid var(--border-color);"><i class="bi bi-person-badge me-1"></i>Required Tour Guide (ATV Long Ride)</span>
+                <span class="price-val">₱30,000.00</span>
+            </div>
+        `;
+        grandTotal += 30000;
+    }
 
     // 4. Extra rooms
     extraRooms.forEach(room => {
@@ -2424,9 +2539,17 @@ function recalcPrice() {
 
     // Total
     summaryHtml += `
-        <div class="price-row total">
-            <span class="price-label" style="font-weight:700;color:var(--text-primary);">Total</span>
+        <div class="price-row total" style="margin-bottom: 0;">
+            <span class="price-label" style="font-weight:700;color:var(--text-primary);">Total Package Price</span>
             <span class="price-val" id="grandTotal">₱${grandTotal.toFixed(2)}</span>
+        </div>
+        <div class="price-row" style="margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px dashed var(--border-color);">
+            <span class="price-label" style="font-weight:700;color:var(--accent-primary);"><i class="bi bi-info-circle me-1"></i>Reservation Fee (Pay Now)</span>
+            <span class="price-val" style="font-weight:800;color:var(--accent-primary);">₱1,000.00</span>
+        </div>
+        <div class="price-row" style="margin-top: 0.2rem;">
+            <span class="price-label" style="font-size:0.85rem;color:var(--text-secondary);">Balance to Pay at Resort</span>
+            <span class="price-val" style="font-size:0.85rem;color:var(--text-secondary);">₱${Math.max(0, grandTotal - 1000).toFixed(2)}</span>
         </div>
     `;
 
@@ -2929,15 +3052,11 @@ function renderCalendarView(data, container) {
         if (isPast) statusClass = 'blocked';
 
         const isSelected = selectedDate === dateStr ? 'selected' : '';
-        const capToShow = (currentCalPkgType === 'accommodation') ? dayData.capacity : (dayData.global_cap ? dayData.global_cap : dayData.capacity);
+        const capToShow = dayData.capacity;
 
         let tooltipTitle = `Date: ${dateStr} | Booked: ${dayData.booked} / Cap: ${capToShow}`;
         let metaFull = `Booked: ${dayData.booked} / Cap: ${capToShow}`;
         let metaShort = `${dayData.booked}/${capToShow}`;
-
-        if (dayData.global_remaining !== undefined && dayData.global_remaining !== null) {
-            tooltipTitle += ` (${dayData.global_remaining} resort spots left)`;
-        }
 
         html += `
             <div class="act-cal-cell ${statusClass} ${isSelected}"

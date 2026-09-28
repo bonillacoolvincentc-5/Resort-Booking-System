@@ -35,6 +35,10 @@ try {
     if ($chkAcc && $chkAcc->num_rows === 0) {
         $conn->query("ALTER TABLE `accommodations` ADD COLUMN `daily_booking_limit` INT(11) NOT NULL DEFAULT 1 AFTER `capacity`");
     }
+    $chkBun = $conn->query("SHOW COLUMNS FROM `bundles` LIKE 'daily_booking_limit'");
+    if ($chkBun && $chkBun->num_rows === 0) {
+        $conn->query("ALTER TABLE `bundles` ADD COLUMN `daily_booking_limit` INT(11) NOT NULL DEFAULT 1 AFTER `capacity`");
+    }
 
     $targetDate = isset($_GET['date']) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $_GET['date']) 
         ? $_GET['date'] 
@@ -122,6 +126,8 @@ try {
             extra_person_fee,
             price_per_night,
             price_per_day,
+            check_in_time,
+            check_out_time,
             amenities,
             image_url,
             is_active,
@@ -176,6 +182,8 @@ try {
             'price'            => (float) $row['price_per_night'],
             'price_per_night'  => (float) $row['price_per_night'],
             'price_per_day'    => (float) $row['price_per_day'],
+            'check_in_time'    => $row['check_in_time'],
+            'check_out_time'   => $row['check_out_time'],
             'base_capacity'    => (int) ($row['base_capacity'] ?? 1),
             'capacity'         => $row['capacity'],
             'extra_person_fee' => (float) ($row['extra_person_fee'] ?? 0),
@@ -203,6 +211,8 @@ try {
             capacity,
             start_time,
             duration_hours,
+            check_in_time,
+            check_out_time,
             amenities,
             image_url,
             is_active,
@@ -283,6 +293,8 @@ try {
             'capacity'              => $row['capacity'],
             'start_time'            => $row['start_time'],
             'duration_hours'        => $row['duration_hours'] !== null ? (int) $row['duration_hours'] : null,
+            'check_in_time'         => $row['check_in_time'],
+            'check_out_time'        => $row['check_out_time'],
             'booked_today_count'    => (int) $row['booked_today_count'],
             'booking_limit'         => (int) $row['daily_booking_limit'],
             'icon'                  => 'bi-box-seam',

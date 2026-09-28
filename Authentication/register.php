@@ -383,6 +383,58 @@
                 return;
             }
 
+            // Strictly require @gmail.com
+            if (!email.toLowerCase().endsWith('@gmail.com')) {
+                isEmailAvailable = false;
+                badge.className = 'status-badge badge-taken';
+                badge.innerHTML = '<i class="bi bi-envelope-x"></i> Gmail Required';
+                badge.style.display = 'inline-flex';
+
+                icon.innerHTML = '<i class="bi bi-x-circle-fill" style="color:#f87171;"></i>';
+                emailInput.classList.remove('input-state-valid', 'input-state-warning');
+                emailInput.classList.add('input-state-invalid');
+
+                feedback.className = 'field-feedback-subtext feedback-error';
+                feedback.innerHTML = '<i class="bi bi-exclamation-circle-fill"></i> Only <b>@gmail.com</b> email addresses are allowed.';
+                feedback.style.display = 'flex';
+                return;
+            }
+
+            // Require at least 6 characters before @gmail.com
+            const username = email.substring(0, email.lastIndexOf('@'));
+            if (username.length < 6) {
+                isEmailAvailable = false;
+                badge.className = 'status-badge badge-taken';
+                badge.innerHTML = '<i class="bi bi-envelope-x"></i> Invalid Username';
+                badge.style.display = 'inline-flex';
+
+                icon.innerHTML = '<i class="bi bi-x-circle-fill" style="color:#f87171;"></i>';
+                emailInput.classList.remove('input-state-valid', 'input-state-warning');
+                emailInput.classList.add('input-state-invalid');
+
+                feedback.className = 'field-feedback-subtext feedback-error';
+                feedback.innerHTML = '<i class="bi bi-exclamation-circle-fill"></i> Gmail usernames must be at least 6 characters long.';
+                feedback.style.display = 'flex';
+                return;
+            }
+
+            // Require valid characters for Gmail usernames
+            if (!/^[a-zA-Z0-9.]+$/.test(username)) {
+                isEmailAvailable = false;
+                badge.className = 'status-badge badge-taken';
+                badge.innerHTML = '<i class="bi bi-envelope-x"></i> Invalid Characters';
+                badge.style.display = 'inline-flex';
+
+                icon.innerHTML = '<i class="bi bi-x-circle-fill" style="color:#f87171;"></i>';
+                emailInput.classList.remove('input-state-valid', 'input-state-warning');
+                emailInput.classList.add('input-state-invalid');
+
+                feedback.className = 'field-feedback-subtext feedback-error';
+                feedback.innerHTML = '<i class="bi bi-exclamation-circle-fill"></i> Gmail usernames can only contain letters, numbers, and periods.';
+                feedback.style.display = 'flex';
+                return;
+            }
+
             // Show checking status immediately
             badge.className = 'status-badge badge-checking';
             badge.innerHTML = '<span class="spin-icon"><i class="bi bi-arrow-repeat"></i></span> Checking...';
@@ -645,9 +697,29 @@
         const city = document.getElementById('city').value;
         const barangay = document.getElementById('barangay').value;
 
+        // Strict Gmail check on submit
+        if (!email.toLowerCase().endsWith('@gmail.com')) {
+            showError('Only @gmail.com email addresses are allowed for registration.');
+            document.getElementById('email').focus();
+            return;
+        }
+
+        const username = email.substring(0, email.lastIndexOf('@'));
+        if (username.length < 6) {
+            showError('Gmail usernames must be at least 6 characters long.');
+            document.getElementById('email').focus();
+            return;
+        }
+
+        if (!/^[a-zA-Z0-9.]+$/.test(username)) {
+            showError('Gmail usernames can only contain letters, numbers, and periods.');
+            document.getElementById('email').focus();
+            return;
+        }
+
         // Check if email was already confirmed to exist in database
         if (isEmailAvailable === false) {
-            showError('This email is already registered. Please sign in or use a different email address.');
+            showError('This email is already registered or invalid. Please provide a valid email address.');
             document.getElementById('email').focus();
             return;
         }

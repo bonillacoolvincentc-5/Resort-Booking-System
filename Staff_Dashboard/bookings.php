@@ -104,7 +104,7 @@ while ($row = $actsRes->fetch_assoc()) {
 }
 
 // Fetch accommodations
-$accsRes = $conn->query("SELECT id, name, type, price_per_night, capacity FROM accommodations WHERE is_active = 1 ORDER BY name ASC");
+$accsRes = $conn->query("SELECT id, name, type, tour_type, price_per_night, price_per_day, capacity FROM accommodations WHERE is_active = 1 ORDER BY name ASC");
 $accommodationsList = [];
 while ($row = $accsRes->fetch_assoc()) {
     $accommodationsList[] = $row;
@@ -406,9 +406,10 @@ while ($row = $bundlesRes->fetch_assoc()) {
                                     <select id="wi_booking_type" class="form-control-modern" required
                                             onchange="wiPopulateItems()">
                                         <option value="">-- Select Category --</option>
-                                        <option value="activity">Activity</option>
-                                        <option value="accommodation">Room / Cottage</option>
-                                        <option value="bundle">Bundle Package</option>
+                                        <option value="bundle">Bundle Packages</option>
+                                        <option value="day_tour">Day Tour Packages (Cottages / Day Rooms)</option>
+                                        <option value="overnight">Overnight Packages (Rooms / Villas)</option>
+                                        <option value="activity">Activities</option>
                                     </select>
                                 </div>
                             </div>
@@ -424,18 +425,18 @@ while ($row = $bundlesRes->fetch_assoc()) {
                             </div>
                         </div>
 
-                        <!-- Row 3: Check-In Date + Time -->
+                        <!-- Row 3: Check-In / Date of Visit & Times / Check-Out -->
                         <div class="row g-3 mb-3">
-                            <div class="col-md-4">
+                            <div class="col-md-4" id="wi_checkin_col">
                                 <div class="form-group-modern">
-                                    <label class="form-label-modern" for="wi_checkin_date">
+                                    <label class="form-label-modern" for="wi_checkin_date" id="wi_checkin_label">
                                         <i class="bi bi-calendar-event me-1"></i>Check-In Date <span class="text-danger">*</span>
                                     </label>
                                     <input type="date" id="wi_checkin_date"
                                            class="form-control-modern" required>
                                 </div>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-4" id="wi_starttime_col">
                                 <div class="form-group-modern">
                                     <label class="form-label-modern" for="wi_checkin_time">
                                         <i class="bi bi-clock me-1"></i>Start Time
@@ -444,7 +445,7 @@ while ($row = $bundlesRes->fetch_assoc()) {
                                            class="form-control-modern">
                                 </div>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-4" id="wi_endtime_col">
                                 <div class="form-group-modern">
                                     <label class="form-label-modern" for="wi_checkout_time">
                                         <i class="bi bi-clock-history me-1"></i>End Time
@@ -453,11 +454,7 @@ while ($row = $bundlesRes->fetch_assoc()) {
                                            class="form-control-modern">
                                 </div>
                             </div>
-                        </div>
-
-                        <!-- Row 4: Check-Out Date + Guests -->
-                        <div class="row g-3 mb-3">
-                            <div class="col-md-6">
+                            <div class="col-md-6" id="wi_checkout_col" style="display:none;">
                                 <div class="form-group-modern">
                                     <label class="form-label-modern" for="wi_checkout_date">
                                         <i class="bi bi-calendar-check me-1"></i>Check-Out Date
@@ -467,7 +464,11 @@ while ($row = $bundlesRes->fetch_assoc()) {
                                            class="form-control-modern">
                                 </div>
                             </div>
-                            <div class="col-md-6">
+                        </div>
+
+                        <!-- Row 4: Guests -->
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6" id="wi_guests_col">
                                 <div class="form-group-modern">
                                     <label class="form-label-modern" for="wi_num_guests">
                                         <i class="bi bi-people me-1"></i>Number of Guests
@@ -934,20 +935,82 @@ while ($row = $bundlesRes->fetch_assoc()) {
             const sel  = document.getElementById('wi_item_id');
             sel.innerHTML = '<option value="">-- Select item --</option>';
 
+            // Adjust fields visibility
+            const checkinCol = document.getElementById('wi_checkin_col');
+            const starttimeCol = document.getElementById('wi_starttime_col');
+            const endtimeCol = document.getElementById('wi_endtime_col');
+            const checkoutCol = document.getElementById('wi_checkout_col');
+            const checkinLabel = document.getElementById('wi_checkin_label');
+
+            if (type === 'day_tour' || type === 'activity') {
+                checkinLabel.innerHTML = '<i class="bi bi-calendar-event me-1"></i>Date of Visit <span class="text-danger">*</span>';
+                checkinCol.className = 'col-md-4';
+                starttimeCol.style.display = 'block';
+                endtimeCol.style.display = 'block';
+                checkoutCol.style.display = 'none';
+            } else {
+                checkinLabel.innerHTML = '<i class="bi bi-calendar-event me-1"></i>Check-In Date <span class="text-danger">*</span>';
+                checkinCol.className = 'col-md-6';
+                starttimeCol.style.display = 'none';
+                endtimeCol.style.display = 'none';
+                checkoutCol.style.display = 'block';
+            }
+
             let list = [];
-            if      (type === 'activity')      list = activitiesList;
-            else if (type === 'accommodation') list = accommodationsList;
-            else if (type === 'bundle')        list = bundlesList;
+            if (type === 'activity') {
+                list = activitiesList.map(a => ({
+                    id: a.id,
+                    name: a.name,
+                    btype: 'activity',
+                    stayType: null,
+                    priceHint: a.price_per_hour ? ` — ₱${parseFloat(a.price_per_hour).toLocaleString()}/hr` : ''
+                }));
+            } else if (type === 'bundle') {
+                list = bundlesList.map(b => ({
+                    id: b.id,
+                    name: b.name,
+                    btype: 'bundle',
+                    stayType: null,
+                    priceHint: b.price ? ` — ₱${parseFloat(b.price).toLocaleString()} (flat rate)` : ''
+                }));
+            } else if (type === 'day_tour') {
+                list = accommodationsList.filter(a => {
+                    const tt = (a.tour_type || '').toLowerCase();
+                    const tp = (a.type || '').toLowerCase();
+                    return tt.includes('day_tour') || tp === 'cottage';
+                }).map(a => {
+                    const price = parseFloat(a.price_per_day) || parseFloat(a.price_per_night) || 0;
+                    return {
+                        id: a.id,
+                        name: a.name,
+                        btype: 'accommodation',
+                        stayType: 'day_tour',
+                        priceHint: ` — ₱${price.toLocaleString()}/day`
+                    };
+                });
+            } else if (type === 'overnight') {
+                list = accommodationsList.filter(a => {
+                    const tt = (a.tour_type || '').toLowerCase();
+                    const tp = (a.type || '').toLowerCase();
+                    return tt.includes('overnight') || tp === 'room' || tp === 'stay-in';
+                }).map(a => {
+                    const price = parseFloat(a.price_per_night) || parseFloat(a.price_per_day) || 0;
+                    return {
+                        id: a.id,
+                        name: a.name,
+                        btype: 'accommodation',
+                        stayType: 'overnight',
+                        priceHint: ` — ₱${price.toLocaleString()}/night`
+                    };
+                });
+            }
 
             list.forEach(item => {
                 const opt = document.createElement('option');
-                opt.value       = item.id;
-                const priceHint = item.price_per_hour
-                    ? ` — ₱${parseFloat(item.price_per_hour).toLocaleString()}/hr`
-                    : (item.price_per_night
-                        ? ` — ₱${parseFloat(item.price_per_night).toLocaleString()}/night`
-                        : (item.price ? ` — ₱${parseFloat(item.price).toLocaleString()}` : ''));
-                opt.textContent = item.name + priceHint;
+                opt.value = item.id;
+                opt.dataset.btype = item.btype;
+                if (item.stayType) opt.dataset.stayType = item.stayType;
+                opt.textContent = item.name + item.priceHint;
                 sel.appendChild(opt);
             });
         }
@@ -975,10 +1038,19 @@ while ($row = $bundlesRes->fetch_assoc()) {
         async function submitWalkIn() {
             const btn = document.getElementById('walkInSubmitBtn');
 
+            const selectedOpt = document.getElementById('wi_item_id').selectedOptions[0];
+            const resolvedBtype = (selectedOpt && selectedOpt.dataset.btype)
+                ? selectedOpt.dataset.btype
+                : document.getElementById('wi_booking_type').value;
+            const resolvedStayType = (selectedOpt && selectedOpt.dataset.stayType)
+                ? selectedOpt.dataset.stayType
+                : (document.getElementById('wi_booking_type').value === 'day_tour' ? 'day_tour' : (document.getElementById('wi_booking_type').value === 'overnight' ? 'overnight' : null));
+
             const payload = {
                 guest_name:      document.getElementById('wi_guest_name').value.trim(),
                 guest_contact:   document.getElementById('wi_guest_contact').value.trim(),
-                booking_type:    document.getElementById('wi_booking_type').value,
+                booking_type:    resolvedBtype,
+                stay_type:       resolvedStayType,
                 item_id:         parseInt(document.getElementById('wi_item_id').value) || 0,
                 check_in_date:   document.getElementById('wi_checkin_date').value,
                 check_in_time:   document.getElementById('wi_checkin_time').value || null,

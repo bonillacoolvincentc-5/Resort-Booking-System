@@ -59,7 +59,7 @@ $adminEmail = $_SESSION['admin_email'];
                     <span class="legend-text">Today</span>
                 </div>
                 <div class="legend-item">
-                    <div class="legend-color" style="background: rgba(16, 185, 129, 0.35);"></div>
+                    <div class="legend-color" style="background: rgba(6, 182, 212, 0.35);"></div>
                     <span class="legend-text">Low Occupancy</span>
                 </div>
                 <div class="legend-item">
@@ -94,19 +94,10 @@ $adminEmail = $_SESSION['admin_email'];
                     <div class="detail-row"><span class="detail-label">Activities Reserved</span><span class="detail-value" id="detailActivities">0</span></div>
                     <div id="blockedReasonRow" class="detail-row d-none"><span class="detail-label">Block Reason</span><span class="detail-value" id="detailBlockReason">�</span></div>
                 </div>
-                <div class="modal-body" id="dailyLimitContainer" style="padding-top: 0; border-top: 1px solid rgba(255,255,255,0.1); margin-top: -0.5rem;">
-                    <div class="detail-row align-items-center mt-3">
-                        <span class="detail-label">Max Guest Limit</span>
-                        <div class="d-flex gap-2">
-                            <input type="number" id="detailDailyCap" class="form-ctrl form-control-sm" style="width: 80px;" min="0" title="Set to 0 to remove override">
-                            <button type="button" id="btnSaveDailyLimit" class="btn-modal btn-modal-primary btn-sm" onclick="saveDailyLimit()" style="min-width: 70px; transition: all 0.3s;">Save</button>
-                        </div>
-                    </div>
-                </div>
+
                 <div class="modal-footer modal-footer-admin d-flex flex-wrap gap-2">
                     <button type="button" class="btn-modal btn-modal-primary" onclick="openBookingsListModal()"><i class="bi bi-list-ul me-1"></i>View Bookings</button>
                     <button type="button" class="btn-modal btn-modal-secondary" id="blockDateBtn" onclick="openBlockDateModal()"><i class="bi bi-slash-circle me-1"></i>Block Date</button>
-                    <button type="button" class="btn-modal btn-modal-secondary" onclick="openCreateBundleModal()"><i class="bi bi-box-seam me-1"></i>Create Bundle</button>
                 </div>
             </div>
         </div>
@@ -181,53 +172,6 @@ $adminEmail = $_SESSION['admin_email'];
         </div>
     </div>
 
-    <!-- Create Bundle Modal -->
-    <div class="modal fade" id="createBundleModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-scrollable">
-            <div class="modal-content modal-content-admin">
-                <div class="modal-header modal-header-admin">
-                    <h5 class="modal-title"><i class="bi bi-box-seam me-2"></i>Create Bundle</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label" style="color: var(--text-primary);">Bundle Name <span style="color: var(--accent-danger);">*</span></label>
-                            <input type="text" class="form-ctrl" id="bundleName" placeholder="e.g. Weekend Getaway">
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label" style="color: var(--text-primary);">Calendar Date</label>
-                            <input type="text" class="form-ctrl" id="bundleCalendarDate" readonly>
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label" style="color: var(--text-primary);">Description</label>
-                            <textarea class="form-ctrl" id="bundleDescription" rows="2" placeholder="Optional description"></textarea>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label" style="color: var(--text-primary);">Original Price (&#8369;)</label>
-                            <input type="number" class="form-ctrl" id="bundleOriginalPrice" min="0" step="0.01" value="0" oninput="calculateBundleFinalPrice()">
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label" style="color: var(--text-primary);">Discount %</label>
-                            <input type="number" class="form-ctrl" id="bundleDiscount" min="0" max="100" step="0.01" value="0" oninput="calculateBundleFinalPrice()">
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label" style="color: var(--text-primary);">Final Price (&#8369;) <span style="color: var(--accent-danger);">*</span></label>
-                            <input type="number" class="form-ctrl" id="bundleFinalPrice" min="0" step="0.01" value="0">
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label" style="color: var(--text-primary);">Included Services</label>
-                            <div class="service-check-scroll" id="bundleServicesList"></div>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer modal-footer-admin">
-                    <button type="button" class="btn-modal btn-modal-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn-modal btn-modal-primary" onclick="saveCalendarBundle()"><i class="bi bi-check-circle me-1"></i>Save Bundle</button>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <script src="../assets/js/bootstrap.bundle.min.js"></script>
     <script>
@@ -240,7 +184,7 @@ $adminEmail = $_SESSION['admin_email'];
         let calendarServices = { activities: [], accommodations: [] };
         let selectedDate = null;
 
-        let dateDetailsModal, bookingsListModal, bookingDetailModal, blockDateModal, createBundleModal, adminAlertModal;
+        let dateDetailsModal, bookingsListModal, bookingDetailModal, blockDateModal, adminAlertModal;
 
         const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
             'July', 'August', 'September', 'October', 'November', 'December'];
@@ -288,7 +232,7 @@ $adminEmail = $_SESSION['admin_email'];
             bookingsListModal = new bootstrap.Modal(document.getElementById('bookingsListModal'));
             bookingDetailModal = new bootstrap.Modal(document.getElementById('bookingDetailModal'));
             blockDateModal = new bootstrap.Modal(document.getElementById('blockDateModal'));
-            createBundleModal = new bootstrap.Modal(document.getElementById('createBundleModal'));
+
             adminAlertModal = new bootstrap.Modal(document.getElementById('adminAlertModal'));
 
             initCalendar();
@@ -379,7 +323,7 @@ $adminEmail = $_SESSION['admin_email'];
                 }
 
                 const countEl = document.createElement('div');
-                const level = dayData.is_blocked ? 'blocked' : (dayData.occupancy_level === 'none' ? 'low' : dayData.occupancy_level);
+                const level = dayData.is_blocked ? 'blocked' : dayData.occupancy_level;
                 countEl.className = `booking-count ${level}`;
                 countEl.textContent = dayData.is_blocked ? 'Blocked' : `Booked: ${dayData.total_bookings}`;
                 dayElement.appendChild(countEl);
@@ -406,7 +350,6 @@ $adminEmail = $_SESSION['admin_email'];
             document.getElementById('detailRooms').textContent = dayData.rooms || 0;
             document.getElementById('detailCottages').textContent = dayData.cottages || 0;
             document.getElementById('detailActivities').textContent = dayData.activities || 0;
-            document.getElementById('detailDailyCap').value = dayData.daily_capacity || '';
 
             const blockedRow = document.getElementById('blockedReasonRow');
             if (dayData.is_blocked) {
@@ -418,69 +361,12 @@ $adminEmail = $_SESSION['admin_email'];
                 document.getElementById('blockDateBtn').innerHTML = '<i class="bi bi-slash-circle me-1"></i>Block Date';
             }
 
-            // Hide limit modification for today and past dates
-            const todayStr = new Date().toISOString().split('T')[0];
-            const isNotTomorrow = dateStr <= todayStr;
-            const container = document.getElementById('dailyLimitContainer');
-            
-            if (isNotTomorrow) {
-                container.style.display = 'none';
-            } else {
-                container.style.display = 'block';
-                document.getElementById('detailDailyCap').title = "Set to 0 to remove override";
-            }
+
 
             dateDetailsModal.show();
         }
 
-        async function saveDailyLimit() {
-            if (!selectedDate) return;
-            const cap = document.getElementById('detailDailyCap').value;
-            if (cap === '') return;
 
-            const btn = document.getElementById('btnSaveDailyLimit');
-            const originalText = btn.innerHTML;
-            btn.disabled = true;
-            btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>';
-
-            try {
-                const fd = new FormData();
-                fd.append('date', selectedDate);
-                fd.append('capacity', cap);
-                
-                const res = await fetch('../php/set_daily_capacity.php', {
-                    method: 'POST',
-                    body: fd
-                });
-                const data = await res.json();
-                
-                if (data.success) {
-                    btn.innerHTML = '<i class="bi bi-check2"></i> Saved';
-                    btn.style.backgroundColor = '#10b981';
-                    btn.style.borderColor = '#10b981';
-                    btn.style.color = '#fff';
-                    
-                    loadCalendarData().then(() => renderCalendar());
-                    
-                    setTimeout(() => {
-                        btn.innerHTML = originalText;
-                        btn.disabled = false;
-                        btn.style.backgroundColor = '';
-                        btn.style.borderColor = '';
-                        btn.style.color = '';
-                    }, 2000);
-                } else {
-                    btn.disabled = false;
-                    btn.innerHTML = originalText;
-                    showAdminAlert('Error', data.message || 'Error updating daily limit');
-                }
-            } catch (err) {
-                console.error(err);
-                btn.disabled = false;
-                btn.innerHTML = originalText;
-                showAdminAlert('Error', 'Failed to save daily limit.');
-            }
-        }
 
         function openBookingsListModal() {
             if (!selectedDate) return;
@@ -614,90 +500,7 @@ $adminEmail = $_SESSION['admin_email'];
                 })
                 .catch(() => showAdminAlert('Error', 'Failed to unblock date.'));
         }
-
-        function openCreateBundleModal() {
-            if (!selectedDate) return;
-            dateDetailsModal.hide();
-            document.getElementById('bundleCalendarDate').value = selectedDate;
-            document.getElementById('bundleName').value = '';
-            document.getElementById('bundleDescription').value = '';
-            document.getElementById('bundleOriginalPrice').value = '0';
-            document.getElementById('bundleDiscount').value = '0';
-            document.getElementById('bundleFinalPrice').value = '0';
-            renderBundleServices();
-            createBundleModal.show();
-        }
-
-        function renderBundleServices() {
-            const container = document.getElementById('bundleServicesList');
-            let html = '';
-
-            if (calendarServices.activities.length) {
-                html += '<div style="font-weight:600;margin-bottom:0.25rem;color:var(--text-secondary);">Activities</div>';
-                calendarServices.activities.forEach(a => {
-                    html += `<label class="service-check-item"><input type="checkbox" class="bundle-act-chk" value="${a.id}" data-price="${a.price_per_hour}"> ${escapeHtml(a.name)} <span style="color:var(--text-muted);margin-left:auto;">&#8369;${parseFloat(a.price_per_hour).toFixed(2)}/hr</span></label>`;
-                });
-            }
-
-            if (calendarServices.accommodations.length) {
-                html += '<div style="font-weight:600;margin:0.75rem 0 0.25rem;color:var(--text-secondary);">Rooms & Cottages</div>';
-                calendarServices.accommodations.forEach(acc => {
-                    html += `<label class="service-check-item"><input type="checkbox" class="bundle-acc-chk" value="${acc.id}" data-price="${acc.price_per_night}"> ${escapeHtml(acc.name)} <small style="color:var(--text-muted);">(${escapeHtml(acc.type)})</small> <span style="color:var(--text-muted);margin-left:auto;">&#8369;${parseFloat(acc.price_per_night).toFixed(2)}/night</span></label>`;
-                });
-            }
-
-            if (!html) html = '<p class="text-muted">No services available. Add activities or accommodations first.</p>';
-            container.innerHTML = html;
-        }
-
-        function calculateBundleFinalPrice() {
-            const original = parseFloat(document.getElementById('bundleOriginalPrice').value) || 0;
-            const discount = parseFloat(document.getElementById('bundleDiscount').value) || 0;
-            const finalPrice = original - (original * discount / 100);
-            document.getElementById('bundleFinalPrice').value = Math.max(0, finalPrice).toFixed(2);
-        }
-
-        function saveCalendarBundle() {
-            const name = document.getElementById('bundleName').value.trim();
-            const finalPrice = parseFloat(document.getElementById('bundleFinalPrice').value) || 0;
-            if (!name) { showAdminAlert('Warning', 'Bundle name is required.'); return; }
-            if (finalPrice <= 0) { showAdminAlert('Warning', 'Final price must be greater than zero.'); return; }
-
-            const activityIds = [...document.querySelectorAll('.bundle-act-chk:checked')].map(el => el.value);
-            const accommodationIds = [...document.querySelectorAll('.bundle-acc-chk:checked')].map(el => el.value);
-            const originalPrice = document.getElementById('bundleOriginalPrice').value;
-            const discount = document.getElementById('bundleDiscount').value;
-            const description = document.getElementById('bundleDescription').value.trim();
-            const amenities = JSON.stringify({
-                original_price: originalPrice,
-                discount_percent: discount,
-                calendar_date: selectedDate
-            });
-
-            const formData = new FormData();
-            formData.append('action', 'add');
-            formData.append('name', name);
-            formData.append('description', description);
-            formData.append('price', finalPrice);
-            formData.append('capacity', '1');
-            formData.append('amenities', amenities);
-            formData.append('is_active', '1');
-            formData.append('activity_ids', activityIds.join(','));
-            formData.append('accommodation_ids', accommodationIds.join(','));
-
-            fetch('../php/add_edit_bundle.php', { method: 'POST', body: formData })
-                .then(r => r.json())
-                .then(data => {
-                    if (data.success) {
-                        createBundleModal.hide();
-                        showAdminAlert('Success', 'Bundle created successfully!', true);
-                    } else {
-                        showAdminAlert('Error', data.message || 'Failed to create bundle.');
-                    }
-                })
-                .catch(() => showAdminAlert('Error', 'Failed to create bundle.'));
-        }
-
+        // Create Bundle JS Functions Removed
         function formatDateTime12(dateStr, timeStr) {
             if (!dateStr) return '—';
             if (!timeStr && dateStr.includes(' ')) {

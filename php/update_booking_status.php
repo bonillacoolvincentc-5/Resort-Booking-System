@@ -220,6 +220,22 @@ function logBookingChange($conn, $bookingId, $oldStatusId, $newStatusId, $change
     $stmt->bind_param('iiisis', $bookingId, $oldStatusId, $newStatusId, $changedBy, $changedById, $notes);
     $stmt->execute();
     $stmt->close();
+
+    // Also insert into activity_logs
+    if ($changedBy === 'admin' || $changedBy === 'staff') {
+        $st = $conn->prepare("SELECT name FROM booking_status WHERE id = ?");
+        $st->bind_param('i', $newStatusId);
+        $st->execute();
+        $res = $st->get_result()->fetch_assoc();
+        $statusName = $res ? $res['name'] : 'unknown';
+        $st->close();
+        
+        $desc = "Booking #$bookingId status updated to $statusName.";
+        $actStmt = $conn->prepare("INSERT INTO activity_logs (user_id, role, action_type, description) VALUES (?, ?, 'status_update', ?)");
+        $actStmt->bind_param('iss', $changedById, $changedBy, $desc);
+        $actStmt->execute();
+        $actStmt->close();
+    }
 }
 
 /**

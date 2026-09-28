@@ -6,6 +6,19 @@
 
 session_start();
 
+// Log admin/staff logout
+if (isset($_SESSION['admin_id'])) {
+    require_once 'db_config.php';
+    $logRole = isset($_SESSION['is_staff']) && $_SESSION['is_staff'] === true ? 'staff' : 'admin';
+    $logUserId = $_SESSION['admin_id'];
+    $logAction = 'logout';
+    $logDesc = ucfirst($logRole) . " logged out.";
+    $logStmt = $conn->prepare("INSERT INTO activity_logs (user_id, role, action_type, description) VALUES (?, ?, ?, ?)");
+    $logStmt->bind_param('isss', $logUserId, $logRole, $logAction, $logDesc);
+    $logStmt->execute();
+    $logStmt->close();
+}
+
 // Destroy session
 session_destroy();
 

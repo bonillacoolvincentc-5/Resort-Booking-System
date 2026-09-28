@@ -93,6 +93,15 @@ try {
     );
     
     if ($insert_stmt->execute()) {
+        $logUserId = $_SESSION['admin_id'] ?? null;
+        if ($logUserId) {
+            $logAction = 'add_staff';
+            $logDesc = "Created new staff account for $firstName $lastName ($email).";
+            $logStmt = $conn->prepare("INSERT INTO activity_logs (user_id, role, action_type, description) VALUES (?, 'admin', ?, ?)");
+            $logStmt->bind_param('iss', $logUserId, $logAction, $logDesc);
+            $logStmt->execute();
+            $logStmt->close();
+        }
         echo json_encode(['success' => true, 'message' => 'Staff account created successfully.']);
     } else {
         echo json_encode(['success' => false, 'message' => 'Failed to create staff account. Please try again.']);

@@ -34,22 +34,13 @@ if ($action === 'send_code') {
         fp_json(false, 'Please enter a valid email address.');
     }
 
-    // Check the user exists in users OR admins table
+    $requestedType = trim($_POST['type'] ?? 'user');
+    
     $userRow = null;
     $userType = null;
 
-    $stmt = $conn->prepare("SELECT id, email FROM users WHERE email = ? LIMIT 1");
-    $stmt->bind_param('s', $email);
-    $stmt->execute();
-    $res = $stmt->get_result();
-    if ($res->num_rows === 1) {
-        $userRow = $res->fetch_assoc();
-        $userType = 'user';
-    }
-    $stmt->close();
-
-    if (!$userRow) {
-        $stmt = $conn->prepare("SELECT id, email FROM admins WHERE email = ? LIMIT 1");
+    if ($requestedType === 'admin') {
+        $stmt = $conn->prepare("SELECT id, email FROM admins WHERE email = ? AND role = 'admin' LIMIT 1");
         $stmt->bind_param('s', $email);
         $stmt->execute();
         $res = $stmt->get_result();
@@ -58,11 +49,20 @@ if ($action === 'send_code') {
             $userType = 'admin';
         }
         $stmt->close();
+    } else {
+        $stmt = $conn->prepare("SELECT id, email FROM users WHERE email = ? LIMIT 1");
+        $stmt->bind_param('s', $email);
+        $stmt->execute();
+        $res = $stmt->get_result();
+        if ($res->num_rows === 1) {
+            $userRow = $res->fetch_assoc();
+            $userType = 'user';
+        }
+        $stmt->close();
     }
 
     if (!$userRow) {
-        // Generic response to prevent email enumeration
-        fp_json(true, 'If that email is registered, a reset code has been sent.');
+        fp_json(false, 'This email is not registered or not authorized for this portal.');
     }
 
     // Enforce 120-second cooldown per email
@@ -210,7 +210,7 @@ if ($action === 'reset_password') {
     $stmt->close();
 
     if (!$updated) {
-        $stmt = $conn->prepare("UPDATE admins SET password = ? WHERE email = ?");
+        $stmt = $conn->prepare("UPDATE admins SET password = ? WHERE email = ? AND role = 'admin'");
         $stmt->bind_param('ss', $hashed, $email);
         $stmt->execute();
         if ($stmt->affected_rows > 0) $updated = true;

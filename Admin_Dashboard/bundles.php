@@ -260,6 +260,17 @@ while ($r = $accResult->fetch_assoc()) $allAccommodations[] = $r;
 
                                 <div class="row g-3 mb-3">
                                     <div class="col-6">
+                                        <label class="form-label-custom">Overnight Check-In Time</label>
+                                        <input type="time" class="form-ctrl" id="bundleCheckInTime" name="check_in_time" value="14:00">
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label-custom">Overnight Check-Out Time</label>
+                                        <input type="time" class="form-ctrl" id="bundleCheckOutTime" name="check_out_time" value="12:00">
+                                    </div>
+                                </div>
+
+                                <div class="row g-3 mb-3">
+                                    <div class="col-6">
                                         <label class="form-label-custom">Status</label>
                                         <select class="form-ctrl" id="bundleStatus" name="is_active">
                                             <option value="1">Available</option>
@@ -424,6 +435,8 @@ while ($r = $accResult->fetch_assoc()) $allAccommodations[] = $r;
         document.getElementById('bundleId').value = '';
         document.getElementById('bundleStatus').value = '1';
         document.getElementById('bundleDailyLimit').value = '10';
+        document.getElementById('bundleCheckInTime').value = '14:00';
+        document.getElementById('bundleCheckOutTime').value = '12:00';
         document.getElementById('imgPreviewWrap').classList.add('d-none');
         clearAllCheckboxes();
         // Default: Overnight checked
@@ -450,6 +463,8 @@ while ($r = $accResult->fetch_assoc()) $allAccommodations[] = $r;
             document.getElementById('bundleDailyLimit').value  = b.daily_booking_limit || 10;
             document.getElementById('bundleStartTime').value   = (b.start_time || '').toString().substring(0, 8);
             document.getElementById('bundleDurationHours').value = b.duration_hours || '';
+            document.getElementById('bundleCheckInTime').value = b.check_in_time ? b.check_in_time.substring(0, 5) : '14:00';
+            document.getElementById('bundleCheckOutTime').value = b.check_out_time ? b.check_out_time.substring(0, 5) : '12:00';
             document.getElementById('bundleAmenities').value   = b.amenities || '';
             document.getElementById('bundleStatus').value      = b.is_active;
             // Pre-check tour type checkboxes

@@ -73,7 +73,7 @@
                     <input class="auth-check" type="checkbox" id="rememberMe" name="remember">
                     Remember me
                 </label>
-                <a href="forgot-pass.php" class="auth-link">Forgot Password?</a>
+                <a href="forgot-pass.php?type=admin" class="auth-link">Forgot Password?</a>
             </div>
 
             <button type="submit" class="auth-submit">

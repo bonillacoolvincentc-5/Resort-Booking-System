@@ -181,7 +181,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $verificationToken
             );
             
-            $redirectPage = '../User_Dashboard/dashboard.php';
+            $redi   rectPage = '../User_Dashboard/dashboard.php';
             $successMessage = 'User account created and verified successfully! Redirecting to dashboard...';
             $autoLoginUserId = true;
         }

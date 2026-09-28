@@ -40,6 +40,9 @@ $special_req    = trim($data['special_requests'] ?? '') ?: null;
 $num_days       = ($check_out_date && $check_in_date)
                     ? (int)((strtotime($check_out_date) - strtotime($check_in_date)) / 86400)
                     : 1;
+$extra_rooms    = $data['extra_rooms'] ?? [];
+$addons         = $data['addons'] ?? [];
+$is_day_stay    = empty($check_out_date) || $check_out_date === $check_in_date;
 
 // ── 4. Basic validation ──────────────────────────────────────────────────────
 $errors = [];
@@ -107,6 +110,103 @@ switch ($booking_type) {
         $total_amount = 0;
 }
 
+// ── 7.5 Extra Rooms Calculation ──────────────────────────────────────────────
+$parsed_extra_rooms = [];
+if (!empty($extra_rooms) && is_array($extra_rooms)) {
+    $extraRoomsDesc = [];
+    foreach ($extra_rooms as $er) {
+        $erId = (int)($er['item_id'] ?? 0);
+        $erGuests = (int)($er['num_guests'] ?? 1);
+        
+        if ($erId > 0) {
+            $erStmt = $conn->prepare("SELECT name, price_per_night, price_per_day, base_capacity, extra_person_fee FROM accommodations WHERE id = ? LIMIT 1");
+            $erStmt->bind_param('i', $erId);
+            $erStmt->execute();
+            $erRow = $erStmt->get_result()->fetch_assoc();
+            
+            if ($erRow) {
+                // Determine day tour or overnight pricing for extra room
+                $is_day_stay_er = $is_day_stay; // Inherit primary booking stay type (if possible)
+                if (isset($er['stay_type'])) {
+                     $is_day_stay_er = ($er['stay_type'] === 'day_tour');
+                }
+
+                $erPrice = 0;
+                $erBaseCap = !empty($erRow['base_capacity']) ? (int)$erRow['base_capacity'] : 1;
+                $erExtraFee = (float)($erRow['extra_person_fee'] ?? 0);
+
+                if ($is_day_stay_er) {
+                    $dayRate = (!empty($erRow['price_per_day']) && (float)$erRow['price_per_day'] > 0)
+                        ? (float)$erRow['price_per_day']
+                        : (float)$erRow['price_per_night'];
+                    $erPrice = $dayRate;
+                    if ($erGuests > $erBaseCap && $erExtraFee > 0) {
+                        $erPrice += ($erGuests - $erBaseCap) * $erExtraFee;
+                    }
+                } else {
+                    $nightRate = (float)$erRow['price_per_night'];
+                    $erPrice = $nightRate * max(1, $num_days);
+                    if ($erGuests > $erBaseCap && $erExtraFee > 0) {
+                        $erPrice += ($erGuests - $erBaseCap) * $erExtraFee * max(1, $num_days);
+                    }
+                }
+                
+                $total_amount += $erPrice;
+                $extraRoomsDesc[] = "{$erRow['name']} (Guests: {$erGuests}, Price: ₱" . number_format($erPrice, 2) . ")";
+                
+                // Save for database insertion later
+                $parsed_extra_rooms[] = [
+                    'accommodation_id' => $erId,
+                    'num_guests' => $erGuests,
+                    'price' => $erPrice
+                ];
+            }
+            $erStmt->close();
+        }
+    }
+    
+    if (!empty($extraRoomsDesc)) {
+        $special_req = trim(($special_req ?? '') . "\n\n[Additional Rooms]:\n- " . implode("\n- ", $extraRoomsDesc));
+    }
+}
+
+// ── 7.6 Add-ons Calculation ──────────────────────────────────────────────────
+if (!empty($addons) && is_array($addons)) {
+    $hasATVShort = false;
+    $hasATVLong = false;
+    $addonDescList = [];
+    
+    foreach ($addons as $addon) {
+        $aPrice = floatval($addon['price'] ?? 0);
+        $aQty = max(1, intval($addon['qty'] ?? 1));
+        $aName = $addon['name'] ?? '';
+        $aNameLower = strtolower($aName);
+        
+        if (strpos($aNameLower, 'atv short ride') !== false) {
+            $hasATVShort = true;
+        } elseif (strpos($aNameLower, 'atv long ride') !== false) {
+            $hasATVLong = true;
+        }
+        
+        $lineCost = $aPrice * $aQty;
+        $total_amount += $lineCost;
+        
+        $addonDescList[] = "{$aName} (Qty: {$aQty}, Price: ₱" . number_format($lineCost, 2) . ")";
+    }
+    
+    if ($hasATVShort) {
+        $total_amount += 1500;
+        $addonDescList[] = "Required Tour Guide (ATV Short Ride) (Price: ₱1,500.00)";
+    } elseif ($hasATVLong) {
+        $total_amount += 30000;
+        $addonDescList[] = "Required Tour Guide (ATV Long Ride) (Price: ₱30,000.00)";
+    }
+    
+    if (!empty($addonDescList)) {
+        $special_req = trim(($special_req ?? '') . "\n\n[Add-on Activities]:\n- " . implode("\n- ", $addonDescList));
+    }
+}
+
 // ── 8. STRICT OVERLAP VALIDATION ─────────────────────────────────────────────
 // Blocks insert if the exact item/date/time slot already has an approved or
 // pending_review booking (regardless of online or walk-in source).
@@ -149,6 +249,24 @@ $oStmt->bind_param('iss', $item_id, $req_end, $req_start);
 $oStmt->execute();
 $overlapCount = (int)$oStmt->get_result()->fetch_assoc()['cnt'];
 $oStmt->close();
+
+if ($booking_type === 'accommodation') {
+    $erOverlapSql = "
+        SELECT COUNT(*) AS cnt
+        FROM booking_extra_rooms er
+        JOIN bookings b ON er.booking_id = b.id
+        JOIN booking_status bs ON b.status_id = bs.id
+        WHERE er.accommodation_id = ?
+          AND bs.name IN ('pending_review', 'approved', 'checked_in')
+          AND CONCAT(er.check_in_date, ' 00:00:00')  < ?
+          AND CONCAT(COALESCE(er.check_out_date, DATE_ADD(er.check_in_date, INTERVAL 1 DAY)), ' 23:59:59') > ?
+    ";
+    $erStmt = $conn->prepare($erOverlapSql);
+    $erStmt->bind_param('iss', $item_id, $req_end, $req_start);
+    $erStmt->execute();
+    $overlapCount += (int)$erStmt->get_result()->fetch_assoc()['cnt'];
+    $erStmt->close();
+}
 
 if ($overlapCount > 0) {
     echo json_encode([
@@ -239,6 +357,24 @@ $ins->bind_param(
 $ins->execute();
 $new_id = $conn->insert_id;
 $ins->close();
+
+// ── 11.5 Insert Extra Rooms to Database ──────────────────────────────────────
+if (!empty($parsed_extra_rooms)) {
+    $erIns = $conn->prepare("INSERT INTO booking_extra_rooms (booking_id, accommodation_id, num_guests, check_in_date, check_out_date, price) VALUES (?, ?, ?, ?, ?, ?)");
+    foreach ($parsed_extra_rooms as $per) {
+        $erIns->bind_param(
+            'iiissd',
+            $new_id,
+            $per['accommodation_id'],
+            $per['num_guests'],
+            $check_in_date,
+            $check_out_date,
+            $per['price']
+        );
+        $erIns->execute();
+    }
+    $erIns->close();
+}
 
 // ── 12. Log the action in booking_logs ───────────────────────────────────────
 $admin_id  = (int)($_SESSION['admin_id'] ?? 0);

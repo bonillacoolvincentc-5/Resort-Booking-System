@@ -148,15 +148,41 @@ try {
             $addonItems = $addonsJson;
         }
     }
+    $hasATVShort = false;
+    $hasATVLong = false;
     foreach ($addonItems as $ai) {
         $aPrice = floatval($ai['price'] ?? 0);
         $aQty = max(1, intval($ai['qty'] ?? 1));
         $pType = $ai['price_type'] ?? 'flat_rate';
+        $aNameLower = strtolower($ai['name'] ?? '');
+        
+        if (strpos($aNameLower, 'atv short ride') !== false) {
+            $hasATVShort = true;
+        } elseif (strpos($aNameLower, 'atv long ride') !== false) {
+            $hasATVLong = true;
+        }
+        
         if ($pType === 'flat_rate') {
             $price += $aPrice;
         } else {
             $price += ($aPrice * $aQty);
         }
+    }
+    
+    if ($hasATVShort) {
+        $price += 1500;
+        $addonItems[] = [
+            'name' => 'Required Tour Guide (ATV Short Ride)',
+            'qty' => 1,
+            'price_type' => 'flat_rate'
+        ];
+    } elseif ($hasATVLong) {
+        $price += 30000;
+        $addonItems[] = [
+            'name' => 'Required Tour Guide (ATV Long Ride)',
+            'qty' => 1,
+            'price_type' => 'flat_rate'
+        ];
     }
 
     // ── Handle payment proof upload (Optional for initial booking request) ──
@@ -204,29 +230,6 @@ try {
         $proofPath = 'assets/uploads/payment_proofs/' . $filename;
     }
 
-    // ── Global Daily Resort Capacity Check ────────────────────────
-    $globalCapStmt = $conn->prepare("SELECT max_guests FROM daily_resort_capacity WHERE target_date = ?");
-    $globalCapStmt->bind_param('s', $checkInDate);
-    $globalCapStmt->execute();
-    $globalCapResult = $globalCapStmt->get_result();
-    if ($globalCapRow = $globalCapResult->fetch_assoc()) {
-        $dailyResortCap = intval($globalCapRow['max_guests']);
-        
-        $activeStatuses = "(SELECT id FROM booking_status WHERE name IN ('awaiting_payment','payment_verifying','approved','checked_in'))";
-        $totalGuestsStmt = $conn->prepare("
-            SELECT SUM(number_of_guests) as total_guests 
-            FROM bookings 
-            WHERE check_in_date = ? AND status_id IN $activeStatuses
-        ");
-        $totalGuestsStmt->bind_param('s', $checkInDate);
-        $totalGuestsStmt->execute();
-        $totalGuestsRow = $totalGuestsStmt->get_result()->fetch_assoc();
-        $currentTotalGuests = intval($totalGuestsRow['total_guests'] ?? 0);
-        
-        if (($currentTotalGuests + $numberOfGuests) > $dailyResortCap) {
-            throw new Exception("The resort has reached its maximum global guest limit for {$checkInDate}. Only " . max(0, $dailyResortCap - $currentTotalGuests) . " spots remaining.");
-        }
-    }
 
     // ── Availability / overlap check ──────────────────────────────
     $activeStatuses = "(SELECT id FROM booking_status WHERE name IN ('awaiting_payment','payment_verifying','approved','checked_in'))";
@@ -374,8 +377,83 @@ try {
     $phone      = $_POST['phone_number'];
     $userId     = $_SESSION['user_id'];
     $specialReqs = $_POST['special_requests'] ?? '';
+    
+    // ── Append Extra Rooms to Special Requests & Add Price ──
+    $parsed_extra_rooms = [];
+    if (!empty($extraRoomsData)) {
+        $extraRoomsDesc = [];
+        foreach ($extraRoomsData as $er) {
+            $erType = $er['package_type'] ?? '';
+            $erId   = intval($er['package_id'] ?? 0);
+            $erGuests = intval($er['guests'] ?? 1);
+            $erIn   = $er['check_in_date']  ?? '';
+            $erOut  = $er['check_out_date'] ?? '';
+            
+            if ($erType !== 'accommodation' || !$erId || !$erIn) continue;
+            
+            $erOutNorm = (!empty($erOut) && $erOut !== $erIn)
+                ? $erOut
+                : date('Y-m-d', strtotime($erIn . ' +1 day'));
+            $erDays = max(1, round((strtotime($erOutNorm) - strtotime($erIn)) / 86400000));
+            
+            // Fetch extra room price & details
+            $erStmt = $conn->prepare("SELECT name, price_per_night, price_per_day, base_capacity, extra_person_fee FROM accommodations WHERE id = ? LIMIT 1");
+            $erStmt->bind_param('i', $erId);
+            $erStmt->execute();
+            $erRow = $erStmt->get_result()->fetch_assoc();
+            
+            if ($erRow) {
+                // Calculate extra room price
+                $erBaseCap = !empty($erRow['base_capacity']) ? intval($erRow['base_capacity']) : 1;
+                $erExtraFee = floatval($erRow['extra_person_fee'] ?? 0);
+                
+                $tourType = strtolower(trim($_POST['tour_type'] ?? ''));
+                $isDayTour = ($tourType === 'daytour' || empty($erOut) || $erOut === $erIn);
+                
+                $erPrice = 0;
+                if ($isDayTour) {
+                    $dayRate = (!empty($erRow['price_per_day']) && floatval($erRow['price_per_day']) > 0)
+                        ? floatval($erRow['price_per_day'])
+                        : floatval($erRow['price_per_night']);
+                    $erPrice = $dayRate;
+                    if ($erGuests > $erBaseCap && $erExtraFee > 0) {
+                        $erPrice += ($erGuests - $erBaseCap) * $erExtraFee;
+                    }
+                } else {
+                    $nightRate = floatval($erRow['price_per_night']);
+                    $erPrice = $nightRate * $erDays;
+                    if ($erGuests > $erBaseCap && $erExtraFee > 0) {
+                        $erPrice += ($erGuests - $erBaseCap) * $erExtraFee * $erDays;
+                    }
+                }
+                
+                $price += $erPrice; // Add to global total
+                
+                // Add to description
+                if ($isDayTour) {
+                    $extraRoomsDesc[] = "{$erRow['name']} (Guests: {$erGuests}, Date: {$erIn}, Price: ₱" . number_format($erPrice, 2) . ")";
+                } else {
+                    $extraRoomsDesc[] = "{$erRow['name']} (Guests: {$erGuests}, Dates: {$erIn} to {$erOutNorm}, Price: ₱" . number_format($erPrice, 2) . ")";
+                }
+                
+                // Save for database insertion later
+                $parsed_extra_rooms[] = [
+                    'accommodation_id' => $erId,
+                    'num_guests' => $erGuests,
+                    'check_in_date' => $erIn,
+                    'check_out_date' => $isDayTour ? null : $erOutNorm,
+                    'price' => $erPrice
+                ];
+            }
+        }
+        
+        if (!empty($extraRoomsDesc)) {
+            $specialReqs = trim($specialReqs . "\n\n[Additional Rooms]:\n- " . implode("\n- ", $extraRoomsDesc));
+        }
+    }
+
     if (!empty($addonItems)) {
-        $addonDesc = "\n[Add-on Activities]: " . implode(', ', array_map(function($a) {
+        $addonDesc = "\n\n[Add-on Activities]: " . implode(', ', array_map(function($a) {
             $qtyStr = ($a['price_type'] ?? '') !== 'flat_rate' ? " (Qty: {$a['qty']})" : "";
             return $a['name'] . $qtyStr;
         }, $addonItems));
@@ -420,6 +498,24 @@ try {
 
     if (!$bookingId) throw new Exception('Failed to save booking. Please try again.');
 
+    // ── Insert Extra Rooms to Database ──────────────────────────────────────────
+    if (!empty($parsed_extra_rooms)) {
+        $erIns = $conn->prepare("INSERT INTO booking_extra_rooms (booking_id, accommodation_id, num_guests, check_in_date, check_out_date, price) VALUES (?, ?, ?, ?, ?, ?)");
+        foreach ($parsed_extra_rooms as $per) {
+            $erIns->bind_param(
+                'iiissd',
+                $bookingId,
+                $per['accommodation_id'],
+                $per['num_guests'],
+                $per['check_in_date'],
+                $per['check_out_date'],
+                $per['price']
+            );
+            $erIns->execute();
+        }
+        $erIns->close();
+    }
+
     // ── Log creation ──────────────────────────────────────────────
     $log = $conn->prepare("
         INSERT INTO booking_logs (booking_id, old_status_id, new_status_id, changed_by, changed_by_id, notes)
@@ -428,54 +524,7 @@ try {
     $log->bind_param('iii', $bookingId, $statusId, $userId);
     $log->execute();
 
-    // ── Insert Extra Rooms ─────────────────────────────────────────
-    $extraRoomIndex = 1;
-    foreach ($extraRoomsData as $er) {
-        $erType = $er['package_type'] ?? '';
-        $erId   = intval($er['package_id'] ?? 0);
-        $erGuests = intval($er['guests'] ?? 1);
-        $erIn   = $er['check_in_date']  ?? '';
-        $erOut  = $er['check_out_date'] ?? '';
-        
-        if ($erType !== 'accommodation' || !$erId || !$erIn) continue;
-        
-        $erOutNorm = (!empty($erOut) && $erOut !== $erIn)
-            ? $erOut
-            : date('Y-m-d', strtotime($erIn . ' +1 day'));
-        $erDays = max(1, round((strtotime($erOutNorm) - strtotime($erIn)) / 86400000));
-        
-        $erIns = $conn->prepare("
-            INSERT INTO bookings (
-                booking_reference, user_id, booking_type, accommodation_id,
-                status_id, full_name, email, phone_number,
-                check_in_date, check_out_date,
-                number_of_days, number_of_guests, special_requests,
-                total_amount, payment_status, payment_method, payment_proof
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 'pending', 'gcash', ?)
-        ");
-        $erTypeStr = 'accommodation';
-        $erReqs = "Extra Room (Part of Booking $bookingRef)";
-        $erBookingRef = $bookingRef . '-EXT' . $extraRoomIndex;
-        $erIns->bind_param(
-            'sisiisssssiiss',
-            $erBookingRef,
-            $userId,
-            $erTypeStr,
-            $erId,
-            $statusId,
-            $fullName,
-            $email,
-            $phone,
-            $erIn,
-            $erOutNorm,
-            $erDays,
-            $erGuests,
-            $erReqs,
-            $proofPath
-        );
-        $erIns->execute();
-        $extraRoomIndex++;
-    }
+
 
     // Availability is reserved/deducted upon Admin Approval into 'awaiting_payment'
 

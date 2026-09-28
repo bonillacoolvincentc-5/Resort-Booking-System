@@ -47,6 +47,8 @@ if ($action === 'add' || $action === 'edit') {
     $extraPersonFee = max(0, floatval($_POST['extra_person_fee'] ?? 0));
     $pricePerNight = floatval($_POST['price_per_night'] ?? 0);
     $pricePerDay = floatval($_POST['price_per_day'] ?? 0);
+    $checkInTime = !empty($_POST['check_in_time']) ? trim($_POST['check_in_time']) . ':00' : '14:00:00';
+    $checkOutTime = !empty($_POST['check_out_time']) ? trim($_POST['check_out_time']) . ':00' : '12:00:00';
     $amenities = trim($_POST['amenities'] ?? '');
     $isActive = intval($_POST['is_active'] ?? 1);
     $dailyLimit = max(1, intval($_POST['daily_booking_limit'] ?? 1));
@@ -71,26 +73,35 @@ if ($action === 'add' || $action === 'edit') {
     
     try {
         if ($action === 'add') {
-            $query = "INSERT INTO accommodations (name, type, tour_type, description, base_capacity, capacity, daily_booking_limit, extra_person_fee, price_per_night, price_per_day, amenities, image_url, is_active) 
-                      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            $query = "INSERT INTO accommodations (name, type, tour_type, description, base_capacity, capacity, daily_booking_limit, extra_person_fee, price_per_night, price_per_day, check_in_time, check_out_time, amenities, image_url, is_active) 
+                      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             $stmt = $conn->prepare($query);
-            $stmt->bind_param('ssssiiidddssi', $name, $type, $tourType, $description, $baseCapacity, $capacity, $dailyLimit, $extraPersonFee, $pricePerNight, $pricePerDay, $amenities, $imagePath, $isActive);
+            $stmt->bind_param('ssssiiidddssssi', $name, $type, $tourType, $description, $baseCapacity, $capacity, $dailyLimit, $extraPersonFee, $pricePerNight, $pricePerDay, $checkInTime, $checkOutTime, $amenities, $imagePath, $isActive);
             $stmt->execute();
             
             $item_id = $conn->insert_id;
-            if ((in_array('day_tour', $validTourTypes) || $type === 'cottage') && !empty($_POST['slot_label']) && !empty($_POST['start_time']) && !empty($_POST['end_time'])) {
-                $ts_stmt = $conn->prepare("INSERT INTO time_slots (accommodation_id, label, start_time, end_time, is_active) VALUES (?, ?, ?, ?, 1)");
-                foreach ($_POST['slot_label'] as $index => $label) {
-                    $start = $_POST['start_time'][$index];
+            if ((in_array('day_tour', $validTourTypes) || $type === 'cottage') && !empty($_POST['start_time']) && !empty($_POST['end_time'])) {
+                $ts_stmt = $conn->prepare("INSERT INTO time_slots (accommodation_id, label, start_time, end_time, is_active) VALUES (?, '', ?, ?, 1)");
+                foreach ($_POST['start_time'] as $index => $start) {
                     $end = $_POST['end_time'][$index];
                     if (!empty($start) && !empty($end)) {
-                        $ts_stmt->bind_param("isss", $item_id, $label, $start, $end);
+                        $ts_stmt->bind_param("iss", $item_id, $start, $end);
                         $ts_stmt->execute();
                     }
                 }
                 $ts_stmt->close();
             }
             
+            $logUserId = $_SESSION['admin_id'] ?? null;
+            if ($logUserId) {
+                $logAction = 'add_accommodation';
+                $logDesc = "Added new accommodation: $name.";
+                $logStmt = $conn->prepare("INSERT INTO activity_logs (user_id, role, action_type, description) VALUES (?, 'admin', ?, ?)");
+                $logStmt->bind_param('iss', $logUserId, $logAction, $logDesc);
+                $logStmt->execute();
+                $logStmt->close();
+            }
+
             echo json_encode(['success' => true, 'message' => 'Amenity / Accommodation added successfully']);
         } elseif ($action === 'edit') {
             if (empty($accId)) {
@@ -99,16 +110,44 @@ if ($action === 'add' || $action === 'edit') {
             }
             
             if ($imagePath) {
-                $query = "UPDATE accommodations SET name = ?, type = ?, tour_type = ?, description = ?, base_capacity = ?, capacity = ?, daily_booking_limit = ?, extra_person_fee = ?, price_per_night = ?, price_per_day = ?, amenities = ?, image_url = ?, is_active = ? WHERE id = ?";
+                $query = "UPDATE accommodations SET name = ?, type = ?, tour_type = ?, description = ?, base_capacity = ?, capacity = ?, daily_booking_limit = ?, extra_person_fee = ?, price_per_night = ?, price_per_day = ?, check_in_time = ?, check_out_time = ?, amenities = ?, image_url = ?, is_active = ? WHERE id = ?";
                 $stmt = $conn->prepare($query);
-                $stmt->bind_param('ssssiiidddssii', $name, $type, $tourType, $description, $baseCapacity, $capacity, $dailyLimit, $extraPersonFee, $pricePerNight, $pricePerDay, $amenities, $imagePath, $isActive, $accId);
+                $stmt->bind_param('ssssiiidddssssii', $name, $type, $tourType, $description, $baseCapacity, $capacity, $dailyLimit, $extraPersonFee, $pricePerNight, $pricePerDay, $checkInTime, $checkOutTime, $amenities, $imagePath, $isActive, $accId);
             } else {
-                $query = "UPDATE accommodations SET name = ?, type = ?, tour_type = ?, description = ?, base_capacity = ?, capacity = ?, daily_booking_limit = ?, extra_person_fee = ?, price_per_night = ?, price_per_day = ?, amenities = ?, is_active = ? WHERE id = ?";
+                $query = "UPDATE accommodations SET name = ?, type = ?, tour_type = ?, description = ?, base_capacity = ?, capacity = ?, daily_booking_limit = ?, extra_person_fee = ?, price_per_night = ?, price_per_day = ?, check_in_time = ?, check_out_time = ?, amenities = ?, is_active = ? WHERE id = ?";
                 $stmt = $conn->prepare($query);
-                $stmt->bind_param('ssssiiidddsii', $name, $type, $tourType, $description, $baseCapacity, $capacity, $dailyLimit, $extraPersonFee, $pricePerNight, $pricePerDay, $amenities, $isActive, $accId);
+                $stmt->bind_param('ssssiiidddsssii', $name, $type, $tourType, $description, $baseCapacity, $capacity, $dailyLimit, $extraPersonFee, $pricePerNight, $pricePerDay, $checkInTime, $checkOutTime, $amenities, $isActive, $accId);
             }
             $stmt->execute();
             
+            // Re-insert time slots
+            $del_ts = $conn->prepare("DELETE FROM time_slots WHERE accommodation_id = ?");
+            $del_ts->bind_param("i", $accId);
+            $del_ts->execute();
+            $del_ts->close();
+            
+            if ((in_array('day_tour', $validTourTypes) || $type === 'cottage') && !empty($_POST['start_time']) && !empty($_POST['end_time'])) {
+                $ts_stmt = $conn->prepare("INSERT INTO time_slots (accommodation_id, label, start_time, end_time, is_active) VALUES (?, '', ?, ?, 1)");
+                foreach ($_POST['start_time'] as $index => $start) {
+                    $end = $_POST['end_time'][$index];
+                    if (!empty($start) && !empty($end)) {
+                        $ts_stmt->bind_param("iss", $accId, $start, $end);
+                        $ts_stmt->execute();
+                    }
+                }
+                $ts_stmt->close();
+            }
+            
+            $logUserId = $_SESSION['admin_id'] ?? null;
+            if ($logUserId) {
+                $logAction = 'edit_accommodation';
+                $logDesc = "Edited accommodation: $name (ID: $accId).";
+                $logStmt = $conn->prepare("INSERT INTO activity_logs (user_id, role, action_type, description) VALUES (?, 'admin', ?, ?)");
+                $logStmt->bind_param('iss', $logUserId, $logAction, $logDesc);
+                $logStmt->execute();
+                $logStmt->close();
+            }
+
             echo json_encode(['success' => true, 'message' => 'Amenity / Accommodation updated successfully']);
         }
     } catch (Exception $e) {
@@ -135,11 +174,28 @@ if ($action === 'add' || $action === 'edit') {
             exit();
         }
         
+        // Get accommodation name before deleting for log
+        $nameStmt = $conn->prepare("SELECT name FROM accommodations WHERE id = ?");
+        $nameStmt->bind_param('i', $accId);
+        $nameStmt->execute();
+        $nameRes = $nameStmt->get_result()->fetch_assoc();
+        $accName = $nameRes['name'] ?? 'Unknown';
+        
         $query = "DELETE FROM accommodations WHERE id = ?";
         $stmt = $conn->prepare($query);
         $stmt->bind_param('i', $accId);
         $stmt->execute();
         
+        $logUserId = $_SESSION['admin_id'] ?? null;
+        if ($logUserId) {
+            $logAction = 'delete_accommodation';
+            $logDesc = "Deleted accommodation: $accName.";
+            $logStmt = $conn->prepare("INSERT INTO activity_logs (user_id, role, action_type, description) VALUES (?, 'admin', ?, ?)");
+            $logStmt->bind_param('iss', $logUserId, $logAction, $logDesc);
+            $logStmt->execute();
+            $logStmt->close();
+        }
+
         echo json_encode(['success' => true, 'message' => 'Amenity / Accommodation deleted successfully']);
     } catch (Exception $e) {
         echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
@@ -159,6 +215,17 @@ if ($action === 'add' || $action === 'edit') {
         $stmt->bind_param('ii', $isActive, $accId);
         $stmt->execute();
         
+        $logUserId = $_SESSION['admin_id'] ?? null;
+        if ($logUserId) {
+            $logAction = 'toggle_accommodation';
+            $statusStr = $isActive ? 'Active' : 'Inactive';
+            $logDesc = "Changed accommodation (ID: $accId) status to $statusStr.";
+            $logStmt = $conn->prepare("INSERT INTO activity_logs (user_id, role, action_type, description) VALUES (?, 'admin', ?, ?)");
+            $logStmt->bind_param('iss', $logUserId, $logAction, $logDesc);
+            $logStmt->execute();
+            $logStmt->close();
+        }
+
         echo json_encode(['success' => true, 'message' => 'Status updated successfully']);
     } catch (Exception $e) {
         echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
@@ -179,6 +246,17 @@ if ($action === 'add' || $action === 'edit') {
         $result = $stmt->get_result();
         
         if ($row = $result->fetch_assoc()) {
+            $ts_query = "SELECT start_time, end_time FROM time_slots WHERE accommodation_id = ?";
+            $ts_stmt = $conn->prepare($ts_query);
+            $ts_stmt->bind_param('i', $accId);
+            $ts_stmt->execute();
+            $ts_res = $ts_stmt->get_result();
+            $time_slots = [];
+            while ($ts_row = $ts_res->fetch_assoc()) {
+                $time_slots[] = $ts_row;
+            }
+            $row['time_slots'] = $time_slots;
+            
             echo json_encode(['success' => true, 'accommodation' => $row]);
         } else {
             echo json_encode(['success' => false, 'message' => 'Amenity / Accommodation not found']);

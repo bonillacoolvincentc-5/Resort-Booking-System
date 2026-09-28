@@ -210,6 +210,8 @@
             const fd = new FormData();
             fd.append('action', 'send_code');
             fd.append('email', email);
+            const userTypeParam = new URLSearchParams(window.location.search).get('type') || 'user';
+            fd.append('type', userTypeParam);
 
             const res  = await fetch('../php/forgot_password.php', { method: 'POST', body: fd });
             const data = await res.json();
@@ -373,6 +375,8 @@
             const fd = new FormData();
             fd.append('action', 'send_code');
             fd.append('email', userEmail);
+            const userTypeParam = new URLSearchParams(window.location.search).get('type') || 'user';
+            fd.append('type', userTypeParam);
             const res  = await fetch('../php/forgot_password.php', { method: 'POST', body: fd });
             const data = await res.json();
             if (data.success) {

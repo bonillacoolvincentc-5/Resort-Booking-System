@@ -30,6 +30,14 @@ try {
         $_SESSION['admin_name']  = $staff['first_name'] . ' ' . $staff['last_name'];
         $_SESSION['is_staff']    = true;
         $_SESSION['login_time']  = time();
+        
+        $logAction = 'login';
+        $logDesc = "Staff logged in.";
+        $logStmt = $conn->prepare("INSERT INTO activity_logs (user_id, role, action_type, description) VALUES (?, 'staff', ?, ?)");
+        $logStmt->bind_param('iss', $staff['id'], $logAction, $logDesc);
+        $logStmt->execute();
+        $logStmt->close();
+        
         header('Location: ../Staff_Dashboard/bookings.php');
         exit();
     } else {

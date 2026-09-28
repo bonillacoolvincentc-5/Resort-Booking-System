@@ -151,43 +151,9 @@ try {
     }
     $blockedStmt->close();
 
-    // 2.5 Fetch Global Daily Capacities
-    $capStmt = $conn->prepare("SELECT target_date, max_guests FROM daily_resort_capacity WHERE target_date BETWEEN ? AND ?");
-    $capStmt->bind_param('ss', $startDate, $endDate);
-    $capStmt->execute();
-    $capRes = $capStmt->get_result();
-    $customCaps = [];
-    while ($row = $capRes->fetch_assoc()) {
-        $customCaps[$row['target_date']] = (int)$row['max_guests'];
-    }
-    $capStmt->close();
-
-    if (!empty($customCaps)) {
-        $globalBookStmt = $conn->prepare("
-            SELECT check_in_date, SUM(number_of_guests) AS total_guests
-            FROM bookings
-            WHERE status_id IN (SELECT id FROM booking_status WHERE name IN ('pending_review', 'approved', 'checked_in'))
-              AND check_in_date BETWEEN ? AND ?
-            GROUP BY check_in_date
-        ");
-        $globalBookStmt->bind_param('ss', $startDate, $endDate);
-        $globalBookStmt->execute();
-        $globalBookRes = $globalBookStmt->get_result();
-        while ($row = $globalBookRes->fetch_assoc()) {
-            $d = $row['check_in_date'];
-            $totalG = (int)$row['total_guests'];
-            if (isset($customCaps[$d]) && $totalG >= $customCaps[$d]) {
-                if (isset($days[$d]) && $days[$d]['status'] !== 'blocked') {
-                    $days[$d]['status'] = 'full';
-                    $days[$d]['global_full'] = true;
-                }
-            }
-        }
-        $globalBookStmt->close();
-    }
 
     // 3. Fetch Bookings overlapping this month for this item
-    $bookingStmt = $conn->prepare("
+    $bookingSql = "
         SELECT check_in_date, check_out_date 
         FROM bookings 
         WHERE booking_type = ? 
@@ -195,8 +161,28 @@ try {
           AND status_id IN (SELECT id FROM booking_status WHERE name IN ('pending_review', 'approved', 'checked_in'))
           AND check_in_date <= ? 
           AND (check_out_date IS NULL OR check_out_date >= ?)
-    ");
-    $bookingStmt->bind_param('siss', $packageType, $itemId, $endDate, $startDate);
+    ";
+    
+    if ($packageType === 'accommodation') {
+        $bookingSql .= "
+            UNION ALL
+            SELECT er.check_in_date, er.check_out_date
+            FROM booking_extra_rooms er
+            JOIN bookings b ON er.booking_id = b.id
+            WHERE er.accommodation_id = ?
+              AND b.status_id IN (SELECT id FROM booking_status WHERE name IN ('pending_review', 'approved', 'checked_in'))
+              AND er.check_in_date <= ?
+              AND (er.check_out_date IS NULL OR er.check_out_date >= ?)
+        ";
+    }
+    
+    $bookingStmt = $conn->prepare($bookingSql);
+    if ($packageType === 'accommodation') {
+        $bookingStmt->bind_param('sississ', $packageType, $itemId, $endDate, $startDate, $itemId, $endDate, $startDate);
+    } else {
+        $bookingStmt->bind_param('siss', $packageType, $itemId, $endDate, $startDate);
+    }
+    
     $bookingStmt->execute();
     $bookingRes = $bookingStmt->get_result();
 

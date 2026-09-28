@@ -121,6 +121,18 @@ try {
     $stmt->bind_param('ii', $_SESSION['admin_id'], $bookingId);
     $stmt->execute();
 
+    // Also log into activity_logs
+    $logRole = isset($_SESSION['is_staff']) && $_SESSION['is_staff'] === true ? 'staff' : 'admin';
+    $logUserId = $_SESSION['admin_id'] ?? ($_SESSION['staff_id'] ?? null);
+    if ($logUserId) {
+        $logAction = 'edit_booking';
+        $logDesc = "Edited booking details for Booking #$bookingId (Customer: $fullName).";
+        $logStmt = $conn->prepare("INSERT INTO activity_logs (user_id, role, action_type, description) VALUES (?, ?, ?, ?)");
+        $logStmt->bind_param('isss', $logUserId, $logRole, $logAction, $logDesc);
+        $logStmt->execute();
+        $logStmt->close();
+    }
+
     echo json_encode([
         'success' => true,
         'message' => 'Booking updated successfully'

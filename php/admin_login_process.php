@@ -24,6 +24,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['admin_role'] = $role;
             $_SESSION['login_time'] = time();
             
+            $logAction = 'login';
+            $logDesc = ucfirst($role) . " logged in.";
+            $logStmt = $conn->prepare("INSERT INTO activity_logs (user_id, role, action_type, description) VALUES (?, ?, ?, ?)");
+            $logStmt->bind_param('isss', $admin['id'], $role, $logAction, $logDesc);
+            $logStmt->execute();
+            $logStmt->close();
+            
             if ($role === 'staff') {
                 $_SESSION['is_staff'] = true;
                 header('Location: ../Staff_Dashboard/bookings.php');

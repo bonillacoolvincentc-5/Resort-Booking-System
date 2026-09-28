@@ -63,23 +63,7 @@ try {
         ];
     }
 
-    // Custom capacities in range
-    $capStmt = $conn->prepare("
-        SELECT target_date, max_guests
-        FROM daily_resort_capacity
-        WHERE target_date BETWEEN ? AND ?
-    ");
-    if ($capStmt) {
-        $capStmt->bind_param('ss', $startDate, $endDate);
-        $capStmt->execute();
-        $capResult = $capStmt->get_result();
-        $customCaps = [];
-        while ($row = $capResult->fetch_assoc()) {
-            $customCaps[$row['target_date']] = intval($row['max_guests']);
-        }
-    } else {
-        $customCaps = [];
-    }
+
 
     // Bookings overlapping each day in the month
     $bookingStmt = $conn->prepare("
@@ -98,11 +82,27 @@ try {
               OR (
                   b.booking_type IN ('accommodation', 'bundle')
                   AND b.check_in_date <= ?
-                  AND (b.check_out_date IS NULL OR b.check_out_date >= ?)
+                  AND (b.check_out_date IS NULL OR b.check_out_date = '' OR b.check_out_date >= ?)
               )
           )
+          
+        UNION ALL
+        
+        SELECT
+            b.id,
+            'accommodation' as booking_type,
+            er.check_in_date,
+            er.check_out_date,
+            acc.type AS accommodation_type
+        FROM booking_extra_rooms er
+        JOIN bookings b ON er.booking_id = b.id
+        LEFT JOIN booking_status bs ON b.status_id = bs.id
+        LEFT JOIN accommodations acc ON er.accommodation_id = acc.id
+        WHERE bs.name NOT IN ('rejected', 'cancelled')
+          AND er.check_in_date <= ?
+          AND (er.check_out_date IS NULL OR er.check_out_date = '' OR er.check_out_date >= ?)
     ");
-    $bookingStmt->bind_param('ssss', $startDate, $endDate, $endDate, $startDate);
+    $bookingStmt->bind_param('ssssss', $startDate, $endDate, $endDate, $startDate, $endDate, $startDate);
     $bookingStmt->execute();
     $bookingResult = $bookingStmt->get_result();
 
@@ -116,7 +116,7 @@ try {
             'rooms' => 0,
             'cottages' => 0,
             'activities' => 0,
-            'daily_capacity' => $customCaps[$dateKey] ?? $maxDailyCapacity,
+            'daily_capacity' => $maxDailyCapacity,
             'occupancy_level' => 'none',
             'is_blocked' => false,
             'block_reason' => null

@@ -457,11 +457,13 @@ while ($row = $accResult->fetch_assoc()) {
                         <!-- Time Slot Fields -->
                         <div id="activityTimeSlotWrapper" style="margin-top: 15px;">
                             <h5>Manage Time Slots</h5>
-                            <div class="time-slot-group" style="display: flex; gap: 10px; margin-bottom: 10px;">
-                                <input type="text" name="slot_label[]" placeholder="Label (e.g. Morning)" class="form-control-modern">
-                                <input type="time" name="start_time[]" class="form-control-modern">
-                                <input type="time" name="end_time[]" class="form-control-modern">
+                            <div id="activityTimeSlotContainer">
+                                <div class="time-slot-group" style="display: flex; gap: 10px; margin-bottom: 10px; align-items: center;">
+                                    <input type="time" name="start_time[]" class="form-control-modern">
+                                    <input type="time" name="end_time[]" class="form-control-modern">
+                                </div>
                             </div>
+                            <button type="button" class="btn btn-sm btn-outline-secondary mt-1" onclick="addTimeSlotRow('activityTimeSlotContainer')">+ Add Time Slot</button>
                         </div>
                     </form>
                 </div>
@@ -519,6 +521,20 @@ while ($row = $accResult->fetch_assoc()) {
                                             </label>
                                         </div>
                                     </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group-modern">
+                                    <label class="form-label-modern">Overnight Check-In Time</label>
+                                    <input type="time" class="form-control-modern" id="accCheckInTime" name="check_in_time" value="14:00">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group-modern">
+                                    <label class="form-label-modern">Overnight Check-Out Time</label>
+                                    <input type="time" class="form-control-modern" id="accCheckOutTime" name="check_out_time" value="12:00">
                                 </div>
                             </div>
                         </div>
@@ -592,11 +608,13 @@ while ($row = $accResult->fetch_assoc()) {
                         <!-- Time Slot Fields -->
                         <div id="timeSlotWrapper" style="margin-top: 15px; display: none;">
                             <h5>Manage Time Slots</h5>
-                            <div class="time-slot-group" style="display: flex; gap: 10px; margin-bottom: 10px;">
-                                <input type="text" name="slot_label[]" placeholder="Label (e.g. Morning)" class="form-control-modern">
-                                <input type="time" name="start_time[]" class="form-control-modern">
-                                <input type="time" name="end_time[]" class="form-control-modern">
+                            <div id="accTimeSlotContainer">
+                                <div class="time-slot-group" style="display: flex; gap: 10px; margin-bottom: 10px; align-items: center;">
+                                    <input type="time" name="start_time[]" class="form-control-modern">
+                                    <input type="time" name="end_time[]" class="form-control-modern">
+                                </div>
                             </div>
+                            <button type="button" class="btn btn-sm btn-outline-secondary mt-1" onclick="addTimeSlotRow('accTimeSlotContainer')">+ Add Time Slot</button>
                         </div>
                     </form>
                 </div>
@@ -613,6 +631,48 @@ while ($row = $accResult->fetch_assoc()) {
         // Modal instance
         let activityModal;
 
+        function addTimeSlotRow(containerId) {
+            const container = document.getElementById(containerId);
+            const row = document.createElement('div');
+            row.className = 'time-slot-group';
+            row.style = 'display: flex; gap: 10px; margin-bottom: 10px; align-items: center;';
+            row.innerHTML = `
+                <input type="time" name="start_time[]" class="form-control-modern">
+                <input type="time" name="end_time[]" class="form-control-modern">
+                <button type="button" class="btn btn-sm btn-outline-danger" onclick="this.parentElement.remove()">X</button>
+            `;
+            container.appendChild(row);
+        }
+
+        function resetTimeSlotContainer(containerId) {
+            document.getElementById(containerId).innerHTML = `
+                <div class="time-slot-group" style="display: flex; gap: 10px; margin-bottom: 10px; align-items: center;">
+                    <input type="time" name="start_time[]" class="form-control-modern">
+                    <input type="time" name="end_time[]" class="form-control-modern">
+                </div>
+            `;
+        }
+
+        function populateTimeSlotContainer(containerId, timeSlots) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            if (timeSlots && timeSlots.length > 0) {
+                timeSlots.forEach((ts, idx) => {
+                    const row = document.createElement('div');
+                    row.className = 'time-slot-group';
+                    row.style = 'display: flex; gap: 10px; margin-bottom: 10px; align-items: center;';
+                    row.innerHTML = `
+                        <input type="time" name="start_time[]" class="form-control-modern" value="${ts.start_time}">
+                        <input type="time" name="end_time[]" class="form-control-modern" value="${ts.end_time}">
+                        ${idx > 0 ? '<button type="button" class="btn btn-sm btn-outline-danger" onclick="this.parentElement.remove()">X</button>' : ''}
+                    `;
+                    container.appendChild(row);
+                });
+            } else {
+                resetTimeSlotContainer(containerId);
+            }
+        }
+
         // Open Add Activity Modal
         function openAddActivityModal() {
             document.getElementById('activityModalTitle').textContent = 'Add Activity';
@@ -620,6 +680,7 @@ while ($row = $accResult->fetch_assoc()) {
             document.getElementById('activityId').value = '';
             document.getElementById('activityStatus').value = '1';
             document.getElementById('activityDailyLimit').value = '10';
+            resetTimeSlotContainer('activityTimeSlotContainer');
             
             if (!activityModal) {
                 activityModal = new bootstrap.Modal(document.getElementById('activityModal'));
@@ -655,6 +716,7 @@ while ($row = $accResult->fetch_assoc()) {
                     document.getElementById('maxDuration').value = activity.max_duration_hours;
                     document.getElementById('activityCapacity').value = activity.capacity;
                     document.getElementById('activityDailyLimit').value = activity.daily_booking_limit || 10;
+                    populateTimeSlotContainer('activityTimeSlotContainer', activity.time_slots);
                     
                     if (!activityModal) {
                         activityModal = new bootstrap.Modal(document.getElementById('activityModal'));
@@ -798,6 +860,9 @@ while ($row = $accResult->fetch_assoc()) {
             document.getElementById('accExtraPersonFee').value = '0.00';
             document.getElementById('accPriceNight').value = '0.00';
             document.getElementById('accPriceDay').value = '0.00';
+            document.getElementById('accCheckInTime').value = '14:00';
+            document.getElementById('accCheckOutTime').value = '12:00';
+            resetTimeSlotContainer('accTimeSlotContainer');
             toggleDayTourSlots();
             
             if (!accommodationModal) {
@@ -835,6 +900,8 @@ while ($row = $accResult->fetch_assoc()) {
                     
                     document.getElementById('accPriceNight').value = acc.price_per_night;
                     document.getElementById('accPriceDay').value = acc.price_per_day;
+                    document.getElementById('accCheckInTime').value = acc.check_in_time ? acc.check_in_time.substring(0, 5) : '14:00';
+                    document.getElementById('accCheckOutTime').value = acc.check_out_time ? acc.check_out_time.substring(0, 5) : '12:00';
                     document.getElementById('accBaseCapacity').value = acc.base_capacity !== undefined ? acc.base_capacity : 1;
                     document.getElementById('accCapacity').value = acc.capacity;
                     document.getElementById('accDailyLimit').value = acc.daily_booking_limit || 1;
@@ -843,6 +910,7 @@ while ($row = $accResult->fetch_assoc()) {
                     document.getElementById('accAmenities').value = acc.amenities || '';
                     document.getElementById('accStatus').value = acc.is_active;
                     
+                    populateTimeSlotContainer('accTimeSlotContainer', acc.time_slots);
                     toggleDayTourSlots();
 
                     if (!accommodationModal) {

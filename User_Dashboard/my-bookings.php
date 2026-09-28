@@ -1558,7 +1558,7 @@ while ($row = $statsResult->fetch_assoc()) {
 
             document.getElementById('modalPayItem').textContent = booking.item_name || 'Reservation';
             document.getElementById('modalPayRef').textContent = booking.booking_reference || '';
-            document.getElementById('modalPayAmount').textContent = '₱' + parseFloat(booking.total_amount || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            document.getElementById('modalPayAmount').textContent = '₱1,000.00';
             
             // Reset file input & preview
             const fileInp = document.getElementById('payModalFileInput');

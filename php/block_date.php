@@ -47,6 +47,17 @@ try {
         $stmt = $conn->prepare("DELETE FROM blocked_dates WHERE blocked_date = ?");
         $stmt->bind_param('s', $date);
         $stmt->execute();
+        
+        $logRole = isset($_SESSION['is_staff']) && $_SESSION['is_staff'] === true ? 'staff' : 'admin';
+        if ($adminId) {
+            $logAction = 'unblock_date';
+            $logDesc = "Unblocked date: $date.";
+            $logStmt = $conn->prepare("INSERT INTO activity_logs (user_id, role, action_type, description) VALUES (?, ?, ?, ?)");
+            $logStmt->bind_param('isss', $adminId, $logRole, $logAction, $logDesc);
+            $logStmt->execute();
+            $logStmt->close();
+        }
+
         echo json_encode(['success' => true, 'message' => 'Date unblocked successfully']);
         exit();
     }
@@ -63,6 +74,16 @@ try {
     ");
     $stmt->bind_param('ssi', $date, $reason, $adminId);
     $stmt->execute();
+
+    $logRole = isset($_SESSION['is_staff']) && $_SESSION['is_staff'] === true ? 'staff' : 'admin';
+    if ($adminId) {
+        $logAction = 'block_date';
+        $logDesc = "Blocked date: $date. Reason: $reason.";
+        $logStmt = $conn->prepare("INSERT INTO activity_logs (user_id, role, action_type, description) VALUES (?, ?, ?, ?)");
+        $logStmt->bind_param('isss', $adminId, $logRole, $logAction, $logDesc);
+        $logStmt->execute();
+        $logStmt->close();
+    }
 
     echo json_encode(['success' => true, 'message' => 'Date blocked successfully']);
 } catch (Exception $e) {

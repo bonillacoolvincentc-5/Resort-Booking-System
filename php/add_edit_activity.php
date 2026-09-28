@@ -79,19 +79,28 @@ if ($action === 'add' || $action === 'edit') {
             $stmt->execute();
             
             $item_id = $conn->insert_id;
-            if (!empty($_POST['slot_label']) && !empty($_POST['start_time']) && !empty($_POST['end_time'])) {
-                $ts_stmt = $conn->prepare("INSERT INTO time_slots (activity_id, label, start_time, end_time, is_active) VALUES (?, ?, ?, ?, 1)");
-                foreach ($_POST['slot_label'] as $index => $label) {
-                    $start = $_POST['start_time'][$index];
+            if (!empty($_POST['start_time']) && !empty($_POST['end_time'])) {
+                $ts_stmt = $conn->prepare("INSERT INTO time_slots (activity_id, label, start_time, end_time, is_active) VALUES (?, '', ?, ?, 1)");
+                foreach ($_POST['start_time'] as $index => $start) {
                     $end = $_POST['end_time'][$index];
                     if (!empty($start) && !empty($end)) {
-                        $ts_stmt->bind_param("isss", $item_id, $label, $start, $end);
+                        $ts_stmt->bind_param("iss", $item_id, $start, $end);
                         $ts_stmt->execute();
                     }
                 }
                 $ts_stmt->close();
             }
             
+            $logUserId = $_SESSION['admin_id'] ?? null;
+            if ($logUserId) {
+                $logAction = 'add_activity';
+                $logDesc = "Added new activity: $name.";
+                $logStmt = $conn->prepare("INSERT INTO activity_logs (user_id, role, action_type, description) VALUES (?, 'admin', ?, ?)");
+                $logStmt->bind_param('iss', $logUserId, $logAction, $logDesc);
+                $logStmt->execute();
+                $logStmt->close();
+            }
+
             echo json_encode(['success' => true, 'message' => 'Activity added successfully']);
         } elseif ($action === 'edit') {
             // Update existing activity
@@ -113,6 +122,34 @@ if ($action === 'add' || $action === 'edit') {
             }
             $stmt->execute();
             
+            // Re-insert time slots
+            $del_ts = $conn->prepare("DELETE FROM time_slots WHERE activity_id = ?");
+            $del_ts->bind_param("i", $activityId);
+            $del_ts->execute();
+            $del_ts->close();
+            
+            if (!empty($_POST['start_time']) && !empty($_POST['end_time'])) {
+                $ts_stmt = $conn->prepare("INSERT INTO time_slots (activity_id, label, start_time, end_time, is_active) VALUES (?, '', ?, ?, 1)");
+                foreach ($_POST['start_time'] as $index => $start) {
+                    $end = $_POST['end_time'][$index];
+                    if (!empty($start) && !empty($end)) {
+                        $ts_stmt->bind_param("iss", $activityId, $start, $end);
+                        $ts_stmt->execute();
+                    }
+                }
+                $ts_stmt->close();
+            }
+            
+            $logUserId = $_SESSION['admin_id'] ?? null;
+            if ($logUserId) {
+                $logAction = 'edit_activity';
+                $logDesc = "Edited activity: $name (ID: $activityId).";
+                $logStmt = $conn->prepare("INSERT INTO activity_logs (user_id, role, action_type, description) VALUES (?, 'admin', ?, ?)");
+                $logStmt->bind_param('iss', $logUserId, $logAction, $logDesc);
+                $logStmt->execute();
+                $logStmt->close();
+            }
+
             echo json_encode(['success' => true, 'message' => 'Activity updated successfully']);
         }
     } catch (Exception $e) {
@@ -146,12 +183,29 @@ if ($action === 'add' || $action === 'edit') {
             exit();
         }
         
+        // Get activity name before deleting for log
+        $nameStmt = $conn->prepare("SELECT name FROM activities WHERE id = ?");
+        $nameStmt->bind_param('i', $activityId);
+        $nameStmt->execute();
+        $nameRes = $nameStmt->get_result()->fetch_assoc();
+        $activityName = $nameRes['name'] ?? 'Unknown';
+        
         // Delete activity
         $query = "DELETE FROM activities WHERE id = ?";
         $stmt = $conn->prepare($query);
         $stmt->bind_param('i', $activityId);
         $stmt->execute();
         
+        $logUserId = $_SESSION['admin_id'] ?? null;
+        if ($logUserId) {
+            $logAction = 'delete_activity';
+            $logDesc = "Deleted activity: $activityName.";
+            $logStmt = $conn->prepare("INSERT INTO activity_logs (user_id, role, action_type, description) VALUES (?, 'admin', ?, ?)");
+            $logStmt->bind_param('iss', $logUserId, $logAction, $logDesc);
+            $logStmt->execute();
+            $logStmt->close();
+        }
+
         echo json_encode(['success' => true, 'message' => 'Activity deleted successfully']);
     } catch (Exception $e) {
         echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
@@ -171,6 +225,17 @@ if ($action === 'add' || $action === 'edit') {
         $stmt->bind_param('ii', $isActive, $activityId);
         $stmt->execute();
         
+        $logUserId = $_SESSION['admin_id'] ?? null;
+        if ($logUserId) {
+            $logAction = 'toggle_activity';
+            $statusStr = $isActive ? 'Active' : 'Inactive';
+            $logDesc = "Changed activity (ID: $activityId) status to $statusStr.";
+            $logStmt = $conn->prepare("INSERT INTO activity_logs (user_id, role, action_type, description) VALUES (?, 'admin', ?, ?)");
+            $logStmt->bind_param('iss', $logUserId, $logAction, $logDesc);
+            $logStmt->execute();
+            $logStmt->close();
+        }
+
         echo json_encode(['success' => true, 'message' => 'Activity status updated successfully']);
     } catch (Exception $e) {
         echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
@@ -191,6 +256,17 @@ if ($action === 'add' || $action === 'edit') {
         $result = $stmt->get_result();
         
         if ($row = $result->fetch_assoc()) {
+            $ts_query = "SELECT start_time, end_time FROM time_slots WHERE activity_id = ?";
+            $ts_stmt = $conn->prepare($ts_query);
+            $ts_stmt->bind_param('i', $activityId);
+            $ts_stmt->execute();
+            $ts_res = $ts_stmt->get_result();
+            $time_slots = [];
+            while ($ts_row = $ts_res->fetch_assoc()) {
+                $time_slots[] = $ts_row;
+            }
+            $row['time_slots'] = $time_slots;
+            
             echo json_encode(['success' => true, 'activity' => $row]);
         } else {
             echo json_encode(['success' => false, 'message' => 'Activity not found']);

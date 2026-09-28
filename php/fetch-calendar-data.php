@@ -126,54 +126,7 @@ try {
     }
     $blkStmt->close();
 
-    // ── Global Daily Resort Capacity Check ────────────────────────
-    $capStmt = $conn->prepare("SELECT target_date, max_guests FROM daily_resort_capacity WHERE target_date BETWEEN ? AND ?");
-    $capStmt->bind_param('ss', $startDate, $endDate);
-    $capStmt->execute();
-    $capRes = $capStmt->get_result();
-    $customCaps = [];
-    while ($row = $capRes->fetch_assoc()) {
-        $customCaps[$row['target_date']] = (int)$row['max_guests'];
-    }
-    $capStmt->close();
 
-    if (!empty($customCaps)) {
-        // Find total guests per day
-        $globalBookStmt = $conn->prepare("
-            SELECT check_in_date, SUM(number_of_guests) AS total_guests
-            FROM bookings
-            WHERE status_id IN (SELECT id FROM booking_status WHERE name IN ('awaiting_payment', 'payment_verifying', 'approved', 'checked_in'))
-              AND check_in_date BETWEEN ? AND ?
-            GROUP BY check_in_date
-        ");
-        $globalBookStmt->bind_param('ss', $startDate, $endDate);
-        $globalBookStmt->execute();
-        $globalBookRes = $globalBookStmt->get_result();
-        $bookedGuestsMap = [];
-        while ($row = $globalBookRes->fetch_assoc()) {
-            $bookedGuestsMap[$row['check_in_date']] = (int)$row['total_guests'];
-        }
-        $globalBookStmt->close();
-
-        $minGuests = max(1, (int)($item['base_capacity'] ?? 1));
-
-        foreach ($customCaps as $date => $cap) {
-            if (isset($days[$date])) {
-                $days[$date]['global_cap'] = $cap;
-                $totalG = $bookedGuestsMap[$date] ?? 0;
-                $remaining = max(0, $cap - $totalG);
-                $days[$date]['global_remaining'] = $remaining;
-
-                if ($remaining < $minGuests) {
-                    if ($days[$date]['status'] !== 'blocked') {
-                        $days[$date]['status'] = 'full';
-                        $days[$date]['available'] = false;
-                        $days[$date]['global_full'] = true;
-                    }
-                }
-            }
-        }
-    }
 
     // Query Bookings
     if ($packageType === 'accommodation') {
@@ -185,8 +138,18 @@ try {
               AND status_id IN (SELECT id FROM booking_status WHERE name IN ('awaiting_payment', 'payment_verifying', 'approved', 'checked_in'))
               AND check_in_date <= ?
               AND (check_out_date IS NULL OR check_out_date >= ?)
+              
+            UNION ALL
+            
+            SELECT er.check_in_date, er.check_out_date
+            FROM booking_extra_rooms er
+            JOIN bookings b ON er.booking_id = b.id
+            WHERE er.accommodation_id = ?
+              AND b.status_id IN (SELECT id FROM booking_status WHERE name IN ('awaiting_payment', 'payment_verifying', 'approved', 'checked_in'))
+              AND er.check_in_date <= ?
+              AND (er.check_out_date IS NULL OR er.check_out_date >= ?)
         ");
-        $bookStmt->bind_param('iss', $itemId, $endDate, $startDate);
+        $bookStmt->bind_param('ississ', $itemId, $endDate, $startDate, $itemId, $endDate, $startDate);
         $bookStmt->execute();
         $bookRes = $bookStmt->get_result();
 
@@ -209,6 +172,9 @@ try {
                     if ($days[$dKey]['booked'] >= $capacity) {
                         $days[$dKey]['status'] = 'full';
                         $days[$dKey]['available'] = false;
+                    } else if ($days[$dKey]['booked'] > 0) {
+                        $days[$dKey]['status'] = 'limited';
+                        $days[$dKey]['available'] = true;
                     }
                 }
                 $dayCursor->modify('+1 day');
@@ -238,7 +204,7 @@ try {
                     if ($bookedGuests >= $capacity) {
                         $days[$d]['status'] = 'full';
                         $days[$d]['available'] = false;
-                    } else if ($capacity - $bookedGuests <= 2 || $bookedGuests >= ($capacity / 2)) {
+                    } else if ($bookedGuests > 0) {
                         $days[$d]['status'] = 'limited';
                         $days[$d]['available'] = true;
                     } else {

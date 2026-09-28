@@ -16,12 +16,18 @@ $res = $conn->query("SELECT id, name, slug, description, price_per_hour, min_dur
 while ($r = $res->fetch_assoc()) $activities[] = $r;
 
 $accommodations = [];
-$res = $conn->query("SELECT id, name, type, description, capacity, price_per_night, price_per_day, amenities, image_url FROM accommodations WHERE is_active = 1 ORDER BY type ASC, name ASC");
+$res = $conn->query("SELECT id, name, type, tour_type, description, capacity, price_per_night, price_per_day, check_in_time, check_out_time, amenities, image_url FROM accommodations WHERE is_active = 1 ORDER BY type ASC, name ASC");
 while ($r = $res->fetch_assoc()) $accommodations[] = $r;
 
 $bundles = [];
-$res = $conn->query("SELECT id, name, slug, description, price, capacity, amenities, image_url FROM bundles WHERE is_active = 1 ORDER BY name ASC");
+$res = $conn->query("SELECT id, name, slug, description, price, capacity, check_in_time, check_out_time, amenities, image_url FROM bundles WHERE is_active = 1 ORDER BY name ASC");
 while ($r = $res->fetch_assoc()) $bundles[] = $r;
+
+$timeSlots = [];
+$stmtSlots = $conn->query("SELECT id, activity_id, accommodation_id, label, start_time, end_time FROM time_slots WHERE is_active = 1 ORDER BY start_time ASC");
+if ($stmtSlots) {
+    while ($r = $stmtSlots->fetch_assoc()) $timeSlots[] = $r;
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -222,11 +228,13 @@ while ($r = $res->fetch_assoc()) $bundles[] = $r;
             text-transform: uppercase;
             letter-spacing: 0.04em;
         }
-        .badge-room     { background: rgba(99,102,241,0.15); color: #a5b4fc; border: 1px solid rgba(99,102,241,0.3); }
-        .badge-cottage  { background: rgba(245,158,11,0.15); color: #fcd34d; border: 1px solid rgba(245,158,11,0.3); }
-        .badge-activity { background: rgba(16,185,129,0.15); color: #6ee7b7; border: 1px solid rgba(16,185,129,0.3); }
-        .badge-bundle   { background: rgba(236,72,153,0.15); color: #f9a8d4; border: 1px solid rgba(236,72,153,0.3); }
-        .badge-stay-in  { background: rgba(139,92,246,0.15); color: #c4b5fd; border: 1px solid rgba(139,92,246,0.3); }
+        .badge-room        { background: rgba(99,102,241,0.15); color: #a5b4fc; border: 1px solid rgba(99,102,241,0.3); }
+        .badge-cottage     { background: rgba(245,158,11,0.15); color: #fcd34d; border: 1px solid rgba(245,158,11,0.3); }
+        .badge-day-tour    { background: rgba(245,158,11,0.15); color: #fcd34d; border: 1px solid rgba(245,158,11,0.3); }
+        .badge-overnight   { background: rgba(99,102,241,0.15); color: #a5b4fc; border: 1px solid rgba(99,102,241,0.3); }
+        .badge-activity    { background: rgba(16,185,129,0.15); color: #6ee7b7; border: 1px solid rgba(16,185,129,0.3); }
+        .badge-bundle      { background: rgba(236,72,153,0.15); color: #f9a8d4; border: 1px solid rgba(236,72,153,0.3); }
+        .badge-stay-in     { background: rgba(139,92,246,0.15); color: #c4b5fd; border: 1px solid rgba(139,92,246,0.3); }
 
         .pos-card-price {
             font-size: 0.95rem;
@@ -394,6 +402,10 @@ while ($r = $res->fetch_assoc()) $bundles[] = $r;
             outline: none;
         }
         .pos-select { cursor: pointer; }
+        .pos-select option {
+            background-color: #08120e;
+            color: #fff;
+        }
         .pos-textarea { resize: vertical; min-height: 72px; }
         .pos-input::placeholder, .pos-textarea::placeholder { color: #5c6b63; }
         .pos-input:focus, .pos-select:focus, .pos-textarea:focus {
@@ -625,21 +637,21 @@ while ($r = $res->fetch_assoc()) $bundles[] = $r;
                                 onclick="filterCat('all',this)">
                             <i class="bi bi-layout-three-columns me-1"></i>All
                         </button>
-                        <button class="cat-tab" data-cat="room"
-                                onclick="filterCat('room',this)">
-                            <i class="bi bi-house-door me-1"></i>Rooms
+                        <button class="cat-tab" data-cat="bundle"
+                                onclick="filterCat('bundle',this)">
+                            <i class="bi bi-box-seam me-1"></i>Bundles
                         </button>
-                        <button class="cat-tab" data-cat="cottage"
-                                onclick="filterCat('cottage',this)">
-                            <i class="bi bi-tree me-1"></i>Cottages
+                        <button class="cat-tab" data-cat="day_tour"
+                                onclick="filterCat('day_tour',this)">
+                            <i class="bi bi-sun me-1"></i>Day Tour Packages
+                        </button>
+                        <button class="cat-tab" data-cat="overnight"
+                                onclick="filterCat('overnight',this)">
+                            <i class="bi bi-moon-stars me-1"></i>Overnight Packages
                         </button>
                         <button class="cat-tab" data-cat="activity"
                                 onclick="filterCat('activity',this)">
                             <i class="bi bi-lightning-charge me-1"></i>Activities
-                        </button>
-                        <button class="cat-tab" data-cat="bundle"
-                                onclick="filterCat('bundle',this)">
-                            <i class="bi bi-box-seam me-1"></i>Bundles
                         </button>
                     </div>
 
@@ -710,18 +722,36 @@ while ($r = $res->fetch_assoc()) $bundles[] = $r;
                     <div class="pos-input-row pos-field-group">
                         <div>
                             <label class="pos-label" for="bi_checkin_date">Check-In Date <span class="text-danger">*</span></label>
-                            <input type="date" id="bi_checkin_date" class="pos-input" required min="<?php echo date('Y-m-d', strtotime('+1 day')); ?>" onchange="recalcTotal()">
+                            <input type="date" id="bi_checkin_date" class="pos-input" required min="<?php echo date('Y-m-d'); ?>" onchange="handleDateChange()">
                         </div>
-                        <div>
-                            <label class="pos-label" for="bi_checkin_time">Start Time</label>
-                            <input type="time" id="bi_checkin_time" class="pos-input" onchange="recalcTotal()">
-                        </div>
-                    </div>
-
-                    <div class="pos-input-row pos-field-group">
                         <div>
                             <label class="pos-label" for="bi_checkout_date">Check-Out Date</label>
                             <input type="date" id="bi_checkout_date" class="pos-input" onchange="recalcTotal()">
+                        </div>
+                    </div>
+                    
+                    <div class="pos-input-row pos-field-group" id="overnightTimeSection" style="display:none;">
+                        <div>
+                            <label class="pos-label" for="bi_overnight_checkin"><i class="bi bi-clock me-1"></i>Check-In Time</label>
+                            <input type="time" id="bi_overnight_checkin" class="pos-input" readonly style="background: rgba(255,255,255,0.05); color: #8c9992; cursor: not-allowed;">
+                        </div>
+                        <div>
+                            <label class="pos-label" for="bi_overnight_checkout"><i class="bi bi-clock-history me-1"></i>Check-Out Time</label>
+                            <input type="time" id="bi_overnight_checkout" class="pos-input" readonly style="background: rgba(255,255,255,0.05); color: #8c9992; cursor: not-allowed;">
+                        </div>
+                    </div>
+                    
+                    <div class="pos-field-group" id="timeSlotContainer" style="display:none;">
+                        <label class="pos-label" for="bi_time_slot">Time Slot</label>
+                        <select id="bi_time_slot" class="pos-select" onchange="handleTimeSlotChange()">
+                            <option value="">-- Select Time Slot --</option>
+                        </select>
+                    </div>
+
+                    <div class="pos-input-row pos-field-group" id="customTimeContainer" style="display:none;">
+                        <div>
+                            <label class="pos-label" for="bi_checkin_time">Start Time</label>
+                            <input type="time" id="bi_checkin_time" class="pos-input" onchange="recalcTotal()">
                         </div>
                         <div>
                             <label class="pos-label" for="bi_checkout_time">End Time</label>
@@ -729,10 +759,23 @@ while ($r = $res->fetch_assoc()) $bundles[] = $r;
                         </div>
                     </div>
 
-                    <div class="pos-field-group">
-                        <label class="pos-label" for="bi_num_guests">Number of Guests / Pax</label>
-                        <input type="number" id="bi_num_guests" class="pos-input"
-                               value="1" min="1" max="200" onchange="recalcTotal()">
+                    <div class="pos-input-row pos-field-group" style="align-items: flex-end;">
+                        <div>
+                            <label class="pos-label" for="bi_num_guests">Guests / Pax</label>
+                            <input type="number" id="bi_num_guests" class="pos-input"
+                                   value="1" min="1" max="200" oninput="if(this.value && parseInt(this.value) > parseInt(this.max)) this.value = this.max; recalcTotal();" onchange="recalcTotal()">
+                        </div>
+                        <div>
+                            <button type="button" class="btn w-100" id="btnAddMoreRoom" onclick="startAddingRoom()" style="display:none; padding: 0.6rem 0.9rem; background:rgba(157, 255, 0, 0.15); border:1px solid #9dff00; color:#9dff00; border-radius: 9px; font-weight: 600;"><i class="bi bi-plus-circle me-1"></i>Add More Room</button>
+                        </div>
+                    </div>
+                    <div id="extraRoomsContainer" style="margin-bottom: 1rem;"></div>
+                    
+                    <div id="addonsContainer" style="display:none; margin-bottom: 1rem;">
+                        <div class="pos-section-label" style="font-size: 0.8rem;">
+                            <i class="bi bi-plus-circle"></i> Add-on Activities (Optional)
+                        </div>
+                        <div id="addonsList" style="display: flex; flex-direction: column; gap: 0.4rem;"></div>
                     </div>
 
                     <!-- ── Billing ── -->
@@ -771,6 +814,27 @@ while ($r = $res->fetch_assoc()) $bundles[] = $r;
         </div><!-- /pos-wrapper -->
     </div><!-- /mainContent -->
 
+    <!-- ══════════ Walk-In Confirmation Modal ══════════ -->
+    <div class="modal fade" id="walkinConfirmModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="background: var(--pos-bg-dark); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+                <div class="modal-header" style="border-bottom: 1px solid rgba(255,255,255,0.05); background: rgba(255,255,255,0.02);">
+                    <h5 class="modal-title" style="color: var(--pos-text-light); font-weight: 600;"><i class="bi bi-receipt me-2"></i>Booking Summary</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="walkinConfirmBody" style="color: var(--pos-text-light); padding: 1.5rem;">
+                    <!-- Content populated by JS -->
+                </div>
+                <div class="modal-footer" style="border-top: 1px solid rgba(255,255,255,0.05); background: rgba(0,0,0,0.2);">
+                    <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal" style="border-radius: 6px;">Cancel</button>
+                    <button type="button" class="btn" id="posFinalConfirmBtn" onclick="executeSubmitWalkIn()" style="background: var(--accent-success); color: #000; font-weight: 600; border-radius: 6px;">
+                        <i class="bi bi-check-circle-fill me-1"></i> Confirm Booking
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- ══════════ Success Overlay ══════════ -->
     <div class="pos-success-overlay" id="successOverlay">
         <div class="pos-success-icon"><i class="bi bi-check-circle-fill"></i></div>
@@ -787,28 +851,87 @@ while ($r = $res->fetch_assoc()) $bundles[] = $r;
         </div>
     </div>
 
+    <!-- ══════════ Details Modal ══════════ -->
+    <div class="modal fade" id="itemDetailsModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" style="max-width: 450px;">
+            <div class="modal-content" style="background: rgba(18, 30, 24, 0.95); backdrop-filter: blur(12px); border: 1px solid rgba(157,255,0,0.2); border-top: 4px solid #9dff00; border-radius: 16px; box-shadow: 0 15px 35px rgba(0,0,0,0.5), 0 0 20px rgba(157,255,0,0.05);">
+                <div class="modal-header border-0 pb-1 px-4 pt-4">
+                    <h5 class="modal-title text-white d-flex align-items-center gap-2" style="font-weight: 700; letter-spacing: 0.02em; font-size: 1.15rem;">
+                        <i class="bi bi-stars" style="color: #9dff00; font-size: 1.1rem;"></i>
+                        <span id="itemDetailsTitle"></span>
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" style="opacity: 0.5;"></button>
+                </div>
+                <div class="modal-body px-4 pb-4 pt-3">
+                    <p id="itemDetailsDesc" style="color:#a8b8b0; font-size: 0.92rem; line-height: 1.6; margin: 0;"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="../assets/js/bootstrap.bundle.min.js"></script>
     <script>
     // ── PHP → JS Data ─────────────────────────────────────────────────────────
     const PHP_ACTIVITIES     = <?= json_encode($activities,     JSON_HEX_TAG) ?>;
     const PHP_ACCOMMODATIONS = <?= json_encode($accommodations, JSON_HEX_TAG) ?>;
     const PHP_BUNDLES        = <?= json_encode($bundles,        JSON_HEX_TAG) ?>;
+    const PHP_TIME_SLOTS     = <?= json_encode($timeSlots,      JSON_HEX_TAG) ?>;
 
     // ── Build unified catalog ─────────────────────────────────────────────────
     const CATALOG = [];
 
     PHP_ACCOMMODATIONS.forEach(a => {
+        const tourType = (a.tour_type || '').toLowerCase();
+        const accType  = (a.type || '').toLowerCase();
+        const isDayTour   = tourType.includes('day_tour') || accType === 'cottage';
+        const isOvernight = tourType.includes('overnight') || accType === 'room' || accType === 'stay-in';
+
+        const pricePerNight = parseFloat(a.price_per_night) || 0;
+        const pricePerDay   = parseFloat(a.price_per_day) || 0;
+
+        let primaryPrice = 0;
+        let priceLabel = '';
+        let badgeClass = 'badge-room';
+        let badgeLabel = 'Accommodation';
+
+        if (isDayTour && !isOvernight) {
+            primaryPrice = pricePerDay > 0 ? pricePerDay : pricePerNight;
+            priceLabel   = '/ day';
+            badgeClass   = 'badge-day-tour';
+            badgeLabel   = 'Day Tour';
+        } else if (isOvernight && !isDayTour) {
+            primaryPrice = pricePerNight > 0 ? pricePerNight : pricePerDay;
+            priceLabel   = '/ night';
+            badgeClass   = 'badge-overnight';
+            badgeLabel   = 'Overnight';
+        } else {
+            // Supports both Day Tour and Overnight
+            primaryPrice = pricePerNight > 0 ? pricePerNight : pricePerDay;
+            priceLabel   = pricePerDay > 0 ? `/ night · ₱${pricePerDay.toLocaleString('en-PH')}/day` : '/ night';
+            badgeClass   = 'badge-overnight';
+            badgeLabel   = 'Day & Overnight';
+        }
+
         CATALOG.push({
-            id:          parseInt(a.id, 10),
-            type:        a.type,       // 'room' | 'cottage' | 'stay-in'
-            booking_type:'accommodation',
-            name:        a.name,
-            description: a.description || '',
-            capacity:    parseInt(a.capacity, 10) || 1,
-            price:       parseFloat(a.price_per_night) || parseFloat(a.price_per_day) || 0,
-            price_label: '/ night',
-            amenities:   a.amenities   || '',
-            image:       a.image_url   || '',
+            id:              parseInt(a.id, 10),
+            type:            a.type,       // 'room' | 'cottage' | 'stay-in'
+            tour_type:       a.tour_type || '',
+            is_day_tour:     isDayTour,
+            is_overnight:    isOvernight,
+            price_per_day:   pricePerDay,
+            price_per_night: pricePerNight,
+            booking_type:    'accommodation',
+            badge_class:     badgeClass,
+            badge_label:     badgeLabel,
+            name:            a.name,
+            description:     a.description || '',
+            capacity:        parseInt(a.capacity, 10) || 1,
+            price:           primaryPrice,
+            price_label:     priceLabel,
+            check_in_time:   a.check_in_time || null,
+            check_out_time:  a.check_out_time || null,
+            amenities:       a.amenities   || '',
+            image:           a.image_url   || '',
         });
     });
 
@@ -817,6 +940,10 @@ while ($r = $res->fetch_assoc()) $bundles[] = $r;
             id:          parseInt(a.id, 10),
             type:        'activity',
             booking_type:'activity',
+            is_day_tour: false,
+            is_overnight:false,
+            badge_class: 'badge-activity',
+            badge_label: 'Activity',
             name:        a.name,
             description: a.description || '',
             capacity:    parseInt(a.capacity, 10) || 1,
@@ -834,11 +961,17 @@ while ($r = $res->fetch_assoc()) $bundles[] = $r;
             id:          parseInt(b.id, 10),
             type:        'bundle',
             booking_type:'bundle',
+            is_day_tour: false,
+            is_overnight:false,
+            badge_class: 'badge-bundle',
+            badge_label: 'Bundle',
             name:        b.name,
             description: b.description || '',
             capacity:    parseInt(b.capacity, 10) || 1,
             price:       parseFloat(b.price) || 0,
             price_label: 'flat rate',
+            check_in_time: b.check_in_time || null,
+            check_out_time: b.check_out_time || null,
             amenities:   b.amenities   || '',
             image:       b.image_url   || '',
         });
@@ -848,28 +981,102 @@ while ($r = $res->fetch_assoc()) $bundles[] = $r;
     let currentCat    = 'all';
     let currentSearch = '';
     let selectedItem  = null;
+    let extraRooms = [];
+    let isAddingExtraRoom = false;
+    let AVAILABILITY_MAP = null;
+    let walkinAddonsMap = {};
+
+    async function loadAllAvailability(date) {
+        if (!date) return;
+        try {
+            const res = await fetch(`../php/get_all_availability.php?date=${date}`);
+            const result = await res.json();
+            if (result.success) {
+                AVAILABILITY_MAP = result.data;
+                renderCatalog();
+            }
+        } catch (e) {
+            console.error('Failed to load availability map', e);
+        }
+    }
 
     // ── Type badges / icons ───────────────────────────────────────────────────
     const TYPE_META = {
-        room:            { badge:'badge-room',     label:'Room',           icon:'bi-house-door' },
-        cottage:         { badge:'badge-cottage',  label:'Cottage',        icon:'bi-tree' },
-        'room,cottage':  { badge:'badge-room',     label:'Room & Cottage', icon:'bi-buildings' },
-        'cottage,room':  { badge:'badge-room',     label:'Room & Cottage', icon:'bi-buildings' },
-        'stay-in':       { badge:'badge-stay-in',  label:'Stay-In',        icon:'bi-moon-stars' },
-        activity:        { badge:'badge-activity', label:'Activity',       icon:'bi-lightning-charge' },
-        bundle:          { badge:'badge-bundle',   label:'Bundle',         icon:'bi-box-seam' },
+        room:            { badge:'badge-overnight', label:'Room',           icon:'bi-house-door' },
+        cottage:         { badge:'badge-day-tour',  label:'Cottage',        icon:'bi-tree' },
+        'room,cottage':  { badge:'badge-overnight', label:'Room & Cottage', icon:'bi-buildings' },
+        'cottage,room':  { badge:'badge-overnight', label:'Room & Cottage', icon:'bi-buildings' },
+        'stay-in':       { badge:'badge-stay-in',   label:'Stay-In',        icon:'bi-moon-stars' },
+        activity:        { badge:'badge-activity',  label:'Activity',       icon:'bi-lightning-charge' },
+        bundle:          { badge:'badge-bundle',    label:'Bundle',         icon:'bi-box-seam' },
     };
 
     // ── Render catalog grid ───────────────────────────────────────────────────
     function renderCatalog() {
         const grid = document.getElementById('posGrid');
         const term = currentSearch.toLowerCase();
+        
+        const tabs = document.querySelectorAll('.cat-tab');
+        if (selectedItem) {
+            const isDayTour = selectedItem.is_day_tour && !selectedItem.is_overnight;
+            const isOvernight = selectedItem.is_overnight;
+            const isBundle = selectedItem.booking_type === 'bundle';
+            
+            tabs.forEach(t => {
+                const cat = t.getAttribute('data-cat');
+                if (cat === 'all') return;
+                
+                if (isBundle) {
+                    if (cat === 'day_tour' || cat === 'overnight' || cat === 'activity') t.style.display = 'none';
+                    else t.style.display = 'inline-block';
+                } else if (isOvernight) {
+                    if (cat === 'day_tour' || cat === 'bundle') t.style.display = 'none';
+                    else t.style.display = 'inline-block';
+                } else if (isDayTour) {
+                    if (cat === 'overnight' || cat === 'bundle') t.style.display = 'none';
+                    else t.style.display = 'inline-block';
+                }
+            });
+            
+            const activeTab = document.querySelector('.cat-tab[data-cat="' + currentCat + '"]');
+            if (activeTab && activeTab.style.display === 'none') {
+                filterCat('all', document.querySelector('.cat-tab[data-cat="all"]'));
+                return;
+            }
+        } else {
+            tabs.forEach(t => t.style.display = 'inline-block');
+        }
 
         const filtered = CATALOG.filter(item => {
-            const types = (item.type || '').split(',').map(s => s.trim());
-            const catMatch = currentCat === 'all'
-                || types.includes(currentCat)
-                || (currentCat === 'room' && types.includes('stay-in'));
+            if (selectedItem) {
+                const isDayTour = selectedItem.is_day_tour && !selectedItem.is_overnight;
+                const isOvernight = selectedItem.is_overnight;
+                const isBundle = selectedItem.booking_type === 'bundle';
+                
+                if (isBundle) {
+                    if (item.booking_type !== 'bundle') return false;
+                } else if (isOvernight) {
+                    if (item.booking_type === 'bundle') return false;
+                    if (item.booking_type === 'accommodation' && !item.is_overnight) return false;
+                } else if (isDayTour) {
+                    if (item.booking_type === 'bundle') return false;
+                    if (item.booking_type === 'accommodation' && !item.is_day_tour) return false;
+                }
+            }
+            
+            let catMatch = false;
+            if (currentCat === 'all') {
+                catMatch = true;
+            } else if (currentCat === 'bundle') {
+                catMatch = (item.booking_type === 'bundle');
+            } else if (currentCat === 'day_tour') {
+                catMatch = (item.is_day_tour === true);
+            } else if (currentCat === 'overnight') {
+                catMatch = (item.is_overnight === true);
+            } else if (currentCat === 'activity') {
+                catMatch = (item.booking_type === 'activity');
+            }
+
             const nameMatch = item.name.toLowerCase().includes(term)
                 || (item.description || '').toLowerCase().includes(term);
             return catMatch && nameMatch;
@@ -885,12 +1092,26 @@ while ($r = $res->fetch_assoc()) $bundles[] = $r;
         }
 
         grid.innerHTML = filtered.map(item => {
-            const meta  = TYPE_META[item.type] || { badge:'badge-activity', label:item.type, icon:'bi-grid' };
+            const meta  = TYPE_META[item.type] || { badge:item.badge_class || 'badge-activity', label:item.badge_label || item.type, icon:'bi-grid' };
+            const cardBadgeClass = item.badge_class || meta.badge;
+            const cardBadgeLabel = item.badge_label || meta.label;
             const isSelected = selectedItem && Number(selectedItem.id) === Number(item.id) && selectedItem.booking_type === item.booking_type;
             const priceStr   = '₱' + item.price.toLocaleString('en-PH', {minimumFractionDigits:2}) + ' <span>' + item.price_label + '</span>';
             const imgHtml    = item.image
                 ? `<img class="pos-card-img" src="../${escH(item.image)}" alt="${escH(item.name)}" loading="lazy" onerror="this.parentElement.innerHTML='<div class=pos-card-img-placeholder><i class=bi-${escH(meta.icon)}></i></div>'">`
                 : `<div class="pos-card-img-placeholder"><i class="bi ${escH(meta.icon)}"></i></div>`;
+                
+            let availText = '';
+            if (AVAILABILITY_MAP && AVAILABILITY_MAP[item.booking_type] && AVAILABILITY_MAP[item.booking_type][item.id]) {
+                const info = AVAILABILITY_MAP[item.booking_type][item.id];
+                const available = Math.max(0, info.capacity - info.booked);
+                
+                let availColor = '#9dff00';
+                if (available === 0) availColor = '#f87171'; // Red
+                else if (available <= 2) availColor = '#fbbf24'; // Yellow
+                
+                availText = `<div class="pos-card-avail" style="font-size:0.8rem; font-weight:600; color:${availColor}; margin-top:0.4rem; background:rgba(0,0,0,0.2); padding:0.2rem 0.5rem; border-radius:4px; display:inline-block;"><i class="bi bi-clock-history me-1"></i>Available: ${available}/${info.capacity}</div>`;
+            }
 
             return `
             <div class="pos-card${isSelected ? ' selected' : ''} h-100 d-flex flex-column"
@@ -899,16 +1120,19 @@ while ($r = $res->fetch_assoc()) $bundles[] = $r;
                 ${imgHtml}
                 <div class="pos-card-body d-flex flex-column flex-grow-1">
                     <div class="pos-card-name">${escH(item.name)}</div>
-                    <span class="pos-card-type-badge ${meta.badge}">${meta.label}</span>
+                    <span class="pos-card-type-badge ${cardBadgeClass}">${cardBadgeLabel}</span>
                     <div class="pos-card-price">${priceStr}</div>
                     <div class="pos-card-cap">
                         <i class="bi bi-people-fill"></i>
                         ${item.capacity} Pax${item.capacity >= 50 ? '+' : ''}
                     </div>
-                    <div class="pos-card-desc">${escH(item.description || 'No description available.')}</div>
+                    ${availText}
                 </div>
                 <div class="pos-card-footer mt-auto">
-                    <button type="button" class="pos-select-btn" onclick="selectItem(${item.id},'${item.booking_type}');">
+                    <button type="button" class="btn btn-sm w-100 mb-2" style="background: rgba(255,255,255,0.05); color: #8c9992; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; font-size: 0.75rem;" onclick="event.stopPropagation(); showItemDetails(${item.id},'${item.booking_type}')">
+                        <i class="bi bi-info-circle me-1"></i>View Details
+                    </button>
+                    <button type="button" class="pos-select-btn" onclick="event.stopPropagation(); selectItem(${item.id},'${item.booking_type}');">
                         <i class="bi bi-${isSelected ? 'check-circle-fill' : 'plus-circle'} me-1"></i>
                         ${isSelected ? 'Selected' : 'Select Item'}
                     </button>
@@ -933,7 +1157,43 @@ while ($r = $res->fetch_assoc()) $bundles[] = $r;
 
     // ── Select item ───────────────────────────────────────────────────────────
     function selectItem(id, btype) {
-        selectedItem = CATALOG.find(i => Number(i.id) === Number(id) && i.booking_type === btype) || null;
+        if (isAddingExtraRoom) {
+            const pkg = CATALOG.find(i => Number(i.id) === Number(id) && i.booking_type === btype);
+            if (!pkg) return;
+            if (pkg.booking_type !== 'accommodation') {
+                showAlert('You can only add accommodations as extra rooms.', 'danger');
+                isAddingExtraRoom = false;
+                renderCatalog();
+                return;
+            }
+            const primaryGuests = parseInt(document.getElementById('bi_num_guests').value) || 1;
+            const roomEntry = {
+                index: extraRooms.length + 2,
+                pkg: pkg,
+                guests: primaryGuests
+            };
+            extraRooms.push(roomEntry);
+            isAddingExtraRoom = false;
+            renderExtraRooms();
+            recalcTotal();
+            renderCatalog();
+            return;
+        }
+
+        const newlySelected = CATALOG.find(i => Number(i.id) === Number(id) && i.booking_type === btype) || null;
+        
+        if (selectedItem && newlySelected && selectedItem.id === newlySelected.id && selectedItem.booking_type === newlySelected.booking_type) {
+            selectedItem = null; // Toggle off
+        } else {
+            selectedItem = newlySelected;
+        }
+        
+        if (!selectedItem || selectedItem.booking_type !== 'accommodation') {
+             extraRooms = [];
+             renderExtraRooms();
+        }
+        
+        renderWalkinAddons();
         renderCatalog();          // re-render to update selected state
         updatePreview();
         recalcTotal();
@@ -947,8 +1207,74 @@ while ($r = $res->fetch_assoc()) $bundles[] = $r;
                     guestInput.value = selectedItem.capacity;
                 }
             }
+            
+            // Show or hide Add More Room button
+            const addRoomBtn = document.getElementById('btnAddMoreRoom');
+            if (addRoomBtn) {
+                if (selectedItem.booking_type === 'accommodation') {
+                    addRoomBtn.style.display = 'block';
+                } else {
+                    addRoomBtn.style.display = 'none';
+                    extraRooms = [];
+                    renderExtraRooms();
+                }
+            }
+            
+            // Time Slots handling
+            const tsSelect = document.getElementById('bi_time_slot');
+            const tsContainer = document.getElementById('timeSlotContainer');
+            const customTimeContainer = document.getElementById('customTimeContainer');
+            
+            tsSelect.innerHTML = '<option value="">-- Select Time Slot --</option>';
+            let slots = [];
+            
+            if (selectedItem.booking_type === 'activity') {
+                slots = PHP_TIME_SLOTS.filter(s => parseInt(s.activity_id) === selectedItem.id);
+            } else if (selectedItem.booking_type === 'accommodation') {
+                slots = PHP_TIME_SLOTS.filter(s => parseInt(s.accommodation_id) === selectedItem.id);
+            }
+            
+            if (slots.length > 0) {
+                slots.forEach(s => {
+                    const opt = document.createElement('option');
+                    opt.value = s.id;
+                    opt.dataset.in = s.start_time;
+                    opt.dataset.out = s.end_time;
+                    
+                    const formatTime = (t) => {
+                        if(!t) return '';
+                        let [h,m] = t.split(':');
+                        h = parseInt(h);
+                        let ampm = h >= 12 ? 'PM' : 'AM';
+                        h = h % 12 || 12;
+                        return `${h}:${m} ${ampm}`;
+                    };
+                    
+                    opt.textContent = `${s.label} (${formatTime(s.start_time)} - ${formatTime(s.end_time)})`;
+                    tsSelect.appendChild(opt);
+                });
+                tsContainer.style.display = 'block';
+                customTimeContainer.style.display = 'none';
+                document.getElementById('overnightTimeSection').style.display = 'none';
+            } else {
+                tsContainer.style.display = 'none';
+                if (selectedItem.is_overnight) {
+                    customTimeContainer.style.display = 'none';
+                    document.getElementById('overnightTimeSection').style.display = 'flex';
+                    const cIn = document.getElementById('bi_overnight_checkin');
+                    const cOut = document.getElementById('bi_overnight_checkout');
+                    if(selectedItem.check_in_time) cIn.value = selectedItem.check_in_time.substring(0,5);
+                    if(selectedItem.check_out_time) cOut.value = selectedItem.check_out_time.substring(0,5);
+                    document.getElementById('bi_checkin_time').value = selectedItem.check_in_time || '14:00';
+                    document.getElementById('bi_checkout_time').value = selectedItem.check_out_time || '12:00';
+                } else {
+                    document.getElementById('overnightTimeSection').style.display = 'none';
+                    customTimeContainer.style.display = 'flex';
+                }
+            }
         }
         
+        handleDateChange();
         // Scroll billing pane to top
         document.getElementById('posAlert').className = 'pos-alert';
     }
@@ -972,6 +1298,40 @@ while ($r = $res->fetch_assoc()) $bundles[] = $r;
             <div class="preview-price">₱${selectedItem.price.toLocaleString('en-PH',{minimumFractionDigits:2})} <small style="font-size:.7em;color:#5c6b63;font-weight:500;">${selectedItem.price_label}</small></div>
             ${selectedItem.description ? `<p style="font-size:.78rem;color:#6b7c74;margin:.35rem 0 0;line-height:1.4;">${escH(selectedItem.description.slice(0,120))}${selectedItem.description.length > 120 ? '…' : ''}</p>` : ''}
         `;
+    }
+
+    // ── Handle Date Change ────────────────────────────────────────────────────
+    function handleDateChange() {
+        if (!selectedItem) { recalcTotal(); return; }
+        
+        const ciEl = document.getElementById('bi_checkin_date');
+        const coEl = document.getElementById('bi_checkout_date');
+        
+        if (selectedItem.is_day_tour && !selectedItem.is_overnight) {
+            coEl.value = ciEl.value;
+            coEl.setAttribute('readonly', true);
+            coEl.style.backgroundColor = 'rgba(255,255,255,0.02)';
+            coEl.style.color = '#5c6b63';
+        } else {
+            coEl.removeAttribute('readonly');
+            coEl.style.backgroundColor = '';
+            coEl.style.color = '';
+            if (coEl.value && ciEl.value && new Date(coEl.value) < new Date(ciEl.value)) {
+                coEl.value = ciEl.value;
+            }
+        }
+        
+        recalcTotal();
+    }
+    
+    function handleTimeSlotChange() {
+        const sel = document.getElementById('bi_time_slot');
+        const opt = sel.options[sel.selectedIndex];
+        if (opt && opt.value) {
+            document.getElementById('bi_checkin_time').value = opt.dataset.in || '';
+            document.getElementById('bi_checkout_time').value = opt.dataset.out || '';
+        }
+        recalcTotal();
     }
 
     // ── Dynamic total calculation ─────────────────────────────────────────────
@@ -1000,13 +1360,117 @@ while ($r = $res->fetch_assoc()) $bundles[] = $r;
             const days = (ciDate && coDate)
                 ? Math.max(1, (new Date(coDate) - new Date(ciDate)) / 86400000)
                 : 1;
-            total = days * selectedItem.price;
+            let dailyRate = selectedItem.price;
+            let is_day = false;
+            if (selectedItem.is_day_tour && !selectedItem.is_overnight && selectedItem.price_per_day > 0) {
+                dailyRate = selectedItem.price_per_day;
+                is_day = true;
+            } else if (!selectedItem.is_overnight && selectedItem.price_per_day > 0) {
+                 // Might be day tour if no overnight selected
+                 if(selectedItem.price_per_night <= 0) {
+                     dailyRate = selectedItem.price_per_day;
+                     is_day = true;
+                 }
+            }
+            total = days * dailyRate;
+            
+            const guests = parseInt(document.getElementById('bi_num_guests').value) || 1;
+            const bCap = selectedItem.base_capacity || 1;
+            const extFee = selectedItem.extra_person_fee || 0;
+            if (guests > bCap && extFee > 0) {
+                 total += (guests - bCap) * extFee * (is_day ? 1 : days);
+            }
+            
+            // Add extra rooms
+            extraRooms.forEach(er => {
+                let erDaily = er.pkg.price;
+                let er_is_day = false;
+                if (er.pkg.is_day_tour && !er.pkg.is_overnight && er.pkg.price_per_day > 0) {
+                    erDaily = er.pkg.price_per_day;
+                    er_is_day = true;
+                } else if (!er.pkg.is_overnight && er.pkg.price_per_day > 0 && er.pkg.price_per_night <= 0) {
+                    erDaily = er.pkg.price_per_day;
+                    er_is_day = true;
+                }
+                
+                let erTotal = days * erDaily;
+                const erGuests = parseInt(document.getElementById('extraRoomGuests-' + er.index)?.value) || er.guests;
+                const erBCap = er.pkg.base_capacity || 1;
+                const erExtFee = er.pkg.extra_person_fee || 0;
+                
+                if (erGuests > erBCap && erExtFee > 0) {
+                     erTotal += (erGuests - erBCap) * erExtFee * (er_is_day ? 1 : days);
+                }
+                total += erTotal;
+            });
+            
+            // Add addons
+            let atvShort = false;
+            let atvLong = false;
+            Object.keys(walkinAddonsMap).forEach(key => {
+                if (walkinAddonsMap[key] && walkinAddonsMap[key].selected) {
+                    total += walkinAddonsMap[key].price * walkinAddonsMap[key].qty;
+                    const lowerName = walkinAddonsMap[key].name.toLowerCase();
+                    if (lowerName.includes('atv short ride')) atvShort = true;
+                    if (lowerName.includes('atv long ride')) atvLong = true;
+                }
+            });
+            
+            if (atvShort) total += 1500;
+            if (atvLong) total += 30000;
+            
         } else {
             total = selectedItem.price;  // bundle flat rate
         }
 
         document.getElementById('posTotal').textContent =
             '₱' + Math.max(0, total).toLocaleString('en-PH', {minimumFractionDigits:2, maximumFractionDigits:2});
+            
+        checkLiveAvailability();
+    }
+
+    // ── Check Availability on Date/Item Change ────────────────────────────────
+    async function checkLiveAvailability() {
+        const ciDate = document.getElementById('bi_checkin_date').value;
+        const btn = document.getElementById('posConfirmBtn');
+        const previewEl = document.getElementById('selectedPreview');
+        
+        // Remove existing badge
+        const existingBadge = previewEl.querySelector('.availability-badge');
+        if (existingBadge) existingBadge.remove();
+        
+        if (!selectedItem || !ciDate) return;
+
+        try {
+            const url = `../php/check_availability.php?type=${selectedItem.booking_type}&item_id=${selectedItem.id}&date=${ciDate}`;
+            const res = await fetch(url);
+            const result = await res.json();
+            
+            let statusBadge = '';
+            let disableBtn = false;
+            
+            if (result.success) {
+                if (result.is_blocked) {
+                    statusBadge = `<div class="availability-badge" style="margin-top:0.5rem;color:#f87171;font-size:0.8rem;font-weight:600;"><i class="bi bi-x-circle-fill me-1"></i>Date Blocked: ${escH(result.block_reason)}</div>`;
+                    disableBtn = true;
+                    showAlert(`This date is blocked: ${result.block_reason}`, 'danger');
+                } else if (!result.available) {
+                    statusBadge = `<div class="availability-badge" style="margin-top:0.5rem;color:#f87171;font-size:0.8rem;font-weight:600;"><i class="bi bi-x-circle-fill me-1"></i>Fully Booked (0 slots left)</div>`;
+                    disableBtn = true;
+                    showAlert('This item is fully booked for this date.', 'danger');
+                } else {
+                    statusBadge = `<div class="availability-badge" style="margin-top:0.5rem;color:#34d399;font-size:0.8rem;font-weight:600;"><i class="bi bi-check-circle-fill me-1"></i>Available: ${result.available_slots} slot(s) left</div>`;
+                    clearAlert();
+                }
+                
+                if (!previewEl.classList.contains('empty')) {
+                    previewEl.innerHTML += statusBadge;
+                }
+                btn.disabled = disableBtn;
+            }
+        } catch (err) {
+            console.error('Failed to check availability:', err);
+        }
     }
 
     // ── Submit walk-in via fetch ──────────────────────────────────────────────
@@ -1018,6 +1482,110 @@ while ($r = $res->fetch_assoc()) $bundles[] = $r;
         const name    = document.getElementById('bi_guest_name').value.trim();
         const contact = document.getElementById('bi_guest_contact').value.trim();
         const ciDate  = document.getElementById('bi_checkin_date').value;
+        const guests  = parseInt(document.getElementById('bi_num_guests').value) || 1;
+
+        if (!name)              { showAlert('Guest full name is required.', 'danger'); return; }
+        if (!/^09\d{9}$/.test(contact)) { showAlert('Contact must be a valid PH mobile number (09XXXXXXXXX).', 'danger'); return; }
+        if (!ciDate)            { showAlert('Check-in date is required.', 'danger'); return; }
+        
+        let summaryHtml = `
+            <div style="margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                <div style="font-size: 1.1rem; font-weight: 600; color: #9dff00;">${escH(name)}</div>
+                <div style="font-size: 0.85rem; color: #aaa;">${escH(contact)}</div>
+            </div>
+            <div style="margin-bottom: 1rem;">
+                <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: #777; margin-bottom: 0.5rem;">Primary Package</div>
+                <div style="display: flex; justify-content: space-between;">
+                    <span>${escH(selectedItem.name)}</span>
+                    <span style="font-weight: 600;">₱${selectedItem.price.toLocaleString('en-PH', {minimumFractionDigits: 2})}</span>
+                </div>
+                <div style="font-size: 0.8rem; color: #aaa; margin-top: 0.2rem;"><i class="bi bi-calendar-event me-1"></i>${ciDate} &bull; ${guests} Guests</div>
+            </div>
+        `;
+        
+        if (extraRooms.length > 0) {
+            summaryHtml += `<div style="margin-bottom: 1rem;">
+                <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: #777; margin-bottom: 0.5rem;">Extra Rooms</div>
+            `;
+            extraRooms.forEach(r => {
+                const g = parseInt(document.getElementById('extraRoomGuests-' + r.index)?.value) || r.guests;
+                const rPrice = (r.pkg.is_day_tour && !r.pkg.is_overnight) ? (parseFloat(r.pkg.price_per_day) || parseFloat(r.pkg.price)) : (parseFloat(r.pkg.price_per_night) || parseFloat(r.pkg.price));
+                summaryHtml += `
+                    <div style="display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 0.3rem;">
+                        <span>${escH(r.pkg.name)} <small style="color:#aaa;">(x${g} guests)</small></span>
+                        <span>₱${Number(rPrice).toLocaleString('en-PH', {minimumFractionDigits: 2})}</span>
+                    </div>
+                `;
+            });
+            summaryHtml += `</div>`;
+        }
+        
+        let hasAddons = false;
+        let addonsHtml = `<div style="margin-bottom: 1rem;">
+            <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: #777; margin-bottom: 0.5rem;">Add-on Activities</div>`;
+        
+        let atvShort = false, atvLong = false;
+        Object.keys(walkinAddonsMap).forEach(key => {
+            if (walkinAddonsMap[key] && walkinAddonsMap[key].selected) {
+                hasAddons = true;
+                const cost = walkinAddonsMap[key].price * walkinAddonsMap[key].qty;
+                addonsHtml += `
+                    <div style="display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 0.3rem;">
+                        <span>${escH(walkinAddonsMap[key].name)} <small style="color:#aaa;">(x${walkinAddonsMap[key].qty})</small></span>
+                        <span>₱${cost.toLocaleString('en-PH', {minimumFractionDigits: 2})}</span>
+                    </div>
+                `;
+                const lowerName = walkinAddonsMap[key].name.toLowerCase();
+                if (lowerName.includes('atv short ride')) atvShort = true;
+                if (lowerName.includes('atv long ride')) atvLong = true;
+            }
+        });
+        
+        if (atvShort) {
+            hasAddons = true;
+            addonsHtml += `
+                <div style="display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 0.3rem;">
+                    <span>Required Tour Guide <small style="color:#aaa;">(ATV Short)</small></span>
+                    <span>₱1,500.00</span>
+                </div>
+            `;
+        }
+        if (atvLong) {
+            hasAddons = true;
+            addonsHtml += `
+                <div style="display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 0.3rem;">
+                    <span>Required Tour Guide <small style="color:#aaa;">(ATV Long)</small></span>
+                    <span>₱30,000.00</span>
+                </div>
+            `;
+        }
+        addonsHtml += `</div>`;
+        if (hasAddons) summaryHtml += addonsHtml;
+        
+        const currentTotal = document.getElementById('posTotal').innerText;
+        summaryHtml += `
+            <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 1.1rem; font-weight: 600;">Total Amount</span>
+                <span style="font-size: 1.5rem; font-weight: 700; color: #9dff00;">${currentTotal}</span>
+            </div>
+        `;
+        
+        document.getElementById('walkinConfirmBody').innerHTML = summaryHtml;
+        const confirmModal = new bootstrap.Modal(document.getElementById('walkinConfirmModal'));
+        confirmModal.show();
+    }
+    
+    async function executeSubmitWalkIn() {
+        const modalEl = document.getElementById('walkinConfirmModal');
+        const modalInstance = bootstrap.Modal.getInstance(modalEl);
+        
+        const btn = document.getElementById('posFinalConfirmBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span>Processing…';
+
+        const name    = document.getElementById('bi_guest_name').value.trim();
+        const contact = document.getElementById('bi_guest_contact').value.trim();
+        const ciDate  = document.getElementById('bi_checkin_date').value;
         const coDate  = document.getElementById('bi_checkout_date').value || null;
         const ciTime  = document.getElementById('bi_checkin_time').value  || null;
         const coTime  = document.getElementById('bi_checkout_time').value  || null;
@@ -1025,13 +1593,26 @@ while ($r = $res->fetch_assoc()) $bundles[] = $r;
         const pm      = 'cash';
         const notes   = document.getElementById('bi_special_requests').value.trim() || null;
 
-        if (!name)              { showAlert('Guest full name is required.', 'danger'); return; }
-        if (!/^09\d{9}$/.test(contact)) { showAlert('Contact must be a valid PH mobile number (09XXXXXXXXX).', 'danger'); return; }
-        if (!ciDate)            { showAlert('Check-in date is required.', 'danger'); return; }
-
-        const btn = document.getElementById('posConfirmBtn');
-        btn.disabled = true;
-        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span>Processing…';
+        const extraRoomsPayload = extraRooms.map(r => {
+             const g = parseInt(document.getElementById('extraRoomGuests-' + r.index)?.value) || r.guests;
+             return {
+                 item_id: r.pkg.id,
+                 num_guests: g,
+                 stay_type: (r.pkg.is_day_tour && !r.pkg.is_overnight) ? 'day_tour' : (r.pkg.is_overnight ? 'overnight' : null)
+             };
+        });
+        
+        const addonsPayload = [];
+        Object.keys(walkinAddonsMap).forEach(key => {
+            if (walkinAddonsMap[key] && walkinAddonsMap[key].selected) {
+                addonsPayload.push({
+                    id: key,
+                    name: walkinAddonsMap[key].name,
+                    price: walkinAddonsMap[key].price,
+                    qty: walkinAddonsMap[key].qty
+                });
+            }
+        });
 
         try {
             const res    = await fetch('../php/process_walkin_booking.php', {
@@ -1041,6 +1622,7 @@ while ($r = $res->fetch_assoc()) $bundles[] = $r;
                     guest_name:      name,
                     guest_contact:   contact,
                     booking_type:    selectedItem.booking_type,
+                    stay_type:       (selectedItem.is_day_tour && !selectedItem.is_overnight) ? 'day_tour' : (selectedItem.is_overnight ? 'overnight' : null),
                     item_id:         selectedItem.id,
                     check_in_date:   ciDate,
                     check_in_time:   ciTime,
@@ -1049,11 +1631,14 @@ while ($r = $res->fetch_assoc()) $bundles[] = $r;
                     num_guests:      guests,
                     payment_method:  pm,
                     special_requests:notes,
+                    extra_rooms:     extraRoomsPayload,
+                    addons:          addonsPayload
                 }),
             });
             const result = await res.json();
 
             if (result.success) {
+                if (modalInstance) modalInstance.hide();
                 // Show success overlay
                 document.getElementById('successRef').textContent    = result.reference;
                 document.getElementById('successName').textContent   = name;
@@ -1063,15 +1648,17 @@ while ($r = $res->fetch_assoc()) $bundles[] = $r;
                   + `${pm.toUpperCase()}`;
                 document.getElementById('successOverlay').classList.add('show');
             } else {
+                if (modalInstance) modalInstance.hide();
                 showAlert(result.message || 'Something went wrong. Please try again.', 'danger');
                 btn.disabled = false;
-                btn.innerHTML = '<i class="bi bi-check-circle-fill"></i> Confirm &amp; Check-In';
+                btn.innerHTML = '<i class="bi bi-check-circle-fill"></i> Confirm Booking';
             }
         } catch (err) {
             console.error(err);
+            if (modalInstance) modalInstance.hide();
             showAlert('Connection error. Please check your network and retry.', 'danger');
             btn.disabled = false;
-            btn.innerHTML = '<i class="bi bi-check-circle-fill"></i> Confirm &amp; Check-In';
+            btn.innerHTML = '<i class="bi bi-check-circle-fill"></i> Confirm Booking';
         }
     }
 
@@ -1092,6 +1679,8 @@ while ($r = $res->fetch_assoc()) $bundles[] = $r;
         document.getElementById('posConfirmBtn').innerHTML =
             '<i class="bi bi-check-circle-fill"></i> Confirm &amp; Check-In';
         clearAlert();
+        walkinAddonsMap = {};
+        renderWalkinAddons();
         updatePreview();
         renderCatalog();
     }
@@ -1112,11 +1701,153 @@ while ($r = $res->fetch_assoc()) $bundles[] = $r;
             .replace(/&/g,'&amp;').replace(/</g,'&lt;')
             .replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
     }
+    
+    function showItemDetails(id, btype) {
+        const item = CATALOG.find(i => Number(i.id) === Number(id) && i.booking_type === btype);
+        if (item) {
+            document.getElementById('itemDetailsTitle').textContent = item.name;
+            document.getElementById('itemDetailsDesc').textContent = item.description || 'No description available.';
+            new bootstrap.Modal(document.getElementById('itemDetailsModal')).show();
+        }
+    }
+
+    // ── Extra Rooms JS Helpers ────────────────────────────────────────────────
+    window.startAddingRoom = function() {
+        if (!selectedItem || selectedItem.booking_type !== 'accommodation') return;
+        isAddingExtraRoom = true;
+        renderCatalog(); // re-render to update the catalog visual cue (maybe change button text)
+        showAlert('Select an accommodation from the catalog to add as an extra room.', 'info');
+    };
+
+    window.removeExtraRoom = function(index) {
+        extraRooms = extraRooms.filter(r => r.index !== index);
+        renderExtraRooms();
+        recalcTotal();
+    };
+
+    function renderExtraRooms() {
+        const container = document.getElementById('extraRoomsContainer');
+        if (!container) return;
+        if (extraRooms.length === 0) {
+             container.innerHTML = '';
+             return;
+        }
+        
+        let html = '';
+        extraRooms.forEach(room => {
+             const r = room.pkg;
+             html += `
+             <div class="pos-field-group" id="extraRoomCard-${room.index}" style="background: rgba(157, 255, 0, 0.03); border: 1px solid rgba(157, 255, 0, 0.2); border-radius: 8px; padding: 0.8rem; margin-top: 0.5rem;">
+                 <div style="display:flex; justify-content: space-between; align-items:flex-start;">
+                     <div>
+                         <div style="color:#9dff00; font-size: 0.8rem; font-weight: 600;"><i class="bi bi-door-open me-1"></i> Room ${room.index}: ${escH(r.name)}</div>
+                         <div style="color:var(--pos-text-muted); font-size: 0.75rem;">Capacity: ${r.capacity} pax</div>
+                     </div>
+                     <button type="button" onclick="removeExtraRoom(${room.index})" class="btn btn-sm btn-outline-danger" style="padding: 0.1rem 0.4rem; font-size: 0.75rem;"><i class="bi bi-x-lg"></i></button>
+                 </div>
+                 <div style="margin-top: 0.5rem;">
+                     <label style="font-size: 0.75rem; color:var(--pos-text-muted);">Guests / Pax</label>
+                     <input type="number" id="extraRoomGuests-${room.index}" class="pos-input" style="width: 80px; padding: 0.3rem 0.5rem; font-size: 0.8rem; min-height: 0;" value="${room.guests}" min="1" max="${r.capacity}" oninput="if(this.value && parseInt(this.value) > parseInt(this.max)) this.value = this.max; recalcTotal();" onchange="recalcTotal()">
+                 </div>
+             </div>`;
+        });
+        container.innerHTML = html;
+    }
+
+    // ── Addons JS Helpers ────────────────────────────────────────────────
+    function renderWalkinAddons() {
+        const addonsCont = document.getElementById('addonsContainer');
+        const addonsList = document.getElementById('addonsList');
+        if (!selectedItem || selectedItem.booking_type !== 'accommodation') {
+            addonsCont.style.display = 'none';
+            walkinAddonsMap = {};
+            return;
+        }
+        
+        const isDayTour = selectedItem.is_day_tour && !selectedItem.is_overnight;
+        if (!isDayTour) {
+            addonsCont.style.display = 'none';
+            walkinAddonsMap = {};
+            return;
+        }
+        
+        const available = CATALOG.filter(i => {
+            if (i.booking_type !== 'activity') return false;
+            return true;
+        });
+        
+        if (available.length === 0) {
+            addonsCont.style.display = 'none';
+            return;
+        }
+        
+        addonsCont.style.display = 'block';
+        
+        addonsList.innerHTML = available.map(a => {
+            const isSelected = !!(walkinAddonsMap[a.id] && walkinAddonsMap[a.id].selected);
+            const qtyVal = (walkinAddonsMap[a.id] && walkinAddonsMap[a.id].qty) || 1;
+            const isATV = (a.name || '').toLowerCase().includes('atv');
+            
+            return `
+            <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.1); padding:0.5rem; border-radius:6px; display:flex; align-items:center; justify-content:space-between;">
+                <div>
+                    <input type="checkbox" id="wAddonChk-${a.id}" ${isSelected?'checked':''} onchange="toggleWalkinAddon(${a.id}, ${a.price}, this, '${escH(a.name)}')">
+                    <label for="wAddonChk-${a.id}" style="font-size:0.8rem; color:#fff; cursor:pointer; margin-left:5px;">${escH(a.name)}</label>
+                    <div style="font-size:0.7rem; color:var(--pos-text-muted); margin-left: 20px;">+₱${a.price.toLocaleString('en-PH',{minimumFractionDigits:2})}</div>
+                </div>
+                ${isATV ? `<input type="number" id="wAddonQty-${a.id}" min="1" value="${qtyVal}" oninput="updateWalkinAddonQty(${a.id}, this)" style="width: 50px; padding:0.2rem; font-size:0.75rem; border-radius:4px; border:1px solid rgba(157, 255, 0, 0.2); background:rgba(157, 255, 0, 0.05); color:#9dff00; display:${isSelected ? 'block' : 'none'};">` : ''}
+            </div>
+            `;
+        }).join('');
+    }
+    
+    function toggleWalkinAddon(id, price, chk, name) {
+        const lowerName = name.toLowerCase();
+        if (chk.checked) {
+            if (lowerName.includes('atv')) {
+                Object.keys(walkinAddonsMap).forEach(key => {
+                    const mapItem = walkinAddonsMap[key];
+                    if (mapItem && mapItem.selected && mapItem.name.toLowerCase().includes('atv')) {
+                        if (key != id) {
+                            mapItem.selected = false;
+                            const otherChk = document.getElementById('wAddonChk-' + key);
+                            if (otherChk) otherChk.checked = false;
+                            const otherQty = document.getElementById('wAddonQty-' + key);
+                            if (otherQty) otherQty.style.display = 'none';
+                        }
+                    }
+                });
+            }
+            const qtyEl = document.getElementById('wAddonQty-' + id);
+            if (qtyEl) qtyEl.style.display = 'block';
+            walkinAddonsMap[id] = { selected: true, price: Number(price), qty: qtyEl ? parseInt(qtyEl.value)||1 : 1, name: name };
+        } else {
+            const qtyEl = document.getElementById('wAddonQty-' + id);
+            if (qtyEl) qtyEl.style.display = 'none';
+            if (walkinAddonsMap[id]) walkinAddonsMap[id].selected = false;
+        }
+        recalcTotal();
+    }
+    
+    window.updateWalkinAddonQty = function(id, input) {
+        if (walkinAddonsMap[id]) {
+            walkinAddonsMap[id].qty = parseInt(input.value)||1;
+        }
+        recalcTotal();
+    }
 
     // ── Init ──────────────────────────────────────────────────────────────────
     document.addEventListener('DOMContentLoaded', () => {
         // Min date = today
-        document.getElementById('bi_checkin_date').min = new Date().toISOString().split('T')[0];
+        const todayStr = new Date().toISOString().split('T')[0];
+        const dateInput = document.getElementById('bi_checkin_date');
+        dateInput.min = todayStr;
+        
+        dateInput.addEventListener('change', (e) => {
+            loadAllAvailability(e.target.value);
+        });
+        
+        loadAllAvailability(dateInput.value || todayStr);
         renderCatalog();
     });
     </script>

@@ -126,6 +126,8 @@ if ($action === 'add' || $action === 'edit') {
     $durationHours = intval($_POST['duration_hours'] ?? 0);
     $amenities   = trim($_POST['amenities'] ?? '');
     $isActive    = intval($_POST['is_active'] ?? 1);
+    $checkInTime = !empty($_POST['check_in_time']) ? trim($_POST['check_in_time']) . ':00' : '14:00:00';
+    $checkOutTime = !empty($_POST['check_out_time']) ? trim($_POST['check_out_time']) . ':00' : '12:00:00';
     $activityIds = array_filter(array_map('intval', explode(',', $_POST['activity_ids'] ?? '')));
     $accommodationIds = array_filter(array_map('intval', explode(',', $_POST['accommodation_ids'] ?? '')));
 
@@ -190,22 +192,22 @@ if ($action === 'add' || $action === 'edit') {
 
         if ($action === 'add') {
             if ($imagePath) {
-                $stmt = $conn->prepare("INSERT INTO bundles (name, slug, description, price, capacity, daily_booking_limit, start_time, duration_hours, bundle_type, amenities, image_url, is_active) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)");
-                $stmt->bind_param('sssdiisisssi', $name, $slug, $description, $price, $capacity, $dailyLimit, $startTime, $durationHours, $bundleType, $amenities, $imagePath, $isActive);
+                $stmt = $conn->prepare("INSERT INTO bundles (name, slug, description, price, capacity, daily_booking_limit, start_time, duration_hours, check_in_time, check_out_time, bundle_type, amenities, image_url, is_active) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+                $stmt->bind_param('sssdiisssssssi', $name, $slug, $description, $price, $capacity, $dailyLimit, $startTime, $durationHours, $checkInTime, $checkOutTime, $bundleType, $amenities, $imagePath, $isActive);
             } else {
-                $stmt = $conn->prepare("INSERT INTO bundles (name, slug, description, price, capacity, daily_booking_limit, start_time, duration_hours, bundle_type, amenities, is_active) VALUES (?,?,?,?,?,?,?,?,?,?,?)");
-                $stmt->bind_param('sssdiisissi', $name, $slug, $description, $price, $capacity, $dailyLimit, $startTime, $durationHours, $bundleType, $amenities, $isActive);
+                $stmt = $conn->prepare("INSERT INTO bundles (name, slug, description, price, capacity, daily_booking_limit, start_time, duration_hours, check_in_time, check_out_time, bundle_type, amenities, is_active) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)");
+                $stmt->bind_param('sssdiissssssi', $name, $slug, $description, $price, $capacity, $dailyLimit, $startTime, $durationHours, $checkInTime, $checkOutTime, $bundleType, $amenities, $isActive);
             }
             $stmt->execute();
             $bundleId = $conn->insert_id;
         } else {
             if (!$bundleId) { throw new Exception('Bundle ID required for editing'); }
             if ($imagePath) {
-                $stmt = $conn->prepare("UPDATE bundles SET name=?, slug=?, description=?, price=?, capacity=?, daily_booking_limit=?, start_time=?, duration_hours=?, bundle_type=?, amenities=?, image_url=?, is_active=? WHERE id=?");
-                $stmt->bind_param('sssdiisisssii', $name, $slug, $description, $price, $capacity, $dailyLimit, $startTime, $durationHours, $bundleType, $amenities, $imagePath, $isActive, $bundleId);
+                $stmt = $conn->prepare("UPDATE bundles SET name=?, slug=?, description=?, price=?, capacity=?, daily_booking_limit=?, start_time=?, duration_hours=?, check_in_time=?, check_out_time=?, bundle_type=?, amenities=?, image_url=?, is_active=? WHERE id=?");
+                $stmt->bind_param('sssdiisssssssii', $name, $slug, $description, $price, $capacity, $dailyLimit, $startTime, $durationHours, $checkInTime, $checkOutTime, $bundleType, $amenities, $imagePath, $isActive, $bundleId);
             } else {
-                $stmt = $conn->prepare("UPDATE bundles SET name=?, slug=?, description=?, price=?, capacity=?, daily_booking_limit=?, start_time=?, duration_hours=?, bundle_type=?, amenities=?, is_active=? WHERE id=?");
-                $stmt->bind_param('sssdiisissii', $name, $slug, $description, $price, $capacity, $dailyLimit, $startTime, $durationHours, $bundleType, $amenities, $isActive, $bundleId);
+                $stmt = $conn->prepare("UPDATE bundles SET name=?, slug=?, description=?, price=?, capacity=?, daily_booking_limit=?, start_time=?, duration_hours=?, check_in_time=?, check_out_time=?, bundle_type=?, amenities=?, is_active=? WHERE id=?");
+                $stmt->bind_param('sssdiissssssii', $name, $slug, $description, $price, $capacity, $dailyLimit, $startTime, $durationHours, $checkInTime, $checkOutTime, $bundleType, $amenities, $isActive, $bundleId);
             }
             $stmt->execute();
 
@@ -233,6 +235,17 @@ if ($action === 'add' || $action === 'edit') {
         }
 
         $conn->commit();
+        
+        $logUserId = $_SESSION['admin_id'] ?? null;
+        if ($logUserId) {
+            $logAction = $action === 'add' ? 'add_bundle' : 'edit_bundle';
+            $logDesc = ($action === 'add' ? "Added new bundle: $name." : "Edited bundle: $name (ID: $bundleId).");
+            $logStmt = $conn->prepare("INSERT INTO activity_logs (user_id, role, action_type, description) VALUES (?, 'admin', ?, ?)");
+            $logStmt->bind_param('iss', $logUserId, $logAction, $logDesc);
+            $logStmt->execute();
+            $logStmt->close();
+        }
+
         echo json_encode(['success' => true, 'message' => 'Bundle ' . ($action === 'add' ? 'added' : 'updated') . ' successfully', 'bundle_id' => $bundleId]);
     } catch (Exception $e) {
         $conn->rollback();
@@ -247,6 +260,13 @@ if ($action === 'delete') {
     if (!$bundleId) { echo json_encode(['success' => false, 'message' => 'Bundle ID required']); exit(); }
 
     try {
+        // Get bundle name before deleting for log
+        $nameStmt = $conn->prepare("SELECT name FROM bundles WHERE id = ?");
+        $nameStmt->bind_param('i', $bundleId);
+        $nameStmt->execute();
+        $nameRes = $nameStmt->get_result()->fetch_assoc();
+        $bundleName = $nameRes['name'] ?? 'Unknown';
+
         $conn->begin_transaction();
         $conn->query("DELETE FROM bundle_activities WHERE bundle_id = $bundleId");
         $conn->query("DELETE FROM bundle_accommodations WHERE bundle_id = $bundleId");
@@ -254,6 +274,17 @@ if ($action === 'delete') {
         $stmt->bind_param('i', $bundleId);
         $stmt->execute();
         $conn->commit();
+        
+        $logUserId = $_SESSION['admin_id'] ?? null;
+        if ($logUserId) {
+            $logAction = 'delete_bundle';
+            $logDesc = "Deleted bundle: $bundleName.";
+            $logStmt = $conn->prepare("INSERT INTO activity_logs (user_id, role, action_type, description) VALUES (?, 'admin', ?, ?)");
+            $logStmt->bind_param('iss', $logUserId, $logAction, $logDesc);
+            $logStmt->execute();
+            $logStmt->close();
+        }
+
         echo json_encode(['success' => true, 'message' => 'Bundle deleted successfully']);
     } catch (Exception $e) {
         $conn->rollback();
@@ -271,6 +302,17 @@ if ($action === 'toggle_status') {
         $stmt = $conn->prepare("UPDATE bundles SET is_active = NOT is_active WHERE id = ?");
         $stmt->bind_param('i', $bundleId);
         $stmt->execute();
+        
+        $logUserId = $_SESSION['admin_id'] ?? null;
+        if ($logUserId) {
+            $logAction = 'toggle_bundle';
+            $logDesc = "Toggled status of bundle (ID: $bundleId).";
+            $logStmt = $conn->prepare("INSERT INTO activity_logs (user_id, role, action_type, description) VALUES (?, 'admin', ?, ?)");
+            $logStmt->bind_param('iss', $logUserId, $logAction, $logDesc);
+            $logStmt->execute();
+            $logStmt->close();
+        }
+
         echo json_encode(['success' => true, 'message' => 'Bundle status updated']);
     } catch (Exception $e) {
         echo json_encode(['success' => false, 'message' => $e->getMessage()]);
