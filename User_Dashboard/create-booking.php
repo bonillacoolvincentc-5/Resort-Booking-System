@@ -2144,17 +2144,29 @@ function selectPackage(id, type) {
             }
         }
     } else {
-        // Bundle
+        // Bundle — treat daytour bundles like day-tour, overnight bundles like overnight
         document.getElementById('timeRangeSection').classList.add('d-none');
-        if (checkoutSec) checkoutSec.classList.remove('d-none');
-        if (labelText) labelText.textContent = 'Check-in Date';
-        if (hintText) hintText.textContent = 'Select your check-in date';
-        if (overnightTimeSec) {
-            overnightTimeSec.classList.remove('d-none');
-            if (pkg.check_in_time) overnightCheckIn.value = pkg.check_in_time.substring(0,5);
-            if (pkg.check_out_time) overnightCheckOut.value = pkg.check_out_time.substring(0,5);
-            document.getElementById('timeIn').value = pkg.check_in_time || '14:00:00';
-            document.getElementById('timeOut').value = pkg.check_out_time || '12:00:00';
+        const bundleTourType = String(pkg.tour_type || 'overnight').toLowerCase();
+        const isBundleDaytour = (bundleTourType === 'day_tour' || bundleTourType === 'daytour');
+        if (isBundleDaytour) {
+            // Day-tour bundle: only ask for a single visit date, no check-out
+            if (labelText) labelText.textContent = 'Date of Visit';
+            if (hintText) hintText.textContent = 'Select your preferred date of visit';
+            if (checkoutSec) checkoutSec.classList.add('d-none');
+            if (checkoutInp) checkoutInp.value = '';
+            if (overnightTimeSec) overnightTimeSec.classList.add('d-none');
+        } else {
+            // Overnight bundle: ask for both check-in and check-out dates
+            if (labelText) labelText.textContent = 'Check-in Date';
+            if (hintText) hintText.textContent = 'Select your check-in date';
+            if (checkoutSec) checkoutSec.classList.remove('d-none');
+            if (overnightTimeSec) {
+                overnightTimeSec.classList.remove('d-none');
+                if (pkg.check_in_time) overnightCheckIn.value = pkg.check_in_time.substring(0,5);
+                if (pkg.check_out_time) overnightCheckOut.value = pkg.check_out_time.substring(0,5);
+                document.getElementById('timeIn').value = pkg.check_in_time || '14:00:00';
+                document.getElementById('timeOut').value = pkg.check_out_time || '12:00:00';
+            }
         }
     }
 
@@ -2676,9 +2688,13 @@ async function handleBookingSubmit(e) {
             showError('Please select a check-out date for overnight stay.');
             return;
         }
-    } else if (selectedPkg.package_type === 'bundle' && !checkOut) {
-        showError('Please select a check-out date.');
-        return;
+    } else if (selectedPkg.package_type === 'bundle') {
+        const bTourType = String(selectedPkg.tour_type || 'overnight').toLowerCase();
+        const isBundleDay = (bTourType === 'day_tour' || bTourType === 'daytour');
+        if (!isBundleDay && !checkOut) {
+            showError('Please select a check-out date.');
+            return;
+        }
     }
     if (guests < 1) { showError('At least 1 guest is required.'); return; }
 
@@ -2697,7 +2713,11 @@ async function handleBookingSubmit(e) {
     fd.append('email',            '<?php echo addslashes($userEmail); ?>');
     fd.append('phone_number',     '<?php echo addslashes($userPhone); ?>');
     fd.append('check_in_date',    date);
-    fd.append('check_out_date',   (currentTourType === 'daytour' ? '' : checkOut) || '');
+    fd.append('check_out_date',   (
+        currentTourType === 'daytour' ||
+        (selectedPkg.package_type === 'bundle' && (String(selectedPkg.tour_type || 'overnight').toLowerCase() === 'day_tour' || String(selectedPkg.tour_type || 'overnight').toLowerCase() === 'daytour'))
+            ? '' : checkOut
+    ) || '');
     fd.append('check_in_time',    tIn || '');
     fd.append('check_out_time',   tOut || '');
     fd.append('number_of_guests', guests);
@@ -3128,7 +3148,8 @@ function renderCalendarView(data, container) {
     container.querySelectorAll('.act-cal-cell[data-date]').forEach(cell => {
         cell.addEventListener('click', () => {
             const pickedDate = cell.getAttribute('data-date');
-            const isOvernightAccommodation = currentCalPkgType === 'accommodation' && currentTourType === 'overnight';
+            const isOvernightAccommodation = (currentCalPkgType === 'accommodation' && currentTourType === 'overnight')
+                || (currentCalPkgType === 'bundle' && selectedPkg && (String(selectedPkg.tour_type || 'overnight').toLowerCase() !== 'day_tour' && String(selectedPkg.tour_type || 'overnight').toLowerCase() !== 'daytour'));
 
             if (!isOvernightAccommodation) {
                 // ── Single-date mode (activities, day-tour) ────────────

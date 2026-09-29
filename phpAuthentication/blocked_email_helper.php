@@ -67,3 +67,51 @@ function blocked_email_message($context = 'login') {
             return 'This email address has been blocked and cannot log in.';
     }
 }
+
+function kick_blocked_user_session(?mysqli $conn, bool $jsonResponse = false): void {
+    if (!$conn || !isset($_SESSION)) {
+        return;
+    }
+
+    $userEmail = $_SESSION['user_email'] ?? '';
+    $userId = $_SESSION['user_id'] ?? null;
+
+    if (empty($userEmail) && $userId) {
+        $stmt = $conn->prepare("SELECT email FROM users WHERE id = ? LIMIT 1");
+        if ($stmt) {
+            $stmt->bind_param('i', $userId);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            if ($result && $result->num_rows > 0) {
+                $row = $result->fetch_assoc();
+                $userEmail = $row['email'] ?? '';
+                if ($userEmail !== '') {
+                    $_SESSION['user_email'] = $userEmail;
+                }
+            }
+            $stmt->close();
+        }
+    }
+
+    if ($userEmail !== '' && is_email_blocked($conn, $userEmail)) {
+        $_SESSION = [];
+        if (ini_get('session.use_cookies')) {
+            $params = session_get_cookie_params();
+            setcookie(session_name(), '', time() - 42000, $params['path'], $params['domain'], $params['secure'], $params['httponly']);
+        }
+        session_destroy();
+
+        if ($jsonResponse) {
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => false,
+                'message' => blocked_email_message('login'),
+                'blocked' => true
+            ]);
+            exit;
+        }
+
+        header('Location: ../Authentication/login.php?error=' . urlencode(blocked_email_message('login')));
+        exit;
+    }
+}

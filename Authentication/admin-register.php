@@ -161,14 +161,14 @@
                         <!-- Admin Login Link -->
                         <p class="text-center">
                             Already have admin account? 
-                            <a href="http://localhost/YP4K_Resort/Authentication/admin-login.php" class="text-decoration-none fw-bold" style="color: var(--accent-secondary);">Admin Login</a>
+                            <a href="admin-login.php" class="text-decoration-none fw-bold" style="color: var(--accent-secondary);">Admin Login</a>
                         </p>
 
                         <!-- User Register Link -->
                         <p class="text-center mt-3">
                             <i class="bi bi-person me-1" style="color: var(--accent-primary);"></i>
                             User account? 
-                            <a href="http://localhost/YP4K_Resort/Authentication/register.php" class="text-decoration-none fw-bold" style="color: var(--accent-primary);">Register as User</a>
+                            <a href="register.php" class="text-decoration-none fw-bold" style="color: var(--accent-primary);">Register as User</a>
                         </p>
                     </form>
 
