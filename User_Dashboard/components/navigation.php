@@ -121,11 +121,30 @@ main, .container-fluid, .content-container {
     color: var(--text) !important; text-decoration: none;
 }
 .resort-dash-nav .brand-icon {
-    width: 32px; height: 32px;
-    background: linear-gradient(135deg, var(--accent), var(--accent-2));
-    border-radius: 8px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 0.9rem; color: #000; flex-shrink: 0;
+    display: none;
+}
+.resort-dash-nav .yp4k-glow-logo {
+    font-family: 'Poppins', sans-serif;
+    font-size: 1.25rem;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    background: linear-gradient(135deg, #9DFF00 0%, #6EDC45 50%, #ffffff 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    filter: drop-shadow(0 0 8px rgba(157, 255, 0, 0.8)) drop-shadow(0 0 16px rgba(157, 255, 0, 0.45));
+    animation: navYp4kGlow 2.8s ease-in-out infinite;
+    line-height: 1;
+    white-space: nowrap;
+    text-decoration: none;
+}
+@keyframes navYp4kGlow {
+    0%, 100% {
+        filter: drop-shadow(0 0 6px rgba(157, 255, 0, 0.7)) drop-shadow(0 0 14px rgba(157, 255, 0, 0.35));
+    }
+    50% {
+        filter: drop-shadow(0 0 14px rgba(157, 255, 0, 1)) drop-shadow(0 0 28px rgba(157, 255, 0, 0.65));
+    }
 }
 .resort-dash-nav .nav-link {
     color: var(--text-muted) !important;
@@ -407,8 +426,7 @@ main, .container-fluid, .content-container {
 <nav class="resort-dash-nav navbar navbar-expand-lg" id="dashNav">
     <div class="container-fluid px-4">
         <a class="navbar-brand" href="dashboard.php">
-            <div class="brand-icon"><i class="bi bi-gem"></i></div>
-            YP4K Resort
+            <span class="yp4k-glow-logo">YP4K</span>
         </a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#dashNavbar">
             <i class="bi bi-list" style="font-size:1.25rem;"></i>

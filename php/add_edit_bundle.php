@@ -173,7 +173,7 @@ if ($action === 'add' || $action === 'edit') {
     $imagePath = null;
     if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
         $uploadDir = '../assets/uploads/bundles/';
-        if (!file_exists($uploadDir)) mkdir($uploadDir, 0777, true);
+        if (!file_exists($uploadDir)) mkdir($uploadDir, 0755, true);
         $ext      = strtolower(pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION));
         $allowed  = ['jpg','jpeg','png','webp','gif'];
         if (!in_array($ext, $allowed)) {

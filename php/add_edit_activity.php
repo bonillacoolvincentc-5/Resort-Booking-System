@@ -54,7 +54,7 @@ if ($action === 'add' || $action === 'edit') {
         
         // Create directory if it doesn't exist
         if (!file_exists($uploadDir)) {
-            mkdir($uploadDir, 0777, true);
+            mkdir($uploadDir, 0755, true);
         }
         
         $fileExtension = strtolower(pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION));

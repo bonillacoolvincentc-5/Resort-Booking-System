@@ -59,7 +59,7 @@ if ($action === 'add' || $action === 'edit') {
         $uploadDir = '../assets/uploads/accommodations/';
         
         if (!file_exists($uploadDir)) {
-            mkdir($uploadDir, 0777, true);
+            mkdir($uploadDir, 0755, true);
         }
         
         $fileExtension = pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION);

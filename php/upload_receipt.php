@@ -73,7 +73,7 @@ try {
     // Create upload directory if it doesn't exist
     $uploadDir = '../uploads/receipts/';
     if (!file_exists($uploadDir)) {
-        mkdir($uploadDir, 0777, true);
+        mkdir($uploadDir, 0755, true);
     }
     
     // Generate unique filename with MIME-derived extension
