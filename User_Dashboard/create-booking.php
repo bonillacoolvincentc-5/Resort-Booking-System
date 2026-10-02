@@ -1228,12 +1228,14 @@ if ($stmtSlots) {
                 </div>
 
                 <div class="step-actions-wrapper mt-4">
-                    <div class="step-actions-main" style="width:100%;">
-                        <button type="button" class="btn-modern btn-secondary-modern btn-back-pkg" onclick="goToStep2()">
-                            <i class="bi bi-arrow-left"></i> Back to Details
+                    <div style="display:flex; flex-direction:column; gap:1rem; width:100%;">
+                        <!-- Primary Action (Premium UX) -->
+                        <button type="submit" form="bookingForm" class="btn-modern btn-primary-modern btn-confirm-booking" id="submitBtn" disabled style="width:100%; justify-content:center; padding:1rem; font-size:1.1rem; box-shadow:0 8px 25px rgba(16,185,129,0.35);" title="Please attach your GCash payment screenshot first">
+                            <i class="bi bi-check-circle me-2"></i> Confirm Booking
                         </button>
-                        <button type="submit" form="bookingForm" class="btn-modern btn-primary-modern btn-confirm-booking" id="submitBtn" disabled title="Please attach your GCash payment screenshot first">
-                            <i class="bi bi-check-circle"></i> Confirm Booking
+                        <!-- Secondary Action -->
+                        <button type="button" class="btn-modern" style="width:100%; justify-content:center; background:transparent; border:1px solid rgba(255,255,255,0.15); color:var(--text-secondary); padding:0.8rem; box-shadow:none;" onclick="goToStep2()" onmouseover="this.style.background='rgba(255,255,255,0.05)';" onmouseout="this.style.background='transparent';">
+                            <i class="bi bi-arrow-left me-2"></i> Back to Details
                         </button>
                     </div>
                 </div>
