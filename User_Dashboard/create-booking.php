@@ -1159,6 +1159,50 @@ if ($stmtSlots) {
                     </div>
                 </div>
 
+                <!-- ── GCash Payment Section (required before confirm) ── -->
+                <div class="card-modern mt-4" id="gcashPaySection">
+                    <div class="card-header-modern">
+                        <i class="bi bi-wallet2"></i> GCash Payment
+                        <span style="font-size:0.75rem;color:var(--text-muted);font-weight:400;margin-left:0.5rem;">Required before confirming</span>
+                    </div>
+                    <div class="card-body-modern">
+                        <!-- QR Code -->
+                        <div style="text-align:center;margin-bottom:1.25rem;">
+                            <div style="font-size:0.75rem;color:#94a3b8;font-weight:600;margin-bottom:0.5rem;text-transform:uppercase;letter-spacing:0.05em;">
+                                <i class="bi bi-qr-code me-1"></i>Scan GCash QR Code
+                            </div>
+                            <div style="display:inline-block;background:#ffffff;padding:0.65rem;border-radius:0.85rem;box-shadow:0 10px 25px rgba(0,0,0,0.3);max-width:200px;width:100%;">
+                                <a href="../assets/gcash/gcashqr.jpg" target="_blank" title="Click to view full size">
+                                    <img src="../assets/gcash/gcashqr.jpg" alt="GCash QR" style="width:100%;height:auto;aspect-ratio:1/1;object-fit:contain;display:block;border-radius:0.4rem;" onerror="this.src='../assets/gcash/gcash_qr.png';">
+                                </a>
+                            </div>
+                            <div style="font-size:0.7rem;color:#94a3b8;margin-top:0.4rem;"><i class="bi bi-zoom-in me-1"></i>Tap image to view full size</div>
+                        </div>
+                        <!-- Receipt Upload -->
+                        <div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.08);border-radius:0.75rem;padding:1rem;">
+                            <label style="font-size:0.8rem;font-weight:600;color:#e2e8f0;margin-bottom:0.4rem;display:flex;align-items:center;justify-content:space-between;">
+                                <span><i class="bi bi-image me-1"></i>Upload GCash Screenshot <span style="color:#ef4444;">*</span></span>
+                                <span style="font-size:0.7rem;color:#94a3b8;">Max 2MB (Auto-compressed)</span>
+                            </label>
+                            <input type="file" id="gcashReceiptInput"
+                                   accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+                                   style="background:rgba(15,23,42,0.8);border:1px solid rgba(255,255,255,0.15);color:#f8fafc;font-size:0.82rem;border-radius:0.5rem;padding:0.45rem 0.65rem;width:100%;"
+                                   onchange="if(this.files&&this.files[0]) handleGcashFileSelect(this.files[0]);">
+                            <div style="font-size:0.7rem;color:#94a3b8;margin-top:0.3rem;">Accepted: JPG, JPEG, WEBP, PNG</div>
+                            <!-- Compression preview -->
+                            <div id="gcashPreviewBox" style="display:none;margin-top:0.75rem;padding:0.6rem;background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.3);border-radius:0.5rem;">
+                                <div class="d-flex align-items-center gap-2">
+                                    <img id="gcashThumb" src="" alt="Thumbnail" style="width:48px;height:48px;object-fit:cover;border-radius:0.35rem;border:1px solid rgba(255,255,255,0.2);">
+                                    <div style="flex:1;min-width:0;">
+                                        <div style="font-size:0.75rem;font-weight:700;color:#34d399;"><i class="bi bi-check-circle-fill me-1"></i>Screenshot Ready</div>
+                                        <div id="gcashStatsText" style="font-size:0.7rem;color:#cbd5e1;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Action buttons -->
                 <div class="step-actions-wrapper">
                     <button type="button" id="add-room-btn" class="btn-add-room">
@@ -1168,7 +1212,7 @@ if ($stmtSlots) {
                         <button type="button" class="btn-modern btn-secondary-modern btn-back-pkg" onclick="goToStep1()">
                             <i class="bi bi-arrow-left"></i> Back <span class="hide-mobile">to Packages</span>
                         </button>
-                        <button type="submit" form="bookingForm" class="btn-modern btn-primary-modern btn-confirm-booking" id="submitBtn">
+                        <button type="submit" form="bookingForm" class="btn-modern btn-primary-modern btn-confirm-booking" id="submitBtn" disabled title="Please attach your GCash payment screenshot first">
                             <i class="bi bi-check-circle"></i> Confirm Booking
                         </button>
                     </div>
@@ -2635,7 +2679,65 @@ function validateTime() {
 }
 
 // ── Form submit & GCash Modal ──────────────────────────────────────
+// GCash Receipt Upload (Step 3 Inline)
+let gcashReceiptBlob = null;
+
+async function handleGcashFileSelect(file) {
+    const previewBox = document.getElementById('gcashPreviewBox');
+    const thumb      = document.getElementById('gcashThumb');
+    const stats      = document.getElementById('gcashStatsText');
+    const submitBtn  = document.getElementById('submitBtn');
+
+    gcashReceiptBlob = null;
+    if (previewBox) previewBox.style.display = 'none';
+    if (submitBtn)  submitBtn.disabled = true;
+
+    try {
+        const MAX_PX = 1280;
+        const QUALITY = 0.75;
+
+        const imgEl = new Image();
+        const objectUrl = URL.createObjectURL(file);
+        imgEl.src = objectUrl;
+        await new Promise((res, rej) => { imgEl.onload = res; imgEl.onerror = rej; });
+        URL.revokeObjectURL(objectUrl);
+
+        let w = imgEl.naturalWidth, h = imgEl.naturalHeight;
+        if (w > MAX_PX || h > MAX_PX) {
+            if (w > h) { h = Math.round(h * MAX_PX / w); w = MAX_PX; }
+            else       { w = Math.round(w * MAX_PX / h); h = MAX_PX; }
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(imgEl, 0, 0, w, h);
+
+        const blob = await new Promise(res => canvas.toBlob(res, 'image/jpeg', QUALITY));
+        if (!blob) throw new Error('Failed to process image.');
+        if (blob.size > 2097152) throw new Error('Image too large even after compression (max 2 MB).');
+
+        gcashReceiptBlob = blob;
+
+        const reader = new FileReader();
+        reader.onload = ev => { if (thumb) thumb.src = ev.target.result; };
+        reader.readAsDataURL(blob);
+
+        const origKB = (file.size / 1024).toFixed(0);
+        const compKB = (blob.size / 1024).toFixed(0);
+        const saved  = Math.max(0, Math.round((1 - blob.size / file.size) * 100));
+        if (stats) stats.textContent = `Compressed: ${compKB} KB (from ${origKB} KB, -${saved}%)`;
+        if (previewBox) previewBox.style.display = 'block';
+        if (submitBtn)  submitBtn.disabled = false;
+    } catch(err) {
+        gcashReceiptBlob = null;
+        if (previewBox) previewBox.style.display = 'none';
+        if (submitBtn)  submitBtn.disabled = true;
+        showError(err.message || 'Error processing image.');
+    }
+}
+
 async function handleBookingSubmit(e) {
+
     e.preventDefault();
     hideAllAlerts();
 
@@ -2698,6 +2800,14 @@ async function handleBookingSubmit(e) {
     }
     if (guests < 1) { showError('At least 1 guest is required.'); return; }
 
+    // ── Require GCash receipt before submitting ──
+    if (!gcashReceiptBlob) {
+        showError('Please scan the GCash QR code, pay the booking fee, and attach your payment screenshot before confirming.');
+        const gcashSection = document.getElementById('gcashPaySection');
+        if (gcashSection) gcashSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+    }
+
     // ── Direct Submission (Approve First, Pay Later) ──
     const submitBtn = document.getElementById('submitBtn');
     if (submitBtn) {
@@ -2750,8 +2860,14 @@ async function handleBookingSubmit(e) {
         fd.append('accommodation_id', selectedPkg.id);
     }
 
+    // Append the compressed GCash receipt (required)
+    if (gcashReceiptBlob) {
+        fd.append('payment_proof', gcashReceiptBlob, 'gcash_receipt_' + Date.now() + '.jpg');
+    }
+
     try {
         const res = await fetch('../php/upload_payment_proof.php', { method: 'POST', body: fd });
+
         const rawText = await res.text();
         let data;
         try {

@@ -188,50 +188,51 @@ try {
         ];
     }
 
-    // ── Handle payment proof upload (Optional for initial booking request) ──
+    // ── Handle payment proof upload (Required in new flow) ──
     $proofPath = null;
-    if (!empty($_FILES['payment_proof']) && $_FILES['payment_proof']['error'] === UPLOAD_ERR_OK) {
-        $uploadDir = '../assets/uploads/payment_proofs/';
-        if (!is_dir($uploadDir)) {
-            mkdir($uploadDir, 0755, true);
-        }
-
-        // Server-side MIME detection (safer for free hosts)
-        $detectedMime = '';
-        if (function_exists('finfo_open')) {
-            $finfo = new finfo(FILEINFO_MIME_TYPE);
-            $detectedMime = $finfo->file($_FILES['payment_proof']['tmp_name']);
-        } elseif (function_exists('mime_content_type')) {
-            $detectedMime = mime_content_type($_FILES['payment_proof']['tmp_name']);
-        } else {
-            $imgInfo = getimagesize($_FILES['payment_proof']['tmp_name']);
-            if ($imgInfo !== false) {
-                $detectedMime = $imgInfo['mime'];
-            }
-        }
-
-        $allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-        if (!in_array($detectedMime, $allowedTypes, true)) {
-            throw new Exception('Invalid file type. Only JPG, PNG, and WEBP images are accepted.');
-        }
-
-        $maxSize = 2097152; // 2 MiB
-        if ($_FILES['payment_proof']['size'] > $maxSize) {
-            throw new Exception('File too large. Maximum allowed size is 2 MB.');
-        }
-
-        // Derive extension from the detected MIME type (safe — not from client filename)
-        $mimeExtMap = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
-        $ext = $mimeExtMap[$detectedMime] ?? 'jpg';
-        $filename = 'proof_' . $_SESSION['user_id'] . '_' . time() . '.' . $ext;
-        $fullPath = $uploadDir . $filename;
-
-        if (!move_uploaded_file($_FILES['payment_proof']['tmp_name'], $fullPath)) {
-            throw new Exception('Failed to save payment proof. Please try again.');
-        }
-
-        $proofPath = 'assets/uploads/payment_proofs/' . $filename;
+    if (empty($_FILES['payment_proof']) || $_FILES['payment_proof']['error'] !== UPLOAD_ERR_OK) {
+        throw new Exception('GCash payment screenshot is required. Please scan the QR code, pay, and upload your receipt.');
     }
+    $uploadDir = '../assets/uploads/payment_proofs/';
+    if (!is_dir($uploadDir)) {
+        mkdir($uploadDir, 0755, true);
+    }
+
+    // Server-side MIME detection (safer for free hosts)
+    $detectedMime = '';
+    if (function_exists('finfo_open')) {
+        $finfo = new finfo(FILEINFO_MIME_TYPE);
+        $detectedMime = $finfo->file($_FILES['payment_proof']['tmp_name']);
+    } elseif (function_exists('mime_content_type')) {
+        $detectedMime = mime_content_type($_FILES['payment_proof']['tmp_name']);
+    } else {
+        $imgInfo = getimagesize($_FILES['payment_proof']['tmp_name']);
+        if ($imgInfo !== false) {
+            $detectedMime = $imgInfo['mime'];
+        }
+    }
+
+    $allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    if (!in_array($detectedMime, $allowedTypes, true)) {
+        throw new Exception('Invalid file type. Only JPG, PNG, and WEBP images are accepted.');
+    }
+
+    $maxSize = 2097152; // 2 MiB
+    if ($_FILES['payment_proof']['size'] > $maxSize) {
+        throw new Exception('File too large. Maximum allowed size is 2 MB.');
+    }
+
+    // Derive extension from the detected MIME type (safe — not from client filename)
+    $mimeExtMap = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
+    $ext = $mimeExtMap[$detectedMime] ?? 'jpg';
+    $filename = 'proof_' . $_SESSION['user_id'] . '_' . time() . '.' . $ext;
+    $fullPath = $uploadDir . $filename;
+
+    if (!move_uploaded_file($_FILES['payment_proof']['tmp_name'], $fullPath)) {
+        throw new Exception('Failed to save payment proof. Please try again.');
+    }
+
+    $proofPath = 'assets/uploads/payment_proofs/' . $filename;
 
 
     // ── Availability / overlap check ──────────────────────────────

@@ -202,16 +202,6 @@ while ($row = $bundlesRes->fetch_assoc()) {
                     Pending Review
                     <span class="bst-count" id="cntPending">0</span>
                 </button>
-                <button class="bst-tab bst-awaiting" data-filter="awaiting_payment">
-                    <span class="bst-dot"></span>
-                    Awaiting Payment
-                    <span class="bst-count" id="cntAwaiting">0</span>
-                </button>
-                <button class="bst-tab bst-verifying" data-filter="payment_verifying">
-                    <span class="bst-dot"></span>
-                    Payment Verifying
-                    <span class="bst-count" id="cntVerifying">0</span>
-                </button>
                 <button class="bst-tab bst-approved" data-filter="approved">
                     <span class="bst-dot"></span>
                     Approved
@@ -346,30 +336,6 @@ while ($row = $bundlesRes->fetch_assoc()) {
                                             <button class="btn-action btn-reject" onclick="rejectBooking(<?php echo $booking['id']; ?>)">
                                                 <i class="bi bi-x-circle"></i>
                                                 Reject
-                                            </button>
-                                        <?php elseif ($booking['status_name'] === 'awaiting_payment'): ?>
-                                            <?php if (!empty($booking['expires_at'])): ?>
-                                                <span class="badge bg-warning text-dark px-2 py-1 d-inline-flex align-items-center gap-1" style="font-size:0.72rem; font-weight:700;">
-                                                    <i class="bi bi-clock-history"></i><span class="admin-countdown" data-remaining="<?php echo max(0, (int)($booking['seconds_remaining'] ?? 0)); ?>">--:--</span>
-                                                </span>
-                                            <?php endif; ?>
-                                            <button class="btn-action btn-reject" onclick="cancelBookingManual(<?php echo $booking['id']; ?>)" title="Cancel Booking">
-                                                <i class="bi bi-slash-circle"></i>
-                                                Cancel
-                                            </button>
-                                        <?php elseif ($booking['status_name'] === 'payment_verifying'): ?>
-                                            <?php $recPath = !empty($booking['receipt_path']) ? $booking['receipt_path'] : ($booking['payment_proof'] ?? ''); ?>
-                                            <button class="btn-action" style="background: rgba(139,92,246,0.15); color: #a78bfa; border: 1px solid rgba(139,92,246,0.3);" onclick="viewReceiptModal('<?php echo htmlspecialchars($recPath); ?>', '<?php echo htmlspecialchars($booking['booking_reference'] ?? ''); ?>')">
-                                                <i class="bi bi-receipt"></i>
-                                                Receipt
-                                            </button>
-                                            <button class="btn-action btn-approve" onclick="confirmPayment(this, <?php echo $booking['id']; ?>)">
-                                                <i class="bi bi-check2-circle"></i>
-                                                Confirm Pay
-                                            </button>
-                                            <button class="btn-action btn-reject" onclick="cancelBookingManual(<?php echo $booking['id']; ?>)" title="Cancel Booking">
-                                                <i class="bi bi-slash-circle"></i>
-                                                Cancel
                                             </button>
                                         <?php elseif ($booking['status_name'] === 'approved'): ?>
                                             <button class="notification-btn" onclick="notifyBooking(<?php echo $booking['id']; ?>)" title="Notify">
@@ -1323,14 +1289,14 @@ while ($row = $bundlesRes->fetch_assoc()) {
                     body: JSON.stringify({
                         booking_id: bookingId,
                         status: 'approved',
-                        notes: 'Booking approved by admin'
+                        notes: 'Booking approved by admin. Payment receipt verified.'
                     })
                 });
                 const result = await response.json();
                 if (!result.success) {
                     showAlert(result.message || 'Failed to approve booking', 'danger');
                 } else {
-                    showNotification(result.message || 'Booking approved! Guest given 2 hours to pay.', 'success');
+                    showNotification(result.message || 'Booking approved and payment confirmed!', 'success');
                     setTimeout(() => location.reload(), 1500);
                 }
                 return result;
@@ -1991,14 +1957,12 @@ while ($row = $bundlesRes->fetch_assoc()) {
             // Count badges: tally rows by status
             function updateCounts() {
                 const allRows = document.querySelectorAll('#bookingsTableBody tr[data-status]');
-                const counts  = { pending_review: 0, awaiting_payment: 0, payment_verifying: 0, approved: 0, rejected: 0, completed: 0, cancelled: 0 };
+                const counts  = { pending_review: 0, approved: 0, rejected: 0, completed: 0, cancelled: 0 };
                 allRows.forEach(r => {
                     const s = r.dataset.status;
                     if (s in counts) counts[s]++;
                 });
                 if (document.getElementById('cntPending'))   document.getElementById('cntPending').textContent   = counts.pending_review;
-                if (document.getElementById('cntAwaiting'))  document.getElementById('cntAwaiting').textContent  = counts.awaiting_payment;
-                if (document.getElementById('cntVerifying')) document.getElementById('cntVerifying').textContent = counts.payment_verifying;
                 if (document.getElementById('cntApproved'))  document.getElementById('cntApproved').textContent  = counts.approved;
                 if (document.getElementById('cntRejected'))  document.getElementById('cntRejected').textContent  = counts.rejected;
                 const cntRecords = document.getElementById('cntRecords');

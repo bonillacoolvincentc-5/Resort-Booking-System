@@ -66,23 +66,23 @@ try {
 
     require_once __DIR__ . '/../phpAuthentication/email_helper.php';
 
-    // ── Approval Logic: Approve First, Pay Later ──
+    // ── Approval Logic: Payment is collected upfront, approve directly ──
     if ($newStatus === 'approved') {
         if ($currentStatusName === 'pending_review') {
-            // First approval: transition to 'awaiting_payment' with 2-hour window
-            $stStmt = $conn->prepare("SELECT id FROM booking_status WHERE name = 'awaiting_payment'");
+            // New flow: payment was submitted with the booking, approve directly
+            $stStmt = $conn->prepare("SELECT id FROM booking_status WHERE name = 'approved'");
             $stStmt->execute();
             $targetStatus = $stStmt->get_result()->fetch_assoc();
             $stStmt->close();
 
-            if (!$targetStatus) throw new Exception('Status awaiting_payment not configured');
+            if (!$targetStatus) throw new Exception('Status approved not configured');
             $newStatusId = (int)$targetStatus['id'];
 
-            // Set expires_at = NOW() + 2 hours
             $upStmt = $conn->prepare("
                 UPDATE bookings 
                 SET status_id = ?, 
-                    expires_at = DATE_ADD(NOW(), INTERVAL 2 HOUR), 
+                    payment_status = 'paid',
+                    expires_at = NULL,
                     updated_at = NOW() 
                 WHERE id = ?
             ");
@@ -90,32 +90,22 @@ try {
             $upStmt->execute();
             $upStmt->close();
 
-            // Fetch calculated expires_at
-            $expStmt = $conn->prepare("SELECT expires_at FROM bookings WHERE id = ?");
-            $expStmt->bind_param('i', $bookingId);
-            $expStmt->execute();
-            $expRow = $expStmt->get_result()->fetch_assoc();
-            $expStmt->close();
-            $expiresAt = $expRow['expires_at'] ?? date('Y-m-d H:i:s', time() + 7200);
+            logBookingChange($conn, $bookingId, $oldStatusId, $newStatusId, 'admin', $_SESSION['admin_id'], $notes ?: 'Booking approved by admin. Payment receipt verified.');
 
-            logBookingChange($conn, $bookingId, $oldStatusId, $newStatusId, 'admin', $_SESSION['admin_id'], 'Approved by admin — Awaiting guest payment (2hr window)');
-
-            // Send 2-hour payment window email
             if (!empty($recipientEmail)) {
-                EmailHelper::sendAwaitingPaymentEmail(
+                EmailHelper::sendBookingStatusEmail(
                     $recipientEmail,
                     $recipientName,
                     $booking['booking_reference'],
-                    $booking['total_amount'],
-                    $expiresAt
+                    'approved',
+                    $notes ?: 'Your booking has been approved! Your GCash payment receipt has been verified.'
                 );
             }
 
             echo json_encode([
-                'success' => true,
-                'message' => 'Booking approved! Guest notified to pay within 2 hours.',
-                'new_status' => 'awaiting_payment',
-                'expires_at' => $expiresAt
+                'success'    => true,
+                'message'    => 'Booking approved and payment confirmed!',
+                'new_status' => 'approved'
             ]);
             exit();
 
