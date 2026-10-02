@@ -902,7 +902,7 @@ if ($stmtSlots) {
         <div class="step-separator"></div>
         <div class="step-item" id="step3Indicator">
             <div class="step-dot" id="step3Dot">3</div>
-            <span>Confirmation</span>
+            <span>Payment</span>
         </div>
     </div>
 
@@ -1159,8 +1159,32 @@ if ($stmtSlots) {
                     </div>
                 </div>
 
-                <!-- ── GCash Payment Section (required before confirm) ── -->
-                <div class="card-modern mt-4" id="gcashPaySection">
+                <!-- Action buttons (Step 2) -->
+                <div class="step-actions-wrapper">
+                    <button type="button" id="add-room-btn" class="btn-add-room">
+                        <i class="bi bi-plus-circle"></i> Add Another Room
+                    </button>
+                    <div class="step-actions-main">
+                        <button type="button" class="btn-modern btn-secondary-modern btn-back-pkg" onclick="goToStep1()">
+                            <i class="bi bi-arrow-left"></i> Back <span class="hide-mobile">to Packages</span>
+                        </button>
+                        <button type="button" class="btn-modern btn-primary-modern btn-confirm-booking" onclick="goToPaymentStep()">
+                            Continue to Payment <i class="bi bi-arrow-right ms-2"></i>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         STEP 3 — GCASH PAYMENT
+    ═══════════════════════════════════════════════════════════════ -->
+    <div id="step3Section" class="d-none">
+        <div class="row g-4">
+            <div class="col-12 col-xl-8 mx-auto">
+                <div class="card-modern" id="gcashPaySection">
                     <div class="card-header-modern">
                         <i class="bi bi-wallet2"></i> GCash Payment
                         <span style="font-size:0.75rem;color:var(--text-muted);font-weight:400;margin-left:0.5rem;">Required before confirming</span>
@@ -1203,47 +1227,16 @@ if ($stmtSlots) {
                     </div>
                 </div>
 
-                <!-- Action buttons -->
-                <div class="step-actions-wrapper">
-                    <button type="button" id="add-room-btn" class="btn-add-room">
-                        <i class="bi bi-plus-circle"></i> Add Another Room
-                    </button>
-                    <div class="step-actions-main">
-                        <button type="button" class="btn-modern btn-secondary-modern btn-back-pkg" onclick="goToStep1()">
-                            <i class="bi bi-arrow-left"></i> Back <span class="hide-mobile">to Packages</span>
+                <div class="step-actions-wrapper mt-4">
+                    <div class="step-actions-main" style="width:100%;">
+                        <button type="button" class="btn-modern btn-secondary-modern btn-back-pkg" onclick="goToStep2()">
+                            <i class="bi bi-arrow-left"></i> Back to Details
                         </button>
                         <button type="submit" form="bookingForm" class="btn-modern btn-primary-modern btn-confirm-booking" id="submitBtn" disabled title="Please attach your GCash payment screenshot first">
                             <i class="bi bi-check-circle"></i> Confirm Booking
                         </button>
                     </div>
                 </div>
-
-            </div>
-
-
-        </div>
-    </div>
-
-    <!-- ══════════════════════════════════════════════════════════════
-         STEP 3 — SUCCESS CONFIRMATION
-    ═══════════════════════════════════════════════════════════════ -->
-    <div id="step3Section" class="d-none">
-        <div class="card-modern text-center" style="padding:4rem 2rem;">
-            <div style="width:80px;height:80px;border-radius:50%;background:rgba(16,185,129,.15);border:2px solid var(--accent-success);display:flex;align-items:center;justify-content:center;margin:0 auto 1.5rem;font-size:2rem;color:var(--accent-success);">
-                <i class="bi bi-check-lg"></i>
-            </div>
-            <h2 style="font-size:1.75rem;font-weight:700;color:var(--text-primary);margin-bottom:.5rem;">Booking Confirmed!</h2>
-            <p class="text-muted mb-1" id="bookingRefDisplay"></p>
-            <p style="color:var(--text-secondary);font-size:.9rem;max-width:480px;margin:0 auto 2rem;">
-                Your booking is pending admin review. You'll receive a confirmation once it's approved. Redirecting you to your dashboard…
-            </p>
-            <div class="d-flex gap-3 justify-content-center">
-                <a href="dashboard.php" class="btn-modern btn-primary-modern">
-                    <i class="bi bi-grid-3x3-gap"></i> Go to Dashboard
-                </a>
-                <a href="my-bookings.php" class="btn-modern btn-secondary-modern">
-                    <i class="bi bi-calendar-check"></i> View My Bookings
-                </a>
             </div>
         </div>
     </div>
@@ -3038,6 +3031,20 @@ function goToStep3() {
     document.getElementById('step3Section').classList.add('section-transition');
     setStepActive(3);
     window.scrollTo({top:0, behavior:'smooth'});
+}
+function goToPaymentStep() {
+    const form = document.getElementById('bookingForm');
+    if (!form.reportValidity()) return;
+    
+    // Check if check-in date is set
+    const dateInput = document.getElementById('bookingDate');
+    if (!dateInput.value) {
+        showError('Please select a check-in date from the calendar.');
+        window.scrollTo({top: document.getElementById('activity-calendar').offsetTop - 50, behavior:'smooth'});
+        return;
+    }
+    
+    goToStep3();
 }
 function setStepActive(n) {
     [1,2,3].forEach(i => {
