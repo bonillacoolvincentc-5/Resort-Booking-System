@@ -62,53 +62,48 @@
     overflow: hidden;
 }
 
-.logo-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
+.premium-logo-yp4k {
     font-family: 'Poppins', sans-serif;
-    font-size: 1.05rem;
+    font-size: 2.2rem;
     font-weight: 900;
-    letter-spacing: 0.06em;
-    background: linear-gradient(135deg, #9DFF00 0%, #6EDC45 50%, #ffffff 100%);
+    letter-spacing: 0.12em;
+    background: linear-gradient(
+        to right, 
+        #ffffff 0%, 
+        #9DFF00 20%, 
+        #4ade80 40%, 
+        #ffffff 60%, 
+        #9DFF00 80%, 
+        #ffffff 100%
+    );
+    background-size: 200% auto;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    text-shadow: none;
-    filter: drop-shadow(0 0 8px rgba(157, 255, 0, 0.75)) drop-shadow(0 0 16px rgba(157, 255, 0, 0.4));
-    animation: yp4kGlow 2.8s ease-in-out infinite;
-    padding: 0 2px;
+    filter: drop-shadow(0 0 10px rgba(157, 255, 0, 0.8)) drop-shadow(0 0 25px rgba(157, 255, 0, 0.5)) drop-shadow(0 0 45px rgba(157, 255, 0, 0.3));
+    animation: premiumShine 3s linear infinite, premiumPulse 2s ease-in-out infinite alternate;
     line-height: 1;
     white-space: nowrap;
+    padding: 0 5px;
+    font-style: italic;
+    margin-top: 5px;
 }
 
-@keyframes yp4kGlow {
-    0%, 100% {
-        filter: drop-shadow(0 0 6px rgba(157, 255, 0, 0.7)) drop-shadow(0 0 14px rgba(157, 255, 0, 0.35));
-    }
-    50% {
-        filter: drop-shadow(0 0 12px rgba(157, 255, 0, 1)) drop-shadow(0 0 24px rgba(157, 255, 0, 0.6));
+@keyframes premiumShine {
+    to {
+        background-position: 200% center;
     }
 }
 
-.logo-text {
-    font-family: 'Poppins', sans-serif;
-    font-size: 1rem;
-    font-weight: 700;
-    color: #ffffff;
-    letter-spacing: -0.01em;
-    white-space: nowrap;
-}
-
-.logo-sub {
-    display: block;
-    font-size: 0.65rem;
-    color: #9DFF00;
-    font-weight: 600;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    line-height: 1;
+@keyframes premiumPulse {
+    0% {
+        filter: drop-shadow(0 0 10px rgba(157, 255, 0, 0.7)) drop-shadow(0 0 20px rgba(157, 255, 0, 0.4));
+        transform: scale(0.98);
+    }
+    100% {
+        filter: drop-shadow(0 0 15px rgba(157, 255, 0, 1)) drop-shadow(0 0 35px rgba(157, 255, 0, 0.7)) drop-shadow(0 0 60px rgba(157, 255, 0, 0.5));
+        transform: scale(1.03);
+    }
 }
 
 .sidebar-toggle {
