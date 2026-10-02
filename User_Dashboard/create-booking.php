@@ -2804,11 +2804,15 @@ function showSuccessOverlay(ref) {
     document.getElementById('successRef').textContent = `Booking Reference: ${ref || ''}`;
     document.getElementById('successOverlay').classList.add('show');
     const goBtn = document.getElementById('successGoBtn');
+    // Store the timer ID so the button click can cancel it before navigating,
+    // preventing a double-navigation that causes InvalidStateError.
+    const redirectTimer = setTimeout(() => { window.location.href = 'my-bookings.php'; }, 4500);
     if (goBtn) {
-        goBtn.onclick = () => { window.location.href = 'my-bookings.php'; };
+        goBtn.onclick = () => {
+            clearTimeout(redirectTimer);
+            window.location.href = 'my-bookings.php';
+        };
     }
-    // Redirect to my-bookings or dashboard after 4.5 seconds
-    setTimeout(() => { window.location.href = 'my-bookings.php'; }, 4500);
 }
 
 // ── Guest counter ──────────────────────────────────────────────────

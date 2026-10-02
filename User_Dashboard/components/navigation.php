@@ -42,9 +42,6 @@ if (isset($_SESSION['user_id'])) {
 <!-- YP4K Resort — User Dashboard Navigation -->
 <link rel="stylesheet" href="../css/resort-theme.css">
 <style>
-@view-transition {
-    navigation: auto;
-}
 
 @keyframes fadeIn {
     from { opacity: 0; }
