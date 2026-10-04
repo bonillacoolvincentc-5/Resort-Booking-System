@@ -111,7 +111,6 @@ while ($row = $result->fetch_assoc()) {
                         <th>Role</th>
                         <th>Joined</th>
                         <th>Bookings</th>
-                        <th>Status</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -160,7 +159,6 @@ while ($row = $result->fetch_assoc()) {
                                 <td>Customer</td>
                                 <td><?php echo $joinedDate; ?></td>
                                 <td><?php echo $user['booking_count']; ?></td>
-                                <td><span class="status-badge <?php echo $statusClass; ?>"><?php echo $statusText; ?></span></td>
                                 <td>
                                     <div class="action-buttons">
                                         <button class="btn-action btn-view" onclick="viewUser(<?php echo $user['id']; ?>)" title="View user">
@@ -181,7 +179,7 @@ while ($row = $result->fetch_assoc()) {
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="6" style="text-align: center; padding: 2rem;">
+                            <td colspan="5" style="text-align: center; padding: 2rem;">
                                 <i class="bi bi-inbox" style="font-size: 2rem; color: var(--text-muted);"></i>
                                 <p style="color: var(--text-secondary); margin-top: 0.5rem;">No users found</p>
                             </td>

@@ -905,22 +905,26 @@
                                             <div class="booking-info-value"><?php echo date('F j, Y', strtotime($booking['check_in_date'])); ?></div>
                                         </div>
                                     </div>
-                                    <?php if ($booking['check_in_time']): ?>
                                     <div class="booking-info-item">
                                         <div class="booking-info-icon">
-                                            <i class="bi bi-clock"></i>
+                                            <i class="bi bi-clock"></i> 
                                         </div>
                                         <div class="booking-info-content">
-                                            <div class="booking-info-label">Time</div>
+                                            <div class="booking-info-label">Schedule / Time</div>
                                             <div class="booking-info-value">
-                                                <?php echo date('g:i A', strtotime($booking['check_in_time'])); ?>
-                                                <?php if ($booking['check_out_time']): ?>
-                                                    - <?php echo date('g:i A', strtotime($booking['check_out_time'])); ?>
-                                                <?php endif; ?>
+                                                <?php 
+                                                    if (!empty($booking['check_in_time'])) {
+                                                        echo date('g:i A', strtotime($booking['check_in_time']));
+                                                        if (!empty($booking['check_out_time'])) {
+                                                            echo ' - ' . date('g:i A', strtotime($booking['check_out_time']));
+                                                        }
+                                                    } else {
+                                                        echo 'Standard Resort Hours';
+                                                    }
+                                                ?>
                                             </div>
                                         </div>
                                     </div>
-                                    <?php endif; ?>
                                     <div class="booking-info-item">
                                         <div class="booking-info-icon">
                                             <span style="font-weight: 800; font-style: normal; font-size: 1.2rem; line-height: 1;">&#8369;</span>
