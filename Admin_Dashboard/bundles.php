@@ -326,9 +326,8 @@ while ($r = $accResult->fetch_assoc()) $allAccommodations[] = $r;
                                         <?php if ($allActivities): ?>
                                             <?php foreach ($allActivities as $act): ?>
                                             <label class="check-item">
-                                                <input type="checkbox" class="act-chk" value="<?= $act['id'] ?>">
+                                                <input type="checkbox" class="act-chk" value="<?= $act['id'] ?>" data-price="<?= $act['price_per_hour'] ?>" onchange="recalcBundleInclusionsTotal()">
                                                 <span class="check-item-name"><?= htmlspecialchars($act['name']) ?></span>
-                                                <span class="check-item-price">&#8369;<?= number_format($act['price_per_hour'], 2) ?>/hr</span>
                                             </label>
                                             <?php endforeach; ?>
                                         <?php else: ?>
@@ -345,12 +344,11 @@ while ($r = $accResult->fetch_assoc()) $allAccommodations[] = $r;
                                         <?php if ($allAccommodations): ?>
                                             <?php foreach ($allAccommodations as $acc): ?>
                                             <label class="check-item">
-                                                <input type="checkbox" class="acc-chk" value="<?= $acc['id'] ?>">
+                                                <input type="checkbox" class="acc-chk" value="<?= $acc['id'] ?>" data-price="<?= $acc['price_per_night'] ?>" onchange="recalcBundleInclusionsTotal()">
                                                 <span class="check-item-name">
                                                     <?= htmlspecialchars($acc['name']) ?>
                                                     <small style="color:var(--text-muted);">(<?= ucfirst($acc['type']) ?>)</small>
                                                 </span>
-                                                <span class="check-item-price">&#8369;<?= number_format($acc['price_per_night'], 2) ?>/night</span>
                                             </label>
                                             <?php endforeach; ?>
                                         <?php else: ?>
@@ -358,6 +356,13 @@ while ($r = $accResult->fetch_assoc()) $allAccommodations[] = $r;
                                         <?php endif; ?>
                                     </div>
                                     <input type="hidden" id="accommodationIds" name="accommodation_ids">
+                                </div>
+                                
+                                <!-- Included Items Total Summary -->
+                                <div class="mb-3 p-3" style="background: rgba(157,255,0,0.05); border: 1px solid rgba(157,255,0,0.2); border-radius: 8px;">
+                                    <div style="color: #9dff00; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.2rem;"><i class="bi bi-calculator me-1"></i>Total Included Value</div>
+                                    <div style="color: #fff; font-size: 1.35rem; font-weight: 700;" id="bundleInclusionsTotal">₱0.00</div>
+                                    <div style="color: var(--text-muted); font-size: 0.75rem; margin-top: 0.2rem;">(This is the combined regular price of all selected items)</div>
                                 </div>
                             </div>
                         </div>
@@ -484,6 +489,7 @@ while ($r = $accResult->fetch_assoc()) $allAccommodations[] = $r;
                 if (accIds.includes(parseInt(chk.value))) chk.checked = true;
             });
 
+            recalcBundleInclusionsTotal();
             bundleModal.show();
         } catch(e) {
             toast('Network error loading bundle', 'error');
@@ -567,8 +573,17 @@ while ($r = $accResult->fetch_assoc()) $allAccommodations[] = $r;
     }
 
     // -- Helpers ----------------------------------------------------
+    function recalcBundleInclusionsTotal() {
+        let total = 0;
+        document.querySelectorAll('.act-chk:checked, .acc-chk:checked').forEach(chk => {
+            total += parseFloat(chk.getAttribute('data-price')) || 0;
+        });
+        document.getElementById('bundleInclusionsTotal').textContent = '₱' + total.toLocaleString('en-PH', {minimumFractionDigits: 2});
+    }
+
     function clearAllCheckboxes() {
         document.querySelectorAll('.act-chk, .acc-chk').forEach(c => c.checked = false);
+        recalcBundleInclusionsTotal();
     }
 
     function toast(msg, type = 'success') {

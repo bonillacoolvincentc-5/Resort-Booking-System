@@ -376,6 +376,20 @@ if (!empty($parsed_extra_rooms)) {
     $erIns->close();
 }
 
+// ── 11.6 Insert Add-ons to Database ──────────────────────────────────────────
+if (!empty($addons) && is_array($addons)) {
+    $addonIns = $conn->prepare("INSERT INTO booking_addons (booking_id, activity_id, qty, usage_date) VALUES (?, ?, ?, ?)");
+    foreach ($addons as $addon) {
+        $aId = (int)($addon['id'] ?? 0);
+        $aQty = max(1, (int)($addon['qty'] ?? 1));
+        if ($aId > 0) {
+            $addonIns->bind_param('iiis', $new_id, $aId, $aQty, $check_in_date);
+            $addonIns->execute();
+        }
+    }
+    $addonIns->close();
+}
+
 // ── 12. Log the action in booking_logs ───────────────────────────────────────
 $admin_id  = (int)($_SESSION['admin_id'] ?? 0);
 $logNote   = 'Walk-in reservation created by admin.';

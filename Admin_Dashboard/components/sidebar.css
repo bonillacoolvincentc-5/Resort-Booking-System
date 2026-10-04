@@ -80,7 +80,6 @@
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    filter: drop-shadow(0 0 10px rgba(157, 255, 0, 0.8)) drop-shadow(0 0 25px rgba(157, 255, 0, 0.5)) drop-shadow(0 0 45px rgba(157, 255, 0, 0.3));
     animation: premiumShine 3s linear infinite, premiumPulse 2s ease-in-out infinite alternate;
     line-height: 1;
     white-space: nowrap;
@@ -97,11 +96,9 @@
 
 @keyframes premiumPulse {
     0% {
-        filter: drop-shadow(0 0 10px rgba(157, 255, 0, 0.7)) drop-shadow(0 0 20px rgba(157, 255, 0, 0.4));
         transform: scale(0.98);
     }
     100% {
-        filter: drop-shadow(0 0 15px rgba(157, 255, 0, 1)) drop-shadow(0 0 35px rgba(157, 255, 0, 0.7)) drop-shadow(0 0 60px rgba(157, 255, 0, 0.5));
         transform: scale(1.03);
     }
 }

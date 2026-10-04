@@ -606,6 +606,25 @@ if ($stmtSlots) {
             border-radius: 4px;
         }
 
+        /* Daily booking limit badge ("X slots left") */
+        .addon-left {
+            font-size:.75rem; font-weight:700; padding:.25rem .6rem; border-radius:999px; white-space:nowrap;
+            background: linear-gradient(135deg, rgba(34,197,94,0.12), rgba(16,185,129,0.02));
+            color: #34d399; border: 1px solid rgba(52,211,153,0.25);
+            display: inline-flex; align-items: center; gap: 0.35rem; margin-left: auto;
+            box-shadow: 0 4px 12px rgba(16,185,129,0.08);
+        }
+        .addon-left.low { 
+            background: linear-gradient(135deg, rgba(245,158,11,0.12), rgba(217,119,6,0.02));
+            color: #fbbf24; border-color: rgba(251,191,36,0.3);
+            box-shadow: 0 4px 12px rgba(245,158,11,0.08);
+        }
+        .addon-left.empty {
+            background: linear-gradient(135deg, rgba(239,68,68,0.12), rgba(220,38,38,0.02));
+            color: #ef4444; border-color: rgba(239,68,68,0.3);
+            box-shadow: 0 4px 12px rgba(239,68,68,0.08);
+        }
+
         /* Override main-content padding for POS */
         #mainContent { padding: 0 !important; }
 
@@ -818,7 +837,7 @@ if ($stmtSlots) {
     <!-- ══════════ Walk-In Confirmation Modal ══════════ -->
     <div class="modal fade" id="walkinConfirmModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content" style="background: var(--pos-bg-dark); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+            <div class="modal-content" style="background: rgba(18, 30, 24, 0.95); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
                 <div class="modal-header" style="border-bottom: 1px solid rgba(255,255,255,0.05); background: rgba(255,255,255,0.02);">
                     <h5 class="modal-title" style="color: var(--pos-text-light); font-weight: 600;"><i class="bi bi-receipt me-2"></i>Booking Summary</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -984,6 +1003,7 @@ if ($stmtSlots) {
     let selectedItem  = null;
     let extraRooms = [];
     let isAddingExtraRoom = false;
+    let ACTIVITY_USAGE_MAP = {};
     let AVAILABILITY_MAP = null;
     let walkinAddonsMap = {};
 
@@ -998,6 +1018,20 @@ if ($stmtSlots) {
             }
         } catch (e) {
             console.error('Failed to load availability map', e);
+        }
+    }
+
+    async function loadActivityUsage(date) {
+        if (!date) return;
+        try {
+            const res = await fetch(`../php/get_activity_availability.php?date=${date}`);
+            const result = await res.json();
+            if (result.success) {
+                ACTIVITY_USAGE_MAP = result.activities || {};
+                renderWalkinAddons();
+            }
+        } catch (e) {
+            console.error('Failed to load activity usage', e);
         }
     }
 
@@ -1785,18 +1819,50 @@ if ($stmtSlots) {
         addonsCont.style.display = 'block';
         
         addonsList.innerHTML = available.map(a => {
-            const isSelected = !!(walkinAddonsMap[a.id] && walkinAddonsMap[a.id].selected);
+            const actLimit = ACTIVITY_USAGE_MAP[a.id];
+            let remaining = -1;
+            let badgeHtml = '';
+            
+            if (actLimit) {
+                remaining = actLimit.remaining;
+                
+                let bClass = '';
+                let iconClass = 'bi-check-circle-fill';
+                if (remaining === 0) { bClass = 'empty'; iconClass = 'bi-x-circle-fill'; }
+                else if (remaining <= 5) { bClass = 'low'; iconClass = 'bi-exclamation-triangle-fill'; }
+                
+                badgeHtml = `<div class="addon-left ${bClass}"><i class="bi ${iconClass}"></i> ${remaining} slots left</div>`;
+            }
+
+            const guests = parseInt(document.getElementById('bi_num_guests').value) || 1;
+            const maxAllowed = remaining !== -1 ? Math.min(guests, remaining) : guests;
+            
+            // if we have map items, cap them
+            if (walkinAddonsMap[a.id]) {
+                if (remaining === 0) walkinAddonsMap[a.id].selected = false;
+                if (walkinAddonsMap[a.id].qty > maxAllowed) walkinAddonsMap[a.id].qty = maxAllowed;
+            }
+
+            const isSelected = !!(walkinAddonsMap[a.id] && walkinAddonsMap[a.id].selected && remaining !== 0);
             const qtyVal = (walkinAddonsMap[a.id] && walkinAddonsMap[a.id].qty) || 1;
             const isATV = (a.name || '').toLowerCase().includes('atv');
             
+            const disabledAttr = (remaining === 0) ? 'disabled' : '';
+            const opacityStyle = (remaining === 0) ? 'opacity: 0.5; filter: grayscale(1); pointer-events: none;' : '';
+            
             return `
-            <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.1); padding:0.5rem; border-radius:6px; display:flex; align-items:center; justify-content:space-between;">
-                <div>
-                    <input type="checkbox" id="wAddonChk-${a.id}" ${isSelected?'checked':''} onchange="toggleWalkinAddon(${a.id}, ${a.price}, this, '${escH(a.name)}')">
-                    <label for="wAddonChk-${a.id}" style="font-size:0.8rem; color:#fff; cursor:pointer; margin-left:5px;">${escH(a.name)}</label>
-                    <div style="font-size:0.7rem; color:var(--pos-text-muted); margin-left: 20px;">+₱${a.price.toLocaleString('en-PH',{minimumFractionDigits:2})}</div>
+            <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.1); padding:0.5rem; border-radius:6px; display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; margin-bottom: 0.4rem; ${opacityStyle}">
+                <div style="display:flex; align-items:center; width:100%;">
+                    <input type="checkbox" id="wAddonChk-${a.id}" ${isSelected?'checked':''} ${disabledAttr} onchange="toggleWalkinAddon(${a.id}, ${a.price}, this, '${escH(a.name)}')">
+                    <label for="wAddonChk-${a.id}" style="font-size:0.8rem; color:#fff; cursor:pointer; margin-left:5px; flex:1;">${escH(a.name)} <span style="font-size:0.7rem; color:var(--pos-text-muted); margin-left:5px;">(+₱${a.price.toLocaleString('en-PH',{minimumFractionDigits:2})})</span></label>
+                    ${badgeHtml}
                 </div>
-                ${isATV ? `<input type="number" id="wAddonQty-${a.id}" min="1" value="${qtyVal}" oninput="updateWalkinAddonQty(${a.id}, this)" style="width: 50px; padding:0.2rem; font-size:0.75rem; border-radius:4px; border:1px solid rgba(157, 255, 0, 0.2); background:rgba(157, 255, 0, 0.05); color:#9dff00; display:${isSelected ? 'block' : 'none'};">` : ''}
+                ${isATV ? `<div style="width:100%; display:${isSelected ? 'flex' : 'none'}; justify-content:flex-end; margin-top:0.4rem;" id="wAddonQtyCont-${a.id}">
+                    <div style="display:flex; align-items:center; gap:0.5rem;">
+                        <span style="font-size:0.7rem; color:#8c9992;">Guests:</span>
+                        <input type="number" id="wAddonQty-${a.id}" min="1" max="${maxAllowed}" value="${qtyVal}" oninput="updateWalkinAddonQty(${a.id}, this)" style="width: 50px; padding:0.2rem; font-size:0.75rem; border-radius:4px; border:1px solid rgba(157, 255, 0, 0.2); background:rgba(157, 255, 0, 0.05); color:#9dff00;">
+                    </div>
+                </div>` : ''}
             </div>
             `;
         }).join('');
@@ -1813,24 +1879,26 @@ if ($stmtSlots) {
                             mapItem.selected = false;
                             const otherChk = document.getElementById('wAddonChk-' + key);
                             if (otherChk) otherChk.checked = false;
-                            const otherQty = document.getElementById('wAddonQty-' + key);
+                            const otherQty = document.getElementById('wAddonQtyCont-' + key);
                             if (otherQty) otherQty.style.display = 'none';
                         }
                     }
                 });
             }
+            const qtyCont = document.getElementById('wAddonQtyCont-' + id);
+            if (qtyCont) qtyCont.style.display = 'flex';
             const qtyEl = document.getElementById('wAddonQty-' + id);
-            if (qtyEl) qtyEl.style.display = 'block';
             walkinAddonsMap[id] = { selected: true, price: Number(price), qty: qtyEl ? parseInt(qtyEl.value)||1 : 1, name: name };
         } else {
-            const qtyEl = document.getElementById('wAddonQty-' + id);
-            if (qtyEl) qtyEl.style.display = 'none';
+            const qtyCont = document.getElementById('wAddonQtyCont-' + id);
+            if (qtyCont) qtyCont.style.display = 'none';
             if (walkinAddonsMap[id]) walkinAddonsMap[id].selected = false;
         }
         recalcTotal();
     }
     
     window.updateWalkinAddonQty = function(id, input) {
+        if (input.value && parseInt(input.value) > parseInt(input.max)) input.value = input.max;
         if (walkinAddonsMap[id]) {
             walkinAddonsMap[id].qty = parseInt(input.value)||1;
         }
@@ -1846,9 +1914,16 @@ if ($stmtSlots) {
         
         dateInput.addEventListener('change', (e) => {
             loadAllAvailability(e.target.value);
+            loadActivityUsage(e.target.value);
+        });
+        
+        // Also listen to guest count changes to cap addons
+        document.getElementById('bi_num_guests').addEventListener('input', () => {
+            renderWalkinAddons();
         });
         
         loadAllAvailability(dateInput.value || todayStr);
+        loadActivityUsage(dateInput.value || todayStr);
         renderCatalog();
     });
     </script>
