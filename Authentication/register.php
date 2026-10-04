@@ -162,8 +162,7 @@
     <div class="auth-card" style="max-width:640px;">
         <!-- Logo -->
         <div class="auth-logo">
-            <div class="auth-logo-icon"><i class="bi bi-gem"></i></div>
-            <h4>YP4K Resort</h4>
+            <div class="premium-logo-yp4k" style="margin: 0 auto 0.5rem auto; font-size: 2.6rem;">YP4K</div>
             <p>Create your account to start booking</p>
         </div>
 
