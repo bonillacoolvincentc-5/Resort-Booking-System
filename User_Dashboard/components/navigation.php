@@ -81,11 +81,13 @@ main, .container-fluid, .content-container {
     right: -7px;
     min-width: 16px;
     height: 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     padding: 0 4px;
     border-radius: 8px;
     font-size: 0.6rem;
     font-weight: 700;
-    line-height: 16px;
     background: #22c55e;
     color: #050505;
     box-shadow: 0 0 5px rgba(34,197,94,0.55);
@@ -275,7 +277,7 @@ main, .container-fluid, .content-container {
         transition: color 0.2s ease, background 0.2s ease;
         -webkit-tap-highlight-color: transparent;
         min-width: 0;
-        overflow: hidden;
+        overflow: visible;
     }
 
     /* Active bottom-bar tab icon wrapper pill */

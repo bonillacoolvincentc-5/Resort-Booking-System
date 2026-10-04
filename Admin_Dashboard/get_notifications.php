@@ -35,6 +35,19 @@ $query = "
     FROM users u
     ORDER BY u.created_at DESC
     LIMIT 5)
+    UNION ALL
+    (SELECT 
+        'booking' as type,
+        'Booking Cancelled' as title,
+        CONCAT(b.full_name, ' cancelled their booking') as descr,
+        bl.created_at as created_at,
+        b.id as reference_id
+    FROM booking_logs bl
+    JOIN bookings b ON bl.booking_id = b.id
+    JOIN booking_status bs ON bl.new_status_id = bs.id
+    WHERE bs.name = 'cancelled' AND bl.changed_by = 'user'
+    ORDER BY bl.created_at DESC
+    LIMIT 5)
     ORDER BY created_at DESC
     LIMIT 8
 ";

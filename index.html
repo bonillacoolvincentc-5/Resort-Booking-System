@@ -1057,9 +1057,12 @@
                         the Philippines.
                     </p>
                     <div class="d-flex gap-2">
-                        <a href="https://www.facebook.com/share/1EjVCv8VXC/" class="social-link"><i class="bi bi-facebook"></i></a>
-                        <a href="https://www.instagram.com/yp4kvillaberderesort?stkn=bjRhdGZ3aWZsd2Yz" class="social-link"><i class="bi bi-instagram"></i></a>
-                        <a href="https://www.tiktok.com/@ypdelarosa?_r=1&_t=ZS-9AGocpNzqyK" class="social-link"><i class="bi bi-tiktok"></i></a>
+                        <a href="https://www.facebook.com/share/1EjVCv8VXC/" class="social-link"><i
+                                class="bi bi-facebook"></i></a>
+                        <a href="https://www.instagram.com/yp4kvillaberderesort?stkn=bjRhdGZ3aWZsd2Yz"
+                            class="social-link"><i class="bi bi-instagram"></i></a>
+                        <a href="https://www.tiktok.com/@ypdelarosa?_r=1&_t=ZS-9AGocpNzqyK" class="social-link"><i
+                                class="bi bi-tiktok"></i></a>
                     </div>
                 </div>
 
@@ -1300,6 +1303,9 @@
                     setButtonState('standalone');
                 } else if (isInstalledLocally) {
                     setButtonState('installed');
+                } else {
+                    // Show button in fallback state for iOS/non-HTTPS where beforeinstallprompt won't fire
+                    setButtonState('unavailable');
                 }
                 // Otherwise: stay hidden — browser will fire beforeinstallprompt when ready
             });
@@ -1389,5 +1395,4 @@
         }
     </script>
 </body>
-
 </html>
