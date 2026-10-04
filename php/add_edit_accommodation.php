@@ -47,8 +47,8 @@ if ($action === 'add' || $action === 'edit') {
     $extraPersonFee = max(0, floatval($_POST['extra_person_fee'] ?? 0));
     $pricePerNight = floatval($_POST['price_per_night'] ?? 0);
     $pricePerDay = floatval($_POST['price_per_day'] ?? 0);
-    $checkInTime = !empty($_POST['check_in_time']) ? trim($_POST['check_in_time']) . ':00' : '14:00:00';
-    $checkOutTime = !empty($_POST['check_out_time']) ? trim($_POST['check_out_time']) . ':00' : '12:00:00';
+    $checkInTime = '14:00:00';
+    $checkOutTime = '12:00:00';
     $amenities = trim($_POST['amenities'] ?? '');
     $isActive = intval($_POST['is_active'] ?? 1);
     $dailyLimit = max(1, intval($_POST['daily_booking_limit'] ?? 1));
@@ -80,15 +80,10 @@ if ($action === 'add' || $action === 'edit') {
             $stmt->execute();
             
             $item_id = $conn->insert_id;
-            if ((in_array('day_tour', $validTourTypes) || $type === 'cottage') && !empty($_POST['start_time']) && !empty($_POST['end_time'])) {
-                $ts_stmt = $conn->prepare("INSERT INTO time_slots (accommodation_id, label, start_time, end_time, is_active) VALUES (?, '', ?, ?, 1)");
-                foreach ($_POST['start_time'] as $index => $start) {
-                    $end = $_POST['end_time'][$index];
-                    if (!empty($start) && !empty($end)) {
-                        $ts_stmt->bind_param("iss", $item_id, $start, $end);
-                        $ts_stmt->execute();
-                    }
-                }
+            if (in_array('day_tour', $validTourTypes) || $type === 'cottage') {
+                $ts_stmt = $conn->prepare("INSERT INTO time_slots (accommodation_id, label, start_time, end_time, is_active) VALUES (?, '', '08:00:00', '17:00:00', 1)");
+                $ts_stmt->bind_param("i", $item_id);
+                $ts_stmt->execute();
                 $ts_stmt->close();
             }
             
@@ -126,15 +121,10 @@ if ($action === 'add' || $action === 'edit') {
             $del_ts->execute();
             $del_ts->close();
             
-            if ((in_array('day_tour', $validTourTypes) || $type === 'cottage') && !empty($_POST['start_time']) && !empty($_POST['end_time'])) {
-                $ts_stmt = $conn->prepare("INSERT INTO time_slots (accommodation_id, label, start_time, end_time, is_active) VALUES (?, '', ?, ?, 1)");
-                foreach ($_POST['start_time'] as $index => $start) {
-                    $end = $_POST['end_time'][$index];
-                    if (!empty($start) && !empty($end)) {
-                        $ts_stmt->bind_param("iss", $accId, $start, $end);
-                        $ts_stmt->execute();
-                    }
-                }
+            if (in_array('day_tour', $validTourTypes) || $type === 'cottage') {
+                $ts_stmt = $conn->prepare("INSERT INTO time_slots (accommodation_id, label, start_time, end_time, is_active) VALUES (?, '', '08:00:00', '17:00:00', 1)");
+                $ts_stmt->bind_param("i", $accId);
+                $ts_stmt->execute();
                 $ts_stmt->close();
             }
             

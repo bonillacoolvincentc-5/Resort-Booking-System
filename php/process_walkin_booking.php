@@ -44,6 +44,17 @@ $extra_rooms    = $data['extra_rooms'] ?? [];
 $addons         = $data['addons'] ?? [];
 $is_day_stay    = empty($check_out_date) || $check_out_date === $check_in_date;
 
+// ── 3.5 Enforce Automatic Time Slots for Accommodations ────────────────────────
+if ($booking_type === 'accommodation') {
+    if ($is_day_stay) {
+        $check_in_time = '08:00:00';
+        $check_out_time = '17:00:00';
+    } else {
+        $check_in_time = '14:00:00';
+        $check_out_time = '12:00:00';
+    }
+}
+
 // ── 4. Basic validation ──────────────────────────────────────────────────────
 $errors = [];
 if ($guest_name === '')                                     $errors[] = 'Guest name is required.';

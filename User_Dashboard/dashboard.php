@@ -759,35 +759,6 @@ function fmtBookingDate(string $d, ?string $ti): string {
                         </div>
                     </div>
                 </div>
-
-                <!-- Quick Actions -->
-                <div class="card-modern mt-4">
-                    <div class="card-header-modern">
-                        <i class="bi bi-lightning-charge me-2"></i>Quick Actions
-                    </div>
-                    <div class="card-body-modern">
-                        <div class="row g-3">
-                            <div class="col-md-4">
-                                <div class="action-item" onclick="window.location.href='../index.html#booking'">
-                                    <i class="bi bi-plus-circle"></i>
-                                    <div class="action-label">New Booking</div>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="action-item" onclick="window.location.href='../index.html#activities'">
-                                    <i class="bi bi-compass"></i>
-                                    <div class="action-label">Explore Activities</div>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="action-item" onclick="window.location.href='../index.html#contact'">
-                                    <i class="bi bi-headset"></i>
-                                    <div class="action-label">Get Support</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
             </div>
 
             <!-- Sidebar -->
@@ -813,52 +784,22 @@ function fmtBookingDate(string $d, ?string $ti): string {
                     </div>
                 </div>
 
-                <!-- Upcoming Events -->
+                <!-- Quick Actions -->
                 <div class="card-modern mt-4">
                     <div class="card-header-modern">
-                        <i class="bi bi-calendar-event me-2"></i>Upcoming Events
+                        <i class="bi bi-lightning-charge me-2"></i>Quick Actions
                     </div>
                     <div class="card-body-modern">
-                        <?php
-                        $monthColors = ['bg-primary','bg-success','bg-warning','bg-danger','bg-info'];
-                        if (empty($upcomingEvents)):
-                        ?>
-                            <div class="text-center py-3 text-muted">
-                                <i class="bi bi-calendar3" style="font-size:1.75rem;opacity:0.4;"></i>
-                                <p class="mt-2 mb-0 small">No upcoming events scheduled.</p>
+                        <div class="action-grid">
+                            <div class="action-item" onclick="window.location.href='create-booking.php'">
+                                <i class="bi bi-plus-circle"></i>
+                                <div class="action-label">New Booking</div>
                             </div>
-                        <?php else: ?>
-                            <?php foreach ($upcomingEvents as $ei => $ev):
-                                try {
-                                    $evDt    = new DateTime($ev['check_in_date']);
-                                    $evMonth = $evDt->format('M');
-                                    $evDay   = $evDt->format('j');
-                                } catch (Exception) { $evMonth = '—'; $evDay = '—'; }
-                                $evName  = htmlspecialchars($ev['item_name'] ?? 'Event');
-                                $evTime  = !empty($ev['check_in_time'])
-                                    ? (new DateTime($ev['check_in_time']))->format('g:i A')
-                                    : '';
-                                $badgeCl = $monthColors[$ei % count($monthColors)];
-                                $isLastEv = $ei === count($upcomingEvents) - 1;
-                            ?>
-                            <div class="event-item <?= $isLastEv ? '' : 'mb-3' ?>">
-                                <div class="d-flex align-items-start">
-                                    <div class="event-date me-3">
-                                        <div class="text-center">
-                                            <div class="badge <?= $badgeCl ?>"><?= strtoupper($evMonth) ?></div>
-                                            <div class="fw-bold"><?= $evDay ?></div>
-                                        </div>
-                                    </div>
-                                    <div class="flex-grow-1">
-                                        <div class="fw-semibold"><?= $evName ?></div>
-                                        <?php if ($evTime): ?>
-                                            <div class="text-muted small"><?= $evTime ?></div>
-                                        <?php endif; ?>
-                                    </div>
-                                </div>
+                            <div class="action-item" onclick="window.location.href='../index.html#contact'">
+                                <i class="bi bi-headset"></i>
+                                <div class="action-label">Get Support</div>
                             </div>
-                            <?php endforeach; ?>
-                        <?php endif; ?>
+                        </div>
                     </div>
                 </div>
             </div>
