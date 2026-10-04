@@ -34,9 +34,6 @@ if ($action === 'add' || $action === 'edit') {
     $pricePerHour = floatval($_POST['price_per_hour'] ?? 0);
     $priceType = trim($_POST['price_type'] ?? 'flat_rate');
     $isActive = intval($_POST['is_active'] ?? 1);
-    $minDuration = floatval($_POST['min_duration_hours'] ?? 1.0);
-    $maxDuration = floatval($_POST['max_duration_hours'] ?? 4.0);
-    $capacity = intval($_POST['capacity'] ?? 10);
     $dailyLimit = intval($_POST['daily_booking_limit'] ?? 10);
 
     $allowedPriceTypes = ['per_head', 'per_hour', 'flat_rate'];
@@ -72,24 +69,13 @@ if ($action === 'add' || $action === 'edit') {
     try {
         if ($action === 'add') {
             // Insert new activity
-            $query = "INSERT INTO activities (name, slug, description, price_per_hour, price_type, min_duration_hours, max_duration_hours, capacity, daily_booking_limit, image_url, is_active) 
-                      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            $query = "INSERT INTO activities (name, slug, description, price_per_hour, price_type, daily_booking_limit, image_url, is_active) 
+                      VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
             $stmt = $conn->prepare($query);
-            $stmt->bind_param('sssdsddiisi', $name, $slug, $description, $pricePerHour, $priceType, $minDuration, $maxDuration, $capacity, $dailyLimit, $imagePath, $isActive);
+            $stmt->bind_param('sssdsisi', $name, $slug, $description, $pricePerHour, $priceType, $dailyLimit, $imagePath, $isActive);
             $stmt->execute();
             
             $item_id = $conn->insert_id;
-            if (!empty($_POST['start_time']) && !empty($_POST['end_time'])) {
-                $ts_stmt = $conn->prepare("INSERT INTO time_slots (activity_id, label, start_time, end_time, is_active) VALUES (?, '', ?, ?, 1)");
-                foreach ($_POST['start_time'] as $index => $start) {
-                    $end = $_POST['end_time'][$index];
-                    if (!empty($start) && !empty($end)) {
-                        $ts_stmt->bind_param("iss", $item_id, $start, $end);
-                        $ts_stmt->execute();
-                    }
-                }
-                $ts_stmt->close();
-            }
             
             $logUserId = $_SESSION['admin_id'] ?? null;
             if ($logUserId) {
@@ -111,34 +97,16 @@ if ($action === 'add' || $action === 'edit') {
             
             if ($imagePath) {
                 // Update with new image
-                $query = "UPDATE activities SET name = ?, slug = ?, description = ?, price_per_hour = ?, price_type = ?, min_duration_hours = ?, max_duration_hours = ?, capacity = ?, daily_booking_limit = ?, image_url = ?, is_active = ? WHERE id = ?";
+                $query = "UPDATE activities SET name = ?, slug = ?, description = ?, price_per_hour = ?, price_type = ?, daily_booking_limit = ?, image_url = ?, is_active = ? WHERE id = ?";
                 $stmt = $conn->prepare($query);
-                $stmt->bind_param('sssdsddiisii', $name, $slug, $description, $pricePerHour, $priceType, $minDuration, $maxDuration, $capacity, $dailyLimit, $imagePath, $isActive, $activityId);
+                $stmt->bind_param('sssdsisii', $name, $slug, $description, $pricePerHour, $priceType, $dailyLimit, $imagePath, $isActive, $activityId);
             } else {
                 // Update without changing image
-                $query = "UPDATE activities SET name = ?, slug = ?, description = ?, price_per_hour = ?, price_type = ?, min_duration_hours = ?, max_duration_hours = ?, capacity = ?, daily_booking_limit = ?, is_active = ? WHERE id = ?";
+                $query = "UPDATE activities SET name = ?, slug = ?, description = ?, price_per_hour = ?, price_type = ?, daily_booking_limit = ?, is_active = ? WHERE id = ?";
                 $stmt = $conn->prepare($query);
-                $stmt->bind_param('sssdsddiiii', $name, $slug, $description, $pricePerHour, $priceType, $minDuration, $maxDuration, $capacity, $dailyLimit, $isActive, $activityId);
+                $stmt->bind_param('sssdsiii', $name, $slug, $description, $pricePerHour, $priceType, $dailyLimit, $isActive, $activityId);
             }
             $stmt->execute();
-            
-            // Re-insert time slots
-            $del_ts = $conn->prepare("DELETE FROM time_slots WHERE activity_id = ?");
-            $del_ts->bind_param("i", $activityId);
-            $del_ts->execute();
-            $del_ts->close();
-            
-            if (!empty($_POST['start_time']) && !empty($_POST['end_time'])) {
-                $ts_stmt = $conn->prepare("INSERT INTO time_slots (activity_id, label, start_time, end_time, is_active) VALUES (?, '', ?, ?, 1)");
-                foreach ($_POST['start_time'] as $index => $start) {
-                    $end = $_POST['end_time'][$index];
-                    if (!empty($start) && !empty($end)) {
-                        $ts_stmt->bind_param("iss", $activityId, $start, $end);
-                        $ts_stmt->execute();
-                    }
-                }
-                $ts_stmt->close();
-            }
             
             $logUserId = $_SESSION['admin_id'] ?? null;
             if ($logUserId) {
@@ -256,16 +224,6 @@ if ($action === 'add' || $action === 'edit') {
         $result = $stmt->get_result();
         
         if ($row = $result->fetch_assoc()) {
-            $ts_query = "SELECT start_time, end_time FROM time_slots WHERE activity_id = ?";
-            $ts_stmt = $conn->prepare($ts_query);
-            $ts_stmt->bind_param('i', $activityId);
-            $ts_stmt->execute();
-            $ts_res = $ts_stmt->get_result();
-            $time_slots = [];
-            while ($ts_row = $ts_res->fetch_assoc()) {
-                $time_slots[] = $ts_row;
-            }
-            $row['time_slots'] = $time_slots;
             
             echo json_encode(['success' => true, 'activity' => $row]);
         } else {

@@ -437,39 +437,10 @@ while ($row = $accResult->fetch_assoc()) {
                         <div class="row">
                             <div class="col-md-4">
                                 <div class="form-group-modern">
-                                    <label class="form-label-modern">Min Duration (hours)</label>
-                                    <input type="number" step="0.5" class="form-control-modern" id="minDuration" name="min_duration_hours" value="1.0">
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="form-group-modern">
-                                    <label class="form-label-modern">Max Duration (hours)</label>
-                                    <input type="number" step="0.5" class="form-control-modern" id="maxDuration" name="max_duration_hours" value="4.0">
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="form-group-modern">
-                                    <label class="form-label-modern">Capacity (per slot)</label>
-                                    <input type="number" class="form-control-modern" id="activityCapacity" name="capacity" value="10">
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="form-group-modern">
                                     <label class="form-label-modern">Daily Booking Limit</label>
                                     <input type="number" class="form-control-modern" id="activityDailyLimit" name="daily_booking_limit" value="10">
                                 </div>
                             </div>
-                        </div>
-                        <!-- Time Slot Fields -->
-                        <div id="activityTimeSlotWrapper" style="margin-top: 15px;">
-                            <h5>Manage Time Slots</h5>
-                            <div id="activityTimeSlotContainer">
-                                <div class="time-slot-group" style="display: flex; gap: 10px; margin-bottom: 10px; align-items: center;">
-                                    <input type="time" name="start_time[]" class="form-control-modern">
-                                    <input type="time" name="end_time[]" class="form-control-modern">
-                                </div>
-                            </div>
-                            <button type="button" class="btn btn-sm btn-outline-secondary mt-1" onclick="addTimeSlotRow('activityTimeSlotContainer')">+ Add Time Slot</button>
                         </div>
                     </form>
                 </div>
@@ -686,7 +657,6 @@ while ($row = $accResult->fetch_assoc()) {
             document.getElementById('activityId').value = '';
             document.getElementById('activityStatus').value = '1';
             document.getElementById('activityDailyLimit').value = '10';
-            resetTimeSlotContainer('activityTimeSlotContainer');
             
             if (!activityModal) {
                 activityModal = new bootstrap.Modal(document.getElementById('activityModal'));
@@ -718,11 +688,7 @@ while ($row = $accResult->fetch_assoc()) {
                     document.getElementById('activityPrice').value = activity.price_per_hour;
                     document.getElementById('activityPriceType').value = activity.price_type || 'flat_rate';
                     document.getElementById('activityStatus').value = activity.is_active;
-                    document.getElementById('minDuration').value = activity.min_duration_hours;
-                    document.getElementById('maxDuration').value = activity.max_duration_hours;
-                    document.getElementById('activityCapacity').value = activity.capacity;
                     document.getElementById('activityDailyLimit').value = activity.daily_booking_limit || 10;
-                    populateTimeSlotContainer('activityTimeSlotContainer', activity.time_slots);
                     
                     if (!activityModal) {
                         activityModal = new bootstrap.Modal(document.getElementById('activityModal'));
