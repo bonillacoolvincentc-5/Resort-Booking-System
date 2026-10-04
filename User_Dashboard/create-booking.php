@@ -367,6 +367,25 @@ if ($stmtSlots) {
         .addon-name > div { display: flex; flex-wrap: wrap; gap: 0.25rem; align-items: center; }
         .addon-price { font-weight:700; color:var(--accent-success); font-size:1rem; white-space: nowrap; margin-left: auto; }
         .addon-qty { margin-left: auto; }
+        /* Daily booking limit badge ("X left for this date") */
+        .addon-left, .daily-left-badge {
+            font-size:.75rem; font-weight:700; padding:.3rem .75rem; border-radius:999px; white-space:nowrap;
+            background: linear-gradient(135deg, rgba(34,197,94,0.12), rgba(16,185,129,0.02));
+            color: #34d399; border: 1px solid rgba(52,211,153,0.25);
+            display: inline-flex; align-items: center; gap: 0.35rem;
+            box-shadow: 0 4px 12px rgba(16,185,129,0.08);
+        }
+        .addon-left.low, .daily-left-badge.low { 
+            background: linear-gradient(135deg, rgba(245,158,11,0.12), rgba(217,119,6,0.02));
+            color: #fbbf24; border-color: rgba(251,191,36,0.3);
+            box-shadow: 0 4px 12px rgba(245,158,11,0.08);
+        }
+        .addon-left.full, .daily-left-badge.full { 
+            background: linear-gradient(135deg, rgba(239,68,68,0.12), rgba(220,38,38,0.02));
+            color: #f87171; border-color: rgba(248,113,113,0.3);
+            box-shadow: 0 4px 12px rgba(239,68,68,0.08);
+        }
+        .addon-item.addon-soldout { opacity:.55; cursor:not-allowed; border-color:rgba(239,68,68,0.3); background:rgba(239,68,68,0.02); }
         
         @media (max-width: 575.98px) {
             .addon-item { padding: 0.6rem 0.75rem; gap: 0.25rem 0.5rem; margin-bottom: 0.4rem; }
@@ -1081,7 +1100,7 @@ if ($stmtSlots) {
                             <!-- Number of guests -->
                             <div class="mb-4">
                                 <label class="form-label-modern"><i class="bi bi-people me-1"></i>Number of Guests</label>
-                                <div class="d-flex align-items-center gap-2 flex-wrap">
+                                <div class="d-flex align-items-center gap-2 flex-wrap mb-2">
                                     <button type="button" class="btn-modern btn-secondary-modern" onclick="adjustGuests(-1)" id="guestMinus" title="Decrease guests">
                                         <i class="bi bi-dash"></i>
                                     </button>
@@ -1097,6 +1116,7 @@ if ($stmtSlots) {
                                             style="font-size:.75rem;font-weight:700;padding:.35rem .65rem;letter-spacing:.04em;">MAX</button>
                                     <span id="capacityHint" class="text-muted" style="font-size:.8rem;"></span>
                                 </div>
+                                <div id="dailyLeftHint" class="daily-left-badge d-none mt-1" style="width: fit-content;"></div>
                             </div>
 
                             <!-- Room / cottage preference — for accommodations -->
@@ -1659,6 +1679,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const sBtn = document.getElementById('submitBtn');
     if (sBtn) sBtn.addEventListener('click', (e) => { e.preventDefault(); handleBookingSubmit(e); });
     document.getElementById('bookingDate').addEventListener('change', recalcPrice);
+    document.getElementById('bookingDate').addEventListener('change', refreshActivityAvailability);
     document.getElementById('checkoutDate').addEventListener('change',  recalcPrice);
     // timeSlotSelect drives validation & recalc (timeIn/timeOut hidden fields are set by onTimeSlotChange)
     const _tss = document.getElementById('timeSlotSelect');
@@ -2224,6 +2245,7 @@ function selectPackage(id, type) {
 
     // Add-on activities (only available in Day Tour; strictly excluded for overnight stays)
     renderAddons(pkg);
+    refreshActivityAvailability();
     if (typeof fetchAndRenderActivityCalendar === 'function') {
         let calY = undefined, calM = undefined;
         if (catalogSelectedDate) {
@@ -2304,15 +2326,16 @@ function renderAddons(currentPkg) {
                 <input type="checkbox" id="addonChk-${a.id}" value="${a.id}" ${isSelected ? 'checked' : ''}
                        onchange="toggleAddon(${a.id},${a.price},this)">
             </div>
-            <div class="addon-name">
-                <div>
+            <div class="addon-name" style="display: flex; flex-direction: column; align-items: flex-start; gap: 0.3rem;">
+                <div style="display: flex; align-items: center; gap: 0.25rem; flex-wrap: wrap;">
                     ${escHtml(a.name)}
                     ${priceType === 'per_head' ? '<span class="badge bg-secondary ms-1" style="font-size:.68rem;">Per Person</span>' : ''}
                     ${noteHtml}
                 </div>
+                <div class="addon-left d-none" id="addonLeft-${a.id}"></div>
             </div>
             ${lowerName.includes('atv') ? `
-            <input type="number" class="addon-qty" id="addonQty-${a.id}" min="1" max="${maxQty}" value="${qtyVal}" step="1"
+            <input type="number" class="addon-qty" id="addonQty-${a.id}" min="1" max="100" value="${qtyVal}" step="1"
                    style="display:${isSelected ? 'inline-block' : 'none'};width:4.5rem;text-align:center;background:var(--bg-secondary);border:1px solid var(--border-color);color:var(--text-primary);border-radius:.5rem;padding:.25rem .35rem;"
                    title="Quantity for this add-on"
                    onclick="event.stopPropagation()"
@@ -2321,18 +2344,22 @@ function renderAddons(currentPkg) {
             <div class="addon-price">+${escHtml(formattedPrice)}${escHtml(suffix)}</div>
         </div>`;
     }).join('');
+    applyActivityAvailability();
 }
 
 function clickAddonCard(e, id) {
     if (e.target.tagName === 'INPUT' || e.target.classList.contains('addon-qty')) return;
     const chk = document.getElementById('addonChk-' + id);
     if (chk) {
+        if (chk.disabled) return; // fully booked for the chosen date
         chk.checked = !chk.checked;
         toggleAddon(id, (addonsMap[id] ? addonsMap[id].price : 0), chk);
     }
 }
 
 function onAddonQtyChange(id, input) {
+    const maxAllowed = parseInt(input.max, 10);
+    if (maxAllowed && (parseInt(input.value, 10) || 1) > maxAllowed) input.value = maxAllowed; // never above guests / spots left
     if (addonsMap[id]) {
         addonsMap[id].qty = Math.max(1, parseInt(input.value, 10) || 1);
     }
@@ -2371,6 +2398,87 @@ function toggleAddon(id, price, chk) {
         if (qtyEl) qtyEl.style.display = 'none';
     }
     recalcPrice();
+}
+
+// ── Daily booking limit: how many spots are left per activity on the chosen date ──
+let activityAvailability = {}; // {activityId: {limit, used, remaining}} for the selected date
+
+async function refreshActivityAvailability() {
+    const date = document.getElementById('bookingDate')?.value;
+    if (!date) return;
+    try {
+        const res  = await fetch('../php/get_activity_availability.php?date=' + encodeURIComponent(date));
+        const data = await res.json();
+        if (!data.success) return;
+        // ignore stale responses if the user already picked another date
+        if (document.getElementById('bookingDate')?.value !== date) return;
+        activityAvailability = data.activities || {};
+        applyActivityAvailability();
+    } catch (err) {
+        console.error('Activity availability error:', err);
+    }
+}
+
+function applyActivityAvailability() {
+    // Add-on activity cards
+    document.querySelectorAll('.addon-item').forEach(row => {
+        const id    = parseInt(row.id.replace('addon-', ''), 10);
+        const info  = activityAvailability[id];
+        const badge = document.getElementById('addonLeft-' + id);
+        const chk   = document.getElementById('addonChk-' + id);
+        const qtyEl = document.getElementById('addonQty-' + id);
+        if (!info || !badge) return;
+
+        const left = info.remaining;
+        badge.classList.remove('d-none', 'low', 'full');
+        if (left <= 0) {
+            badge.classList.add('full');
+            badge.innerHTML = '<i class="bi bi-x-circle-fill"></i> Fully booked for this date';
+        } else {
+            if (left <= 3) badge.classList.add('low');
+            badge.innerHTML = `<i class="bi bi-lightning-charge-fill"></i> ${left} left for this date`;
+        }
+
+        if (left <= 0) {
+            if (chk && chk.checked) { chk.checked = false; toggleAddon(id, 0, chk); }
+            if (chk) chk.disabled = true;
+            row.classList.add('addon-soldout');
+        } else {
+            if (chk) chk.disabled = false;
+            row.classList.remove('addon-soldout');
+        }
+
+        if (qtyEl) {
+            const newMax = Math.max(1, left);
+            qtyEl.max = newMax;
+            if (left > 0 && (parseInt(qtyEl.value, 10) || 1) > newMax) {
+                qtyEl.value = newMax;
+                onAddonQtyChange(id, qtyEl);
+            }
+        }
+    });
+
+    // Standalone activity package (e.g. booking ATV directly)
+    const hint = document.getElementById('dailyLeftHint');
+    if (hint) {
+        const info = (selectedPkg && selectedPkg.package_type === 'activity') ? activityAvailability[selectedPkg.id] : null;
+        if (info) {
+            hint.classList.remove('d-none', 'low', 'full');
+            if (info.remaining <= 0) {
+                hint.classList.add('full');
+                hint.innerHTML = '<i class="bi bi-x-circle-fill"></i> Fully booked for this date';
+            } else {
+                if (info.remaining <= 3) hint.classList.add('low');
+                hint.innerHTML = `<i class="bi bi-lightning-charge-fill"></i> ${info.remaining} of ${info.limit} left for this date`;
+                if (selectedPkg.price_type === 'per_head') {
+                    const g = document.getElementById('numberOfGuests');
+                    if (g) g.max = Math.max(1, Math.min(parseInt(selectedPkg.capacity, 10) || info.remaining, info.remaining));
+                }
+            }
+        } else {
+            hint.classList.add('d-none');
+        }
+    }
 }
 
 // ── Price calculation ──────────────────────────────────────────────
@@ -2933,6 +3041,7 @@ function adjustGuests(delta) {
     let val = parseInt(input.value) + delta;
     val = Math.max(1, Math.min(max, val));
     input.value = val;
+    applyActivityAvailability();
     recalcPrice();
 }
 
@@ -2945,6 +3054,7 @@ function clampGuestInput(input) {
         if (val > max) input.value = max;
         if (val < min) input.value = min;
     }
+    applyActivityAvailability();
     recalcPrice();
 }
 
@@ -2953,6 +3063,7 @@ function setGuestsMax() {
     const input = document.getElementById('numberOfGuests');
     const max   = parseInt(input.max) || 100;
     input.value = max;
+    applyActivityAvailability();
     recalcPrice();
 }
 

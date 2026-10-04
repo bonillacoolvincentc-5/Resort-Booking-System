@@ -8,6 +8,7 @@ session_start();
 require_once '../phpAuthentication/db_config.php';
 require_once '../phpAuthentication/blocked_email_helper.php';
 require_once __DIR__ . '/check_expired_bookings.php';
+require_once __DIR__ . '/activity_daily_usage.php';
 
 header('Content-Type: application/json');
 
@@ -151,6 +152,29 @@ try {
             $addonItems = $addonsJson;
         }
     }
+
+    // ── Daily booking limit for add-on activities ───────────────────
+    // Each add-on uses spots of that activity's daily limit on the booking date
+    // (ATV etc. = chosen quantity, flat-rate activities = 1).
+    $addonRows = []; // activity_id => units used by this booking
+    if (!empty($addonItems)) {
+        $addonUsage = getActivityDailyUsage($conn, $checkInDate);
+        foreach ($addonItems as $ai) {
+            $aid = intval($ai['id'] ?? 0);
+            if ($aid <= 0 || !isset($addonUsage[$aid])) continue;
+            $units = ($addonUsage[$aid]['price_type'] === 'flat_rate') ? 1 : max(1, intval($ai['qty'] ?? 1));
+            $addonRows[$aid] = ($addonRows[$aid] ?? 0) + $units;
+        }
+        foreach ($addonRows as $aid => $units) {
+            $info = $addonUsage[$aid];
+            if ($units > $info['remaining']) {
+                if ($info['remaining'] > 0) {
+                    throw new Exception("Only {$info['remaining']} spot(s) left for {$info['name']} on {$checkInDate} (daily limit: {$info['limit']}). Please lower the quantity or choose another date.");
+                }
+                throw new Exception("{$info['name']} is fully booked on {$checkInDate} (daily limit of {$info['limit']} reached). Please remove it or choose another date.");
+            }
+        }
+    }
     $hasATVShort = false;
     $hasATVLong = false;
     foreach ($addonItems as $ai) {
@@ -272,8 +296,21 @@ try {
                 'Please choose different dates or another accommodation.'
             );
         }
+    } elseif ($bookingType === 'activity') {
+        // Activities: the admin's daily booking limit is how many spots can be used per day.
+        // Standalone bookings and add-on selections from other bookings all count toward it.
+        $actUsage = getActivityDailyUsage($conn, $checkInDate, $itemId)[$itemId] ?? null;
+        if ($actUsage) {
+            $needed = ($actUsage['price_type'] === 'per_head') ? $numberOfGuests : 1;
+            if ($needed > $actUsage['remaining']) {
+                if ($actUsage['remaining'] > 0) {
+                    throw new Exception("Only {$actUsage['remaining']} spot(s) left for {$actUsage['name']} on this date (daily limit: {$actUsage['limit']}). Please lower the number of guests or choose another date.");
+                }
+                throw new Exception('This activity is fully booked for the selected date (daily limit reached). Please choose another date.');
+            }
+        }
     } else {
-        // Activities and bundles: simple same-day slot count vs. capacity.
+        // Bundles: simple same-day slot count vs. capacity.
         $itemColumn = $bookingType === 'activity' ? 'activity_id' : 'bundle_id';
         $avCheck = $conn->prepare("
             SELECT COUNT(*) AS cnt
@@ -501,6 +538,17 @@ try {
     $bookingId = $conn->insert_id;
 
     if (!$bookingId) throw new Exception('Failed to save booking. Please try again.');
+
+    // ── Save the add-on activities so they count toward each activity's daily limit ──
+    if (!empty($addonRows)) {
+        ensureBookingAddonsTable($conn);
+        $abIns = $conn->prepare("INSERT INTO booking_addons (booking_id, activity_id, qty, usage_date) VALUES (?, ?, ?, ?)");
+        foreach ($addonRows as $aid => $units) {
+            $abIns->bind_param('iiis', $bookingId, $aid, $units, $checkInDate);
+            $abIns->execute();
+        }
+        $abIns->close();
+    }
 
     // ── Insert Extra Rooms to Database ──────────────────────────────────────────
     if (!empty($parsed_extra_rooms)) {

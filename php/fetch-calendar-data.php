@@ -10,6 +10,7 @@ if (session_status() === PHP_SESSION_NONE) {
 
 require_once __DIR__ . '/../phpAuthentication/db_config.php';
 require_once __DIR__ . '/check_expired_bookings.php';
+require_once __DIR__ . '/activity_daily_usage.php';
 
 if (!headers_sent()) {
     header('Content-Type: application/json');
@@ -79,8 +80,9 @@ try {
         // Accommodations track how many TIMES they can be booked per day (units)
         $capacity = isset($item['daily_booking_limit']) ? max(1, (int)$item['daily_booking_limit']) : 1;
     } else {
-        // Activities track how many GUESTS can book per day
-        $capacity = max(1, (int)$item['capacity']);
+        // Activities: the admin's daily booking limit = spots that can be used per day
+        // (standalone bookings and add-on selections both count)
+        $capacity = isset($item['daily_booking_limit']) ? max(1, (int)$item['daily_booking_limit']) : max(1, (int)$item['capacity']);
     }
     $startDate = sprintf('%04d-%02d-01', $year, $month);
     $endDate   = date('Y-m-t', strtotime($startDate));
@@ -182,23 +184,16 @@ try {
         }
         $bookStmt->close();
     } else {
-        $bookStmt = $conn->prepare("
-            SELECT check_in_date, COALESCE(SUM(number_of_guests), COUNT(*)) AS total_booked
-            FROM bookings
-            WHERE booking_type = 'activity'
-              AND activity_id = ?
-              AND status_id IN (SELECT id FROM booking_status WHERE name IN ('awaiting_payment', 'payment_verifying', 'approved', 'checked_in'))
-              AND check_in_date BETWEEN ? AND ?
-            GROUP BY check_in_date
-        ");
-        $bookStmt->bind_param('iss', $itemId, $startDate, $endDate);
-        $bookStmt->execute();
-        $bookRes = $bookStmt->get_result();
+        $ptStmt = $conn->prepare("SELECT price_type FROM activities WHERE id = ?");
+        $ptStmt->bind_param('i', $itemId);
+        $ptStmt->execute();
+        $priceType = ($ptStmt->get_result()->fetch_assoc()['price_type'] ?? 'flat_rate');
+        $ptStmt->close();
 
-        while ($row = $bookRes->fetch_assoc()) {
-            $d = $row['check_in_date'];
+        $usageByDate = getActivityUsageByDate($conn, $itemId, $priceType, $startDate, $endDate);
+
+        foreach ($usageByDate as $d => $bookedGuests) {
             if (isset($days[$d])) {
-                $bookedGuests = (int)$row['total_booked'];
                 $days[$d]['booked'] = $bookedGuests;
                 if ($days[$d]['status'] !== 'blocked' && empty($days[$d]['global_full'])) {
                     if ($bookedGuests >= $capacity) {
@@ -214,7 +209,6 @@ try {
                 }
             }
         }
-        $bookStmt->close();
     }
 
     echo json_encode([

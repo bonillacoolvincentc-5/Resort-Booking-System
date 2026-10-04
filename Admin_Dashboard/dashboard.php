@@ -194,7 +194,7 @@ while ($row = $result->fetch_assoc()) {
 
         <!-- Charts Section -->
         <div class="charts-section">
-            <div class="chart-card">
+            <div class="chart-card overview-card">
                 <div class="chart-header">
                     <h5 class="chart-title">Bookings Overview</h5>
                     <div class="chart-options">
@@ -204,18 +204,157 @@ while ($row = $result->fetch_assoc()) {
                     </div>
                 </div>
                 <div class="chart-container">
-                    <canvas id="bookingsOverviewChart"></canvas>
+                    <div class="overview-canvas-wrap">
+                        <canvas id="bookingsOverviewChart"></canvas>
+                    </div>
                 </div>
             </div>
 
             <div class="chart-card">
                 <div class="chart-header">
-                    <h5 class="chart-title">Activity Distribution</h5>
+                    <h5 class="chart-title">Bookings Status Overview</h5>
                 </div>
-                <div class="chart-container">
-                    <div class="chart-placeholder">
-                        <i class="bi bi-pie-chart"></i>
-                        <p>Activity Pie Chart</p>
+                <style>
+                    /* ── Bookings Overview: fill the card height (no empty space under the chart) ── */
+                    .chart-card.overview-card {
+                        display: flex;
+                        flex-direction: column;
+                    }
+                    .chart-card.overview-card > .chart-container {
+                        flex: 1 1 auto;
+                        align-items: stretch;
+                        min-height: 300px;
+                    }
+                    .overview-canvas-wrap {
+                        position: relative;
+                        flex: 1 1 auto;
+                        min-width: 0;
+                        align-self: stretch;
+                    }
+                    .overview-canvas-wrap canvas {
+                        position: absolute;
+                        top: 0;
+                        left: 0;
+                    }
+                    /* ── Bookings Status Pie (scoped to this card) ── */
+                    .chart-container.pie-container {
+                        flex-direction: column;
+                        align-items: stretch;
+                        justify-content: flex-start;
+                        gap: 1.1rem;
+                        min-height: 0;
+                        padding: 1.25rem 1.1rem 1.1rem;
+                        position: relative;
+                        overflow: hidden;
+                        background:
+                            radial-gradient(circle at 50% 0%, rgba(157, 255, 0, 0.07), transparent 60%),
+                            rgba(8, 18, 14, 0.45);
+                    }
+                    .pie-stage {
+                        position: relative;
+                        width: 232px;
+                        height: 232px;
+                        max-width: 100%;
+                        aspect-ratio: 1 / 1;
+                        margin: 0 auto;
+                        flex-shrink: 0;
+                    }
+                    .pie-legend {
+                        display: grid;
+                        gap: 0.5rem;
+                        width: 100%;
+                    }
+                    .pie-legend-item {
+                        --c: #9DFF00;
+                        display: grid;
+                        grid-template-columns: auto 1fr auto;
+                        align-items: center;
+                        column-gap: 0.65rem;
+                        row-gap: 0.45rem;
+                        padding: 0.6rem 0.8rem;
+                        border-radius: 12px;
+                        background: rgba(255, 255, 255, 0.03);
+                        border: 1px solid rgba(255, 255, 255, 0.06);
+                        cursor: default;
+                        transition: border-color 0.25s ease, background 0.25s ease, transform 0.25s ease;
+                    }
+                    .pie-legend-item:hover {
+                        border-color: var(--c);
+                        background: rgba(255, 255, 255, 0.05);
+                        transform: translateX(2px);
+                    }
+                    .pie-dot {
+                        width: 10px;
+                        height: 10px;
+                        border-radius: 50%;
+                        background: var(--c);
+                        box-shadow: 0 0 10px var(--c);
+                    }
+                    .pie-name {
+                        color: #d5e0da;
+                        font-size: 0.8rem;
+                        font-weight: 600;
+                        letter-spacing: 0.02em;
+                    }
+                    .pie-figures {
+                        display: flex;
+                        align-items: baseline;
+                        gap: 0.45rem;
+                    }
+                    .pie-figures strong {
+                        color: #ffffff;
+                        font-size: 0.95rem;
+                        font-weight: 700;
+                    }
+                    .pie-figures em {
+                        font-style: normal;
+                        color: var(--c);
+                        font-size: 0.72rem;
+                        font-weight: 700;
+                        min-width: 2.6em;
+                        text-align: right;
+                    }
+                    .pie-bar {
+                        grid-column: 1 / -1;
+                        height: 4px;
+                        border-radius: 4px;
+                        background: rgba(255, 255, 255, 0.07);
+                        overflow: hidden;
+                    }
+                    .pie-bar i {
+                        display: block;
+                        height: 100%;
+                        border-radius: 4px;
+                        background: linear-gradient(90deg, var(--c), rgba(255, 255, 255, 0.55));
+                        box-shadow: 0 0 8px var(--c);
+                    }
+                </style>
+                <div class="chart-container pie-container">
+                    <div class="pie-stage">
+                        <canvas id="bookingsPieChart"></canvas>
+                    </div>
+                    <div class="pie-legend" id="bookingsPieLegend">
+                        <?php
+                        $pieTotal = (int)$totalBookings;
+                        $pieItems = [
+                            ['Pending',  (int)$pendingBookings,  '#F5A623'],
+                            ['Approved', (int)$approvedBookings, '#82D616'],
+                            ['Rejected', (int)$rejectedBookings, '#EF4B55'],
+                        ];
+                        $pieOther = $pieTotal - ((int)$pendingBookings + (int)$approvedBookings + (int)$rejectedBookings);
+                        if ($pieOther > 0) {
+                            $pieItems[] = ['Other', $pieOther, '#6FA8DC'];
+                        }
+                        foreach ($pieItems as $pieIndex => $pieItem):
+                            $piePct = $pieTotal > 0 ? round(($pieItem[1] / $pieTotal) * 100) : 0;
+                        ?>
+                        <div class="pie-legend-item" data-index="<?php echo $pieIndex; ?>" style="--c: <?php echo $pieItem[2]; ?>;">
+                            <span class="pie-dot"></span>
+                            <span class="pie-name"><?php echo $pieItem[0]; ?></span>
+                            <span class="pie-figures"><strong><?php echo number_format($pieItem[1]); ?></strong><em><?php echo $piePct; ?>%</em></span>
+                            <span class="pie-bar"><i style="width: <?php echo $piePct; ?>%;"></i></span>
+                        </div>
+                        <?php endforeach; ?>
                     </div>
                 </div>
             </div>
@@ -376,8 +515,236 @@ while ($row = $result->fetch_assoc()) {
                 });
             }
         });
-    </script>
 
+        // ── Bookings Status Pie Chart ────────────────────────────────────────
+        document.addEventListener('DOMContentLoaded', function () {
+            const pieCanvas = document.getElementById('bookingsPieChart');
+            if (!pieCanvas || typeof Chart === 'undefined') return;
+            const pieCtx = pieCanvas.getContext('2d');
+
+            const counts = [
+                <?php echo (int)$pendingBookings; ?>,
+                <?php echo (int)$approvedBookings; ?>,
+                <?php echo (int)$rejectedBookings; ?>
+            ];
+            const total = <?php echo (int)$totalBookings; ?>;
+            const otherCount = Math.max(0, total - (counts[0] + counts[1] + counts[2]));
+            if (otherCount > 0) counts.push(otherCount); // completed / cancelled / etc.
+            const approvalRate = total > 0 ? Math.round((counts[1] / total) * 100) : 0;
+            const isEmpty = total === 0;
+
+            // Slice palettes [light, base] – matches the dark / neon-green admin theme
+            const palettes = [
+                ['#FFD27A', '#F5A623'], // Pending
+                ['#C6FF5C', '#82D616'], // Approved
+                ['#FF8A90', '#E0343F'], // Rejected
+                ['#A9CDF0', '#5B93C9']  // Other
+            ];
+            const sliceLabels = ['Pending', 'Approved', 'Rejected', 'Other'].slice(0, counts.length);
+
+            // Pre-built gradients (canvas is 232px square)
+            const sliceColors = palettes.slice(0, counts.length).map(function (p) {
+                const g = pieCtx.createLinearGradient(0, 0, 232, 232);
+                g.addColorStop(0, p[0]);
+                g.addColorStop(1, p[1]);
+                return g;
+            });
+
+            // Decorative layers: soft shadow, track, dashed halo, ticks, approval ring, centre text
+            const pieDecor = {
+                id: 'pieDecor',
+                beforeDatasetsDraw: function (chart) {
+                    const arc = chart.getDatasetMeta(0).data[0];
+                    if (!arc) return;
+                    const c = chart.ctx;
+                    const mid = (arc.innerRadius + arc.outerRadius) / 2;
+                    const thick = arc.outerRadius - arc.innerRadius;
+
+                    // faint background track
+                    c.save();
+                    c.beginPath();
+                    c.arc(arc.x, arc.y, mid, 0, Math.PI * 2);
+                    c.lineWidth = thick;
+                    c.strokeStyle = 'rgba(255, 255, 255, 0.035)';
+                    c.stroke();
+                    c.restore();
+
+                    // drop shadow for the slices
+                    c.save();
+                    c.shadowColor = 'rgba(0, 0, 0, 0.55)';
+                    c.shadowBlur = 14;
+                    c.shadowOffsetY = 5;
+                },
+                afterDatasetsDraw: function (chart) {
+                    const arc = chart.getDatasetMeta(0).data[0];
+                    if (!arc) return;
+                    const c = chart.ctx;
+                    c.restore(); // end slice shadow
+
+                    const cx = arc.x, cy = arc.y;
+                    const outer = arc.outerRadius;
+                    const inner = arc.innerRadius;
+                    if (!(outer > 0) || inner < 24) return; // too small to decorate safely
+
+                    // dashed halo
+                    c.save();
+                    c.beginPath();
+                    c.arc(cx, cy, outer + 10, 0, Math.PI * 2);
+                    c.setLineDash([2, 5]);
+                    c.lineWidth = 1;
+                    c.strokeStyle = 'rgba(157, 255, 0, 0.28)';
+                    c.stroke();
+                    c.restore();
+
+                    // 12 tick marks (like a watch bezel)
+                    c.save();
+                    c.lineWidth = 1.5;
+                    c.lineCap = 'round';
+                    for (let t = 0; t < 12; t++) {
+                        const a = (t / 12) * Math.PI * 2 - Math.PI / 2;
+                        c.beginPath();
+                        c.moveTo(cx + Math.cos(a) * (outer + 13), cy + Math.sin(a) * (outer + 13));
+                        c.lineTo(cx + Math.cos(a) * (outer + 17), cy + Math.sin(a) * (outer + 17));
+                        c.strokeStyle = t % 3 === 0 ? 'rgba(157, 255, 0, 0.55)' : 'rgba(255, 255, 255, 0.16)';
+                        c.stroke();
+                    }
+                    c.restore();
+
+                    // soft inner glow disc
+                    const discR = inner - 6;
+                    const glow = c.createRadialGradient(cx, cy, 0, cx, cy, discR);
+                    glow.addColorStop(0, 'rgba(157, 255, 0, 0.10)');
+                    glow.addColorStop(0.65, 'rgba(157, 255, 0, 0.03)');
+                    glow.addColorStop(1, 'rgba(157, 255, 0, 0)');
+                    c.save();
+                    c.beginPath();
+                    c.arc(cx, cy, discR, 0, Math.PI * 2);
+                    c.fillStyle = glow;
+                    c.fill();
+                    c.lineWidth = 1;
+                    c.strokeStyle = 'rgba(255, 255, 255, 0.07)';
+                    c.stroke();
+                    c.restore();
+
+                    // approval-rate progress ring
+                    const ringR = inner - 12;
+                    c.save();
+                    c.beginPath();
+                    c.arc(cx, cy, ringR, 0, Math.PI * 2);
+                    c.lineWidth = 3;
+                    c.strokeStyle = 'rgba(255, 255, 255, 0.06)';
+                    c.stroke();
+                    if (approvalRate > 0) {
+                        c.beginPath();
+                        c.arc(cx, cy, ringR, -Math.PI / 2, -Math.PI / 2 + (approvalRate / 100) * Math.PI * 2);
+                        c.lineCap = 'round';
+                        c.lineWidth = 3;
+                        c.strokeStyle = '#9DFF00';
+                        c.shadowColor = 'rgba(157, 255, 0, 0.8)';
+                        c.shadowBlur = 10;
+                        c.stroke();
+                    }
+                    c.restore();
+
+                    // centre text
+                    const font = "'Inter', sans-serif";
+                    c.save();
+                    c.textAlign = 'center';
+                    c.textBaseline = 'middle';
+
+                    c.font = '800 36px ' + font;
+                    c.fillStyle = '#ffffff';
+                    c.shadowColor = 'rgba(157, 255, 0, 0.35)';
+                    c.shadowBlur = 14;
+                    c.fillText(String(total), cx, cy - 8);
+
+                    c.shadowBlur = 0;
+                    if ('letterSpacing' in c) c.letterSpacing = '1.4px';
+                    c.font = '600 9.5px ' + font;
+                    c.fillStyle = '#8C9992';
+                    c.fillText('TOTAL BOOKINGS', cx, cy + 16);
+
+                    c.font = '700 10.5px ' + font;
+                    c.fillStyle = '#9DFF00';
+                    c.fillText(approvalRate + '% APPROVED', cx, cy + 32);
+                    c.restore();
+                }
+            };
+
+            const pieChart = new Chart(pieCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: isEmpty ? ['No bookings'] : sliceLabels,
+                    datasets: [{
+                        data: isEmpty ? [1] : counts,
+                        backgroundColor: isEmpty ? ['rgba(255, 255, 255, 0.05)'] : sliceColors,
+                        hoverBackgroundColor: isEmpty ? ['rgba(255, 255, 255, 0.05)'] : sliceColors,
+                        borderWidth: 0,
+                        spacing: isEmpty ? 0 : 3,
+                        borderRadius: 4,
+                        hoverOffset: 4
+                    }]
+                },
+                plugins: [pieDecor],
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '74%',
+                    layout: { padding: 20 },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            enabled: !isEmpty,
+                            backgroundColor: 'rgba(8, 18, 14, 0.92)',
+                            titleColor: '#ffffff',
+                            bodyColor: '#d5e0da',
+                            titleFont: { family: "'Inter', sans-serif", size: 12, weight: '700' },
+                            bodyFont: { family: "'Inter', sans-serif", size: 12, weight: '500' },
+                            padding: 12,
+                            boxPadding: 6,
+                            usePointStyle: true,
+                            borderColor: 'rgba(157, 255, 0, 0.25)',
+                            borderWidth: 1,
+                            cornerRadius: 10,
+                            callbacks: {
+                                label: function (context) {
+                                    const value = context.parsed || 0;
+                                    const pct = total > 0 ? Math.round((value / total) * 100) : 0;
+                                    return ' ' + value + (value === 1 ? ' booking' : ' bookings') + ' · ' + pct + '%';
+                                }
+                            }
+                        }
+                    },
+                    animation: {
+                        animateScale: false,
+                        animateRotate: true,
+                        duration: 1200,
+                        easing: 'easeOutQuart'
+                    }
+                }
+            });
+
+            // Hovering a legend row highlights its slice (and vice-versa via tooltip)
+            document.querySelectorAll('#bookingsPieLegend .pie-legend-item').forEach(function (row) {
+                const i = parseInt(row.dataset.index, 10);
+                row.addEventListener('mouseenter', function () {
+                    if (isEmpty) return;
+                    const el = pieChart.getDatasetMeta(0).data[i];
+                    if (!el) return;
+                    const pos = el.tooltipPosition();
+                    pieChart.setActiveElements([{ datasetIndex: 0, index: i }]);
+                    pieChart.tooltip.setActiveElements([{ datasetIndex: 0, index: i }], { x: pos.x, y: pos.y });
+                    pieChart.update();
+                });
+                row.addEventListener('mouseleave', function () {
+                    if (isEmpty) return;
+                    pieChart.setActiveElements([]);
+                    pieChart.tooltip.setActiveElements([], { x: 0, y: 0 });
+                    pieChart.update();
+                });
+            });
+        });
+    </script>
     <script src="../assets/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
