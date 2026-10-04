@@ -50,19 +50,23 @@ while ($row = $result->fetch_assoc()) {
     <link rel="stylesheet" href="../css/admin-theme.css">
     <script src="components/admin-components.js" defer></script>
     <style>
-        .log-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #fff;
-            font-size: 1.2rem;
+        .role-badge-admin {
+            background-color: rgba(59, 130, 246, 0.15); /* Blue background */
+            color: #60a5fa; /* Blue text */
+            border: 1px solid rgba(59, 130, 246, 0.3);
         }
-        .icon-walk_in { background: var(--accent-success); }
-        .icon-status_update { background: var(--accent-primary); }
-        .icon-default { background: var(--text-muted); }
+        .role-badge-admin::before {
+            background-color: #60a5fa !important;
+        }
+        
+        .role-badge-staff {
+            background-color: rgba(168, 85, 247, 0.15); /* Purple background */
+            color: #c084fc; /* Purple text */
+            border: 1px solid rgba(168, 85, 247, 0.3);
+        }
+        .role-badge-staff::before {
+            background-color: #c084fc !important;
+        }
     </style>
 </head>
 <body>
@@ -82,7 +86,6 @@ while ($row = $result->fetch_assoc()) {
             <table class="table-modern">
                 <thead>
                     <tr>
-                        <th style="width: 50px;"></th>
                         <th>User</th>
                         <th>Role</th>
                         <th>Action</th>
@@ -95,31 +98,16 @@ while ($row = $result->fetch_assoc()) {
                         <?php foreach ($logs as $log): ?>
                             <?php
                                 $actionType = $log['action_type'];
-                                $iconClass = 'icon-default';
-                                $iconHTML = '<i class="bi bi-info-circle"></i>';
-                                
-                                if ($actionType === 'walk_in') {
-                                    $iconClass = 'icon-walk_in';
-                                    $iconHTML = '<i class="bi bi-person-walking"></i>';
-                                } elseif ($actionType === 'status_update') {
-                                    $iconClass = 'icon-status_update';
-                                    $iconHTML = '<i class="bi bi-arrow-repeat"></i>';
-                                }
-                                
                                 $dateStr = date('M j, Y h:i A', strtotime($log['created_at']));
+                                $roleClass = strtolower($log['role']) === 'admin' ? 'role-badge-admin' : 'role-badge-staff';
                             ?>
                             <tr>
-                                <td>
-                                    <div class="log-icon <?php echo $iconClass; ?>">
-                                        <?php echo $iconHTML; ?>
-                                    </div>
-                                </td>
                                 <td>
                                     <div class="user-details">
                                         <div class="user-name"><?php echo htmlspecialchars($log['user_name']); ?></div>
                                     </div>
                                 </td>
-                                <td><span class="status-badge status-active"><?php echo ucfirst($log['role']); ?></span></td>
+                                <td><span class="status-badge <?php echo $roleClass; ?>"><?php echo ucfirst($log['role']); ?></span></td>
                                 <td><strong><?php echo ucwords(str_replace('_', ' ', $actionType)); ?></strong></td>
                                 <td style="color: var(--text-secondary);"><?php echo htmlspecialchars($log['description']); ?></td>
                                 <td style="font-size: 0.9rem; color: var(--text-muted);"><?php echo $dateStr; ?></td>
@@ -127,7 +115,7 @@ while ($row = $result->fetch_assoc()) {
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="6" style="text-align: center; padding: 2rem;">
+                            <td colspan="5" style="text-align: center; padding: 2rem;">
                                 <i class="bi bi-inbox" style="font-size: 2rem; color: var(--text-muted);"></i>
                                 <p style="color: var(--text-secondary); margin-top: 0.5rem;">No activity logs found</p>
                             </td>

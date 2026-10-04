@@ -367,7 +367,7 @@ if ($stmtSlots) {
         .addon-name > div { display: flex; flex-wrap: wrap; gap: 0.25rem; align-items: center; }
         .addon-price { font-weight:700; color:var(--accent-success); font-size:1rem; white-space: nowrap; margin-left: auto; }
         .addon-qty { margin-left: auto; }
-        /* Daily booking limit badge ("X left for this date") */
+        /* Daily booking limit badge ("X slots left") */
         .addon-left, .daily-left-badge {
             font-size:.75rem; font-weight:700; padding:.3rem .75rem; border-radius:999px; white-space:nowrap;
             background: linear-gradient(135deg, rgba(34,197,94,0.12), rgba(16,185,129,0.02));
@@ -2335,7 +2335,7 @@ function renderAddons(currentPkg) {
                 <div class="addon-left d-none" id="addonLeft-${a.id}"></div>
             </div>
             ${lowerName.includes('atv') ? `
-            <input type="number" class="addon-qty" id="addonQty-${a.id}" min="1" max="100" value="${qtyVal}" step="1"
+            <input type="number" class="addon-qty" id="addonQty-${a.id}" min="1" max="${maxQty}" value="${qtyVal}" step="1"
                    style="display:${isSelected ? 'inline-block' : 'none'};width:4.5rem;text-align:center;background:var(--bg-secondary);border:1px solid var(--border-color);color:var(--text-primary);border-radius:.5rem;padding:.25rem .35rem;"
                    title="Quantity for this add-on"
                    onclick="event.stopPropagation()"
@@ -2436,7 +2436,7 @@ function applyActivityAvailability() {
             badge.innerHTML = '<i class="bi bi-x-circle-fill"></i> Fully booked for this date';
         } else {
             if (left <= 3) badge.classList.add('low');
-            badge.innerHTML = `<i class="bi bi-lightning-charge-fill"></i> ${left} left for this date`;
+            badge.innerHTML = `<i class="bi bi-lightning-charge-fill"></i> ${left} slots left`;
         }
 
         if (left <= 0) {
@@ -2449,7 +2449,8 @@ function applyActivityAvailability() {
         }
 
         if (qtyEl) {
-            const newMax = Math.max(1, left);
+            const guestMax = Math.max(1, parseInt(document.getElementById('numberOfGuests')?.value, 10) || 1);
+            const newMax = Math.max(1, Math.min(guestMax, left));
             qtyEl.max = newMax;
             if (left > 0 && (parseInt(qtyEl.value, 10) || 1) > newMax) {
                 qtyEl.value = newMax;
@@ -2469,7 +2470,7 @@ function applyActivityAvailability() {
                 hint.innerHTML = '<i class="bi bi-x-circle-fill"></i> Fully booked for this date';
             } else {
                 if (info.remaining <= 3) hint.classList.add('low');
-                hint.innerHTML = `<i class="bi bi-lightning-charge-fill"></i> ${info.remaining} of ${info.limit} left for this date`;
+                hint.innerHTML = `<i class="bi bi-lightning-charge-fill"></i> ${info.remaining} of ${info.limit} slots left`;
                 if (selectedPkg.price_type === 'per_head') {
                     const g = document.getElementById('numberOfGuests');
                     if (g) g.max = Math.max(1, Math.min(parseInt(selectedPkg.capacity, 10) || info.remaining, info.remaining));

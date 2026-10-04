@@ -1170,11 +1170,8 @@ while ($row = $statsResult->fetch_assoc()) {
                         <div class="fw-bold text-primary fs-5" style="letter-spacing: 0.5px;">${escHtml(booking.booking_reference)}</div>
                     </div>
                     <div class="text-end">
-                        <span class="badge px-3 py-2 me-1" style="background: ${statusColor}; color: #fff; font-size: 0.8rem; font-weight: 700;">
+                        <span class="badge px-3 py-2" style="background: ${statusColor}; color: #fff; font-size: 0.85rem; font-weight: 700; letter-spacing: 0.5px; box-shadow: 0 4px 12px ${statusColor}40;">
                             ${escHtml(statusLabel)}
-                        </span>
-                        <span class="badge px-2 py-2 ${booking.payment_status === 'paid' ? 'bg-success' : 'bg-warning text-dark'}" style="font-size: 0.8rem; font-weight: 700;">
-                            ${escHtml(payStatusLabel)}
                         </span>
                     </div>
                 </div>
